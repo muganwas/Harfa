@@ -57,4 +57,5 @@ buck-out/
 
 # CocoaPods
 /ios/Pods/
+# heavy android files
 android/java_pid828.hprof
