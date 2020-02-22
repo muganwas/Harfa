@@ -1,0 +1,554 @@
+import React, { Component } from 'react';
+import {
+  View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, Linking,
+  BackHandler, Alert, StatusBar, Platform,
+} from 'react-native';
+import firebase from 'firebase';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import MapView from 'react-native-maps';
+import Polyline from '@mapbox/polyline';
+import LinearGradient from 'react-native-linear-gradient';
+import SlidingPanel from 'react-native-sliding-up-down-panels';
+import PendingJobRequest from './PendingJobRequest';
+import UserDetails from './UserDetails';
+
+const colorPrimary = '#FFBF0F';
+const colorPrimaryDark = '#C5940E';
+const colorYellow = '#FFBF0F';
+const colorBg = '#E8EEE9';
+const colorGray = '#C0C0C0'
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
+
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+
+function StatusBarPlaceHolder() {
+  return (
+    Platform.OS === 'ios' ?
+      <View style={{
+        width: "100%",
+        height: STATUS_BAR_HEIGHT,
+        backgroundColor: colorPrimaryDark
+      }}>
+        <StatusBar
+          barStyle="light-content" />
+      </View>
+      :
+      <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+  );
+}
+
+export default class MapDirectionScreen extends Component {
+
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      sourceLocation: UserDetails.User.lat + "," + UserDetails.User.lang,  //String
+      sourceLat: parseFloat(UserDetails.User.lat),   //Double
+      sourceLng: parseFloat(UserDetails.User.lang),
+      destinationLocation: PendingJobRequest.Request.lat + ',' + PendingJobRequest.Request.lang,
+      destinationLat: parseFloat(PendingJobRequest.Request.lat),
+      destinationLng: parseFloat(PendingJobRequest.Request.lang),
+      coords: [],
+      isLoading: true,
+
+      senderId: UserDetails.User.userId,
+      senderImage: UserDetails.User.image,
+      senderName: UserDetails.User.username,
+      inputMessage: '',
+      dataChatSource: [],
+
+      //From DashboardScreen && ProviderDetailsScreen
+      id: PendingJobRequest.Request.id,
+      orderId: PendingJobRequest.Request.order_id,
+      providerId: PendingJobRequest.Request.employee_id,
+      providerImage: PendingJobRequest.Request.image,
+      providerfcmId: PendingJobRequest.Request.fcm_id,
+      providerName: PendingJobRequest.Request.name + " " + PendingJobRequest.Request.surName,
+      providerMobile: PendingJobRequest.Request.mobile,
+      providerDescription: PendingJobRequest.Request.description,
+      providerAddress: PendingJobRequest.Request.address,
+      providerLat: PendingJobRequest.Request.lat,
+      providerLang: PendingJobRequest.Request.lang,
+      serviceName: PendingJobRequest.Request.service_name,
+      titlePage: this.props.navigation.state.params.titlePage
+    };
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+  };
+
+  componentDidMount() {
+
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+
+    var that = this;
+
+    console.log(this.state.orderId);
+
+    firebase.database().ref('tracking').child(this.state.orderId)
+      .on('value', function (snapshot) {
+
+        console.log("Value >> " + JSON.stringify(snapshot));
+
+        if (JSON.stringify(snapshot) != 'null') {
+          console.log("Value >> " + JSON.stringify(snapshot));
+          console.log("Source Loc >> " + JSON.stringify(UserDetails.User.lat + "," + UserDetails.User.lang));
+          console.log("Source Location >> " + that.state.sourceLocation);
+
+          that.setState({
+            destinationLat: parseFloat(snapshot.val().latitude),
+            destinationLng: parseFloat(snapshot.val().longitude),
+            destinationLocation: snapshot.val().latitude + ',' + snapshot.val().longitude,
+          })
+
+          that.getDirections(that.state.sourceLocation, that.state.destinationLocation);
+        }
+        else {
+          Alert.alert(
+            "Info emploi",
+            "Votre travail n'a pas été accepté par le fournisseur de services jusqu'à présent. Vous ne pouvez donc pas suivre en ce moment",
+            [
+              {
+                text: 'Annuler',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+              },
+              {
+                text: 'OK',
+                onPress: () => {
+                  if (that.state.titlePage == "Dashboard")
+                    that.props.navigation.navigate("DashBoard");
+                  else if (that.state.titlePage == "ProviderDetails")
+                    that.props.navigation.navigate("ProviderDetails");
+                  else if (that.state.titlePage == "Chat")
+                    that.props.navigation.navigate("Chat");
+                  return true;
+                },
+              },
+            ]
+          );
+        }
+      });
+  }
+
+  componentWillMount() {
+
+    var that = this;
+
+    firebaseMessaging.notifications().onNotification((notification) => {
+
+      const { title, body, data } = notification;
+
+      console.log('Notification >>> ', notification);
+      console.log("Title, body  data >>> " + title + " >>>" + body + " >>> " + JSON.stringify(data));
+
+      if (title == "Chat Request Rejected") {
+        that.setState({
+          requestStatus: title,
+          title: title,
+          body: body,
+          data: data,
+          isJobAccepted: false,
+        })
+        that.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+      }
+      else if (title == "No Response") {
+        that.setState({
+          requestStatus: title,
+          title: title,
+          body: body,
+          data: data,
+        })
+        var jobData = {
+          id: '',
+          order_id: '',
+          employee_id: '',
+          image: '',
+          fcm_id: '',
+          name: '',
+          surName: '',
+          mobile: '',
+          description: '',
+          address: '',
+          lat: '',
+          lang: '',
+          service_name: '',
+          chat_status: '',
+          status: '',
+          delivery_address: '',
+          delivery_lat: '',
+          delivery_lang: '',
+        }
+        PendingJobRequest.Request = jobData;
+
+        that.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
+      }
+      else if (title == "Job Accepted") {
+        var pendingJobData = {
+          id: data.mainId,
+          order_id: data.orderId,
+          employee_id: data.ProviderId,
+          image: data.image,
+          fcm_id: data.fcmId,
+          name: data.name,
+          surName: data.surname,
+          mobile: data.mobile,
+          description: data.description,
+          address: data.address,
+          lat: data.lat,
+          lang: data.lang,
+          service_name: data.serviceName,
+          chat_status: data.chat_status,
+          status: data.status,
+          delivery_address: data.delivery_address,
+          delivery_lat: data.delivery_lat,
+          delivery_lang: data.delivery_lang,
+        }
+        PendingJobRequest.Request = pendingJobData;
+
+        console.log('After Job Accepted >>> ', JSON.stringify(PendingJobRequest.Request));
+
+        that.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
+      }
+      else if (title == "Job Rejected") {
+        that.setState({
+          isJobAccepted: false
+        })
+        var jobData = {
+          id: '',
+          order_id: '',
+          employee_id: '',
+          image: '',
+          fcm_id: '',
+          name: '',
+          surName: '',
+          mobile: '',
+          description: '',
+          address: '',
+          lat: '',
+          lang: '',
+          service_name: '',
+          chat_status: '',
+          status: '',
+          delivery_address: '',
+          delivery_lat: '',
+          delivery_lang: '',
+        }
+        PendingJobRequest.Request = jobData;
+        that.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
+      }
+      else if (title == "Job Completed") {
+        var jobData = {
+          id: '',
+          order_id: '',
+          employee_id: '',
+          image: '',
+          fcm_id: '',
+          name: '',
+          surName: '',
+          mobile: '',
+          description: '',
+          address: '',
+          lat: '',
+          lang: '',
+          service_name: '',
+          chat_status: '',
+          status: '',
+          delivery_address: '',
+          delivery_lat: '',
+          delivery_lang: '',
+        }
+        PendingJobRequest.Request = jobData;
+        that.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
+
+  handleBackButtonClick() {
+    if (this.state.titlePage == "Dashboard")
+      this.props.navigation.navigate("DashBoard");
+    else if (this.state.titlePage == "ProviderDetails")
+      this.props.navigation.navigate("ProviderDetails");
+    else if (this.state.titlePage == "Chat")
+      this.props.navigation.navigate("Chat");
+    return true;
+  }
+
+  async getDirections(startLoc, destinationLoc) {
+
+    console.log("Start Location : " + startLoc);
+    console.log("Destination Location : " + destinationLoc);
+
+    try {
+      let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030`)
+      let respJson = await resp.json();
+
+      let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
+      let coords = points.map((point, index) => {
+        return {
+          latitude: point[0],
+          longitude: point[1]
+        }
+      })
+      this.setState({
+        coords: coords,
+        isLoading: false,
+      })
+
+      return coords
+    } catch (error) {
+      alert(error)
+      return error
+    }
+  }
+
+  callPhoneTask = () => {
+    Linking.openURL('tel:' + this.state.providerMobile)
+  }
+
+  showRejectionAlert = (title, message) => {
+    console.log("Alert Show");
+    var that = this;
+    Alert.alert(
+      title,
+      message,
+      [
+        {
+          // text: 'Cancel',  
+          // onPress: () => console.log('Cancel Pressed'),  
+          // style: 'cancel',  
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            console.log("OK Press");
+            that.props.navigation.navigate("Dashboard")
+          },
+        },
+      ]
+    );
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+
+        <StatusBarPlaceHolder />
+
+        <MapView style={styles.map}
+          region={{
+            latitude: this.state.destinationLat,
+            longitude: this.state.destinationLng,
+            latitudeDelta: 0.922,
+            longitudeDelta: 0.0121,
+          }}
+          zoomEnabled={true}
+          minZoomLevel={16}
+          maxZoomLevel={20}>
+          {Platform.OS === 'ios' && (
+            <View style={styles.header}>
+              <View style={{ flex: 1, flexDirection: 'row', margin: 5 }}>
+                <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
+                  onPress={() => this.props.navigation.goBack()}>
+                  <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                    source={require('../icons/back_arrow_double.png')} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          <MapView.Marker
+            coordinate={{
+              latitude: this.state.sourceLat,
+              longitude: this.state.sourceLng,
+            }}
+            title={UserDetails.User.username}
+            description="Vous">
+            <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
+              source={require('../icons/home_marker.png')} />
+          </MapView.Marker>
+
+          <MapView.Marker
+            coordinate={{
+              latitude: this.state.destinationLat,
+              longitude: this.state.destinationLng,
+            }}
+            title="Fournisseur"
+            description={this.state.providerName}>
+
+            <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
+              source={require('../icons/car_marker.png')} />
+          </MapView.Marker>
+          <MapView.Polyline
+            coordinates={this.state.coords}
+            strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+            strokeColors={[
+              '#7F0000',
+              '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+              '#B24112',
+              '#E5845C',
+              '#238C23',
+              '#7F0000'
+            ]}
+            strokeWidth={6} />
+        </MapView>
+        <SlidingPanel
+          headerLayoutHeight={140}
+          headerLayout={() =>
+            <LinearGradient style={styles.headerLayoutStyle}
+              colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+              <View style={{ flex: 1, flexDirection: 'column', width: screenWidth }}>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 5 }}>
+                  <Image style={{ width: 20, height: 20, }}
+                    source={require('../icons/up_arrow.gif')}>
+                  </Image>
+                </View>
+
+                <View style={{ flexDirection: 'row', flex: 1 }}>
+
+                  <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
+                    source={{ uri: PendingJobRequest.Request.image }} />
+                  <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                    <Text style={{ marginRight: 200, color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
+                      numberOfLines={1}>
+                      {PendingJobRequest.Request.name + " " + PendingJobRequest.Request.surName}
+                    </Text>
+                    <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                      {PendingJobRequest.Request.service_name}
+                    </Text>
+                    <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                      {PendingJobRequest.Request.status == "Pending" ? "Demande de chat acceptée" : "Travail accepté"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.callView}>
+                    <TouchableOpacity style={{
+                      width: 40, height: 40, backgroundColor: 'black', borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, padding: 10, marginRight: 15
+                    }}
+                      onPress={this.callPhoneTask}>
+                      <Image style={styles.call}
+                        source={require('../icons/call.png')} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={{
+                      width: 40, height: 40, backgroundColor: 'black', borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, padding: 10
+                    }}
+                      onPress={() => this.props.navigation.navigate("Chat", {
+                        "providerId": PendingJobRequest.Request.employee_id,
+                        "providerName": PendingJobRequest.Request.name,
+                        "providerSurname": PendingJobRequest.Request.surName,
+                        "providerImage": PendingJobRequest.Request.image,
+                        "serviceName": PendingJobRequest.Request.service_name,
+                        "OrderId": PendingJobRequest.Request.order_id,
+                        'titlePage': "MapDirection"
+                      })}>
+                      <Image style={styles.call}
+                        source={require('../icons/chat.png')} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </LinearGradient>
+          }
+          slidingPanelLayout={() =>
+            <View style={styles.slidingPanelLayoutStyle}>
+              <View style={styles.containerSlide}>
+
+              </View>
+            </View>
+          }>
+        </SlidingPanel>
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    width: screenWidth,
+    height: screenHeight,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+    marginBottom: 140,
+    marginTop: Platform.OS === 'ios' ? 20 : 0,
+  },
+  header: {
+    flexDirection: 'row',
+    width: '100%',
+    height: 50,
+    paddingLeft: 10,
+    paddingRight: 20,
+    paddingTop: 5,
+    paddingBottom: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  loaderStyle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  headerLayoutStyle: {
+    width: screenWidth,
+    height: 140,
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  containerSlide: {
+    flex: 1,
+    flexDirection: 'column',
+    width: screenWidth,
+    height: screenHeight,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    backgroundColor: colorBg,
+  },
+  slidingPanelLayoutStyle: {
+    width: screenWidth,
+    height: screenHeight,
+    backgroundColor: colorYellow,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  callView: {
+    flex: 1,
+    flexDirection: 'row',
+    height: 115,
+    color: 'white',
+    alignContent: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    end: 0,
+    paddingRight: 15,
+  },
+  call: {
+    width: 20,
+    height: 20,
+  },
+})
