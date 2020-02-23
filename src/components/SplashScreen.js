@@ -56,13 +56,13 @@ class SplashScreen extends Component {
 
          // // Your web app's Firebase configuration
          var config = {
-            apiKey: "AIzaSyD09zpn6kbC99gHv5FLdrhJgdbWCctWCHQ",
-            authDomain: "harfa-47425.firebaseapp.com",
-            databaseURL: "https://harfa-47425.firebaseio.com",
-            projectId: "harfa-47425",
-            storageBucket: "harfa-47425.appspot.com",
-            messagingSenderId: "28855864302",
-            appId: "1:28855864302:web:ec0c0de5d989bf1e"
+            apiKey: Config.apiKey,
+            authDomain: Config.authDomain,
+            databaseURL: Config.databaseURL,
+            projectId: Config.projectId,
+            storageBucket: Config.storageBucket,
+            messagingSenderId: Config.messagingSenderId,
+            appId: Config.appId
         };
         // Initialize Firebase
         if (!firebase.apps.length) {
