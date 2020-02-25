@@ -17,9 +17,9 @@ const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
-const MOBILE_EXISTS_URL = Config.BASEURL+'users/check/mobile'
-const USER_GET_PROFILE = Config.BASEURL+"users/"
-const PENDING_JOB = Config.BASEURL+"jobrequest/user_status_check/";
+const MOBILE_EXISTS_URL = Config.baseURL+'users/check/mobile'
+const USER_GET_PROFILE = Config.baseURL+"users/"
+const PENDING_JOB = Config.baseURL+"jobrequest/user_status_check/";
 
 export default class VerificationScreen extends Component {
 

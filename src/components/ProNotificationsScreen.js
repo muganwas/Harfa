@@ -13,7 +13,7 @@ const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0' 
 const screenWidth = Dimensions.get('window').width;
 
-const NOTIFICATION_URL = Config.BASEURL+"";
+const NOTIFICATION_URL = Config.baseURL+"";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

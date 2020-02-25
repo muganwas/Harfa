@@ -21,8 +21,8 @@ const colorRed = 'red';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const BOOKING_REQUEST = Config.BASEURL+"jobrequest/addjobrequest";
-const PRO_GET_PROFILE = Config.BASEURL+"employee/";
+const BOOKING_REQUEST = Config.baseURL+"jobrequest/addjobrequest";
+const PRO_GET_PROFILE = Config.baseURL+"employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

@@ -15,7 +15,7 @@ const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const PRO_INFO_UPDATE = Config.BASEURL + "employee/";
+const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 
 export default class ProDialogLogout extends Component {
 

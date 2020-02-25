@@ -41,7 +41,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-const GET_IMAGE_URL = Config.BASEURL+"thirdpartyapi/chatupload"
+const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
 export default class ProChatScreen extends Component {
 

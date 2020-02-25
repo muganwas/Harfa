@@ -19,7 +19,7 @@ const colorBg = '#E8EEE9';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const REVIEW_RATING = Config.BASEURL + 'jobrequest/ratingreview';
+const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

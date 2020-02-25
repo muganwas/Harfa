@@ -30,9 +30,9 @@ const options = {
     quality: 1
 };
 
-const PRO_GET_PROFILE = Config.BASEURL+"employee/";
-const PRO_IMAGE_UPDATE = Config.BASEURL+"employee/upload/";
-const PRO_INFO_UPDATE = Config.BASEURL+"employee/";
+const PRO_GET_PROFILE = Config.baseURL+"employee/";
+const PRO_IMAGE_UPDATE = Config.baseURL+"employee/upload/";
+const PRO_INFO_UPDATE = Config.baseURL+"employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

@@ -19,7 +19,7 @@ const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const REGISTER_URL = Config.BASEURL+"users/register/create";
+const REGISTER_URL = Config.baseURL+"users/register/create";
 
 const options = {
     title: 'Select a photo',
@@ -197,7 +197,7 @@ export default class RegisterScreen extends Component {
                         },
                         body: userData
                     })
-                    .then((response) => response.json())
+                    .then(response => response.json())
                     .then((responseJson) => {
                         console.log("Response Register" + JSON.stringify(responseJson));
                         if (responseJson.result) {
@@ -271,7 +271,7 @@ export default class RegisterScreen extends Component {
                         })
                         Alert.alert(  
                             "OOPS !",  
-                            "Something went wrong, Try again later",  
+                            "Something went wrong, Try again later", 
                             [  
                               {  
                                 text: 'Cancel',  

@@ -28,9 +28,9 @@ const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
-const USER_GET_PROFILE = Config.BASEURL+"users/";
-const USER_IMAGE_UPDATE = Config.BASEURL+"users/upload/";
-const USER_INFO_UPDATE = Config.BASEURL+"users/"
+const USER_GET_PROFILE = Config.baseURL+"users/";
+const USER_IMAGE_UPDATE = Config.baseURL+"users/upload/";
+const USER_INFO_UPDATE = Config.baseURL+"users/"
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

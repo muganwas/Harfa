@@ -5,7 +5,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import CheckBox from 'react-native-check-box';
 import Config from './Config';
 
-const SERVICES_URL = Config.BASEURL+'service/getall'
+const SERVICES_URL = Config.baseURL+'service/getall'
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';

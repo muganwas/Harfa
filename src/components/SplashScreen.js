@@ -34,10 +34,10 @@ import ProPendingRequest from './ProPendingJobRequest';
 const colorPrimary = '#262425';
 const colorPrimaryDark = '#000000';
 
-const PRO_GET_PROFILE = Config.BASEURL+"employee/";
-const USER_GET_PROFILE = Config.BASEURL+"users/";
-const PENDING_JOB_CUSTOMER = Config.BASEURL+"jobrequest/user_status_check/";
-const PENDING_JOB_PROVIDER = Config.BASEURL+"jobrequest/customer_status_check/";
+const PRO_GET_PROFILE = Config.baseURL+"employee/";
+const USER_GET_PROFILE = Config.baseURL+"users/";
+const PENDING_JOB_CUSTOMER = Config.baseURL+"jobrequest/user_status_check/";
+const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
 
 class SplashScreen extends Component {
 
@@ -64,6 +64,7 @@ class SplashScreen extends Component {
             messagingSenderId: Config.messagingSenderId,
             appId: Config.appId
         };
+        console.log(config)
         // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(config);

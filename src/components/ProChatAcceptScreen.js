@@ -20,8 +20,8 @@ const colorBg = '#E8EEE9';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const USER_GET_PROFILE = Config.BASEURL+"users/"
-const REJECT_ACCEPT_REQUEST = Config.BASEURL+"jobrequest/updatejobrequest";
+const USER_GET_PROFILE = Config.baseURL+"users/"
+const REJECT_ACCEPT_REQUEST = Config.baseURL+"jobrequest/updatejobrequest";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

@@ -20,9 +20,9 @@ const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const REGISTER_URL = Config.BASEURL + "users/register/create";
-const PENDING_JOB_CUSTOMER = Config.BASEURL + "jobrequest/user_status_check/";
-const AUTHENTICATE_URL = Config.BASEURL + 'users/authenticate'
+const REGISTER_URL = Config.baseURL + "users/register/create";
+const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/user_status_check/";
+const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate'
 
 var that;
 

@@ -17,8 +17,8 @@ const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
-const MOBILE_EXISTS_URL = Config.BASEURL+'employee/check/mobile'
-const PENDING_JOB_PROVIDER = Config.BASEURL+"jobrequest/customer_status_check/";
+const MOBILE_EXISTS_URL = Config.baseURL+'employee/check/mobile'
+const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
 
 export default class ProVerificationScreen extends Component {
 

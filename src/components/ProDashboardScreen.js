@@ -35,12 +35,12 @@ const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const PRO_INFO_UPDATE = Config.BASEURL + "employee/";
-const BOOKING_HISTORY = Config.BASEURL + 'jobrequest/employee_request/';
-const REVIEW_RATING = Config.BASEURL + 'jobrequest/ratingreview';
-const RECENT_USER = Config.BASEURL + 'jobrequest/usergroupby/';
-const REJECT_ACCEPT_REQUEST = Config.BASEURL + "jobrequest/updatejobrequest";
-const ASK_FOR_REVIEW = Config.BASEURL + "notification/addreviewrequest";
+const PRO_INFO_UPDATE = Config.baseURL + "employee/";
+const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/';
+const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
+const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
+const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
+const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

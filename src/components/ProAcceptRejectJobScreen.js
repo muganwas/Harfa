@@ -21,8 +21,8 @@ const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const REJECT_ACCEPT_REQUEST = Config.BASEURL+"jobrequest/updatejobrequest";
-const GET_IMAGE_URL = Config.BASEURL+"thirdpartyapi/chatupload"
+const REJECT_ACCEPT_REQUEST = Config.baseURL+"jobrequest/updatejobrequest";
+const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

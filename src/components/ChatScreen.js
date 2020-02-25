@@ -21,7 +21,7 @@ const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-const GET_IMAGE_URL = Config.BASEURL+"thirdpartyapi/chatupload"
+const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
 function StatusBarPlaceHolder() {
     return (

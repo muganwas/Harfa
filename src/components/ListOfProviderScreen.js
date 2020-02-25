@@ -17,7 +17,7 @@ const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const GET_ALL_PROVIDER_URL = Config.BASEURL+'job/serviceprovider/';
+const GET_ALL_PROVIDER_URL = Config.baseURL+'job/serviceprovider/';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

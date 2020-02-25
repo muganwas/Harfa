@@ -20,9 +20,9 @@ const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const CHECK_EMAIL = Config.BASEURL + "employee/check/email";
-const PENDING_JOB_PROVIDER = Config.BASEURL+"jobrequest/customer_status_check/";
-const AUTHENTICATE_URL = Config.BASEURL+"employee/authenticate"
+const CHECK_EMAIL = Config.baseURL + "employee/check/email";
+const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
+const AUTHENTICATE_URL = Config.baseURL+"employee/authenticate"
 
 var that;
 

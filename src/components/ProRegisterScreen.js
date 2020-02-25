@@ -16,7 +16,7 @@ const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const REGISTER_URL = Config.BASEURL+'employee/register';
+const REGISTER_URL = Config.baseURL+'employee/register';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
