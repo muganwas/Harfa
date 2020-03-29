@@ -9,11 +9,12 @@ import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import ProviderDetails from './ProviderDetails';
+import Axios from 'axios';
 
-const colorPrimary = '#FFBF0F';
+//const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+//const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -137,22 +138,13 @@ export default class ProRegisterFBScreen extends Component {
                      isLoading: true
                  })
                  
-                 fetch(REGISTER_URL , {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body:  JSON.stringify(userData)
-                 })
-                 .then((response) => response.json())
+                 Axios.post(REGISTER_URL , {data:JSON.stringify(userData)})
                  .then((responseJson) => {
-                    
-                    console.log("Response Register >> "+JSON.stringify(responseJson));
+                    console.log(responseJson);
                     this.setState({
                         isLoading: false
                     })
-                    if(responseJson.result)
+                    if(responseJson.status === 200 && responseJson.data.createdDate)
                     {
                         const id = responseJson.data.id;
         
@@ -188,7 +180,7 @@ export default class ProRegisterFBScreen extends Component {
                     {
                         Alert.alert(
                             "OOPS !",
-                            responseJson.message,
+                            responseJson.data.message,
                             [
                                 {
                                     text: 'Cancel',

@@ -1,6 +1,6 @@
 import { 
-  BASEURL, 
-  ALTBASEURL,
+  BASE_URL_CLOUD,
+  BASE_URL_LOCAL,
   FIREBASE_API_KEY, 
   FIREBASE_APP_ID, 
   FIREBASE_AUTH_DOMAIN, 
@@ -9,8 +9,9 @@ import {
   FIREBASE_STORAGE_BUCKET,
   FIREBASE_MESSAGING_SENDER_ID
 } from 'react-native-dotenv';
+//local
 export default class Config {
-  static baseURL = BASEURL
+  static baseURL = BASE_URL_LOCAL
   static apiKey = FIREBASE_API_KEY
   static authDomain = FIREBASE_AUTH_DOMAIN
   static databaseURL = FIREBASE_DATABASE_URL

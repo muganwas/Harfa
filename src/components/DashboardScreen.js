@@ -23,7 +23,7 @@ import PendingJobRequest from './PendingJobRequest';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
@@ -89,8 +89,8 @@ class DashBoardScreen extends Component {
 
             const { title, body, data } = notification;
       
-            console.log('Notification >>> ', notification);
-            console.log("Title, body  data >>> " + title + " >>>" + body+ " >>> "+JSON.stringify(data));
+            //console.log('Notification >>> ', notification);
+            //console.log("Title, body  data >>> " + title + " >>>" + body+ " >>> "+JSON.stringify(data));
       
             if (title == "Chat Request Accepted") {
               this.setState({
@@ -193,7 +193,7 @@ class DashBoardScreen extends Component {
                 }
                 PendingJobRequest.Request = pendingJobData;
 
-                console.log('After Job Accepted >>> ', JSON.stringify(PendingJobRequest.Request));
+                //console.log('After Job Accepted >>> ', JSON.stringify(PendingJobRequest.Request));
 
                 this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
@@ -313,7 +313,6 @@ class DashBoardScreen extends Component {
 
     //GridView Items
     renderItem = ({ item }) => {
-
         return (
             <TouchableOpacity style={{
                 flex: 1, flexDirection: 'column', margin: 5, padding: 10,
@@ -330,8 +329,8 @@ class DashBoardScreen extends Component {
                     this.props.navigation.navigate("ListOfProvider", {
                         'serviceName': item.service_name, 
                         'serviceId': item.id   })}}>
-                <Image style={{ width: 30, height: 30, margin: 10 }}
-                    source={{ uri: item.image }} />
+                <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
+                    source={{ uri:item.image}} />
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
                     <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
                         {item.service_name}
@@ -357,7 +356,7 @@ class DashBoardScreen extends Component {
         fetch(SERVICES_URL)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : "+JSON.stringify(responseJson))
+                //console.log("Response : "+JSON.stringify(responseJson))
                 this.setState({
                     dataSource: responseJson.data,  //data is key
                     isLoading: false

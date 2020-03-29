@@ -1,12 +1,10 @@
 /**
  * @format
  */
-
-import {AppRegistry} from 'react-native';
+import {AppRegistry, YellowBox} from 'react-native';
 import App from './src/components/SplashScreen';
 import {name as appName} from './app.json';
 
-import { YellowBox } from 'react-native';
 
 YellowBox.ignoreWarnings([
   'Warning: componentWillMount is deprecated',
@@ -23,6 +21,7 @@ YellowBox.ignoreWarnings([
   'DatePickerAndroid has been merged',
   'VirtualizedLists should never be nested inside plain ScrollViews with the same orientation',
   'You should only render one navigator explicitly in your app, and other navigators should be rendered by including them in that navigator'
-])
+]);
 
-AppRegistry.registerComponent(appName, () => App);
+
+AppRegistry.registerComponent(appName, () => App );

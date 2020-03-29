@@ -76,6 +76,7 @@ export default class MyProfileScreen extends Component {
 
     componentDidMount() {
         console.log("My Profile Mount")
+        console.log(this.state)
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
     }
 
@@ -143,6 +144,7 @@ export default class MyProfileScreen extends Component {
             
                 if(responseJson.result)
                 {
+                    console.log(responseJson.data.image)
                     this.setState({
                         userId: responseJson.data.id,
                         imageSource: responseJson.data.image,
