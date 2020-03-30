@@ -188,6 +188,7 @@ class ProBookingScreen extends Component {
     };
 
     renderBookingHistoryItem = ({ item }) => {
+        const userImage = item.user_details.image;
         return (
             <TouchableOpacity style={{flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
                 shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,}}
@@ -197,7 +198,7 @@ class ProBookingScreen extends Component {
                 <View style={styles.itemContainer}>
                     <Image
                         style={{ height: 45, width: 45, alignSelf: 'flex-start', alignContent: 'flex-start', borderRadius: 100 }}
-                        source={{uri: item.user_details.image}}/>
+                        source={userImage ? {uri: item.user_details.image} : require('../images/generic_avatar.png')}/>
                     <View style={{ flexDirection: 'column' }}>
                         <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                             {item.user_details.username}

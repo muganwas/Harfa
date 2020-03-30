@@ -28,12 +28,15 @@ export default class CustomMenuLayout extends Component {
     }
 
     render() {
+        const imageSource = ProviderDetails.Provider.imageSource; 
+        console.log('custom menu')
+        console.log(imageSource)
         return (
             <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
                 <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>
                     <ScrollView>
                         <View style={styles.header}>
-                            <Image source={{uri: ProviderDetails.Provider.imageSource}} style={styles.headerImage}/>
+                            <Image source={ imageSource ? {uri: imageSource} : require('../images/generic_avatar.png')} style={styles.headerImage}/>
                             <Text style={{fontSize: 12, color: 'white', 
                                    alignItems: 'center',justifyContent: 'center',marginTop: 5,}}>
                                 Welcome</Text>

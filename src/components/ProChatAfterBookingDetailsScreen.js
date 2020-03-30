@@ -380,6 +380,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
@@ -389,7 +390,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -471,6 +472,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
+        const receiverImage = this.props.navigation.state.params.receiverImage;
         return (
 
             <View style={styles.container}>
@@ -492,7 +494,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10, }}
-                                source={{ uri: this.props.navigation.state.params.receiverImage }} />
+                                source={receiverImage ? { uri: receiverImage } : require('../images/generic_avatar.png')} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
                                 {this.state.receiverName}
                             </Text>

@@ -378,6 +378,8 @@ export default class ChatAfterBookingDetailsScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
+        console.log('sender iamge' + senderImage)
         return (
             this.state.senderId != item.senderId
                 ?
@@ -387,7 +389,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -463,6 +465,8 @@ export default class ChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
+        const providerImage = this.props.navigation.state.params.providerImage;
+        console.log('sender iamge' + providerImage)
         return (
 
             <View style={styles.container}>
@@ -483,7 +487,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={{ uri: this.props.navigation.state.params.providerImage }} />
+                                source={providerImage ? { uri: providerImage } : require('../images/generic_avatar.png')} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                                 {this.state.receiverName + " "}{this.state.surname}
                             </Text>

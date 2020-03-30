@@ -402,7 +402,13 @@ class ProMyProfileScreen extends Component {
                         justifyContent: 'center', alignItems: 'center', }}>
                         <Image
                             style={{ width: 100, height: 100, borderRadius: 100, marginTop: 20 }}
-                            source={this.state.galleryCameraImage == '' ? {uri: this.state.imageSource}: this.state.imageSource} />
+                            source={
+                                this.state.galleryCameraImage == '' ? 
+                                this.state.imageSource ? 
+                                {uri: this.state.imageSource} : 
+                                require('../images/generic_avatar.png') :
+                                this.state.imageSource
+                            }/>
 
                         <TouchableOpacity style={{
                             width: 40, height: 40, alignSelf: 'flex-end', alignContent: 'center', justifyContent: 'center', borderRadius: 50, backgroundColor: '#fff',

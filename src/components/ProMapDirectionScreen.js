@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, BackHandler, 
   Linking, PermissionsAndroid, Alert, StatusBar, Platform, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import firebase from 'firebase';
@@ -13,11 +13,11 @@ import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog'
 
-const colorPrimary = '#FFBF0F';
+//const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
+//const colorGray = '#C0C0C0' 
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -35,8 +35,7 @@ function StatusBarPlaceHolder() {
             backgroundColor: colorPrimaryDark}}>
             <StatusBar
                 barStyle="light-content"/>
-        </View>
-        :
+        </View> :
         <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
     );
 }

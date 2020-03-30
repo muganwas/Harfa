@@ -30,6 +30,7 @@ import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
 import ProPendingRequest from './ProPendingJobRequest';
+import Axios from 'axios';
  
 const colorPrimary = '#262425';
 const colorPrimaryDark = '#000000';
@@ -156,7 +157,7 @@ class SplashScreen extends Component {
                     },
                  })
                  .then((response) => response.json())
-                 .then((responseJson) => {
+                 .then(responseJson => {
                     
                     console.log("Response autoLogin Provider >> "+JSON.stringify(responseJson));
                    
@@ -207,11 +208,12 @@ class SplashScreen extends Component {
                         );
                     }
                  })
-                .catch((error) => {
+                .catch(error => {
                     this.setState({
                         isLoading: false
                     })
-                    alert("Error "+error);
+                    alert("Error " + error);
+                    console.log('error in autologin')
                     console.log(JSON.stringify(responseJson));
                 });
             }

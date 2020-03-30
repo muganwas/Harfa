@@ -30,17 +30,19 @@ export default class CustomMenuLayout extends Component {
     }
 
     render() {
+        const imageSource = UserDetails.User.image; 
+        console.log(imageSource)
         return (
             <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
                 <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>
                     <ScrollView>
                         <View style={styles.header}>
-                            <Image source={{uri: UserDetails.User.image == "" ? 'http://laabhaa.in/harfa/api/uploads/users/no-image.jpg' : UserDetails.User.image}} style={styles.headerImage}/>
+                            <Image source={ imageSource ? {uri: imageSource} : require('../images/generic_avatar.png')} style={styles.headerImage}/>
                             <Text style={[styles.textHeader, {color: 'white'}]}>{UserDetails.User.username}</Text>
                         </View>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() =>{ 
+                            onPress={() => { 
                                 this.props.navigation.navigate("DashBoard")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                             }}>

@@ -12,6 +12,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import PendingJobRequest from './PendingJobRequest';
 import UserDetails from './UserDetails';
+import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -23,6 +24,7 @@ const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const REJECT_ACCEPT_REQUEST = Config.baseURL+"jobrequest/updatejobrequest";
 
 function StatusBarPlaceHolder() {
   return (
@@ -335,6 +337,118 @@ export default class MapDirectionScreen extends Component {
     );
   }
 
+  openCompleteConfirmation = () => {
+    Alert.alert(  
+      "COMPLETED",  
+      "Was the job completed successfully?",  
+      [  
+          {  
+              text: 'Cancel',  
+              onPress: () => console.log('Cancel Pressed'),  
+              style: 'cancel',  
+          },  
+          {
+            text: 'Yes', 
+            onPress: () => {this.jobCompleteTask()},
+          },  
+      ]  
+    ); 
+  }
+
+  jobCompleteTask = () => {
+
+    this.setState({
+      isLoading: true
+    })
+
+    const data = {
+      main_id: PendingJobRequest.Request.id,
+      chat_status: '1',
+      status: 'Completed',
+      'notification': {
+        "fcm_id": PendingJobRequest.Request.fcm_id,
+        "title": "Job Completed",
+        "body": 'Your job request has been completed by '+' Request Id : ' + PendingJobRequest.Request.order_id,
+        "data": {
+          ProviderId: PendingJobRequest.Request.employee_id,
+          image: PendingJobRequest.Request.image,
+          fcmId: PendingJobRequest.Request.fcm_id,
+          name: PendingJobRequest.Request.name,
+          surname: PendingJobRequest.Request.surname,
+          mobile: PendingJobRequest.Request.mobile,
+          description: PendingJobRequest.Request.description,
+          address: PendingJobRequest.Request.address,
+          lat: PendingJobRequest.Request.lat,
+          lang: PendingJobRequest.Request.lang,
+          serviceName: PendingJobRequest.Request.service_name,
+          orderId: PendingJobRequest.Request.order_id,
+          mainId: PendingJobRequest.Request.id,
+          chat_status: PendingJobRequest.Request.chat_status,
+          status: PendingJobRequest.Request.status,
+          delivery_address: PendingJobRequest.Request.delivery_address,
+          delivery_lat: PendingJobRequest.Request.delivery_lat,
+          delivery_lang: PendingJobRequest.Request.delivery_lang,
+        },
+      }
+    }
+
+    console.log("Complete Job >> " + JSON.stringify(data));
+
+    fetch(REJECT_ACCEPT_REQUEST, {
+      method: "POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log("Response : " + JSON.stringify(responseJson))
+        if (responseJson.result) {
+          this.setState({
+            isLoading: false,
+            isAcceptJob: true,
+          })
+
+          var jobData = {
+            id: '' ,
+            order_id: '',
+            employee_id: '',
+            image: '', 
+            fcm_id: '',
+            name: '',
+            surName: '',
+            mobile: '',
+            description: '',
+            address: '',
+            lat: 0,
+            lang: 0,
+            service_name: '',
+            chat_status : '',
+            status : '',
+            delivery_address: '',
+            delivery_lat: 0,
+            delivery_lang: 0
+          }
+          PendingJobRequest.Request = jobData;
+          this.props.navigation.navigate("DashBoard");
+        }
+        else {
+          Alert.alert("OOPS!", "Something went wrong, try again later");
+          this.setState({
+            isLoading: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("Error >>> " + error);
+        this.setState({
+          isLoading: false,
+        });
+      })
+  }
+
   render() {
     return (
       <View style={styles.container}>
@@ -461,7 +575,12 @@ export default class MapDirectionScreen extends Component {
           slidingPanelLayout={() =>
             <View style={styles.slidingPanelLayoutStyle}>
               <View style={styles.containerSlide}>
-
+                <TouchableOpacity style={styles.buttonContainer}
+                    onPress={this.openCompleteConfirmation}>
+                    <Text style={styles.text}>
+                      Completed
+                    </Text>
+                </TouchableOpacity>
               </View>
             </View>
           }>
@@ -534,6 +653,26 @@ const styles = StyleSheet.create({
     backgroundColor: colorYellow,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  buttonContainer: {
+    width: 200,
+    paddingTop: 10,
+    backgroundColor: '#000000',
+    paddingBottom: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    borderRadius: 5,
+    borderColor: colorYellow,
+    borderWidth: 2,
+    marginBottom: 25,
+    textAlign: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  text: {fontSize: 16,
+    color: 'white',
+    textAlign: 'center',
+    justifyContent: 'center',
   },
   callView: {
     flex: 1,

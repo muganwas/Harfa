@@ -173,7 +173,7 @@ export default class ProChatScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
+    getImageURL = async imageObject => {
        
         let message = {
             textMessage: 'uploading',
@@ -351,7 +351,7 @@ export default class ProChatScreen extends Component {
         });
     }
 
-    sendImageTask = async (imageURL) => {
+    sendImageTask = async imageURL => {
        
         console.log("Sender Id : "+this.state.senderId);
         console.log("Receiver Id : "+this.state.receiverId);
@@ -424,6 +424,7 @@ export default class ProChatScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
@@ -433,7 +434,7 @@ export default class ProChatScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -515,6 +516,7 @@ export default class ProChatScreen extends Component {
     }
 
   render() {
+      const receiverImage = this.state.receiverImage;
     return (
 
         <View style={styles.container}>
@@ -536,7 +538,7 @@ export default class ProChatScreen extends Component {
                         </TouchableOpacity>
 
                         <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                            source={{ uri: this.state.receiverImage }} />
+                            source={ receiverImage ? { uri: receiverImage } : require('../images/generic_avatar.png')} />
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                             {this.state.receiverName}
                         </Text>

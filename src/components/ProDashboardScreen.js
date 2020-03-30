@@ -70,7 +70,7 @@ class ProDashBoardScreen extends Component {
             mainId: '',
             reviewData: '',
             width: Dimensions.get('window').width,
-            status: ProviderDetails.Provider.status == 1 ? "ONLINE" : "OFFLINE",
+            status: ProviderDetails.Provider.status == '1' ? "ONLINE" : "OFFLINE",
             availBackground: ProviderDetails.Provider.status == '1' ? 'green' : 'red',
             dataSource: [],
             dataUserSource: [],
@@ -267,6 +267,7 @@ class ProDashBoardScreen extends Component {
     }
 
     renderRecentMessageItem = ({ item }) => {
+        const customerImage = item.image;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => this.props.navigation.navigate("ProChat", {
@@ -279,7 +280,7 @@ class ProDashBoardScreen extends Component {
                 })}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.image }} />
+                        source={ customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -329,12 +330,13 @@ class ProDashBoardScreen extends Component {
     }
 
     renderRecentUserItem = ({ item }) => {
+        const recentUserImage = item.user_details.image;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={()=> this.props.navigation.navigate("ProBooking")}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.user_details.image }} />
+                        source={ recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -772,6 +774,9 @@ class ProDashBoardScreen extends Component {
     }
 
     render() {
+        const customerImage = ProPendingJobRequest.Request.image;
+        console.log('customer image')
+        console.log(customerImage)
         return (
             <View style={styles.container}>
 
@@ -874,7 +879,7 @@ class ProDashBoardScreen extends Component {
                                 </View>
                             </View>
                         }
-                        {this.state.isRecentUser &&
+                        {/*this.state.isRecentUser &&
                             <View style={styles.mainContainer}>
                                 <View style={styles.recentMessageHeader}>
                                     <Text style={{
@@ -897,7 +902,7 @@ class ProDashBoardScreen extends Component {
                                         showsVerticalScrollIndicator={false}
                                         extraData={this.state} />
                                 </View>
-                            </View>
+                            </View>*/
                         }
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false, "", "", "", "", "")}>
@@ -926,7 +931,7 @@ class ProDashBoardScreen extends Component {
                         <LinearGradient style={styles.pendingJobStyle}
                             colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                             <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                                source={{ uri: ProPendingJobRequest.Request.image }} />
+                                source={ customerImage ? { uri: customerImage } : require('../images/generic_avatar.png')} />
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
                                     {ProPendingJobRequest.Request.name}
