@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
 import AsyncStorage from '@react-native-community/async-storage';
 import 'react-native-gesture-handler';
-import firebaseMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import Config from './Config';
@@ -23,7 +23,7 @@ const colorBg = '#E8EEE9';
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
 const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/user_status_check/";
-const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate'
+const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate';
 
 var that;
 
@@ -149,7 +149,7 @@ export default class FacebookGoogleScreen extends Component {
             isLoading: true,
         })
 
-        firebaseMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -268,7 +268,7 @@ export default class FacebookGoogleScreen extends Component {
             isLoading: true,
         })
 
-        firebaseMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {

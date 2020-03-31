@@ -17,6 +17,7 @@
 		2D02E4BD1E0B4A84006451C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* HarfaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* HarfaTests.m */; };
+		6A9B534B2433338A00888CA0 /* harfa_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A9B53492433338A00888CA0 /* harfa_logo.png */; };
 		8442F45623A7839C00AF74B4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8442F45523A7839C00AF74B4 /* GoogleService-Info.plist */; };
 		8467D76523857BAD00A0141D /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8467D76423857BAD00A0141D /* UserNotifications.framework */; };
 		8467D76723857BC900A0141D /* libRNFirebase.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8467D76623857BC900A0141D /* libRNFirebase.a */; };
@@ -69,6 +70,7 @@
 		468651C7F2303AD5620B1C8D /* libPods-Harfa-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Harfa-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		486D4437C5D7173FFA90E121 /* Pods-Harfa-tvOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Harfa-tvOSTests.debug.xcconfig"; path = "Target Support Files/Pods-Harfa-tvOSTests/Pods-Harfa-tvOSTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5E51D9DDCCDFA52260DF1E5A /* Pods-HarfaTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HarfaTests.release.xcconfig"; path = "Target Support Files/Pods-HarfaTests/Pods-HarfaTests.release.xcconfig"; sourceTree = "<group>"; };
+		6A9B53492433338A00888CA0 /* harfa_logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = harfa_logo.png; path = ../src/images/harfa_logo.png; sourceTree = "<group>"; };
 		72DF307B94DFC313AC426E26 /* libPods-HarfaTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-HarfaTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		76F6345C406301E209900C7A /* libPods-Harfa-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Harfa-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E072601889368C880CB8DA3 /* Pods-Harfa-tvOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Harfa-tvOSTests.release.xcconfig"; path = "Target Support Files/Pods-Harfa-tvOSTests/Pods-Harfa-tvOSTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 		13B07FAE1A68108700A75B9A /* Harfa */ = {
 			isa = PBXGroup;
 			children = (
+				6A9B53492433338A00888CA0 /* harfa_logo.png */,
 				8442F45523A7839C00AF74B4 /* GoogleService-Info.plist */,
 				84EFF1182386542F00F15C40 /* Harfa.entitlements */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
@@ -395,6 +398,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
 				8442F45623A7839C00AF74B4 /* GoogleService-Info.plist in Resources */,
+				6A9B534B2433338A00888CA0 /* harfa_logo.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

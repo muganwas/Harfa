@@ -3,7 +3,7 @@ import {View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityInd
    Linking, Alert, BackHandler, StatusBar, Platform } from 'react-native';
 import { Rating, AirbnbRating } from 'react-native-ratings';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import Toast, {DURATION} from 'react-native-easy-toast';
 import UserDetails from './UserDetails';
 import Config from './Config';
@@ -25,6 +25,7 @@ const BOOKING_REQUEST = Config.baseURL+"jobrequest/addjobrequest";
 const PRO_GET_PROFILE = Config.baseURL+"employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const database = firebase.database();
 
 function StatusBarPlaceHolder() {
   return (
@@ -299,11 +300,21 @@ export default class ProviderDetailsScreen extends Component {
       }
   }
 
-  componentWillMount(){
+  componentDidMount(){
 
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    const { providerId } = this.state;
+    const userRef = database.ref(`users/${providerId}`);
+    /** if provider id is available listen for changes in his database */
+    if (providerId) {
+        userRef.on('child_changed', result => {
+            if (result.key === "status") this.setState({status: result.val()});
+        });
+    }
+    else console.log('provider id unavailable')
+    
 
-    firebaseMessaging.notifications().onNotification((notification) => {
+    /*firebase.notifications().onNotification((notification) => {
 
       const { title, body, data } = notification;
 
@@ -481,7 +492,7 @@ export default class ProviderDetailsScreen extends Component {
       PendingJobRequest.Request = jobData;
       this.showRejectionAlert("JOB COMPLETED", "Your job has been completed.")
       }
-    });
+    });*/
   }
 
   componentWillUnmount() {

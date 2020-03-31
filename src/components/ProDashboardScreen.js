@@ -8,9 +8,8 @@ import { createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import { DrawerActions } from 'react-navigation-drawer';
 import WaitingDialog from './WaitingDialog';
-import firebase from 'firebase';
 import RNExitApp from 'react-native-exit-app';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast, { DURATION } from 'react-native-easy-toast';
 import ReviewDialog from './ReviewDialog';
@@ -41,6 +40,7 @@ const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
+const database = firebase.database();
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -93,19 +93,20 @@ class ProDashBoardScreen extends Component {
     }
 
     //Get All Bookings
-    componentDidMount() {
+    async componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             console.log("willFocus runs >>")
             this.onRefresh();
         });
+
     }
 
     componentWillMount() {
 
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
 
-        firebaseMessaging.notifications().onNotification((notification) => {
+        firebase.notifications().onNotification((notification) => {
 
             const { title, body, data } = notification;
 
@@ -130,7 +131,6 @@ class ProDashBoardScreen extends Component {
 
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
         this.notificationOpenedListener();
     }
 
@@ -367,22 +367,7 @@ class ProDashBoardScreen extends Component {
         )
     }
 
-    changeAvailabilityStaus = () => {
-        var statusValue = null;
-        this.setState({
-            isLoading: true,
-        })
-
-        if (this.state.status == 'ONLINE') {
-            statusValue = '0';
-        }
-        else if (this.state.status == 'OFFLINE') {
-            statusValue = '1';
-        }
-
-        const userData = {
-            "status": statusValue
-        }
+    updateAvailabilityInMongoDB = userData => {
 
         fetch(PRO_INFO_UPDATE + ProviderDetails.Provider.providerId,
             {
@@ -431,6 +416,47 @@ class ProDashBoardScreen extends Component {
                 })
             })
             .done()
+
+    }
+
+    changeAvailabilityStaus = () => {
+        var statusValue = null;
+        const providerId = ProviderDetails.Provider.providerId;
+        const usersRef = database.ref('users/' + providerId);
+        this.setState({
+            isLoading: true,
+        })
+
+        if (this.state.status == 'ONLINE') {
+            statusValue = '0';
+        }
+        else if (this.state.status == 'OFFLINE') {
+            statusValue = '1';
+        }
+
+        const userData = {
+            "status": statusValue
+        }
+        usersRef.once('value', data => {
+            if (data) {
+                usersRef.update(userData).then(() => {
+                    console.log("updated");
+                    this.updateAvailabilityInMongoDB(userData);
+                }).
+                catch(e => {
+                    console.log(e.message)
+                });
+            }
+            else {
+                usersRef.set(userData).then(() => {
+                    this.updateAvailabilityInMongoDB(userData);
+                }).
+                catch(e => {
+                    console.log(e.message);
+                });
+            }
+        })
+
     };
 
     _spring() {
