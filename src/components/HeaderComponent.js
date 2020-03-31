@@ -1,9 +1,9 @@
 
 import React, { Component } from 'react';
 import {View, Image, TouchableOpacity} from 'react-native';
-import { TouchableHighlight } from 'react-native-gesture-handler';
 
 export default class HeaderComponent extends Component {
+
     render() {
         return (
             <View style={{

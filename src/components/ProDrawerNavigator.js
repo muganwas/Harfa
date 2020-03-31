@@ -13,8 +13,6 @@ import ContactUsScreen from './ContactUsScreen';
 import AboutUsScreen from './AboutUsScreen';
 import ProBookingScreen from './ProBookingScreen';
 
-const colorPrimary = '#FFBF0F';
-
 const ProMyDrawerNavigator = createDrawerNavigator({
     
     ProDashboard: {screen: ProDashboardScreen},
@@ -42,7 +40,6 @@ const ProMyDrawerNavigator = createDrawerNavigator({
 const AppContainer = createAppContainer(ProMyDrawerNavigator);
 
 export default class ProDrawerNavigator extends Component{
-
     render(){
         return <AppContainer/>;
     }

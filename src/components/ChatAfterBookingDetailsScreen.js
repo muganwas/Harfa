@@ -70,7 +70,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount() {
+    componentDidMount() {
 
         console.log("Sender Id >> "+UserDetails.User.userId);
         console.log("Receiver ID >> "+this.state.receiverId);
@@ -79,8 +79,8 @@ export default class ChatAfterBookingDetailsScreen extends Component {
 
         //Get Chat Message
         firebase.database().ref('chatting').child(UserDetails.User.userId).child(this.state.receiverId)
-            .on('child_added', (value) => {
-                this.setState((prevState) => {
+            .on('child_added', value => {
+                this.setState(prevState => {
                     return {
                         dataChatSource: [...prevState.dataChatSource, value.val()],
                         isLoading: false

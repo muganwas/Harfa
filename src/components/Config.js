@@ -1,3 +1,4 @@
+import io from 'socket.io-client';
 import { 
   BASE_URL_CLOUD,
   BASE_URL_LOCAL,
@@ -19,4 +20,5 @@ export default class Config {
   static storageBucket = FIREBASE_STORAGE_BUCKET
   static messagingSenderId = FIREBASE_MESSAGING_SENDER_ID
   static appId = FIREBASE_APP_ID
+  static socket = io(this.baseURL, { autoConnect: false, transports: ['websocket'] })
 }

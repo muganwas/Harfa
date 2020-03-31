@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions, 
-    ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert}  from 'react-native';
-import firebase from 'firebase';
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert}  from 'react-native';
 import ImagePicker from 'react-native-image-picker';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
@@ -87,7 +86,7 @@ export default class ChatScreen extends Component {
         });
 
         //Get Job accept reject status
-        firebaseMessaging.notifications().onNotification((notification) => {
+        firebase.notifications().onNotification((notification) => {
 
             const { title, body, data } = notification;
             console.log('Notification >>> ', notification);
@@ -156,7 +155,7 @@ export default class ChatScreen extends Component {
         });
     }
 
-    convertTime = (time) => {
+    convertTime = time => {
         let d = new Date(time);
         let c = new Date();
         let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
@@ -188,8 +187,8 @@ export default class ChatScreen extends Component {
 
     sendMessageTask = async () => {
 
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
+        console.log("Sender Id : " + this.state.senderId);
+        console.log("Receiver Id : " + this.state.receiverId);
 
         if(this.state.inputMessage.length > 0)
         {

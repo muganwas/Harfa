@@ -9,6 +9,7 @@ import UserDetails from './UserDetails';
 import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
+import OnlineUsers from './OnlineUsers';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -286,7 +287,15 @@ export default class ProviderDetailsScreen extends Component {
   componentDidUpdate(){
 
       console.log(this.state.minutes_Counter+" : "+this.state.seconds_Counter);
-    
+      const onlineUsers = OnlineUsers.Users;
+      const { providerId } = this.state;
+      /** if provider id is available listen for changes in his database */
+      if (providerId) {
+          if (onlineUsers[providerId] && onlineUsers[providerId].status !== this.state.status) {
+              this.setState({status: onlineUsers[providerId].status});
+          }
+      }
+      else console.log('provider id unavailable')
       if(this.state.minutes_Counter == '00'){ 
         if(this.state.seconds_Counter == '00')
         {
@@ -301,19 +310,31 @@ export default class ProviderDetailsScreen extends Component {
   }
 
   componentDidMount(){
-
+    const onlineUsers = OnlineUsers.Users;
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     const { providerId } = this.state;
     const userRef = database.ref(`users/${providerId}`);
-    /** if provider id is available listen for changes in his database */
-    if (providerId) {
-        userRef.on('child_changed', result => {
-            if (result.key === "status") this.setState({status: result.val()});
-        });
-    }
-    else console.log('provider id unavailable')
-    
 
+    userRef.on('child_changed', result => {
+        console.log('something changed')
+        if (result.key === "status" && providerId) 
+            if (onlineUsers[providerId] && result.val() === '1') this.setState({status: onlineUsers[providerId].status});
+            else this.setState({status: result.val()});
+        else console.log('provider id unavailable')
+    });
+
+    userRef.once('value', data => {
+        if (data) {
+            const { status } = data.val();
+            if (providerId) {
+                if (onlineUsers[providerId] ) {
+                    if (status === onlineUsers[providerId].status) this.setState({status: onlineUsers[providerId].status});
+                    else this.setState({status: status });
+                }
+            }
+        }
+    });
+    
     /*firebase.notifications().onNotification((notification) => {
 
       const { title, body, data } = notification;
@@ -585,6 +606,7 @@ export default class ProviderDetailsScreen extends Component {
   }
 
   render() {
+      console.log(this.state.status)
     return (
       <View style={styles.container}>
 
@@ -614,9 +636,9 @@ export default class ProviderDetailsScreen extends Component {
           </View>
 
           <View style={styles.onlineOfflineView}>
-            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status == '1' ? colorGreen : colorRed }]}>
+            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status === '1' ? colorGreen : colorRed }]}>
               <Text style={{color: 'white', fontWeight: 'bold',}}>
-                {this.state.status == 1 ? "ONLINE" : "OFFLINE"}</Text>
+                {this.state.status === '1' ? "ONLINE" : "OFFLINE"}</Text>
             </View>
           </View>
         </View>

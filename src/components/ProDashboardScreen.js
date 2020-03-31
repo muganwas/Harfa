@@ -24,6 +24,10 @@ import ProPendingJobRequest from './ProPendingJobRequest';
 import ProBookingScreen from './ProBookingScreen';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
+
+const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -84,7 +88,9 @@ class ProDashBoardScreen extends Component {
             review: '',
             refreshing: false,
             pause: false,
-            backClickCount: 0
+            backClickCount: 0,
+            online: false,
+            connectivityAvailable: false
         }
         this.springValue = new Animated.Value(100);
         this.goToProMapDirection = this.goToProMapDirection.bind(this)
@@ -95,6 +101,37 @@ class ProDashBoardScreen extends Component {
     //Get All Bookings
     async componentDidMount() {
         const { navigation } = this.props;
+        NetInfo.addEventListener(state => {
+            if (!state.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        socket.on('connect', () => {
+            const userId = ProviderDetails.Provider.providerId;
+            if (userId) {
+                socket.emit('connected', userId);
+                this.setState({online:true});
+            }
+            console.log('connected');
+        });
+        socket.on('user-disconnected', users => {
+            console.log('someone disconnected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('someone connected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            console.log('you disconnected')
+            console.log(info);
+            this.setState({online:false});
+            if (!this.state.online && this.state.connectivityAvailable) socket.open();
+        })
+        socket.open();
         navigation.addListener('willFocus', async () => {
             console.log("willFocus runs >>")
             this.onRefresh();

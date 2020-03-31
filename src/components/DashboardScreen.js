@@ -13,6 +13,9 @@ import Toast, {DURATION} from 'react-native-easy-toast'
 import WaitingDialog from './WaitingDialog';
 
 import Config from './Config';
+import UserDetails from './UserDetails';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
 import ListOfProviderScreen from './ListOfProviderScreen';
 import ProviderDetailsScreen from './ProviderDetailsScreen';
 import ChatScreen from './ChatScreen';
@@ -20,6 +23,8 @@ import MapDirectionScreen from './MapDirectionScreen';
 import AddAddressScreen from './AddAddressScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
+
+const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -56,6 +61,8 @@ class DashBoardScreen extends Component {
             isLoading: true,
             backClickCount: 0,
             isToastShow: false,
+            online: false,
+            connectivityAvailable: false
         }
         this.springValue = new Animated.Value(100);
         buttonType = this.buttonType.bind(this);
@@ -68,6 +75,38 @@ class DashBoardScreen extends Component {
 
     //Get All Services
     componentDidMount() {
+
+        NetInfo.addEventListener(status => {
+            if (!status.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        NetInfo.fetch().then(status => {
+            if (!status.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        socket.on('connect', () => {
+            const userId = UserDetails.User.userId;
+            if (userId) {
+                socket.emit('connected', userId);
+                this.setState({online:true});
+            }
+            console.log('connected');
+        }); 
+        socket.on('user-disconnected', users => {
+            console.log('someone disconnected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('someone connected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            console.log('you disconnected')
+            console.log(info);
+            this.setState({online:false});
+            if (!this.state.online && this.state.connectivityAvailable) socket.open();
+        });
+        socket.open();
 
         console.log("willFocus runs") // calling it here to make sure it is logged at initial start
 
@@ -254,7 +293,8 @@ class DashBoardScreen extends Component {
     }
 
     componentWillUnmount() {
-        console.log("Dashboard Unmount")
+        Config.socket.close();
+        console.log("Dashboard Unmount");
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
     }
 
