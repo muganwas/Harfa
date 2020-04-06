@@ -4,7 +4,7 @@ import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ScrollView,
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import Notifications from './Notifications';
-import Hamburger from './Hamburger';
+import Hamburger from './ProHamburger';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -31,7 +31,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class AboutUsScreen extends Component{
+export default class ProAboutUsScreen extends Component{
 
     constructor(props) {
       super(props)

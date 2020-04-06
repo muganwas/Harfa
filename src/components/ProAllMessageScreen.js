@@ -1,21 +1,22 @@
 import React, { Component } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { DrawerActions } from 'react-navigation-drawer';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
-
 import ProviderDetails from './ProviderDetails';
 import ProChatScreen from './ProChatScreen';
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+//const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -67,8 +68,7 @@ class ProAllMessageScreen extends Component {
             const message = snapshot.val();
 
             if (message != null) {
-                dbRef.on('child_added', (val) => {
-
+                dbRef.on('child_added', val => {
                     let message = val.val();
                     let id = val.key;
                     console.log("ProAllMessageScreen Id : " + id);
@@ -209,17 +209,11 @@ class ProAllMessageScreen extends Component {
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5 }}>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center' }}
-                            onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                            <Image style={{ width: 25, height: 25, alignSelf: 'center' }}
-                                source={require('../icons/humberger.png')} />
-                        </TouchableOpacity>
-
-                        <Text style={{ color: 'black', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                            Tous les messages
-                        </Text>
-                    </View>
+                    <Hamburger
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Tous les messages' 
+                    />
                 </View>
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 55, backgroundColor: colorYellow,

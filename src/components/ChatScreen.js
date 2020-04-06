@@ -3,7 +3,7 @@ import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, T
     ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert}  from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
 
@@ -76,8 +76,8 @@ export default class ChatScreen extends Component {
 
         //Get Chat Message
         firebase.database().ref('chatting').child(UserDetails.User.userId).child(PendingJobRequest.Request.employee_id)
-        .on('child_added', (value)=>{
-            this.setState((prevState)=>{
+        .on('child_added', value => {
+            this.setState(prevState => {
                 return {
                     dataChatSource: [...prevState.dataChatSource, value.val()],
                     isLoading: false
@@ -87,7 +87,6 @@ export default class ChatScreen extends Component {
 
         //Get Job accept reject status
         firebase.notifications().onNotification((notification) => {
-
             const { title, body, data } = notification;
             console.log('Notification >>> ', notification);
             console.log("Title, body  data >>> " + title + " " + body + " " + data);
@@ -407,7 +406,7 @@ export default class ChatScreen extends Component {
 
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
-        console.log('sender iamge' + senderImage)
+        console.log('sender image' + senderImage)
         return (
             this.state.senderId != item.senderId
                 ?

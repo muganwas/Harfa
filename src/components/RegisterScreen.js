@@ -22,7 +22,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import moment from 'moment';
 import ImagePicker from 'react-native-image-picker';
 //import AsyncStorage from '@react-native-community/async-storage';
-import firebaeMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails';
 import WaitingDialog from './WaitingDialog';
@@ -180,7 +180,7 @@ export default class RegisterScreen extends Component {
       isLoading: true,
     });
 
-    firebaeMessaging
+    firebase
       .messaging()
       .getToken()
       .then(fcmToken => {

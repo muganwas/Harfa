@@ -2,18 +2,20 @@ import React, { Component } from 'react';
 import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, 
     ActivityIndicator, StatusBar, Platform, Animated, BackHandler} from 'react-native';
 import RNExitApp from 'react-native-exit-app';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { DrawerActions } from 'react-navigation-drawer';
-import Config from './Config';
+//import Config from './Config';
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
 
-const colorPrimary = '#FFBF0F';
+//const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0' 
 const screenWidth = Dimensions.get('window').width;
 
-const NOTIFICATION_URL = Config.baseURL+"";
+//const NOTIFICATION_URL = Config.baseURL+"";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -147,18 +149,11 @@ export default class ProNotificationsScreen extends Component {
        <StatusBarPlaceHolder/>
 
         <View style={styles.header} >
-            <View style={{ flex: 1, flexDirection: 'row' }}>
-                <TouchableOpacity style={{ width: 35, height: 35,alignSelf: 'center', 
-                    justifyContent: 'center', marginLeft: 10 }}
-                    onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                    <Image style={{ width: 25, height: 25, alignSelf: 'center', }}
-                        source={require('../icons/humberger.png')} />
-                </TouchableOpacity>
-
-                <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                    Notifications
-                </Text>
-            </View>
+            <Hamburger
+                Notifications={Notifications}
+                navigation={this.props.navigation}
+                text='Notifications'
+            />
             </View>
                 {!this.state.isLoading && !this.state.isNoData &&
                     <View style={styles.listView}>

@@ -2,10 +2,9 @@ import React, { Component } from 'react';
 import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
 } from 'react-native';
-import firebase from 'firebase';
 import ImagePicker from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
 
@@ -379,7 +378,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
 
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
-        console.log('sender iamge' + senderImage)
+        console.log('sender image' + senderImage)
         return (
             this.state.senderId != item.senderId
                 ?
@@ -466,7 +465,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
 
     render() {
         const providerImage = this.props.navigation.state.params.providerImage;
-        console.log('sender iamge' + providerImage)
+        console.log('sender image' + providerImage)
         return (
 
             <View style={styles.container}>

@@ -3,20 +3,22 @@ import { View, StyleSheet, ScrollView,Dimensions, TouchableOpacity, Image, Text,
      ActivityIndicator, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
 import {createAppContainer,} from 'react-navigation';     
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import WaitingDialog from './WaitingDialog';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Toast, { DURATION } from 'react-native-easy-toast';
 import ViewPager from "@react-native-community/viewpager";
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
@@ -248,20 +250,13 @@ class ProBookingScreen extends Component {
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder/>
-               
                 <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5  }}>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center'}}
-                            onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                            <Image style={{ width: 25, height: 25, alignSelf: 'center' }}
-                                source={require('../icons/humberger.png')} />
-                        </TouchableOpacity>
-
-                        <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                            Réservations   
-                        </Text>
-                    </View>
+                    <Hamburger
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Réservations'
+                    />
                 </View>
 
                 <View style={{

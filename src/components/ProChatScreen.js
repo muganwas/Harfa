@@ -4,7 +4,7 @@ import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, T
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ImagePicker from 'react-native-image-picker';
 import ProviderDetails from './ProviderDetails';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import ProPendingJobRequest from './ProPendingJobRequest';
 import Config from './Config';
 

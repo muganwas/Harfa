@@ -10,7 +10,7 @@ import ProNotificationsScreen from './ProNotificationsScreen';
 import ProAllMessageScreen from './ProAllMessageScreen';
 import ChatWithAdminScreen from './ChatWithAdminScreen';
 import ContactUsScreen from './ContactUsScreen';
-import AboutUsScreen from './AboutUsScreen';
+import ProAboutUsScreen from './ProAboutUsScreen';
 import ProBookingScreen from './ProBookingScreen';
 
 const ProMyDrawerNavigator = createDrawerNavigator({
@@ -22,7 +22,7 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     ProAllMessage: {screen: ProAllMessageScreen},
     ChatWithAdmin: {screen: ChatWithAdminScreen},
     ContactUs: {screen: ContactUsScreen},
-    AboutUs: {screen: AboutUsScreen},
+    AboutUs: {screen: ProAboutUsScreen},
     ProBooking: {screen: ProBookingScreen}
 },
 {

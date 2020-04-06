@@ -92,15 +92,16 @@ export default class FacebookGoogleScreen extends Component {
 
     async facebookLoginTask() {
 
-        LoginManager.logInWithPermissions(["public_profile", "email"]).then(function (result) {
+        LoginManager.logInWithPermissions(["public_profile", "email"]).then(result => {
             if (result.isCancelled) {
                 console.log("Login cancelled");
             } else {
-                console.log("Result " + JSON.stringify(result));
+                console.log("Facebook Result");
+                console.log(result);
                 console.log("Login success: " + result.grantedPermissions.toString());
 
                 AccessToken.getCurrentAccessToken().then(
-                    (data) => {
+                    data => {
                         const infoRequest = new GraphRequest(
                             '/me?fields=email,name,picture',
                             null,
@@ -112,7 +113,7 @@ export default class FacebookGoogleScreen extends Component {
                 )
             }
         },
-            function (error) {
+            error => {
                 console.log("Login fail with error: " + error);
             }
         );
@@ -197,7 +198,7 @@ export default class FacebookGoogleScreen extends Component {
                                         console.log(e.message);
                                     });
                                 }
-                            })
+                            });
                             const id = responseJson.data.id;
                             var providerData = {
                                 providerId: responseJson.data.id,

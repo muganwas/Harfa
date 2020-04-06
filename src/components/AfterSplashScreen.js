@@ -1,12 +1,12 @@
 
 import React, { Component } from 'react';
 import {View, Image, Text, StatusBar, TouchableOpacity, BackHandler} from 'react-native';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import firebase from 'react-native-firebase';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import RNExitApp from 'react-native-exit-app';
 
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
+//const colorPrimary = '#262425';
+//const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F'
 
 export default class AfterSplashScreen extends Component {
@@ -17,22 +17,22 @@ export default class AfterSplashScreen extends Component {
 
         if (Platform.OS === 'android') {
             try {
-              const res = await firebaseMessaging.messaging().requestPermission();
-              const fcmToken = await firebaseMessaging.messaging().getToken();
+              const res = await firebase.messaging().requestPermission();
+              const fcmToken = await firebase.messaging().getToken();
               if (fcmToken) {
                 console.log('FCM Token: ', fcmToken);
-                const enabled = await firebaseMessaging.messaging().hasPermission();
+                const enabled = await firebase.messaging().hasPermission();
                 if (enabled) 
                 {
                     console.log('FCM messaging has permission:' + enabled)
-                    firebaseMessaging.notifications().onNotificationDisplayed((notification) => {
+                    firebase.notifications().onNotificationDisplayed((notification) => {
                         // Process your notification as required
                         // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification.
                         const { title, body } = notification;
                         console.log('NotificationDisplayed : ', notification);
                         console.log("Title, body >>> "+title+" "+body);
                     });
-                    firebaseMessaging.notifications().onNotification((notification) => {
+                    firebase.notifications().onNotification((notification) => {
                         
                         const { title, body } = notification;
 
@@ -44,7 +44,7 @@ export default class AfterSplashScreen extends Component {
                 {
                   try 
                   {
-                    await firebaseMessaging.messaging().requestPermission();
+                    await firebase.messaging().requestPermission();
                     console.log('FCM permission granted')
                   } 
                   catch (error)

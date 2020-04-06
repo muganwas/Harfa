@@ -1,8 +1,9 @@
 
 import React, { Component } from 'react';
 import {StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import {DrawerActions} from 'react-navigation-drawer';
+import Notifications from './Notifications';
 import ProDialogLogout from './ProDialogLogout';
 import ProviderDetails from './ProviderDetails';
 
@@ -50,7 +51,7 @@ export default class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_home_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Home</Text>
+                               <Text style={styles.textMenu}>Maison</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -61,7 +62,7 @@ export default class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_user_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>My Profile</Text>
+                               <Text style={styles.textMenu}>Mon profil</Text>
                             </View>
                         </TouchableHighlight>
                         
@@ -72,40 +73,46 @@ export default class CustomMenuLayout extends Component {
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/booking_history.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Bookings</Text>
+                               <Text style={styles.textMenu}>Réservations</Text>
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => { 
+                                Notifications.generic = 0;
                                 this.props.navigation.navigate("ProNotifications")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_notification.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Notifications</Text>
+                               { Notifications.generic > 0 ? <Text style={styles.menuNotifications}>{Notifications.generic}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
+                                Notifications.messages = 0;
                                 this.props.navigation.navigate("ProAllMessage")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Message</Text>
+                               { Notifications.messages > 0 ? <Text style={styles.menuNotifications}>{Notifications.messages}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
+                                Notifications.admin = 0;
                                 this.props.navigation.navigate("ChatWithAdmin")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Chat with Admin</Text>
+                               { Notifications.admin > 0 ? <Text style={styles.menuNotifications}>{Notifications.admin}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
@@ -116,7 +123,7 @@ export default class CustomMenuLayout extends Component {
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_aboutus_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>About us</Text>
+                               <Text style={styles.textMenu}>À propos de nous</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -148,7 +155,7 @@ export default class CustomMenuLayout extends Component {
                             onPress={() => this.changeDialogVisibility(true)}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_logout.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Logout</Text>
+                               <Text style={styles.textMenu}>Déconnexion</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -174,6 +181,18 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         backgroundColor: 'white',
+    },
+    menuNotifications: {
+        position: 'absolute',
+        textAlignVertical: 'center',
+        textAlign: 'center',
+        borderRadius: 12,
+        color: 'white',
+        right: 10,
+        top: 15,
+        height: 24,
+        width: 24,
+        backgroundColor: 'red',
     },
     header: {
         width: '100%',

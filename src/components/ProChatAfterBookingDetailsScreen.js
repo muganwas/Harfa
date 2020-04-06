@@ -6,7 +6,7 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ProviderDetails from './ProviderDetails';
 import ImagePicker from 'react-native-image-picker';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
@@ -80,7 +80,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
         console.log("Receiver Id: "+this.state.receiverId);
 
         firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
-            .on('child_added', (value) => {
+            .on('child_added',value => {
                 this.setState((prevState) => {
                     return {
                         dataChatSource: [...prevState.dataChatSource, value.val()],

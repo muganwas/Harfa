@@ -15,9 +15,11 @@ import ProviderDetails from './ProviderDetails';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import WaitingDialog from './WaitingDialog';
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
 
-const bgColor = '#E8EEE9';
-const colorPrimary = '#262425';
+//const bgColor = '#E8EEE9';
+//const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 
@@ -377,16 +379,11 @@ class ProMyProfileScreen extends Component {
             <StatusBarPlaceHolder/>
             
             <View style={styles.header} >
-                <View style={{ flex: 1, flexDirection: 'row',  }}>
-                    <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', marginLeft: 5,}}
-                        onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                        <Image style={{ width: 25, height: 25, alignSelf: 'center',  }}
-                            source={require('../icons/humberger.png')} />
-                    </TouchableOpacity>
-                    <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                        Profile
-                    </Text>
-                </View>
+                <Hamburger 
+                    Notifications={Notifications}
+                    navigation={this.props.navigation}
+                    text='Mon Profil'
+                />
             </View>
 
             <KeyboardAwareScrollView contentContainerStyle={{

@@ -1,14 +1,13 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, 
     ActivityIndicator, ToastAndroid, BackHandler, ImageBackground, StatusBar, Platform, Modal} from 'react-native';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import firebase from 'react-native-firebase';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import WaitingDialog from './WaitingDialog';
 import ImagePicker from 'react-native-image-picker';
 import Toast, { DURATION } from 'react-native-easy-toast';
 import Geolocation from 'react-native-geolocation-service';
 import ProviderDetails from './ProviderDetails';
-import firebase from 'firebase';
 import Config from './Config';
 import ProPendingJobRequest from './ProPendingJobRequest';
 

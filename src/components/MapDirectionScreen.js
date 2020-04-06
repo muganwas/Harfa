@@ -3,9 +3,8 @@ import {
   View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, Linking,
   BackHandler, Alert, StatusBar, Platform,
 } from 'react-native';
-import firebase from 'firebase';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+import firebase from 'react-native-firebase';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import LinearGradient from 'react-native-linear-gradient';
@@ -14,11 +13,11 @@ import PendingJobRequest from './PendingJobRequest';
 import UserDetails from './UserDetails';
 import Config from './Config';
 
-const colorPrimary = '#FFBF0F';
+//const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+//const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -139,7 +138,7 @@ export default class MapDirectionScreen extends Component {
 
     var that = this;
 
-    firebaseMessaging.notifications().onNotification((notification) => {
+    firebase.notifications().onNotification((notification) => {
 
       const { title, body, data } = notification;
 

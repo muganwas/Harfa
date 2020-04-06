@@ -5,7 +5,7 @@ import {View,StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
 import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
-import firebaeMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails'
 import PendingJobRequest from './PendingJobRequest';
@@ -86,7 +86,7 @@ export default class VerificationScreen extends Component {
                 isLoading: true
             });
 
-            firebaeMessaging.messaging().getToken().then((fcmToken) => {
+            firebase.messaging().getToken().then((fcmToken) => {
                 console.log("ProRegister FCM ID " + fcmToken);
 
                 if (fcmToken) {

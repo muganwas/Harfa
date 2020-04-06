@@ -1,9 +1,14 @@
 /**
  * @format
  */
+import React from 'react';
 import {AppRegistry, YellowBox} from 'react-native';
 import App from './src/components/SplashScreen';
 import {name as appName} from './app.json';
+import configureStore from './store';
+import { Provider } from 'react-redux';
+
+const store = configureStore();
 
 
 YellowBox.ignoreWarnings([
@@ -23,5 +28,10 @@ YellowBox.ignoreWarnings([
   'You should only render one navigator explicitly in your app, and other navigators should be rendered by including them in that navigator'
 ]);
 
+const IniApp = () => (
+    <Provider store = { store }> 
+        <App /> 
+    </Provider>
+);
 
-AppRegistry.registerComponent(appName, () => App );
+AppRegistry.registerComponent(appName, () => IniApp );

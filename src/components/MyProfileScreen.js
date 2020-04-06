@@ -8,13 +8,12 @@ import {
   TextInput,
   Text,
   ActivityIndicator,
-  ToastAndroid,
   StatusBar,
   Platform,
   BackHandler,
   Animated,
 } from 'react-native';
-import {NavigationActions} from 'react-navigation';
+//import {NavigationActions} from 'react-navigation';
 import {DrawerActions} from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import ShakingText from 'react-native-shaking-text';
@@ -26,6 +25,8 @@ import UserDetails from './UserDetails';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import Toast, {DURATION} from 'react-native-easy-toast';
+import Notifications from './Notifications';
+import Hamburger from './Hamburger';
 
 const options = {
   title: 'Select a photo',
@@ -351,29 +352,12 @@ export default class MyProfileScreen extends Component {
             shadowRadius: 5,
             elevation: 5,
           }}>
-          <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
-            <TouchableOpacity
-              style={{width: 35, height: 35, justifyContent: 'center'}}
-              onPress={() =>
-                this.props.navigation.dispatch(DrawerActions.openDrawer())
-              }>
-              <Image
-                style={{width: 25, height: 25, alignSelf: 'center'}}
-                source={require('../icons/humberger.png')}
-              />
-            </TouchableOpacity>
-
-            <Text
-              style={{
-                color: 'black',
-                fontSize: 20,
-                fontWeight: 'bold',
-                alignSelf: 'center',
-                marginLeft: 10,
-              }}>
-              Mon profil
-            </Text>
-          </View>
+              
+          <Hamburger
+            Notifications={Notifications}
+            navigation={this.props.navigation}
+            text='Mon Profil' 
+          />
         </View>
 
         <KeyboardAwareScrollView

@@ -3,10 +3,10 @@ import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ProviderDetails from './ProviderDetails';
 import ImagePicker from 'react-native-image-picker';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
@@ -83,7 +83,7 @@ export default class ChatWithAdminScreen extends Component {
                         isLoading: false,
                     }
                 })
-            })
+            });
 
         this.setState({
             isLoading: false

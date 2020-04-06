@@ -4,7 +4,7 @@ import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityInd
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import Geolocation from 'react-native-geolocation-service';
 import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
@@ -347,7 +347,7 @@ export default class ProMapDirectionScreen extends Component {
 
     this.setState({
       isLoading: true
-    })
+    });
 
     const data = {
       main_id: ProPendingJobRequest.Request.id,
@@ -356,7 +356,7 @@ export default class ProMapDirectionScreen extends Component {
       'notification': {
         "fcm_id": ProPendingJobRequest.Request.fcm_id,
         "title": "Job Completed",
-        "body": 'Your job request has been completed by '+' Request Id : ' + ProPendingJobRequest.Request.order_id,
+        "body": 'Your job request has been completed by the service provder : ' + ProviderDetails.Provider.providerId,
         "data": {
           ProviderId: ProviderDetails.Provider.providerId,
           image: ProviderDetails.Provider.imageSource,

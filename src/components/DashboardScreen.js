@@ -2,12 +2,12 @@
 import React, { Component } from 'react';
 import {Text, StyleSheet, View, Image, FlatList, ActivityIndicator,
     TouchableOpacity, StatusBar, Dimensions, Animated, BackHandler, Alert, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast, {DURATION} from 'react-native-easy-toast'
 import WaitingDialog from './WaitingDialog';
@@ -23,6 +23,8 @@ import MapDirectionScreen from './MapDirectionScreen';
 import AddAddressScreen from './AddAddressScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
+import Notifications from './Notifications';
+import Hamburger from './Hamburger';
 
 const socket = Config.socket;
 
@@ -75,7 +77,7 @@ class DashBoardScreen extends Component {
 
     //Get All Services
     componentDidMount() {
-
+        console.log('setting listeners...');
         NetInfo.addEventListener(status => {
             if (!status.isConnected) this.setState({connectivityAvailable: false});
             else this.setState({connectivityAvailable: true});
@@ -116,7 +118,6 @@ class DashBoardScreen extends Component {
         this.onRefresh();
         });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
     }
 
     componentWillMount() {
@@ -124,7 +125,7 @@ class DashBoardScreen extends Component {
         console.log("Dashboard Mount")
 
 
-        firebaseMessaging.notifications().onNotification((notification) => {
+        firebase.notifications().onNotification((notification) => {
 
             const { title, body, data } = notification;
       
@@ -296,6 +297,10 @@ class DashBoardScreen extends Component {
         Config.socket.close();
         console.log("Dashboard Unmount");
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
+        firebase.database().ref('chatting').child(senderId).child(receiverId)
+        .off('child_changed');
+        firebase.database().ref('adminChatting').child(senderId).child(receiverId)
+        .off('child_changed');
     }
 
     showRejectionAlert(title, message)
@@ -437,7 +442,7 @@ class DashBoardScreen extends Component {
     }
 
     render() {
-       
+        const { notificationTotal } = this.state;
         return (  
             <View style={styles.container}>
                
@@ -446,18 +451,11 @@ class DashBoardScreen extends Component {
                 <StatusBarPlaceHolder/>
                
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}
-                        style={styles.touchableHighlight}>
-                        <Image style={{ width: 25, height: 25 }}
-                            source={require('../icons/humberger.png')} />
-                    </TouchableOpacity>
-
-                    <View style={styles.textView}>
-                        <Text style={{fontSize: 20, fontWeight: 'bold',color: 'black', textAlignVertical: 'center' }}>
-                            Harfa
-                        </Text>
-                    </View>
-                    
+                    <Hamburger
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Harfa'
+                    />
                     <TouchableOpacity style={{width: '100%' , justifyContent: 'center', alignContent: 'center'}}
                         onPress={() => this.props.navigation.navigate("AddAddress")}>
                         <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}

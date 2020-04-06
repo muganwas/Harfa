@@ -26,6 +26,8 @@ import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
 import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
 
 const socket = Config.socket;
 
@@ -65,8 +67,8 @@ function StatusBarPlaceHolder() {
 
 class ProDashBoardScreen extends Component {
 
-    constructor() {
-        super()
+    constructor(props) {
+        super(props)
 
         this.state = {
             isLoading: true,
@@ -100,6 +102,7 @@ class ProDashBoardScreen extends Component {
 
     //Get All Bookings
     async componentDidMount() {
+        console.log('setting listeners...')
         const { navigation } = this.props;
         NetInfo.addEventListener(state => {
             if (!state.isConnected) this.setState({connectivityAvailable: false});
@@ -342,28 +345,32 @@ class ProDashBoardScreen extends Component {
     }
 
     renderWorkItem = ({ item }) => {
-
-        return (
-            <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
-                onPress={() => this.props.navigation.navigate("ProBookingDetails", {
-                    "bookingDetails": item
-                })}>
-                <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
-                    <Text style={{ fontSize: 12, fontWeight: 'bold' }}>{item.service_details.service_name}</Text>
-                </View>
-                <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
-                    <Text style={{ fontSize: 12, fontWeight: 'bold', ...item.status == 'Pending' ? styles.colorYellow : item.status == 'Accepted' ? styles.colorGreen : item.status == 'Completed' ? styles.colorBlack : styles.colorRed }}>{item.status}</Text>
-                </View>
-                <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}
-                    onPress={() => this.askForReview(item)}>
-                    <Text style={{ fontSize: 12, }}>{item.customer_review == "Requested" ? 'Waiting' : item.customer_rating == "" ? 'Ask for review' : item.customer_rating + "/5"}</Text>
+        console.log(ProviderDetails.Provider.providerId)
+        //console.log(item);
+        if (String(item.employee_id) === String(ProviderDetails.Provider.providerId)) {
+            return (
+                <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
+                    onPress={() => this.props.navigation.navigate("ProBookingDetails", {
+                        "bookingDetails": item
+                    })}>
+                    <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold' }}>{item.service_details.service_name}</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', ...item.status == 'Pending' ? styles.colorYellow : item.status == 'Accepted' ? styles.colorGreen : item.status == 'Completed' ? styles.colorBlack : styles.colorRed }}>{item.status}</Text>
+                    </View>
+                    <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}
+                        onPress={() => this.askForReview(item)}>
+                        <Text style={{ fontSize: 12, }}>{item.customer_review == "Requested" ? 'Waiting' : item.customer_rating == "" ? 'Ask for review' : item.customer_rating + "/5"}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5, }}
+                        onPress={() => this.changeDialogVisibility(true, "", item, "", "")}>
+                        <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
+                    </TouchableOpacity>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5, }}
-                    onPress={() => this.changeDialogVisibility(true, "", item, "", "")}>
-                    <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
-                </TouchableOpacity>
-            </TouchableOpacity>
-        )
+            )
+        }
+        else return null;
     }
 
     renderRecentUserItem = ({ item }) => {
@@ -838,20 +845,18 @@ class ProDashBoardScreen extends Component {
 
     render() {
         const customerImage = ProPendingJobRequest.Request.image;
-        console.log('customer image')
-        console.log(customerImage)
+        const { notificationTotal } = this.state;
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder/>
 
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}
-                        style={styles.touchaleHighlight}>
-                        <Image style={{ width: 25, height: 25 }}
-                            source={require('../icons/humberger.png')} />
-                    </TouchableOpacity>
-                    <Text style={styles.textHeader}>Harfa</Text>
+                    <Hamburger 
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Harfa'
+                    />
                 </View>
 
                 <View style={styles.onlineOfflineHeader}>
@@ -1180,6 +1185,18 @@ const styles = StyleSheet.create({
         elevation: 5,
         alignItems: 'center',
         marginTop: 10
+    },
+    noticationsCount: {
+        position: 'absolute',
+        textAlignVertical: 'center',
+        textAlign: 'center',
+        borderRadius: 10,
+        color: 'white',
+        right: 15,
+        height: 20,
+        width: 20,
+        backgroundColor: 'red',
+        top: 5
     },
     recentMessageHeader: {
         width: screenWidth,

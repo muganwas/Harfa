@@ -287,15 +287,6 @@ export default class ProviderDetailsScreen extends Component {
   componentDidUpdate(){
 
       console.log(this.state.minutes_Counter+" : "+this.state.seconds_Counter);
-      const onlineUsers = OnlineUsers.Users;
-      const { providerId } = this.state;
-      /** if provider id is available listen for changes in his database */
-      if (providerId) {
-          if (onlineUsers[providerId] && onlineUsers[providerId].status !== this.state.status) {
-              this.setState({status: onlineUsers[providerId].status});
-          }
-      }
-      else console.log('provider id unavailable')
       if(this.state.minutes_Counter == '00'){ 
         if(this.state.seconds_Counter == '00')
         {
@@ -311,6 +302,7 @@ export default class ProviderDetailsScreen extends Component {
 
   componentDidMount(){
     const onlineUsers = OnlineUsers.Users;
+
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     const { providerId } = this.state;
     const userRef = database.ref(`users/${providerId}`);
@@ -328,8 +320,11 @@ export default class ProviderDetailsScreen extends Component {
             const { status } = data.val();
             if (providerId) {
                 if (onlineUsers[providerId] ) {
+                    console.log('user in api')
                     if (status === onlineUsers[providerId].status) this.setState({status: onlineUsers[providerId].status});
-                    else this.setState({status: status });
+                    else {
+                        this.setState({status: status });
+                    }
                 }
             }
         }

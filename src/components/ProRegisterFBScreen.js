@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, ScrollView,
      ActivityIndicator,ToastAndroid, Alert, StatusBar, Platform, BackHandler, Modal} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import AsyncStorage from '@react-native-community/async-storage';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
@@ -110,7 +110,7 @@ export default class ProRegisterFBScreen extends Component {
 
     registerTask()
     {
-        firebaseMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("ProRegister FCM ID " + fcmToken);
 
             if (fcmToken) {

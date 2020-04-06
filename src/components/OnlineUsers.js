@@ -1,4 +1,3 @@
-export default class UserDetails {
-
+export default class OnlineUsers {
     static Users;
 }
