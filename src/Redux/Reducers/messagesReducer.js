@@ -5,7 +5,7 @@ import {
 } from '../types';
 
 const initialState = {
-    message: null,
+    dataChatSource: [],
     fetched: false,
     fetching: false,
     error: null
@@ -23,7 +23,7 @@ const messagesReducer = (state=initialState, action) => {
         case FETCHED_MESSAGES: 
             return {
                 ...state,
-                message: action.payload,
+                dataChatSource: action.payload,
                 fetched: true,
                 fetching: false,
                 error: null

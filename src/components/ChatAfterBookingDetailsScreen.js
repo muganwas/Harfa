@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
 } from 'react-native';
@@ -43,7 +44,7 @@ const options = {
 
 const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
-export default class ChatAfterBookingDetailsScreen extends Component {
+class ChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -54,8 +55,8 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             senderName: UserDetails.User.username,
             inputMessage: '',
             showButton: false,
-            dataChatSource: [],
-            isLoading: true,
+            dataChatSource: this.props.messagesInfo.dataChatSource,
+            isLoading: !this.props.messagesInfo.fetched,
             isUpLoading: false,
 
             receiverId: this.props.navigation.state.params.providerId,
@@ -75,21 +76,16 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         console.log("Receiver ID >> "+this.state.receiverId);
 
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    }
 
-        //Get Chat Message
-        firebase.database().ref('chatting').child(UserDetails.User.userId).child(this.state.receiverId)
-            .on('child_added', value => {
-                this.setState(prevState => {
-                    return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
-                        isLoading: false
-                    }
-                })
-            });
-
-        this.setState({
-            isLoading: false,
-        })
+    componentDidUpdate(){
+        const { fetched, dataChatSource } = this.props.messagesInfo;
+        const { isLoading } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading) 
+            this.setState({isLoading:false});
+        if ( JSON.stringify(dataChatSource) !== JSON.stringify(localDataChatSource)) 
+            this.setState({dataChatSource});
     }
 
     componentWillUnmount() {
@@ -222,7 +218,9 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
+    getImageURL = async imageObject => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
        
         let message = {
             textMessage: 'uploading',
@@ -239,10 +237,9 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             type: "image",
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
         }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
 
+        const newDataChatSource = [...dataChatSource, message];
+        fetchedMessages(newDataChatSource);
         this.setState({
             isUploading: true
         })
@@ -304,8 +301,9 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    sendImageTask = async (imageURL) => {
-       
+    sendImageTask = async imageURL => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
         console.log("Sender Id : "+this.state.senderId);
         console.log("Receiver Id : "+this.state.receiverId);
 
@@ -355,10 +353,10 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             }
 
             //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
+            var array = [...dataChatSource]; // make a separate copy of the array
             if (array.length > 0) {
                 array.splice(array.length-1, 1);
-                this.setState({ dataChatSource: array });
+                fetchedMessages(array);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -640,3 +638,25 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchMessages: () => {
+            dispatch(startFetchingMessages());
+        },
+        fetchedMessages: data => {
+            dispatch(messagesFetched(data));
+        },
+        fetchingMessagesError: error => {
+            dispatch(messagesError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen);

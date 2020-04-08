@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions, 
-    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert}  from 'react-native';
+import { connect } from 'react-redux';
+import { View, StyleSheet, TouchableOpacity, Image, Text, FlatList, TextInput, Dimensions, 
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert }  from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
@@ -12,11 +13,11 @@ import Config from './Config';
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+//const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0' 
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -44,7 +45,7 @@ const options = {
     quality: 1
 };
 
-export default class ChatScreen extends Component {
+class ChatScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -55,13 +56,13 @@ export default class ChatScreen extends Component {
         senderName: UserDetails.User.username,
         inputMessage: '',
         showButton: false,
-        dataChatSource: [],
-        isLoading: true,
+        dataChatSource: this.props.messagesInfo.dataChatSource,
+        isLoading: !this.props.messagesInfo.fetched,
         isUploading: false,
         isJobAccepted: this.props.navigation.state.params.isJobAccepted,
 
         receiverId: PendingJobRequest.Request.employee_id,
-        receiverName: PendingJobRequest.Request.name + " " +PendingJobRequest.Request.surName,
+        receiverName: PendingJobRequest.Request.name + " " + PendingJobRequest.Request.surName,
         receiverImage: PendingJobRequest.Request.image,
         serviceName: PendingJobRequest.Request.service_name,
         orderId: PendingJobRequest.Request.order_id,
@@ -73,17 +74,6 @@ export default class ChatScreen extends Component {
     componentWillMount(){
 
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-        //Get Chat Message
-        firebase.database().ref('chatting').child(UserDetails.User.userId).child(PendingJobRequest.Request.employee_id)
-        .on('child_added', value => {
-            this.setState(prevState => {
-                return {
-                    dataChatSource: [...prevState.dataChatSource, value.val()],
-                    isLoading: false
-                }
-            })
-        });
 
         //Get Job accept reject status
         firebase.notifications().onNotification((notification) => {
@@ -105,10 +95,16 @@ export default class ChatScreen extends Component {
                 this.props.navigation.navigate("ListOfProvider");
             }
         });
+    }
 
-        this.setState({
-            isLoading: false,
-        })
+    componentDidUpdate(){
+        const { fetched, dataChatSource } = this.props.messagesInfo;
+        const { isLoading } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading) 
+            this.setState({isLoading:false});
+        if (JSON.stringify(dataChatSource) !== JSON.stringify(localDataChatSource)) 
+            this.setState({dataChatSource});
     }
 
     componentWillUnmount() {
@@ -250,7 +246,9 @@ export default class ChatScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
+    getImageURL = async imageObject => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
        
         let message = {
             textMessage: 'uploading',
@@ -266,10 +264,10 @@ export default class ChatScreen extends Component {
             orderId: this.state.orderId,
             type: "image",
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
+        };
+
+        const newDataChatSource = [...dataChatSource, message];
+        fetchedMessages(newDataChatSource);
 
         this.setState({
             isUploading: true
@@ -332,8 +330,9 @@ export default class ChatScreen extends Component {
         });
     }
 
-    sendImageTask = async (imageURL) => {
-       
+    sendImageTask = async imageURL => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
         console.log("Sender Id : "+this.state.senderId);
         console.log("Receiver Id : "+this.state.receiverId);
 
@@ -383,10 +382,10 @@ export default class ChatScreen extends Component {
             }
 
             //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
+            var array = [...dataChatSource]; // make a separate copy of the array
             if (array.length > 0) {
                 array.splice(array.length-1, 1);
-                this.setState({ dataChatSource: array });
+                fetchedMessages(array);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -664,3 +663,25 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchMessages: () => {
+            dispatch(startFetchingMessages());
+        },
+        fetchedMessages: data => {
+            dispatch(messagesFetched(data));
+        },
+        fetchingMessagesError: error => {
+            dispatch(messagesError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);

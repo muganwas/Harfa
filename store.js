@@ -8,7 +8,7 @@ applyMiddleware(thunk);
 const rootReducer = combineReducers({
   generalInfo: generalReducer,
   notificationsInfo: notifications,
-  messages: messages
+  messagesInfo: messages
 });
 
 const configureStore = () => {

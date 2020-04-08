@@ -4,9 +4,10 @@ import {
     FETCHING_NOTIFICATIONS_ERROR
 } from '../types';
 
-export const startFetchingNotification = () => {
+export const startFetchingNotification = payload => {
     return {
-      type: FETCHING_NOTIFICATIONS
+      type: FETCHING_NOTIFICATIONS,
+      payload
     }
 }
 
@@ -22,4 +23,4 @@ export const notificationError = payload => {
       type: FETCHING_NOTIFICATIONS_ERROR,
       payload
     }
-  }
+}

@@ -787,7 +787,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.abc.Harfa;
+				PRODUCT_BUNDLE_IDENTIFIER = com.muganwasteven.Harfa;
 				PRODUCT_NAME = Harfa;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = 1;
@@ -867,7 +867,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.abc.Harfa;
+				PRODUCT_BUNDLE_IDENTIFIER = com.muganwasteven.Harfa;
 				PRODUCT_NAME = Harfa;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = 1;
