@@ -33,17 +33,16 @@ const styles = StyleSheet.create({
     titleText: {fontSize: 20, fontWeight: 'bold',color: 'black', textAlignVertical: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }
 })
 class Hamburger extends React.Component {
-    state = {notificationTotal: 0, loopCount: 0}
     componentDidMount(){
         const {
             navigation, 
             fetchNotifications, 
             fetchedNotifications, 
-            fetchingNotificationsError,
             fetchedMessages
         } = this.props;
         console.log('hamburger loaded...');
-        const receiverId = PendingJobRequest.Request.employee_id || navigation.state.params.providerId;
+        const providerId = navigation.state.params ? navigation.satate.params.providerId ? navigation.state.params.providerId : null : null;
+        const receiverId = PendingJobRequest.Request.employee_id || providerId;
         const senderId = UserDetails.User.userId;
         firebase.database().ref('chatting').child(senderId).child(receiverId)
             .on('child_added', data => {
@@ -65,19 +64,19 @@ class Hamburger extends React.Component {
                     }
                 })
                 //console.log(value); 
-            }).
-            catch(e => {
-                fetchingNotificationsError(e.message);
-                console.log('something went wrong');
-            })
+            });
         });
         firebase.database().ref('adminChatting').child(senderId).on('child_changed', result => {
             //Notifications.admin = Notifications.admin + 1;
+            fetchedNotifications({type: 'adminMessages', value: newMessagesCount});
         });
-        return () => {
-            console.log('burger unmount..');
-            firebase.database().ref('chatting').child(senderId).off('child_changed');
-        }
+    }
+    componentWillUnmount(){
+        console.log('burger unmount..');
+        const senderId = ProPendingJobRequest.Request.user_id;
+        //const receiverId = ProviderDetails.Provider.providerId;
+        firebase.database().ref('adminChatting').child(senderId).off('child_changed')
+        firebase.database().ref('chatting').child(senderId).off('child_changed');
     }
     render(){
         const {

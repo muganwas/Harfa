@@ -2,9 +2,11 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, 
     ActivityIndicator, BackHandler, StatusBar, Platform, Modal, Animated} from 'react-native';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import Toast, {DURATION} from 'react-native-easy-toast';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
 import UserDetails from './UserDetails';
@@ -38,7 +40,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class NotificationsScreen extends Component {
+class NotificationsScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -55,7 +57,8 @@ export default class NotificationsScreen extends Component {
     };
 
     componentDidMount() {
-
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'generic', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
         const {navigation} = this.props;
@@ -302,5 +305,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center'
     },
-})
+});
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(NotificationsScreen);

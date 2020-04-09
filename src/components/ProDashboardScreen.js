@@ -3,10 +3,10 @@ import React, { Component } from 'react';
 import {
     Text, StyleSheet, View, Image, ActivityIndicator, Dimensions, FlatList, TouchableOpacity, 
     ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import { createAppContainer} from 'react-navigation';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import {createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
@@ -102,8 +102,9 @@ class ProDashBoardScreen extends Component {
 
     //Get All Bookings
     async componentDidMount() {
-        console.log('setting listeners...')
+        console.log('setting listeners...');
         const { navigation } = this.props;
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
         NetInfo.addEventListener(state => {
             if (!state.isConnected) this.setState({connectivityAvailable: false});
             else this.setState({connectivityAvailable: true});
@@ -140,33 +141,6 @@ class ProDashBoardScreen extends Component {
             this.onRefresh();
         });
 
-    }
-
-    componentWillMount() {
-
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
-        firebase.notifications().onNotification((notification) => {
-
-            const { title, body, data } = notification;
-
-            console.log("Title, body , data >>> " + title + " >> " + body + " >> " + JSON.stringify(data));
-            console.log('DeliveryAddress >>> ', data.delivery_address);
-            console.log('DeliveryLat >>> ', data.delivery_lat);
-
-            if(title == "Booking Request")
-            {
-                this.props.navigation.navigate("ProChatAccept", {
-                    'userId': data.userId,
-                    'serviceName': data.serviceName,
-                    'mainId': data.main_id,
-                    'orderId': data.order_id,
-                    'delivery_address': data.delivery_address,
-                    'delivery_lat': data.delivery_lat,
-                    'delivery_lang': data.delivery_lang,
-                })
-            }
-        });
     }
 
     componentWillUnmount() {

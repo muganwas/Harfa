@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { View, StyleSheet, TouchableOpacity, Image, Text, FlatList, TextInput, Dimensions, 
     ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert }  from 'react-native';
 import ImagePicker from 'react-native-image-picker';
@@ -71,8 +72,9 @@ class ChatScreen extends Component {
       this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount(){
-
+    componentDidMount(){
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
         //Get Job accept reject status
@@ -680,6 +682,15 @@ const mapDispatchToProps = dispatch => {
         },
         fetchingMessagesError: error => {
             dispatch(messagesError(error));
+        },
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
         }
     }
 }

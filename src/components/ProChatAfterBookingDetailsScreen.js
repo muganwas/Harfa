@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ProviderDetails from './ProviderDetails';
 import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
@@ -45,7 +47,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ProChatAfterBookingDetailsScreen extends Component {
+class ProChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -72,8 +74,9 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount() {
-
+    componentDidMount() {
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
         console.log("Sender Id: "+this.state.senderId);
@@ -612,3 +615,25 @@ const styles = StyleSheet.create({
       },
 
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProChatAfterBookingDetailsScreen);

@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated} from 'react-native';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
@@ -57,7 +59,7 @@ class AllMessageScreen extends Component {
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount(){
+    componentDidMount(){
         let dbRef = firebase.database().ref('recentMessage').child(UserDetails.User.userId);
 
         dbRef.once('value', (snapshot) => {
@@ -267,9 +269,29 @@ class AllMessageScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     AllMessage: {
-        screen: AllMessageScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(AllMessageScreen),
         navigationOptions:{
             header : null
         }

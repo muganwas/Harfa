@@ -31,22 +31,45 @@ const styles = StyleSheet.create({
     image: { width: 25, height: 25 },
     titleText: {fontSize: 20, fontWeight: 'bold',color: 'black', textAlignVertical: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }
 })
-const Hamburger = ({text, navigation, notificationsInfo, fetchNotifications, fetchedNotifications, fetchingNotificationsError }) => {
-    const [notificationTotal=0, updateNotificationTotal] = useState();
-    useEffect(() => {
+class Hamburger extends React.Component{
+
+    componentDidMount(){
+        const {fetchNotifications, fetchedNotifications} = this.props;
         console.log('hamburger loaded...')
         const senderId = ProPendingJobRequest.Request.user_id;
         const receiverId = ProviderDetails.Provider.providerId;
-        let total = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
-        updateNotificationTotal(total);
+
+        firebase.notifications().onNotification(notification => {
+            const { notificationsInfo, navigation } = this.props;
+            const { title, body, data } = notification;
+
+            console.log("Title, body , data >>> " + title + " >> " + body + " >> " + JSON.stringify(data));
+            console.log('DeliveryAddress >>> ', data.delivery_address);
+            console.log('DeliveryLat >>> ', data.delivery_lat);
+
+            if(title == "Booking Request")
+            {
+                navigation.navigate("ProChatAccept", {
+                    'userId': data.userId,
+                    'serviceName': data.serviceName,
+                    'mainId': data.main_id,
+                    'orderId': data.order_id,
+                    'delivery_address': data.delivery_address,
+                    'delivery_lat': data.delivery_lat,
+                    'delivery_lang': data.delivery_lang,
+                });
+                const currentGenericCount = notificationsInfo.generic;
+                const newGenericCount = currentGenericCount + 1;
+                fetchedNotifications({type: 'generic', value: newGenericCount});
+            }
+        });
+
         firebase.database().ref('chatting').child(senderId).on('child_changed', result => {
             /** not too important */
             fetchNotifications({type: 'messages'});
-
-            let total = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
-            updateNotificationTotal(total);
             // console.log(result.val())
             firebase.database().ref('chatting').child(senderId).child(receiverId).limitToLast(1).once('value', result => {
+                const {notificationsInfo} = this.props;
                 const value = result.val();
                 Object.keys(value).map(key => {
                     const sentById = value[key].senderId;
@@ -54,49 +77,52 @@ const Hamburger = ({text, navigation, notificationsInfo, fetchNotifications, fet
                         const currentMessagesCount = notificationsInfo.messages;
                         const newMessagesCount = currentMessagesCount + 1;
                         //console.log(currentCount)
-                        const newTotalCount = notificationTotal + 1;
                         fetchedNotifications({type: 'messages', value: newMessagesCount});
-                        updateNotificationTotal(newTotalCount);
                         // console.log(Notifications.messages);
                     }
                 })
                 //console.log(value); 
-            }).
-            catch(e => {
-                fetchingNotificationsError(e.message);
-                console.log('something went wrong');
-            })
+            });
         });
+
         firebase.database().ref('adminChatting').child(senderId).on('child_changed', result => {
             //Notifications.admin = Notifications.admin + 1;
+            fetchedNotifications({type: 'adminMessages', value: newMessagesCount});
         });
-        return () => {
-            console.log('pro burger unmount..');
-            firebase.database().ref('chatting').child(senderId).off('child_changed');
-        }
-    }, [])
-    useEffect(() => {
-        let total = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
-        console.log('new total')
-        console.log(total)
-        updateNotificationTotal(total);
-    });
-    return (
-        <>
-            <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-                style={styles.touchableHighlight}>
-                <Image style={styles.image}
-                    source={require('../icons/humberger.png')} />
-                { notificationTotal > 0 ? <Text style={styles.noticationsCount}>{notificationTotal}</Text> : null }
-            </TouchableOpacity>
+        
+    }
 
-            <View style={styles.textView}>
-                <Text style={styles.titleText}>
-                    {text}
-                </Text>
-            </View>
-        </>
-    )
+    componentWillUnmount(){
+        console.log('pro burger unmount..');
+        const senderId = ProPendingJobRequest.Request.user_id;
+        //const receiverId = ProviderDetails.Provider.providerId;
+        firebase.database().ref('adminChatting').child(senderId).off('child_changed')
+        firebase.database().ref('chatting').child(senderId).off('child_changed');
+    }
+    render(){
+        const {
+            text, 
+            navigation,
+            notificationsInfo 
+        } = this.props;
+        const notificationTotal = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
+        return (
+            <>
+                <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+                    style={styles.touchableHighlight}>
+                    <Image style={styles.image}
+                        source={require('../icons/humberger.png')} />
+                    { notificationTotal > 0 ? <Text style={styles.noticationsCount}>{notificationTotal}</Text> : null }
+                </TouchableOpacity>
+    
+                <View style={styles.textView}>
+                    <Text style={styles.titleText}>
+                        {text}
+                    </Text>
+                </View>
+            </>
+        )
+    }
 }
 
 const mapStateToProps = state => {

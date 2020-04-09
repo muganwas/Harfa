@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, 
     ActivityIndicator, StatusBar, Platform, Animated, BackHandler} from 'react-native';
 import RNExitApp from 'react-native-exit-app';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 //import Config from './Config';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
@@ -34,7 +36,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ProNotificationsScreen extends Component {
+class ProNotificationsScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -49,7 +51,8 @@ export default class ProNotificationsScreen extends Component {
     };
 
     componentDidMount() {
-        
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'generic', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
         
         // fetch(NOTIFICATION_URL)
@@ -234,5 +237,26 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 3
     },
-})
+});
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProNotificationsScreen)

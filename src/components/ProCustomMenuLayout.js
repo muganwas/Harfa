@@ -1,15 +1,16 @@
 
 import React, { Component } from 'react';
-import {StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal} from 'react-native';
+import { StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import { connect } from 'react-redux';
+import { notificationsFetched } from '../Redux/Actions/notificationActions';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import {DrawerActions} from 'react-navigation-drawer';
-import Notifications from './Notifications';
 import ProDialogLogout from './ProDialogLogout';
 import ProviderDetails from './ProviderDetails';
 
 const colorPrimary = '#FFBF0F';
 
-export default class CustomMenuLayout extends Component {
+class CustomMenuLayout extends Component {
 
     constructor(props) {
       super(props)
@@ -30,6 +31,7 @@ export default class CustomMenuLayout extends Component {
 
     render() {
         const imageSource = ProviderDetails.Provider.imageSource; 
+        const { notificationsInfo, fetchedNotifications } = this.props;
         console.log('custom menu')
         console.log(imageSource)
         return (
@@ -79,40 +81,40 @@ export default class CustomMenuLayout extends Component {
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => { 
-                                Notifications.generic = 0;
+                                fetchedNotifications({type: 'generic', value: 0});
                                 this.props.navigation.navigate("ProNotifications")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_notification.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Notifications</Text>
-                               { Notifications.generic > 0 ? <Text style={styles.menuNotifications}>{Notifications.generic}</Text> : null }
+                               { notificationsInfo.generic > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.generic}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
-                                Notifications.messages = 0;
+                                fetchedNotifications({type: 'messages', value: 0});
                                 this.props.navigation.navigate("ProAllMessage")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Message</Text>
-                               { Notifications.messages > 0 ? <Text style={styles.menuNotifications}>{Notifications.messages}</Text> : null }
+                               { notificationsInfo.messages > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.messages}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
-                                Notifications.admin = 0;
+                                fetchedNotifications({type: 'adminMessages', value: 0});
                                 this.props.navigation.navigate("ChatWithAdmin")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Chat with Admin</Text>
-                               { Notifications.admin > 0 ? <Text style={styles.menuNotifications}>{Notifications.admin}</Text> : null }
+                               { notificationsInfo.admin > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.admin}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
@@ -245,3 +247,18 @@ const styles = StyleSheet.create({
     },
 });
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(CustomMenuLayout);

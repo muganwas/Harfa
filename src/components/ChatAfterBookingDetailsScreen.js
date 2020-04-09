@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
 } from 'react-native';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import ImagePicker from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import firebase from 'react-native-firebase';
@@ -71,7 +72,8 @@ class ChatAfterBookingDetailsScreen extends Component {
     };
 
     componentDidMount() {
-
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         console.log("Sender Id >> "+UserDetails.User.userId);
         console.log("Receiver ID >> "+this.state.receiverId);
 
@@ -655,6 +657,15 @@ const mapDispatchToProps = dispatch => {
         },
         fetchingMessagesError: error => {
             dispatch(messagesError(error));
+        },
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
         }
     }
 }

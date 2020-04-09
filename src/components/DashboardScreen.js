@@ -3,9 +3,11 @@ import React, { Component } from 'react';
 import {Text, StyleSheet, View, Image, FlatList, ActivityIndicator,
     TouchableOpacity, StatusBar, Dimensions, Animated, BackHandler, Alert, Modal} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
@@ -121,12 +123,12 @@ class DashBoardScreen extends Component {
     }
 
     componentWillMount() {
-
         console.log("Dashboard Mount")
-
-
-        firebase.notifications().onNotification((notification) => {
-
+        firebase.notifications().onNotification(notification => {
+            const {fetchedNotifications, notificationsInfo} = this.props;
+            const currentGenericCount = notificationsInfo.generic;
+            const newGenericCount = currentGenericCount + 1;
+            fetchedNotifications({type: 'generic', value: newGenericCount});
             const { title, body, data } = notification;
       
             //console.log('Notification >>> ', notification);
@@ -556,9 +558,29 @@ class DashBoardScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     DashBoard: {
-        screen: DashBoardScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(DashBoardScreen),
         navigationOptions:{
             header : null
         }

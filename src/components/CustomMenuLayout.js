@@ -112,7 +112,7 @@ class CustomMenuLayout extends Component {
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Chat with Admin</Text>
-                               { notificationsInfo.admin > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.admin}</Text> : null }
+                               { notificationsInfo.adminMessages > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.adminMessages}</Text> : null }
                             </View>
                         </TouchableHighlight>
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}

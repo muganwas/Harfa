@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions, 
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform}  from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ImagePicker from 'react-native-image-picker';
 import ProviderDetails from './ProviderDetails';
 import firebase from 'react-native-firebase';
@@ -43,7 +45,7 @@ function StatusBarPlaceHolder() {
 
 const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
-export default class ProChatScreen extends Component {
+class ProChatScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -94,10 +96,10 @@ export default class ProChatScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount(){
-
+    componentDidMount(){
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
         var that = this;
 
         console.log("Sender Id: "+this.state.senderId);
@@ -663,3 +665,34 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
       },  
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchMessages: () => {
+            dispatch(startFetchingMessages());
+        },
+        fetchedMessages: data => {
+            dispatch(messagesFetched(data));
+        },
+        fetchingMessagesError: error => {
+            dispatch(messagesError(error));
+        },
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProChatScreen);
