@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, BackHandler, 
   Linking, PermissionsAndroid, Alert, StatusBar, Platform, Modal} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
@@ -11,7 +12,8 @@ import SlidingPanel from 'react-native-sliding-up-down-panels';
 import ProPendingJobRequest from './ProPendingJobRequest';
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
-import WaitingDialog from './WaitingDialog'
+import WaitingDialog from './WaitingDialog';
+import { MAPS_API_KEY } from 'react-native-dotenv';
 
 //const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -40,18 +42,18 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ProMapDirectionScreen extends Component {
+class ProMapDirectionScreen extends Component {
 
   constructor(props) {
     super(props)
-  
+    const { usersCoordinates, othersCoordinates } = this.props.generalInfo;
     this.state = {
-      sourcesourceLocation: ProviderDetails.Provider.lat+","+ProviderDetails.Provider.lang,
-      sourceLat: parseFloat(ProviderDetails.Provider.lat),
-      sourceLng: parseFloat(ProviderDetails.Provider.lang),
-      destinationLocation: ProPendingJobRequest.Request.delivery_lat+','+ProPendingJobRequest.Request.delivery_lang,
-      destinationLat: parseFloat(ProPendingJobRequest.Request.delivery_lat),
-      destinationLng: parseFloat(ProPendingJobRequest.Request.delivery_lang),
+      sourcesourceLocation: usersCoordinates.latitude+","+usersCoordinates.longitude,
+      sourceLat: parseFloat(usersCoordinates.latitude),
+      sourceLng: parseFloat(usersCoordinates.longitude),
+      destinationLocation: othersCoordinates.latitude+','+othersCoordinates.longitude,
+      destinationLat: parseFloat(othersCoordinates.latitude),
+      destinationLng: parseFloat(othersCoordinates.longitude),
       routeCoordinates: [],
       isLoading: true,
       pageTitle: this.props.navigation.state.params.pageTitle,
@@ -79,13 +81,20 @@ export default class ProMapDirectionScreen extends Component {
   };
 
   async componentDidMount(){
+    console.log(this.props.generalInfo)
     const { navigation } = this.props;
     navigation.addListener('willFocus', async () => {
         console.log("willFocus runs >>")
         this.onRefresh();
     });
-
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
+
+  componentDidUpdate() {
+      const { generalInfo: { usersCoordinates: { latitude, longitude} } } = this.props;
+      const { sourceLat, sourceLng } = this.state;
+      if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(sourceLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(sourceLng))) 
+        this.onRefresh();
   }
 
   componentWillUnmount() {
@@ -93,17 +102,12 @@ export default class ProMapDirectionScreen extends Component {
   }
 
   async onRefresh() {
-    console.log("OnRefresh >> ");
+    const { generalInfo: { usersCoordinates, othersCoordinates } } = this.props;
      //Get latitude & longitude on Location change
      if (Platform.OS == 'ios') {
-      await Geolocation.requestAuthorization();
-
-      this.WatchID = Geolocation.watchPosition((lastPosition) => {
-        console.log("New Location >> " + JSON.stringify(lastPosition));
-
         let locationData = {
-          latitude: lastPosition.coords.latitude,
-          longitude: lastPosition.coords.longitude,
+          latitude: usersCoordinates.latitude,
+          longitude: usersCoordinates.longitude,
         }
 
         let updates = {};
@@ -111,49 +115,25 @@ export default class ProMapDirectionScreen extends Component {
         firebase.database().ref().update(updates);
 
         this.setState({
-          sourcesourceLocation: lastPosition.coords.latitude + "," + lastPosition.coords.longitude,
-          sourceLat: parseFloat(lastPosition.coords.latitude),
-          sourceLng: parseFloat(lastPosition.coords.longitude),
+          sourcesourceLocation: usersCoordinates.latitude + "," + usersCoordinates.longitude,
+          sourceLat: parseFloat(usersCoordinates.latitude),
+          sourceLng: parseFloat(usersCoordinates.longitude),
+          destinationLocation: othersCoordinates.latitude+ ','+othersCoordinates.longitude,
+          destinationLat: parseFloat(othersCoordinates.latitude),
+          destinationLng: parseFloat(othersCoordinates.longitude)
         })
 
-      this.getDirections(lastPosition.coords.latitude + "," + lastPosition.coords.longitude, this.state.destinationLocation);
-      
-      // Geolocation.getCurrentPosition(
-      //   (position) => {
-      //       console.log("Position : " + JSON.stringify(position));
-      //       let locationData = {
-      //             latitude: position.coords.latitude,
-      //             longitude: position.coords.longitude,
-      //           }
-      
-      //           let updates = {};
-      //           updates['tracking/' + this.state.orderId] = locationData;
-      //           firebase.database().ref().update(updates);
-      
-      //           this.setState({
-      //             sourcesourceLocation: position.coords.latitude + "," + position.coords.longitude,
-      //             sourceLat: parseFloat(position.coords.latitude),
-      //             sourceLng: parseFloat(position.coords.longitude),
-      //           })
-      //           console.log("Before GetDirection :: ");
-      //           this.getDirections(position.coords.latitude + "," + position.coords.longitude, this.state.destinationLocation);
-      },
-        (error) => alert(JSON.stringify(error)),
-        { enableHighAccuracy: true, });
+      this.getDirections(usersCoordinates.latitude + "," + usersCoordinates.longitude, this.state.destinationLocation);
+    
     }
     else {
       const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-      console.log("Permission Granted >>> " + JSON.stringify(granted));
 
       if (granted) {
-        console.log("If");
-
-        this.WatchID = Geolocation.watchPosition((lastPosition) => {
-          console.log("New Location : " + JSON.stringify(lastPosition));
 
           let locationData = {
-            latitude: lastPosition.coords.latitude,
-            longitude: lastPosition.coords.longitude,
+            latitude: usersCoordinates.latitude,
+            longitude: usersCoordinates.longitude,
           }
 
           let updates = {};
@@ -161,15 +141,12 @@ export default class ProMapDirectionScreen extends Component {
           firebase.database().ref().update(updates);
 
           this.setState({
-            sourcesourceLocation: lastPosition.coords.latitude + "," + lastPosition.coords.longitude,
-            sourceLat: parseFloat(lastPosition.coords.latitude),
-            sourceLng: parseFloat(lastPosition.coords.longitude),
+            sourcesourceLocation: usersCoordinates.latitude + "," + usersCoordinates.longitude,
+            sourceLat: parseFloat(usersCoordinates.latitude),
+            sourceLng: parseFloat(usersCoordinates.longitude),
           })
 
-          this.getDirections(lastPosition.coords.latitude + "," + lastPosition.coords.longitude, this.state.destinationLocation);
-        },
-          (error) => alert(JSON.stringify(error)),
-          { enableHighAccuracy: true, });
+          this.getDirections(usersCoordinates.latitude + "," + usersCoordinates.longitude, this.state.destinationLocation);
       }
       else {
         console.log("ELSE");
@@ -180,90 +157,14 @@ export default class ProMapDirectionScreen extends Component {
 
   async permissionRequest(){
     try {
-      console.log("REQUEST PERMISSION");
-      console.log("Platform : " + Platform.OS)
-        
-      if (Platform.OS == 'ios') {
-        await Geolocation.requestAuthorization();
-
-        this.WatchID = Geolocation.watchPosition((lastPosition) => {
-          console.log("New Location >> " + JSON.stringify(lastPosition));
-  
-          let locationData = {
-            latitude: lastPosition.coords.latitude,
-            longitude: lastPosition.coords.longitude,
-          }
-  
-          let updates = {};
-          updates['tracking/' + this.state.orderId] = locationData;
-          firebase.database().ref().update(updates);
-  
-          this.setState({
-            sourcesourceLocation: lastPosition.coords.latitude + "," + lastPosition.coords.longitude,
-            sourceLat: parseFloat(lastPosition.coords.latitude),
-            sourceLng: parseFloat(lastPosition.coords.longitude),
-          })
-  
-        this.getDirections(lastPosition.coords.latitude + "," + lastPosition.coords.longitude, this.state.destinationLocation);
-
-        // Geolocation.getCurrentPosition(
-        //     (position) => {
-        //         console.log("Position >> " + JSON.stringify(position));
-
-        //         let locationData = {
-        //           latitude: position.coords.latitude,
-        //           longitude: position.coords.longitude,
-        //         }
-      
-        //         let updates = {};
-        //         updates['tracking/' + this.state.orderId] = locationData;
-        //         firebase.database().ref().update(updates);
-      
-        //         this.setState({
-        //           sourcesourceLocation: position.coords.latitude + "," + position.coords.longitude,
-        //           sourceLat: parseFloat(position.coords.latitude),
-        //           sourceLng: parseFloat(position.coords.longitude),
-        //         })
-        //         console.log("Before GetDirection >> ");
-        //         this.getDirections(position.coords.latitude + "," + position.coords.longitude, this.state.destinationLocation);
-              }, (error) => {
-                console.log("Error: " + error.code, error);
-                console.log("Error: " + error.code, error.message);
-                this.setState({
-                    isLoading: false,  
-                })
-            },
-            {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000}
-        );
-      }
+      if (Platform.OS == 'ios') Geolocation.requestAuthorization();
       else {
         const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          this.watchID = Geolocation.watchPosition((lastPosition) => {
-            console.log("New Location >> " + JSON.stringify(lastPosition));
-
-            let locationData = {
-              latitude : lastPosition.coords.latitude,
-              longitude : lastPosition.coords.longitude,
-            }
-    
-            let updates = {};
-            updates['tracking/' + this.state.orderId] = locationData;
-            firebase.database().ref().update(updates);
-    
-            this.setState({
-              sourcesourceLocation: lastPosition.coords.latitude+","+lastPosition.coords.longitude,
-              sourceLat: parseFloat(lastPosition.coords.latitude),
-              sourceLng: parseFloat(lastPosition.coords.longitude),
-            })
-    
-            this.getDirections(lastPosition.coords.latitude+","+lastPosition.coords.longitude, this.state.destinationLocation);
-          },
-            (error) => alert(JSON.stringify(error)),
-            { enableHighAccuracy: true, });
+            this.onRefresh();
         } 
         else{
-        console.log("location permission denied")
+        console.log("location permission denied");
         }
       }
     } 
@@ -273,9 +174,6 @@ export default class ProMapDirectionScreen extends Component {
   }
  
   handleBackButtonClick() {
-
-    Geolocation.clearWatch(this.WatchID);
-
     if (this.state.pageTitle == "ProDashboard")
       this.props.navigation.navigate("ProDashBoard");
     else if (this.state.pageTitle == "ProAcceptRejectJob")
@@ -296,7 +194,7 @@ export default class ProMapDirectionScreen extends Component {
     //console.log("Destination Location : "+parseFloat(ProPendingJobRequest.Request.delivery_lat));
 
     try {
-        let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${ startLoc }&destination=${ destinationLoc }&key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030`)
+        let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${ startLoc }&destination=${ destinationLoc }&key=${MAPS_API_KEY}`)
         let respJson = await resp.json();
 
         let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
@@ -718,4 +616,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-})
+});
+
+const mapStateToProps = state => {
+    return {
+        generalInfo: state.generalInfo
+    }
+}
+
+export default connect(mapStateToProps)(ProMapDirectionScreen);

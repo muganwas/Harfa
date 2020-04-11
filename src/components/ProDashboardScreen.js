@@ -11,7 +11,7 @@ import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-easy-toast';
 import ReviewDialog from './ReviewDialog';
 import ProChatScreen from './ProChatScreen';
 import ProChatAcceptScreen from './ProChatAcceptScreen';
@@ -26,8 +26,10 @@ import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
 import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
+//import Geocoding from 'react-native-geocoding'
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+
 
 const socket = Config.socket;
 
@@ -811,15 +813,21 @@ class ProDashBoardScreen extends Component {
         this.state.refreshing = false;
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
     }
 
+    /*getLocation = () => {
+        Geolocation.getCurrentPosition(info => {
+            const { coords: { longitude, latitude} } = info;
+            
+        });
+    }*/
+
     render() {
         const customerImage = ProPendingJobRequest.Request.image;
-        const { notificationTotal } = this.state;
         return (
             <View style={styles.container}>
 
@@ -831,8 +839,12 @@ class ProDashBoardScreen extends Component {
                         navigation={this.props.navigation}
                         text='Harfa'
                     />
+                    <TouchableOpacity style={{width: '100%' , justifyContent: 'center', alignContent: 'center'}}
+                        onPress={() => this.props.navigation.navigate("ProAddAddress")}>
+                        <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
+                            source={require('../icons/maps_location.png')} />
+                    </TouchableOpacity>
                 </View>
-
                 <View style={styles.onlineOfflineHeader}>
                     <Text style={{
                         flex: 1, textAlignVertical: 'center', alignItems: 'flex-start',

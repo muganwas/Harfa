@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import {View, Text, TouchableOpacity, Image, StyleSheet, Dimensions, BackHandler, 
-    ScrollView, Modal, StatusBar, Platform, ToastAndroid} from 'react-native';
-import Toast, {DURATION} from 'react-native-easy-toast';
-import { Rating, AirbnbRating } from 'react-native-ratings';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+    ScrollView, Modal, StatusBar, Platform} from 'react-native';
+import Toast from 'react-native-easy-toast';
+import { AirbnbRating } from 'react-native-ratings';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import UserDetails from './UserDetails';
 import ReviewDialogCustomer from './ReviewDialogCustomer';
 import WaitingDialog from './WaitingDialog';
@@ -11,11 +11,11 @@ import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 

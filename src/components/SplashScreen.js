@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import {View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler} from 'react-native';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
@@ -11,10 +10,7 @@ import DashboardScreen from './DashboardScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
-import VerificationScreen from './VerificationScreen';
 import RegisterScreen from './RegisterScreen';
-import ProVerificationScreen from './ProVerificationScreen';
-import ProLoginPhoneScreen from './ProLoginPhoneScreen';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
 import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
 import ProForgotPasswordScreen from './ProForgotPasswordScreen';
@@ -29,10 +25,6 @@ import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
 import ProPendingRequest from './ProPendingJobRequest';
-import Axios from 'axios';
- 
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#000000';
 
 const PRO_GET_PROFILE = Config.baseURL+"employee/";
 const USER_GET_PROFILE = Config.baseURL+"users/";
@@ -43,19 +35,19 @@ const database = firebase.database();
 class SplashScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
-      this.state = {
-        id: null,
-        isLoading: false,
-      };
+        super(props);
+
+        this.state = {
+            id: null,
+            isLoading: false,
+        };
     };
 
     componentDidMount()
     {
         setTimeout(this.splashTimeOut, 3000);
-
-         // // Your web app's Firebase configuration
+         /*
+         * no need for initialization
          var config = {
             apiKey: Config.apiKey,
             authDomain: Config.authDomain,
@@ -69,11 +61,7 @@ class SplashScreen extends Component {
         // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(config);
-        }
-        
-        firebase.notifications().onNotification((notification) => {       
-            const { title, body } = notification;
-        });
+        }*/
     }
 
     splashTimeOut = () => {

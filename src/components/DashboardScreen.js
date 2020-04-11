@@ -11,7 +11,7 @@ import {createStackNavigator} from 'react-navigation-stack';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
-import Toast, {DURATION} from 'react-native-easy-toast'
+import Toast from 'react-native-easy-toast'
 import WaitingDialog from './WaitingDialog';
 
 import Config from './Config';
@@ -25,8 +25,8 @@ import MapDirectionScreen from './MapDirectionScreen';
 import AddAddressScreen from './AddAddressScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
-import Notifications from './Notifications';
 import Hamburger from './Hamburger';
+//import {Notifications} from 'react-native-notifications';
 
 const socket = Config.socket;
 
@@ -131,9 +131,6 @@ class DashBoardScreen extends Component {
             fetchedNotifications({type: 'generic', value: newGenericCount});
             const { title, body, data } = notification;
       
-            //console.log('Notification >>> ', notification);
-            //console.log("Title, body  data >>> " + title + " >>>" + body+ " >>> "+JSON.stringify(data));
-      
             if (title == "Chat Request Accepted") {
               this.setState({
                 requestStatus: title,
@@ -164,6 +161,7 @@ class DashBoardScreen extends Component {
                 delivery_lat: data.delivery_lat,
                 delivery_lang: data.delivery_lang,
               }
+
               PendingJobRequest.Request = pendingJobData;
 
               this.showToast("Demande de chat acceptée")
@@ -454,7 +452,6 @@ class DashBoardScreen extends Component {
                
                 <View style={styles.header}>
                     <Hamburger
-                        Notifications={Notifications}
                         navigation={this.props.navigation}
                         text='Harfa'
                     />

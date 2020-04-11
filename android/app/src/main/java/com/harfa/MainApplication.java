@@ -12,6 +12,8 @@ import java.util.List;
 import io.invertase.firebase.messaging.RNFirebaseMessagingPackage; 
 import io.invertase.firebase.notifications.RNFirebaseNotificationsPackage;
 import io.invertase.firebase.database.RNFirebaseDatabasePackage;
+//import io.neson.react.notification.NotificationPackage;
+//import com.wix.reactnativenotifications.RNNotificationsPackage;
 import com.facebook.FacebookSdk;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -32,6 +34,8 @@ public class MainApplication extends Application implements ReactApplication {
           packages.add(new RNFirebaseMessagingPackage());
           packages.add(new RNFirebaseNotificationsPackage());
           packages.add(new RNFirebaseDatabasePackage());
+          //packages.add(new RNNotificationsPackage(MainApplication.this));
+            //packages.add(new NotificationPackage());
           return packages;
         }
 

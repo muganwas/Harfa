@@ -495,7 +495,7 @@ class ProMyProfileScreen extends Component {
                                 value={this.state.address}
                                 multiline={true}
                                 onPress={() => this.props.navigation.navigate('SelectAddress', {
-                                    onGoBack: this.getDataFromAddAddressScreen, })}>
+                                    onGoBack: this.getDataFromAddAddressScreen })}>
                                 {this.state.address}
                             </Text>
                         </View>

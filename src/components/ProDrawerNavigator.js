@@ -4,6 +4,7 @@ import {createAppContainer} from 'react-navigation';
 import {createDrawerNavigator } from 'react-navigation-drawer';
 import ProCustomMenuLayout from './ProCustomMenuLayout';
 import ProCheckProfileScreen from './ProCheckProfileScreen'
+import ProAddAddressScreen from './ProAddAddressScreen';
 import ProDashboardScreen from './ProDashboardScreen';
 import ProMyProfileScreen from './ProMyProfileScreen';
 import ProNotificationsScreen from './ProNotificationsScreen';
@@ -16,6 +17,7 @@ import ProBookingScreen from './ProBookingScreen';
 const ProMyDrawerNavigator = createDrawerNavigator({
     
     ProDashboard: {screen: ProDashboardScreen},
+    ProAddAddress: {screen: ProAddAddressScreen},
     ProMyProfile: {screen: ProMyProfileScreen},
     ProCheckProfile: {screen: ProCheckProfileScreen},
     ProNotifications: {screen: ProNotificationsScreen},
@@ -41,7 +43,7 @@ const AppContainer = createAppContainer(ProMyDrawerNavigator);
 
 export default class ProDrawerNavigator extends Component{
     render(){
-        return <AppContainer/>;
+        return <AppContainer/>
     }
 }
 

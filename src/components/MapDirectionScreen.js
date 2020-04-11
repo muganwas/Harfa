@@ -3,6 +3,7 @@ import {
   View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, Linking,
   BackHandler, Alert, StatusBar, Platform,
 } from 'react-native';
+import { connect } from 'react-redux';
 //import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import firebase from 'react-native-firebase';
 import MapView from 'react-native-maps';
@@ -11,6 +12,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import PendingJobRequest from './PendingJobRequest';
 import UserDetails from './UserDetails';
+import { MAPS_API_KEY } from 'react-native-dotenv';
 import Config from './Config';
 
 //const colorPrimary = '#FFBF0F';
@@ -41,18 +43,18 @@ function StatusBarPlaceHolder() {
   );
 }
 
-export default class MapDirectionScreen extends Component {
+class MapDirectionScreen extends Component {
 
   constructor(props) {
     super(props)
-
+    const { usersCoordinates, othersCoordinates } = this.props.generalInfo;
     this.state = {
-      sourceLocation: UserDetails.User.lat + "," + UserDetails.User.lang,  //String
-      sourceLat: parseFloat(UserDetails.User.lat),   //Double
-      sourceLng: parseFloat(UserDetails.User.lang),
-      destinationLocation: PendingJobRequest.Request.lat + ',' + PendingJobRequest.Request.lang,
-      destinationLat: parseFloat(PendingJobRequest.Request.lat),
-      destinationLng: parseFloat(PendingJobRequest.Request.lang),
+      sourceLocation: othersCoordinates.latitude + "," + othersCoordinates.longitude,
+      sourceLat: parseFloat(othersCoordinates.latitude),
+      sourceLng: parseFloat(othersCoordinates.longitude),
+      destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+      destinationLat: parseFloat(usersCoordinates.latitude),
+      destinationLng: parseFloat(usersCoordinates.longitude),
       coords: [],
       isLoading: true,
 
@@ -81,63 +83,10 @@ export default class MapDirectionScreen extends Component {
   };
 
   componentDidMount() {
-
+    const { generalInfo: { othersCoordinates }} = this.props;
+    this.getDirections(othersCoordinates.latitude + "," + othersCoordinates.longitude, this.state.destinationLocation);
+    var that = this;
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-    var that = this;
-
-    console.log(this.state.orderId);
-
-    firebase.database().ref('tracking').child(this.state.orderId)
-      .on('value', function (snapshot) {
-
-        console.log("Value >> " + JSON.stringify(snapshot));
-
-        if (JSON.stringify(snapshot) != 'null') {
-          console.log("Value >> " + JSON.stringify(snapshot));
-          console.log("Source Loc >> " + JSON.stringify(UserDetails.User.lat + "," + UserDetails.User.lang));
-          console.log("Source Location >> " + that.state.sourceLocation);
-
-          that.setState({
-            destinationLat: parseFloat(snapshot.val().latitude),
-            destinationLng: parseFloat(snapshot.val().longitude),
-            destinationLocation: snapshot.val().latitude + ',' + snapshot.val().longitude,
-          })
-
-          that.getDirections(that.state.sourceLocation, that.state.destinationLocation);
-        }
-        else {
-          Alert.alert(
-            "Info emploi",
-            "Votre travail n'a pas été accepté par le fournisseur de services jusqu'à présent. Vous ne pouvez donc pas suivre en ce moment",
-            [
-              {
-                text: 'Annuler',
-                onPress: () => console.log('Cancel Pressed'),
-                style: 'cancel',
-              },
-              {
-                text: 'OK',
-                onPress: () => {
-                  if (that.state.titlePage == "Dashboard")
-                    that.props.navigation.navigate("DashBoard");
-                  else if (that.state.titlePage == "ProviderDetails")
-                    that.props.navigation.navigate("ProviderDetails");
-                  else if (that.state.titlePage == "Chat")
-                    that.props.navigation.navigate("Chat");
-                  return true;
-                },
-              },
-            ]
-          );
-        }
-      });
-  }
-
-  componentWillMount() {
-
-    var that = this;
-
     firebase.notifications().onNotification((notification) => {
 
       const { title, body, data } = notification;
@@ -267,6 +216,22 @@ export default class MapDirectionScreen extends Component {
     });
   }
 
+  componentDidUpdate() {
+    const { generalInfo: { usersCoordinates, othersCoordinates: { latitude, longitude } }} = this.props;
+    const { sourceLat, sourceLng } = this.state;
+    if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(sourceLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(sourceLng))) {
+        this.setState({
+            sourceLocation: othersCoordinates.latitude + "," + othersCoordinates.longitude,
+            sourceLat: parseFloat(othersCoordinates.latitude),
+            sourceLng: parseFloat(othersCoordinates.longitude),
+            destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+            destinationLat: parseFloat(usersCoordinates.latitude),
+            destinationLng: parseFloat(usersCoordinates.longitude),
+        });
+        this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
+    }
+  }
+
   componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
@@ -287,7 +252,7 @@ export default class MapDirectionScreen extends Component {
     console.log("Destination Location : " + destinationLoc);
 
     try {
-      let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030`)
+      let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`)
       let respJson = await resp.json();
 
       let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
@@ -689,4 +654,12 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
-})
+});
+
+const mapStateToProps = state => {
+    return {
+        generalInfo: state.generalInfo
+    }
+}
+
+export default connect(mapStateToProps)(MapDirectionScreen);
