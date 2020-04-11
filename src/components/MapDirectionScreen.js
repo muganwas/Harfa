@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, Linking,
+  View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Linking,
   BackHandler, Alert, StatusBar, Platform,
 } from 'react-native';
 import { connect } from 'react-redux';
@@ -218,12 +218,12 @@ class MapDirectionScreen extends Component {
 
   componentDidUpdate() {
     const { generalInfo: { usersCoordinates, othersCoordinates: { latitude, longitude } }} = this.props;
-    const { sourceLat, sourceLng } = this.state;
-    if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(sourceLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(sourceLng))) {
+    const { destinationLat, destinationLng } = this.state;
+    if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(destinationLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))) {
         this.setState({
-            sourceLocation: othersCoordinates.latitude + "," + othersCoordinates.longitude,
-            sourceLat: parseFloat(othersCoordinates.latitude),
-            sourceLng: parseFloat(othersCoordinates.longitude),
+            sourceLocation: latitude + "," + longitude,
+            sourceLat: parseFloat(latitude),
+            sourceLng: parseFloat(longitude),
             destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
             destinationLat: parseFloat(usersCoordinates.latitude),
             destinationLng: parseFloat(usersCoordinates.longitude),

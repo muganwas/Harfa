@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import { connect } from 'react-redux';
 import {
   View,
   StyleSheet,
@@ -7,27 +8,27 @@ import {
   Text,
   Dimensions,
   FlatList,
-  ActivityIndicator,
   BackHandler,
   StatusBar,
   Platform,
   Modal,
 } from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import {Rating, AirbnbRating} from 'react-native-ratings';
-import Toast, {DURATION} from 'react-native-easy-toast';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import {AirbnbRating} from 'react-native-ratings';
+import Toast from 'react-native-easy-toast';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails';
 import WaitingDialog from './WaitingDialog';
 
-const colorPrimary = '#FFBF0F';
+//const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0';
+//const colorGray = '#C0C0C0';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const GET_ALL_PROVIDER_URL = Config.baseURL + 'job/serviceprovider/';
 
@@ -48,7 +49,7 @@ function StatusBarPlaceHolder() {
   );
 }
 
-export default class ListOfProviderScreen extends Component {
+class ListOfProviderScreen extends Component {
   constructor(props) {
     super(props);
 
@@ -58,6 +59,8 @@ export default class ListOfProviderScreen extends Component {
       serviceId: this.props.navigation.state.params.serviceId,
 
       dataSource: [],
+      distInfo: {},
+      distCalculated: false,
       isNoData: false,
       isData: false,
       isLoading: true,
@@ -116,12 +119,59 @@ export default class ListOfProviderScreen extends Component {
       });
   }
 
+  componentDidUpdate(){
+    const { dataSource, distCalculated } = this.state;
+    console.log(dataSource)
+    var distInfo = {};
+    const { generalInfo: { usersCoordinates } } = this.props;
+    if (dataSource.length > 0 && !distCalculated) {
+        dataSource.map(info => {
+            console.log(info)
+            const { _id } = info;
+            firebase.database().ref(`liveLocation/${_id}`).once('value', result => {
+                const { latitude, longitude } = result.val();
+                console.log(latitude, longitude)
+                const dist = this.distance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
+                distInfo[_id] = dist;
+                this.setState({distInfo});
+            }).
+            catch(e => {
+                console.log(e.message);
+            });
+        });
+        this.setState({distCalculated: true});
+    }
+    console.log(this.state.distInfo)
+  }
+
   componentWillUnmount() {
     BackHandler.removeEventListener(
       'hardwareBackPress',
       this.handleBackButtonClick,
     );
   }
+
+  distance = (lat1, lon1, lat2, lon2, unit) => {
+	if ((lat1 == lat2) && (lon1 == lon2)) {
+		return 0;
+	}
+	else {
+		var radlat1 = Math.PI * lat1/180;
+		var radlat2 = Math.PI * lat2/180;
+		var theta = lon1-lon2;
+		var radtheta = Math.PI * theta/180;
+		var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+		if (dist > 1) {
+			dist = 1;
+		}
+		dist = Math.acos(dist);
+		dist = dist * 180/Math.PI;
+		dist = dist * 60 * 1.1515;
+		if (unit=="K") { dist = dist * 1.609344 }
+		if (unit=="N") { dist = dist * 0.8684 }
+		return dist;
+	}
+} 
 
   handleBackButtonClick() {
     this.props.navigation.navigate('DashBoard');
@@ -134,6 +184,7 @@ export default class ListOfProviderScreen extends Component {
 
   renderItem = ({item}) => {
     const { accountType } = UserDetails.User;
+    const { _id } = item;
     if ( accountType === 'Individual' || item.invoice === 1)/** only return providers with invoices for enterprise clients */
         return (
         <TouchableOpacity
@@ -201,7 +252,21 @@ export default class ListOfProviderScreen extends Component {
                 </Text>
                 <Text style={{marginTop: 5}}>
                 <Text style={{fontWeight: 'bold', color: 'black', fontSize: 14}}>
-                    {item.hash + ' Km'}
+                    {'Address:' + item.hash + ' Km'}
+                </Text>
+                <Text
+                    style={{
+                    color: 'black',
+                    width: screenWidth - 120,
+                    fontSize: 14,
+                    }}>
+                    {' '}
+                    loin de vous
+                </Text>
+                </Text>
+                <Text style={{marginTop: 5}}>
+                <Text style={{fontWeight: 'bold', color: 'black', fontSize: 14}}>
+                    {`Current Location: ${!this.state.distInfo[_id] ? item.hash : Math.round(this.state.distInfo[_id]) } Kms`}
                 </Text>
                 <Text
                     style={{
@@ -380,3 +445,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+const mapStateToProps = state => {
+    return {
+        generalInfo: state.generalInfo
+    }
+}
+
+export default connect(mapStateToProps)(ListOfProviderScreen);

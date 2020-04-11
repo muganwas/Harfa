@@ -13,7 +13,7 @@ import ProPendingJobRequest from './ProPendingJobRequest';
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
-import { MAPS_API_KEY } from 'react-native-dotenv';
+import {MAPS_API_KEY} from 'react-native-dotenv';
 
 //const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -194,7 +194,7 @@ class ProMapDirectionScreen extends Component {
     //console.log("Destination Location : "+parseFloat(ProPendingJobRequest.Request.delivery_lat));
 
     try {
-        let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${ startLoc }&destination=${ destinationLoc }&key=${MAPS_API_KEY}`)
+        let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`)
         let respJson = await resp.json();
 
         let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
