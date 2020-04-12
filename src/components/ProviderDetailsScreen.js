@@ -54,6 +54,7 @@ export default class ProviderDetailsScreen extends Component {
         surname: this.props.navigation.state.params.surname,
         image: this.props.navigation.state.params.image,
         mobile: this.props.navigation.state.params.mobile,
+        avgRating: this.props.navigation.state.params.avgRating,
         distance: this.props.navigation.state.params.distance,
         address: this.props.navigation.state.params.address,
         description: this.props.navigation.state.params.description,
@@ -650,6 +651,7 @@ export default class ProviderDetailsScreen extends Component {
               <AirbnbRating
                 type='custom'
                 ratingCount={5}
+                defaultRating={this.state.avgRating}
                 size={10}
                 ratingBackgroundColor={colorBg}
                 showRating={false}

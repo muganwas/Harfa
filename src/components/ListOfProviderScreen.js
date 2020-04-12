@@ -211,6 +211,7 @@ class ListOfProviderScreen extends Component {
                     surname: item.surname,
                     image: item.image,
                     mobile: item.mobile,
+                    avgRating: item.avgRating,
                     distance: item.hash,
                     address: item.address,
                     description: item.description,
