@@ -14,11 +14,12 @@ import {
   Modal,
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import {AirbnbRating} from 'react-native-ratings';
+import {Rating, AirbnbRating} from 'react-native-ratings';
 import Toast from 'react-native-easy-toast';
 import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails';
+import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
 
 //const colorPrimary = '#FFBF0F';
@@ -31,6 +32,7 @@ const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
 
 const GET_ALL_PROVIDER_URL = Config.baseURL + 'job/serviceprovider/';
+const GET_EMPLOYEE_RATINGS = Config.baseURL + 'jobrequest/employeeReviews/';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -64,6 +66,9 @@ class ListOfProviderScreen extends Component {
       isNoData: false,
       isData: false,
       isLoading: true,
+      showClasses: false,
+      distanceOrder: true,
+      reviewOrder: true
     };
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
@@ -95,6 +100,7 @@ class ListOfProviderScreen extends Component {
       .then(response => response.json())
       .then(responseJson => {
         // console.log('Response : ' + JSON.stringify(responseJson));
+        // console.log(responseJson)
         if (responseJson.result) {
           this.setState({
             dataSource: responseJson.data, //data is key
@@ -119,29 +125,36 @@ class ListOfProviderScreen extends Component {
       });
   }
 
+  calculateRating = async id => {
+    let avg = 0;
+    await axios.get(GET_EMPLOYEE_RATINGS + id).then(res => {
+      if (res.data.rating > 0) avg = res.data.rating;
+    });
+    return(avg)
+  }
+
   componentDidUpdate(){
     const { dataSource, distCalculated } = this.state;
-    console.log(dataSource)
     var distInfo = {};
+    var tempDatasource = [...dataSource];
     const { generalInfo: { usersCoordinates } } = this.props;
     if (dataSource.length > 0 && !distCalculated) {
-        dataSource.map(info => {
-            console.log(info)
-            const { _id } = info;
+        Object.keys(dataSource).map(key => {
+            // console.log(info)
+            const { _id, id } = dataSource[key];
             firebase.database().ref(`liveLocation/${_id}`).once('value', result => {
                 const { latitude, longitude } = result.val();
-                console.log(latitude, longitude)
                 const dist = this.distance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
-                distInfo[_id] = dist;
+                distInfo[_id] = parseFloat(dist).toFixed(1);
+                tempDatasource[key].hash = parseFloat(dist).toFixed(1);
                 this.setState({distInfo});
             }).
             catch(e => {
                 console.log(e.message);
             });
         });
-        this.setState({distCalculated: true});
+        this.setState({distCalculated: true, dataSource: tempDatasource});
     }
-    console.log(this.state.distInfo)
   }
 
   componentWillUnmount() {
@@ -184,55 +197,61 @@ class ListOfProviderScreen extends Component {
 
   renderItem = ({item}) => {
     const { accountType } = UserDetails.User;
-    const { _id } = item;
+    const { showClasses } = this.state;
+    console.log(item)
     if ( accountType === 'Individual' || item.invoice === 1)/** only return providers with invoices for enterprise clients */
         return (
         <TouchableOpacity
             style={styles.itemMainContainer}
-            onPress={() =>
-            this.props.navigation.navigate('ProviderDetails', {
-                providerId: item.id,
-                name: item.username,
-                surname: item.surname,
-                image: item.image,
-                mobile: item.mobile,
-                distance: item.hash,
-                address: item.address,
-                description: item.description,
-                status: item.status,
-                fcmId: item.fcm_id,
-                accountType: item.account_type,
-                serviceName: this.state.serviceName,
-                serviceId: this.state.serviceId,
-            })
+            onPress={() => {
+                !showClasses ?
+                this.props.navigation.navigate('ProviderDetails', {
+                    providerId: item.id,
+                    name: item.username,
+                    surname: item.surname,
+                    image: item.image,
+                    mobile: item.mobile,
+                    distance: item.hash,
+                    address: item.address,
+                    description: item.description,
+                    status: item.status,
+                    fcmId: item.fcm_id,
+                    accountType: item.account_type,
+                    serviceName: this.state.serviceName,
+                    serviceId: this.state.serviceId,
+                }) :
+                null;
+            }
             }>
             <View
-            style={{
-                width: screenWidth,
-                flexDirection: 'row',
-                backgroundColor: 'white',
-                alignContent: 'center',
-                padding: 10,
-            }}>
+                style={{
+                    width: screenWidth,
+                    flexDirection: 'row',
+                    backgroundColor: 'white',
+                    alignContent: 'center',
+                    padding: 10,
+                }}
+            >
             <View style={{flexDirection: 'column', marginLeft: 10}}>
                 <Image
-                style={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: 100,
-                    alignSelf: 'center',
-                }}
-                source={{uri: item.image}}
+                    style={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 100,
+                        alignSelf: 'center',
+                    }}
+                    source={{uri: item.image}}
                 />
 
                 <View style={{backgroundColor: 'white', marginTop: 5}}>
+
                 <AirbnbRating
                     type="custom"
                     ratingCount={5}
+                    defaultRating={item.avgRating}
                     size={10}
                     ratingBackgroundColor={colorBg}
                     showRating={false}
-                    onFinishRating={this.ratingCompleted}
                 />
                 </View>
             </View>
@@ -242,7 +261,8 @@ class ListOfProviderScreen extends Component {
                 flexDirection: 'column',
                 width: screenWidth - 130,
                 marginLeft: 10,
-                }}>
+                }}
+            >
                 <Text style={{fontWeight: 'bold', color: 'black', fontSize: 16}}>
                 {item.username + ' ' + item.surname}
                 </Text>
@@ -252,21 +272,7 @@ class ListOfProviderScreen extends Component {
                 </Text>
                 <Text style={{marginTop: 5}}>
                 <Text style={{fontWeight: 'bold', color: 'black', fontSize: 14}}>
-                    {'Address:' + item.hash + ' Km'}
-                </Text>
-                <Text
-                    style={{
-                    color: 'black',
-                    width: screenWidth - 120,
-                    fontSize: 14,
-                    }}>
-                    {' '}
-                    loin de vous
-                </Text>
-                </Text>
-                <Text style={{marginTop: 5}}>
-                <Text style={{fontWeight: 'bold', color: 'black', fontSize: 14}}>
-                    {`Current Location: ${!this.state.distInfo[_id] ? item.hash : Math.round(this.state.distInfo[_id]) } Kms`}
+                    {'Position:' + item.hash + ' Km'}
                 </Text>
                 <Text
                     style={{
@@ -285,13 +291,57 @@ class ListOfProviderScreen extends Component {
     else return null;
   };
 
-  changeWaitingDialogVisibility = boo => {
+  changeWaitingDialogVisibility = bool => {
     this.setState({
       isLoading: bool,
     });
   };
 
+  rerenderList = order => {
+      const { dataSource, reviewOrder, distanceOrder } = this.state
+      // console.log(dataSource);
+      let hashsArr = [];
+      let ratingArr = [];
+      let newDataSource = [];
+      if (order === 'distance') {
+        dataSource.map(obj => hashsArr.push([obj._id, obj.hash]));
+        distanceOrder ? hashsArr.sort(function(a,b){return a[1]-b[1]}) : hashsArr.sort(function(a,b){return b[1]-a[1]});
+        /**rearrange datasource according to distance */
+        hashsArr.map(innerArr => {
+          dataSource.map(obj => {
+            const id = obj._id;
+            if (id === innerArr[0]) {
+                newDataSource.push(obj);
+            }
+          });
+        });
+        //console.log(newDataSource);
+        this.setState({dataSource: newDataSource, distanceOrder: !distanceOrder });
+      } else {
+        dataSource.map(obj => ratingArr.push([obj._id, obj.avgRating]));
+        reviewOrder ? ratingArr.sort(function(a,b){return a[1]-b[1]}) : ratingArr.sort(function(a,b){return b[1]-a[1]});
+        /**rearrange datasource according to ratings */
+        ratingArr.map(innerArr => {
+            dataSource.map(obj => {
+                const id = obj._id;
+                //const rating = obj.avgRating;
+                if (id === innerArr[0]) {
+                    newDataSource.push(obj);
+                }
+            }); 
+        });
+        this.setState({ dataSource: newDataSource, reviewOrder: !reviewOrder});
+      }
+      
+      this.toggleShowClasses();
+  }
+
+  toggleShowClasses = () => {
+      this.setState({showClasses: !this.state.showClasses});
+  }
+
   render() {
+      const { showClasses } = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -322,6 +372,17 @@ class ListOfProviderScreen extends Component {
               }}>
               {this.state.serviceName}
             </Text>
+            <TouchableOpacity onPress={this.toggleShowClasses} style={styles.classedByContainer}>
+                <Text style={styles.classedByText}>Classed By</Text>
+            </TouchableOpacity>
+            <View style={ showClasses ? styles.classList : styles.hidden}>
+                <TouchableOpacity onPress={() => this.rerenderList('distance')} style={styles.classTextContainer}>
+                    <Text style={styles.classText}> Distance </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => this.rerenderList('reviews')} style={styles.classTextContainer}>
+                    <Text style={styles.classText}> Reviews </Text>
+                </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -401,7 +462,7 @@ class ListOfProviderScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colorBg,
+    backgroundColor: colorBg
   },
   header: {
     width: '100%',
@@ -418,6 +479,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colorBg,
     padding: 5,
+    elevation: Platform.OS === 'android' ? 3 : 0,
+    zIndex: 2
   },
   itemMainContainer: {
     flex: 1,
@@ -427,9 +490,8 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
-    elevation: 5,
     padding: 5,
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   itemImageView: {
     alignItems: 'flex-start',
@@ -444,6 +506,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  classedByContainer: {
+      position: 'absolute',
+      right: 10
+  },
+  classedByText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 15
+  },
+  hidden: {
+      display: 'none'
+  },
+  classList: {
+      position: 'absolute',
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: '#fff',
+      alignContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 0},
+      shadowOpacity: 0.75,
+      shadowRadius: 5,
+      width: 100,
+      right: 2,
+      top: 3,
+      elevation: Platform.OS === 'android' ? 10 : 0,
+      zIndex: 4
+  },
+  classTextContainer: {
+      flex: 1,
+      display: 'flex',
+      alignContent: 'center',
+      padding: 5,
+      alignItems: 'center',
+      elevation: Platform.OS === 'android' ? 10 : 0,
+      zIndex: 9
+  },
+  classText: {
+      flex: 1,
+      textAlign: 'center'
+  }
 });
 
 const mapStateToProps = state => {

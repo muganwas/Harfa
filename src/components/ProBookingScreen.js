@@ -246,6 +246,7 @@ class ProBookingScreen extends Component {
     }
 
     render() {
+        console.log('pro booking screen')
         return (
             <View style={styles.container}>
 
@@ -253,7 +254,6 @@ class ProBookingScreen extends Component {
                 <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5  }}>
                     <Hamburger
-                        Notifications={Notifications}
                         navigation={this.props.navigation}
                         text='Réservations'
                     />

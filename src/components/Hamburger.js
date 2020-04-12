@@ -75,7 +75,13 @@ class Hamburger extends React.Component {
             fetchOthersCoordinatesError
         } = this.props;
         console.log('hamburger loaded...');
-        const providerId = navigation.state.params ? navigation.satate.params.providerId ? navigation.state.params.providerId : null : null;
+        const providerId = navigation ?
+        navigation.state.params ? 
+        navigation.satate.params.providerId ? 
+        navigation.state.params.providerId : 
+        null : 
+        null :
+        null;
         const receiverId = PendingJobRequest.Request.employee_id || providerId;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
@@ -209,10 +215,11 @@ class Hamburger extends React.Component {
             navigation,
             notificationsInfo 
         } = this.props;
+        console.log(this.props)
         const notificationTotal = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
         return (
             <>
-                <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+                <TouchableOpacity onPress={ navigation ? () => navigation.dispatch(DrawerActions.openDrawer()) : () => {}}
                     style={styles.touchableHighlight}>
                     <Image style={styles.image}
                         source={require('../icons/humberger.png')} />

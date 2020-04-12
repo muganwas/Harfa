@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, FlatList, ActivityIndicator,
-    BackHandler, StatusBar, Platform, Modal, ToastAndroid, Animated} from 'react-native';
+    BackHandler, StatusBar, Platform, Modal, Animated} from 'react-native';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import ViewPager from "@react-native-community/viewpager";
-import Toast, {DURATION} from 'react-native-easy-toast';
+import Toast from 'react-native-easy-toast';
 import UserDetails from './UserDetails';
 import Config from './Config';
 import BookingDetailsScreen from './BookingDetailsScreen';
 import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
 import WaitingDialog from './WaitingDialog';
-import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 
 const colorPrimary = '#FFBF0F';
@@ -248,8 +248,7 @@ class BookingScreen extends Component {
                 <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 10, paddingRight: 20, paddingBottom: 5}}>
                     <Hamburger
-                        Notifications={Notifications}
-                        navigation={this.props.navitgation}
+                        navigation={this.props.navigation}
                         text='Réservations'
                     />
                 </View>
@@ -346,13 +345,13 @@ class BookingScreen extends Component {
 
 const AppStackNavigator = createStackNavigator({
     Booking: {
-        screen: BookingScreen,
+        screen: connect()(BookingScreen),
         navigationOptions: {
             header: null
         }
     },
     BookingDetails: {
-        screen: BookingDetailsScreen,
+        screen: connect()(BookingDetailsScreen),
         navigationOptions: {
             header: null,
         }
