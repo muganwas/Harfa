@@ -3,6 +3,7 @@ import {StyleSheet, Text, View, Platform, Dimensions, TouchableOpacity, Touchabl
 import Modal from 'react-native-modalbox';
 import AsyncStorage from '@react-native-community/async-storage';
 import RNExitApp from 'react-native-exit-app';
+import Config from './Config';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 
 const colorPrimary = '#FFBF0F';
@@ -34,10 +35,11 @@ export default class DialogLogout extends Component {
             await AsyncStorage.removeItem('userType');
 
             console.log("Logout");    
-           if (Platform.OS == 'android')
-                BackHandler.exitApp();
-           else
+           if (Platform.OS == 'android') BackHandler.exitApp();
+           else {
+                Config.socket.close();
                 RNExitApp.exitApp();
+           }
         }
         else if(action == 'Cancel')
         {

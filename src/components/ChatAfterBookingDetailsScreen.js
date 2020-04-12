@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
 } from 'react-native';
-import firebase from 'firebase';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import ImagePicker from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
 
@@ -44,7 +45,7 @@ const options = {
 
 const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
-export default class ChatAfterBookingDetailsScreen extends Component {
+class ChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -55,8 +56,8 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             senderName: UserDetails.User.username,
             inputMessage: '',
             showButton: false,
-            dataChatSource: [],
-            isLoading: true,
+            dataChatSource: this.props.messagesInfo.dataChatSource,
+            isLoading: !this.props.messagesInfo.fetched,
             isUpLoading: false,
 
             receiverId: this.props.navigation.state.params.providerId,
@@ -70,27 +71,23 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount() {
-
+    componentDidMount() {
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         console.log("Sender Id >> "+UserDetails.User.userId);
         console.log("Receiver ID >> "+this.state.receiverId);
 
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    }
 
-        //Get Chat Message
-        firebase.database().ref('chatting').child(UserDetails.User.userId).child(this.state.receiverId)
-            .on('child_added', (value) => {
-                this.setState((prevState) => {
-                    return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
-                        isLoading: false
-                    }
-                })
-            });
-
-        this.setState({
-            isLoading: false,
-        })
+    componentDidUpdate(){
+        const { fetched, dataChatSource } = this.props.messagesInfo;
+        const { isLoading } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading) 
+            this.setState({isLoading:false});
+        if ( JSON.stringify(dataChatSource) !== JSON.stringify(localDataChatSource)) 
+            this.setState({dataChatSource});
     }
 
     componentWillUnmount() {
@@ -223,7 +220,9 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
+    getImageURL = async imageObject => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
        
         let message = {
             textMessage: 'uploading',
@@ -240,10 +239,9 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             type: "image",
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
         }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
 
+        const newDataChatSource = [...dataChatSource, message];
+        fetchedMessages(newDataChatSource);
         this.setState({
             isUploading: true
         })
@@ -305,8 +303,9 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    sendImageTask = async (imageURL) => {
-       
+    sendImageTask = async imageURL => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
         console.log("Sender Id : "+this.state.senderId);
         console.log("Receiver Id : "+this.state.receiverId);
 
@@ -356,10 +355,10 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             }
 
             //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
+            var array = [...dataChatSource]; // make a separate copy of the array
             if (array.length > 0) {
                 array.splice(array.length-1, 1);
-                this.setState({ dataChatSource: array });
+                fetchedMessages(array);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -378,6 +377,8 @@ export default class ChatAfterBookingDetailsScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
+        console.log('sender image' + senderImage)
         return (
             this.state.senderId != item.senderId
                 ?
@@ -387,7 +388,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -463,6 +464,8 @@ export default class ChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
+        const providerImage = this.props.navigation.state.params.providerImage;
+        console.log('sender image' + providerImage)
         return (
 
             <View style={styles.container}>
@@ -483,7 +486,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={{ uri: this.props.navigation.state.params.providerImage }} />
+                                source={providerImage ? { uri: providerImage } : require('../images/generic_avatar.png')} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                                 {this.state.receiverName + " "}{this.state.surname}
                             </Text>
@@ -637,3 +640,34 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchMessages: () => {
+            dispatch(startFetchingMessages());
+        },
+        fetchedMessages: data => {
+            dispatch(messagesFetched(data));
+        },
+        fetchingMessagesError: error => {
+            dispatch(messagesError(error));
+        },
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen);

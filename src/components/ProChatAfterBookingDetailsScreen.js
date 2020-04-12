@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ProviderDetails from './ProviderDetails';
 import ImagePicker from 'react-native-image-picker';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
@@ -45,7 +47,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ProChatAfterBookingDetailsScreen extends Component {
+class ProChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -72,15 +74,16 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount() {
-
+    componentDidMount() {
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
         console.log("Sender Id: "+this.state.senderId);
         console.log("Receiver Id: "+this.state.receiverId);
 
         firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
-            .on('child_added', (value) => {
+            .on('child_added',value => {
                 this.setState((prevState) => {
                     return {
                         dataChatSource: [...prevState.dataChatSource, value.val()],
@@ -380,6 +383,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
@@ -389,7 +393,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -471,6 +475,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
+        const receiverImage = this.props.navigation.state.params.receiverImage;
         return (
 
             <View style={styles.container}>
@@ -492,7 +497,7 @@ export default class ProChatAfterBookingDetailsScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10, }}
-                                source={{ uri: this.props.navigation.state.params.receiverImage }} />
+                                source={receiverImage ? { uri: receiverImage } : require('../images/generic_avatar.png')} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
                                 {this.state.receiverName}
                             </Text>
@@ -610,3 +615,25 @@ const styles = StyleSheet.create({
       },
 
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProChatAfterBookingDetailsScreen);

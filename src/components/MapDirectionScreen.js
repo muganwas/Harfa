@@ -1,28 +1,31 @@
 import React, { Component } from 'react';
 import {
-  View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, Linking,
+  View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Linking,
   BackHandler, Alert, StatusBar, Platform,
 } from 'react-native';
-import firebase from 'firebase';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import { connect } from 'react-redux';
+//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+import firebase from 'react-native-firebase';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import PendingJobRequest from './PendingJobRequest';
 import UserDetails from './UserDetails';
+import { MAPS_API_KEY } from 'react-native-dotenv';
+import Config from './Config';
 
-const colorPrimary = '#FFBF0F';
+//const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+//const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const REJECT_ACCEPT_REQUEST = Config.baseURL+"jobrequest/updatejobrequest";
 
 function StatusBarPlaceHolder() {
   return (
@@ -40,18 +43,18 @@ function StatusBarPlaceHolder() {
   );
 }
 
-export default class MapDirectionScreen extends Component {
+class MapDirectionScreen extends Component {
 
   constructor(props) {
     super(props)
-
+    const { usersCoordinates, othersCoordinates } = this.props.generalInfo;
     this.state = {
-      sourceLocation: UserDetails.User.lat + "," + UserDetails.User.lang,  //String
-      sourceLat: parseFloat(UserDetails.User.lat),   //Double
-      sourceLng: parseFloat(UserDetails.User.lang),
-      destinationLocation: PendingJobRequest.Request.lat + ',' + PendingJobRequest.Request.lang,
-      destinationLat: parseFloat(PendingJobRequest.Request.lat),
-      destinationLng: parseFloat(PendingJobRequest.Request.lang),
+      sourceLocation: othersCoordinates.latitude + "," + othersCoordinates.longitude,
+      sourceLat: parseFloat(othersCoordinates.latitude),
+      sourceLng: parseFloat(othersCoordinates.longitude),
+      destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+      destinationLat: parseFloat(usersCoordinates.latitude),
+      destinationLng: parseFloat(usersCoordinates.longitude),
       coords: [],
       isLoading: true,
 
@@ -80,64 +83,11 @@ export default class MapDirectionScreen extends Component {
   };
 
   componentDidMount() {
-
+    const { generalInfo: { othersCoordinates }} = this.props;
+    this.getDirections(othersCoordinates.latitude + "," + othersCoordinates.longitude, this.state.destinationLocation);
+    var that = this;
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-    var that = this;
-
-    console.log(this.state.orderId);
-
-    firebase.database().ref('tracking').child(this.state.orderId)
-      .on('value', function (snapshot) {
-
-        console.log("Value >> " + JSON.stringify(snapshot));
-
-        if (JSON.stringify(snapshot) != 'null') {
-          console.log("Value >> " + JSON.stringify(snapshot));
-          console.log("Source Loc >> " + JSON.stringify(UserDetails.User.lat + "," + UserDetails.User.lang));
-          console.log("Source Location >> " + that.state.sourceLocation);
-
-          that.setState({
-            destinationLat: parseFloat(snapshot.val().latitude),
-            destinationLng: parseFloat(snapshot.val().longitude),
-            destinationLocation: snapshot.val().latitude + ',' + snapshot.val().longitude,
-          })
-
-          that.getDirections(that.state.sourceLocation, that.state.destinationLocation);
-        }
-        else {
-          Alert.alert(
-            "Info emploi",
-            "Votre travail n'a pas été accepté par le fournisseur de services jusqu'à présent. Vous ne pouvez donc pas suivre en ce moment",
-            [
-              {
-                text: 'Annuler',
-                onPress: () => console.log('Cancel Pressed'),
-                style: 'cancel',
-              },
-              {
-                text: 'OK',
-                onPress: () => {
-                  if (that.state.titlePage == "Dashboard")
-                    that.props.navigation.navigate("DashBoard");
-                  else if (that.state.titlePage == "ProviderDetails")
-                    that.props.navigation.navigate("ProviderDetails");
-                  else if (that.state.titlePage == "Chat")
-                    that.props.navigation.navigate("Chat");
-                  return true;
-                },
-              },
-            ]
-          );
-        }
-      });
-  }
-
-  componentWillMount() {
-
-    var that = this;
-
-    firebaseMessaging.notifications().onNotification((notification) => {
+    firebase.notifications().onNotification((notification) => {
 
       const { title, body, data } = notification;
 
@@ -266,6 +216,22 @@ export default class MapDirectionScreen extends Component {
     });
   }
 
+  componentDidUpdate() {
+    const { generalInfo: { usersCoordinates, othersCoordinates: { latitude, longitude } }} = this.props;
+    const { destinationLat, destinationLng } = this.state;
+    if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(destinationLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))) {
+        this.setState({
+            sourceLocation: latitude + "," + longitude,
+            sourceLat: parseFloat(latitude),
+            sourceLng: parseFloat(longitude),
+            destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+            destinationLat: parseFloat(usersCoordinates.latitude),
+            destinationLng: parseFloat(usersCoordinates.longitude),
+        });
+        this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
+    }
+  }
+
   componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
@@ -286,7 +252,7 @@ export default class MapDirectionScreen extends Component {
     console.log("Destination Location : " + destinationLoc);
 
     try {
-      let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030`)
+      let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`)
       let respJson = await resp.json();
 
       let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
@@ -333,6 +299,118 @@ export default class MapDirectionScreen extends Component {
         },
       ]
     );
+  }
+
+  openCompleteConfirmation = () => {
+    Alert.alert(  
+      "COMPLETED",  
+      "Was the job completed successfully?",  
+      [  
+          {  
+              text: 'Cancel',  
+              onPress: () => console.log('Cancel Pressed'),  
+              style: 'cancel',  
+          },  
+          {
+            text: 'Yes', 
+            onPress: () => {this.jobCompleteTask()},
+          },  
+      ]  
+    ); 
+  }
+
+  jobCompleteTask = () => {
+
+    this.setState({
+      isLoading: true
+    })
+
+    const data = {
+      main_id: PendingJobRequest.Request.id,
+      chat_status: '1',
+      status: 'Completed',
+      'notification': {
+        "fcm_id": PendingJobRequest.Request.fcm_id,
+        "title": "Job Completed",
+        "body": 'Your job request has been completed by '+' Request Id : ' + PendingJobRequest.Request.order_id,
+        "data": {
+          ProviderId: PendingJobRequest.Request.employee_id,
+          image: PendingJobRequest.Request.image,
+          fcmId: PendingJobRequest.Request.fcm_id,
+          name: PendingJobRequest.Request.name,
+          surname: PendingJobRequest.Request.surname,
+          mobile: PendingJobRequest.Request.mobile,
+          description: PendingJobRequest.Request.description,
+          address: PendingJobRequest.Request.address,
+          lat: PendingJobRequest.Request.lat,
+          lang: PendingJobRequest.Request.lang,
+          serviceName: PendingJobRequest.Request.service_name,
+          orderId: PendingJobRequest.Request.order_id,
+          mainId: PendingJobRequest.Request.id,
+          chat_status: PendingJobRequest.Request.chat_status,
+          status: PendingJobRequest.Request.status,
+          delivery_address: PendingJobRequest.Request.delivery_address,
+          delivery_lat: PendingJobRequest.Request.delivery_lat,
+          delivery_lang: PendingJobRequest.Request.delivery_lang,
+        },
+      }
+    }
+
+    console.log("Complete Job >> " + JSON.stringify(data));
+
+    fetch(REJECT_ACCEPT_REQUEST, {
+      method: "POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log("Response : " + JSON.stringify(responseJson))
+        if (responseJson.result) {
+          this.setState({
+            isLoading: false,
+            isAcceptJob: true,
+          })
+
+          var jobData = {
+            id: '' ,
+            order_id: '',
+            employee_id: '',
+            image: '', 
+            fcm_id: '',
+            name: '',
+            surName: '',
+            mobile: '',
+            description: '',
+            address: '',
+            lat: 0,
+            lang: 0,
+            service_name: '',
+            chat_status : '',
+            status : '',
+            delivery_address: '',
+            delivery_lat: 0,
+            delivery_lang: 0
+          }
+          PendingJobRequest.Request = jobData;
+          this.props.navigation.navigate("DashBoard");
+        }
+        else {
+          Alert.alert("OOPS!", "Something went wrong, try again later");
+          this.setState({
+            isLoading: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("Error >>> " + error);
+        this.setState({
+          isLoading: false,
+        });
+      })
   }
 
   render() {
@@ -461,7 +539,12 @@ export default class MapDirectionScreen extends Component {
           slidingPanelLayout={() =>
             <View style={styles.slidingPanelLayoutStyle}>
               <View style={styles.containerSlide}>
-
+                <TouchableOpacity style={styles.buttonContainer}
+                    onPress={this.openCompleteConfirmation}>
+                    <Text style={styles.text}>
+                      Completed
+                    </Text>
+                </TouchableOpacity>
               </View>
             </View>
           }>
@@ -535,6 +618,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  buttonContainer: {
+    width: 200,
+    paddingTop: 10,
+    backgroundColor: '#000000',
+    paddingBottom: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    borderRadius: 5,
+    borderColor: colorYellow,
+    borderWidth: 2,
+    marginBottom: 25,
+    textAlign: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  text: {fontSize: 16,
+    color: 'white',
+    textAlign: 'center',
+    justifyContent: 'center',
+  },
   callView: {
     flex: 1,
     flexDirection: 'row',
@@ -551,4 +654,12 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
-})
+});
+
+const mapStateToProps = state => {
+    return {
+        generalInfo: state.generalInfo
+    }
+}
+
+export default connect(mapStateToProps)(MapDirectionScreen);

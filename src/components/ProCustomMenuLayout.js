@@ -1,14 +1,16 @@
 
 import React, { Component } from 'react';
-import {StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import { connect } from 'react-redux';
+import { notificationsFetched } from '../Redux/Actions/notificationActions';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import {DrawerActions} from 'react-navigation-drawer';
 import ProDialogLogout from './ProDialogLogout';
 import ProviderDetails from './ProviderDetails';
 
 const colorPrimary = '#FFBF0F';
 
-export default class CustomMenuLayout extends Component {
+class CustomMenuLayout extends Component {
 
     constructor(props) {
       super(props)
@@ -28,12 +30,16 @@ export default class CustomMenuLayout extends Component {
     }
 
     render() {
+        const imageSource = ProviderDetails.Provider.imageSource; 
+        const { notificationsInfo, fetchedNotifications } = this.props;
+        console.log('custom menu')
+        console.log(imageSource)
         return (
             <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
                 <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>
                     <ScrollView>
                         <View style={styles.header}>
-                            <Image source={{uri: ProviderDetails.Provider.imageSource}} style={styles.headerImage}/>
+                            <Image source={ imageSource ? {uri: imageSource} : require('../images/generic_avatar.png')} style={styles.headerImage}/>
                             <Text style={{fontSize: 12, color: 'white', 
                                    alignItems: 'center',justifyContent: 'center',marginTop: 5,}}>
                                 Welcome</Text>
@@ -47,7 +53,7 @@ export default class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_home_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Home</Text>
+                               <Text style={styles.textMenu}>Maison</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -58,7 +64,7 @@ export default class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_user_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>My Profile</Text>
+                               <Text style={styles.textMenu}>Mon profil</Text>
                             </View>
                         </TouchableHighlight>
                         
@@ -69,40 +75,46 @@ export default class CustomMenuLayout extends Component {
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/booking_history.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Bookings</Text>
+                               <Text style={styles.textMenu}>Réservations</Text>
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => { 
+                                fetchedNotifications({type: 'generic', value: 0});
                                 this.props.navigation.navigate("ProNotifications")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_notification.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Notifications</Text>
+                               { notificationsInfo.generic > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.generic}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
+                                fetchedNotifications({type: 'messages', value: 0});
                                 this.props.navigation.navigate("ProAllMessage")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Message</Text>
+                               { notificationsInfo.messages > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.messages}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
+                                fetchedNotifications({type: 'adminMessages', value: 0});
                                 this.props.navigation.navigate("ChatWithAdmin")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
                                <Text style={styles.textMenu}>Chat with Admin</Text>
+                               { notificationsInfo.admin > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.admin}</Text> : null }
                             </View>
                         </TouchableHighlight>
 
@@ -113,7 +125,7 @@ export default class CustomMenuLayout extends Component {
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_aboutus_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>About us</Text>
+                               <Text style={styles.textMenu}>À propos de nous</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -145,7 +157,7 @@ export default class CustomMenuLayout extends Component {
                             onPress={() => this.changeDialogVisibility(true)}>
                             <View style={styles.row}>
                                <Image source={require('../icons/ic_logout.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Logout</Text>
+                               <Text style={styles.textMenu}>Déconnexion</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -171,6 +183,18 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         backgroundColor: 'white',
+    },
+    menuNotifications: {
+        position: 'absolute',
+        textAlignVertical: 'center',
+        textAlign: 'center',
+        borderRadius: 12,
+        color: 'white',
+        right: 10,
+        top: 15,
+        height: 24,
+        width: 24,
+        backgroundColor: 'red',
     },
     header: {
         width: '100%',
@@ -223,3 +247,18 @@ const styles = StyleSheet.create({
     },
 });
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(CustomMenuLayout);

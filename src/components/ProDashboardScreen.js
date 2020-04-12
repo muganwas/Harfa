@@ -3,16 +3,15 @@ import React, { Component } from 'react';
 import {
     Text, StyleSheet, View, Image, ActivityIndicator, Dimensions, FlatList, TouchableOpacity, 
     ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import { createAppContainer} from 'react-navigation';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import {createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import WaitingDialog from './WaitingDialog';
-import firebase from 'firebase';
 import RNExitApp from 'react-native-exit-app';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-easy-toast';
 import ReviewDialog from './ReviewDialog';
 import ProChatScreen from './ProChatScreen';
 import ProChatAcceptScreen from './ProChatAcceptScreen';
@@ -25,6 +24,14 @@ import ProPendingJobRequest from './ProPendingJobRequest';
 import ProBookingScreen from './ProBookingScreen';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
+//import Geocoding from 'react-native-geocoding'
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
+
+
+const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -41,6 +48,7 @@ const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
+const database = firebase.database();
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -61,8 +69,8 @@ function StatusBarPlaceHolder() {
 
 class ProDashBoardScreen extends Component {
 
-    constructor() {
-        super()
+    constructor(props) {
+        super(props)
 
         this.state = {
             isLoading: true,
@@ -70,7 +78,7 @@ class ProDashBoardScreen extends Component {
             mainId: '',
             reviewData: '',
             width: Dimensions.get('window').width,
-            status: ProviderDetails.Provider.status == 1 ? "ONLINE" : "OFFLINE",
+            status: ProviderDetails.Provider.status == '1' ? "ONLINE" : "OFFLINE",
             availBackground: ProviderDetails.Provider.status == '1' ? 'green' : 'red',
             dataSource: [],
             dataUserSource: [],
@@ -84,7 +92,9 @@ class ProDashBoardScreen extends Component {
             review: '',
             refreshing: false,
             pause: false,
-            backClickCount: 0
+            backClickCount: 0,
+            online: false,
+            connectivityAvailable: false
         }
         this.springValue = new Animated.Value(100);
         this.goToProMapDirection = this.goToProMapDirection.bind(this)
@@ -93,44 +103,50 @@ class ProDashBoardScreen extends Component {
     }
 
     //Get All Bookings
-    componentDidMount() {
+    async componentDidMount() {
+        console.log('setting listeners...');
         const { navigation } = this.props;
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
+        NetInfo.addEventListener(state => {
+            if (!state.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        socket.on('connect', () => {
+            const userId = ProviderDetails.Provider.providerId;
+            if (userId) {
+                socket.emit('connected', userId);
+                this.setState({online:true});
+            }
+            console.log('connected');
+        });
+        socket.on('user-disconnected', users => {
+            console.log('someone disconnected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('someone connected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            console.log('you disconnected')
+            console.log(info);
+            this.setState({online:false});
+            if (!this.state.online && this.state.connectivityAvailable) socket.open();
+        })
+        socket.open();
         navigation.addListener('willFocus', async () => {
             console.log("willFocus runs >>")
             this.onRefresh();
         });
-    }
 
-    componentWillMount() {
-
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
-        firebaseMessaging.notifications().onNotification((notification) => {
-
-            const { title, body, data } = notification;
-
-            console.log("Title, body , data >>> " + title + " >> " + body + " >> " + JSON.stringify(data));
-            console.log('DeliveryAddress >>> ', data.delivery_address);
-            console.log('DeliveryLat >>> ', data.delivery_lat);
-
-            if(title == "Booking Request")
-            {
-                this.props.navigation.navigate("ProChatAccept", {
-                    'userId': data.userId,
-                    'serviceName': data.serviceName,
-                    'mainId': data.main_id,
-                    'orderId': data.order_id,
-                    'delivery_address': data.delivery_address,
-                    'delivery_lat': data.delivery_lat,
-                    'delivery_lang': data.delivery_lang,
-                })
-            }
-        });
     }
 
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
         this.notificationOpenedListener();
     }
 
@@ -267,6 +283,7 @@ class ProDashBoardScreen extends Component {
     }
 
     renderRecentMessageItem = ({ item }) => {
+        const customerImage = item.image;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => this.props.navigation.navigate("ProChat", {
@@ -279,7 +296,7 @@ class ProDashBoardScreen extends Component {
                 })}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.image }} />
+                        source={ customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -304,37 +321,42 @@ class ProDashBoardScreen extends Component {
     }
 
     renderWorkItem = ({ item }) => {
-
-        return (
-            <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
-                onPress={() => this.props.navigation.navigate("ProBookingDetails", {
-                    "bookingDetails": item
-                })}>
-                <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
-                    <Text style={{ fontSize: 12, fontWeight: 'bold' }}>{item.service_details.service_name}</Text>
-                </View>
-                <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
-                    <Text style={{ fontSize: 12, fontWeight: 'bold', ...item.status == 'Pending' ? styles.colorYellow : item.status == 'Accepted' ? styles.colorGreen : item.status == 'Completed' ? styles.colorBlack : styles.colorRed }}>{item.status}</Text>
-                </View>
-                <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}
-                    onPress={() => this.askForReview(item)}>
-                    <Text style={{ fontSize: 12, }}>{item.customer_review == "Requested" ? 'Waiting' : item.customer_rating == "" ? 'Ask for review' : item.customer_rating + "/5"}</Text>
+        console.log(ProviderDetails.Provider.providerId)
+        //console.log(item);
+        if (String(item.employee_id) === String(ProviderDetails.Provider.providerId)) {
+            return (
+                <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
+                    onPress={() => this.props.navigation.navigate("ProBookingDetails", {
+                        "bookingDetails": item
+                    })}>
+                    <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold' }}>{item.service_details.service_name}</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', ...item.status == 'Pending' ? styles.colorYellow : item.status == 'Accepted' ? styles.colorGreen : item.status == 'Completed' ? styles.colorBlack : styles.colorRed }}>{item.status}</Text>
+                    </View>
+                    <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}
+                        onPress={() => this.askForReview(item)}>
+                        <Text style={{ fontSize: 12, }}>{item.customer_review == "Requested" ? 'Waiting' : item.customer_rating == "" ? 'Ask for review' : item.customer_rating + "/5"}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5, }}
+                        onPress={() => this.changeDialogVisibility(true, "", item, "", "")}>
+                        <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
+                    </TouchableOpacity>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5, }}
-                    onPress={() => this.changeDialogVisibility(true, "", item, "", "")}>
-                    <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
-                </TouchableOpacity>
-            </TouchableOpacity>
-        )
+            )
+        }
+        else return null;
     }
 
     renderRecentUserItem = ({ item }) => {
+        const recentUserImage = item.user_details.image;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={()=> this.props.navigation.navigate("ProBooking")}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.user_details.image }} />
+                        source={ recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -365,22 +387,7 @@ class ProDashBoardScreen extends Component {
         )
     }
 
-    changeAvailabilityStaus = () => {
-        var statusValue = null;
-        this.setState({
-            isLoading: true,
-        })
-
-        if (this.state.status == 'ONLINE') {
-            statusValue = '0';
-        }
-        else if (this.state.status == 'OFFLINE') {
-            statusValue = '1';
-        }
-
-        const userData = {
-            "status": statusValue
-        }
+    updateAvailabilityInMongoDB = userData => {
 
         fetch(PRO_INFO_UPDATE + ProviderDetails.Provider.providerId,
             {
@@ -429,6 +436,47 @@ class ProDashBoardScreen extends Component {
                 })
             })
             .done()
+
+    }
+
+    changeAvailabilityStaus = () => {
+        var statusValue = null;
+        const providerId = ProviderDetails.Provider.providerId;
+        const usersRef = database.ref('users/' + providerId);
+        this.setState({
+            isLoading: true,
+        })
+
+        if (this.state.status == 'ONLINE') {
+            statusValue = '0';
+        }
+        else if (this.state.status == 'OFFLINE') {
+            statusValue = '1';
+        }
+
+        const userData = {
+            "status": statusValue
+        }
+        usersRef.once('value', data => {
+            if (data) {
+                usersRef.update(userData).then(() => {
+                    console.log("updated");
+                    this.updateAvailabilityInMongoDB(userData);
+                }).
+                catch(e => {
+                    console.log(e.message)
+                });
+            }
+            else {
+                usersRef.set(userData).then(() => {
+                    this.updateAvailabilityInMongoDB(userData);
+                }).
+                catch(e => {
+                    console.log(e.message);
+                });
+            }
+        })
+
     };
 
     _spring() {
@@ -765,27 +813,38 @@ class ProDashBoardScreen extends Component {
         this.state.refreshing = false;
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
     }
 
+    /*getLocation = () => {
+        Geolocation.getCurrentPosition(info => {
+            const { coords: { longitude, latitude} } = info;
+            
+        });
+    }*/
+
     render() {
+        const customerImage = ProPendingJobRequest.Request.image;
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder/>
 
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}
-                        style={styles.touchaleHighlight}>
-                        <Image style={{ width: 25, height: 25 }}
-                            source={require('../icons/humberger.png')} />
+                    <Hamburger 
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Harfa'
+                    />
+                    <TouchableOpacity style={{width: '100%' , justifyContent: 'center', alignContent: 'center'}}
+                        onPress={() => this.props.navigation.navigate("ProAddAddress")}>
+                        <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
+                            source={require('../icons/maps_location.png')} />
                     </TouchableOpacity>
-                    <Text style={styles.textHeader}>Harfa</Text>
                 </View>
-
                 <View style={styles.onlineOfflineHeader}>
                     <Text style={{
                         flex: 1, textAlignVertical: 'center', alignItems: 'flex-start',
@@ -874,7 +933,7 @@ class ProDashBoardScreen extends Component {
                                 </View>
                             </View>
                         }
-                        {this.state.isRecentUser &&
+                        {/*this.state.isRecentUser &&
                             <View style={styles.mainContainer}>
                                 <View style={styles.recentMessageHeader}>
                                     <Text style={{
@@ -897,7 +956,7 @@ class ProDashBoardScreen extends Component {
                                         showsVerticalScrollIndicator={false}
                                         extraData={this.state} />
                                 </View>
-                            </View>
+                            </View>*/
                         }
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false, "", "", "", "", "")}>
@@ -926,7 +985,7 @@ class ProDashBoardScreen extends Component {
                         <LinearGradient style={styles.pendingJobStyle}
                             colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                             <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                                source={{ uri: ProPendingJobRequest.Request.image }} />
+                                source={ customerImage ? { uri: customerImage } : require('../images/generic_avatar.png')} />
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
                                     {ProPendingJobRequest.Request.name}
@@ -1112,6 +1171,18 @@ const styles = StyleSheet.create({
         elevation: 5,
         alignItems: 'center',
         marginTop: 10
+    },
+    noticationsCount: {
+        position: 'absolute',
+        textAlignVertical: 'center',
+        textAlign: 'center',
+        borderRadius: 10,
+        color: 'white',
+        right: 15,
+        height: 20,
+        width: 20,
+        backgroundColor: 'red',
+        top: 5
     },
     recentMessageHeader: {
         width: screenWidth,

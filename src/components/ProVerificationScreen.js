@@ -5,7 +5,7 @@ import {View,StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
 import ShakingText from 'react-native-shaking-text';
-import firebaeMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import ProPendingRequest from './ProPendingJobRequest';
@@ -83,7 +83,7 @@ export default class ProVerificationScreen extends Component {
                 isLoading: true
             })
 
-            firebaeMessaging.messaging().getToken().then((fcmToken) => {
+            firebase.messaging().getToken().then((fcmToken) => {
 
                 console.log("ProVerificationFCM ID " + fcmToken);
 

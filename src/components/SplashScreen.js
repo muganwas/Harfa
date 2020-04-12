@@ -2,20 +2,15 @@ import React, { Component } from 'react';
 import {View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler} from 'react-native';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
 import RNExitApp from 'react-native-exit-app';
-import firebase from 'firebase';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import HomeScreen from './HomeScreen';
 import DashboardScreen from './DashboardScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
-import VerificationScreen from './VerificationScreen';
 import RegisterScreen from './RegisterScreen';
-import ProVerificationScreen from './ProVerificationScreen';
-import ProLoginPhoneScreen from './ProLoginPhoneScreen';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
 import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
 import ProForgotPasswordScreen from './ProForgotPasswordScreen';
@@ -30,31 +25,29 @@ import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
 import ProPendingRequest from './ProPendingJobRequest';
- 
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#000000';
 
 const PRO_GET_PROFILE = Config.baseURL+"employee/";
 const USER_GET_PROFILE = Config.baseURL+"users/";
 const PENDING_JOB_CUSTOMER = Config.baseURL+"jobrequest/user_status_check/";
 const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
+const database = firebase.database();
 
 class SplashScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
-      this.state = {
-        id: null,
-        isLoading: false,
-      };
+        super(props);
+
+        this.state = {
+            id: null,
+            isLoading: false,
+        };
     };
 
     componentDidMount()
     {
         setTimeout(this.splashTimeOut, 3000);
-
-         // // Your web app's Firebase configuration
+         /*
+         * no need for initialization
          var config = {
             apiKey: Config.apiKey,
             authDomain: Config.authDomain,
@@ -68,11 +61,7 @@ class SplashScreen extends Component {
         // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(config);
-        }
-        
-        firebaseMessaging.notifications().onNotification((notification) => {       
-            const { title, body } = notification;
-        });
+        }*/
     }
 
     splashTimeOut = () => {
@@ -82,13 +71,13 @@ class SplashScreen extends Component {
 
     async getUserType(userId){
 
-     firebaseMessaging.messaging().hasPermission()
+     firebase.messaging().hasPermission()
             .then(async enabled => {
                 if (enabled) {
                     this.getFCMToken(userId);
                 }
                 else {
-                    await firebaseMessaging.messaging().requestPermission()
+                    await firebase.messaging().requestPermission()
                         .then(() => {
                             this.getFCMToken(userId);
                         })
@@ -127,7 +116,7 @@ class SplashScreen extends Component {
 
     async getFCMToken(userId){
 
-        const fcmToken = await firebaseMessaging.messaging().getToken();
+        const fcmToken = await firebase.messaging().getToken();
         if (fcmToken) {
             console.log("Splash FCMID >> " + fcmToken);
 
@@ -156,13 +145,28 @@ class SplashScreen extends Component {
                     },
                  })
                  .then((response) => response.json())
-                 .then((responseJson) => {
-                    
+                 .then(async responseJson => {
+                    var status;
                     console.log("Response autoLogin Provider >> "+JSON.stringify(responseJson));
                    
                     if(responseJson.result)
                     {
+
                         const id = responseJson.data.id;
+                        const usersRef = database.ref(`users/${id}`);
+                        await usersRef.once('value', snapshot => {
+                            const value = snapshot.val();
+                            if (value) 
+                                status = value.status;
+                            else {
+                                usersRef.set({'status': responseJson.data.status}).then(() => {
+                                    console.log('status set');
+                                }).
+                                catch(e => {
+                                    console.log(e.message);
+                                });
+                            }
+                        });
                         var providerData = {
                             providerId: responseJson.data.id,
                             name: responseJson.data.username,
@@ -177,7 +181,7 @@ class SplashScreen extends Component {
                             lat: responseJson.data.lat,
                             lang: responseJson.data.lang,
                             invoice: responseJson.data.invoice,
-                            status: responseJson.data.status,
+                            status: status != undefined ? status : responseJson.data.status,
                             fcmId: responseJson.data.fcm_id,
                             accountType: responseJson.data.account_type
                         }
@@ -207,15 +211,16 @@ class SplashScreen extends Component {
                         );
                     }
                  })
-                .catch((error) => {
+                .catch(error => {
                     this.setState({
                         isLoading: false
                     })
-                    alert("Error "+error);
+                    alert("Error " + error);
+                    console.log('error in autologin')
                     console.log(JSON.stringify(responseJson));
                 });
             }
-            else if(userType == 'User')
+            else if (userType == 'User')
             {
                 console.log(USER_GET_PROFILE+userId)
 

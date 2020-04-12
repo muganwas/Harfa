@@ -63,12 +63,12 @@ export default class ProDialogLogout extends Component {
                     await AsyncStorage.removeItem('userType');
 
                     console.log("Logout");
-                    if (Platform.OS == 'android')
-                        BackHandler.exitApp();
-                    else
+                    if (Platform.OS == 'android') BackHandler.exitApp();
+                    else {
+                        Config.socket.close();
                         RNExitApp.exitApp();
-
                         this.props.changeDialogVisibility(false);
+                    }
                 }
                 else {
                     this.setState({

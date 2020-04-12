@@ -3,10 +3,10 @@ import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ProviderDetails from './ProviderDetails';
 import ImagePicker from 'react-native-image-picker';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
@@ -83,7 +83,7 @@ export default class ChatWithAdminScreen extends Component {
                         isLoading: false,
                     }
                 })
-            })
+            });
 
         this.setState({
             isLoading: false
@@ -340,6 +340,7 @@ export default class ChatWithAdminScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
@@ -349,7 +350,7 @@ export default class ChatWithAdminScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>

@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ScrollView, StatusBar, Platform,
      BackHandler, Animated} from 'react-native';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
+import Notifications from './Notifications';
+import Hamburger from './Hamburger';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0' ;
 
@@ -90,17 +92,11 @@ export default class AboutUsScreen extends Component{
                 
                 <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                      paddingLeft: 10, paddingRight: 20, paddingBottom: 5}}>
-                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', }}
-                            onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                            <Image style={{ width: 25, height: 25, alignSelf: 'center' }}
-                                source={require('../icons/humberger.png')} />
-                        </TouchableOpacity>
-
-                        <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
-                            À propos de nous
-                        </Text>
-                    </View>
+                    <Hamburger
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='À propos de nous'
+                    />
                 </View>
 
                 <ScrollView>

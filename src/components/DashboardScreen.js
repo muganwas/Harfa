@@ -2,17 +2,22 @@
 import React, { Component } from 'react';
 import {Text, StyleSheet, View, Image, FlatList, ActivityIndicator,
     TouchableOpacity, StatusBar, Dimensions, Animated, BackHandler, Alert, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
-import Toast, {DURATION} from 'react-native-easy-toast'
+import Toast from 'react-native-easy-toast'
 import WaitingDialog from './WaitingDialog';
 
 import Config from './Config';
+import UserDetails from './UserDetails';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
 import ListOfProviderScreen from './ListOfProviderScreen';
 import ProviderDetailsScreen from './ProviderDetailsScreen';
 import ChatScreen from './ChatScreen';
@@ -20,10 +25,14 @@ import MapDirectionScreen from './MapDirectionScreen';
 import AddAddressScreen from './AddAddressScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
+import Hamburger from './Hamburger';
+//import {Notifications} from 'react-native-notifications';
+
+const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
@@ -56,6 +65,8 @@ class DashBoardScreen extends Component {
             isLoading: true,
             backClickCount: 0,
             isToastShow: false,
+            online: false,
+            connectivityAvailable: false
         }
         this.springValue = new Animated.Value(100);
         buttonType = this.buttonType.bind(this);
@@ -68,6 +79,38 @@ class DashBoardScreen extends Component {
 
     //Get All Services
     componentDidMount() {
+        console.log('setting listeners...');
+        NetInfo.addEventListener(status => {
+            if (!status.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        NetInfo.fetch().then(status => {
+            if (!status.isConnected) this.setState({connectivityAvailable: false});
+            else this.setState({connectivityAvailable: true});
+        });
+        socket.on('connect', () => {
+            const userId = UserDetails.User.userId;
+            if (userId) {
+                socket.emit('connected', userId);
+                this.setState({online:true});
+            }
+            console.log('connected');
+        }); 
+        socket.on('user-disconnected', users => {
+            console.log('someone disconnected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('someone connected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            console.log('you disconnected')
+            console.log(info);
+            this.setState({online:false});
+            if (!this.state.online && this.state.connectivityAvailable) socket.open();
+        });
+        socket.open();
 
         console.log("willFocus runs") // calling it here to make sure it is logged at initial start
 
@@ -77,20 +120,16 @@ class DashBoardScreen extends Component {
         this.onRefresh();
         });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
     }
 
     componentWillMount() {
-
         console.log("Dashboard Mount")
-
-
-        firebaseMessaging.notifications().onNotification((notification) => {
-
+        firebase.notifications().onNotification(notification => {
+            const {fetchedNotifications, notificationsInfo} = this.props;
+            const currentGenericCount = notificationsInfo.generic;
+            const newGenericCount = currentGenericCount + 1;
+            fetchedNotifications({type: 'generic', value: newGenericCount});
             const { title, body, data } = notification;
-      
-            console.log('Notification >>> ', notification);
-            console.log("Title, body  data >>> " + title + " >>>" + body+ " >>> "+JSON.stringify(data));
       
             if (title == "Chat Request Accepted") {
               this.setState({
@@ -122,6 +161,7 @@ class DashBoardScreen extends Component {
                 delivery_lat: data.delivery_lat,
                 delivery_lang: data.delivery_lang,
               }
+
               PendingJobRequest.Request = pendingJobData;
 
               this.showToast("Demande de chat acceptée")
@@ -193,7 +233,7 @@ class DashBoardScreen extends Component {
                 }
                 PendingJobRequest.Request = pendingJobData;
 
-                console.log('After Job Accepted >>> ', JSON.stringify(PendingJobRequest.Request));
+                //console.log('After Job Accepted >>> ', JSON.stringify(PendingJobRequest.Request));
 
                 this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
@@ -254,8 +294,13 @@ class DashBoardScreen extends Component {
     }
 
     componentWillUnmount() {
-        console.log("Dashboard Unmount")
+        Config.socket.close();
+        console.log("Dashboard Unmount");
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
+        firebase.database().ref('chatting').child(senderId).child(receiverId)
+        .off('child_changed');
+        firebase.database().ref('adminChatting').child(senderId).child(receiverId)
+        .off('child_changed');
     }
 
     showRejectionAlert(title, message)
@@ -313,7 +358,6 @@ class DashBoardScreen extends Component {
 
     //GridView Items
     renderItem = ({ item }) => {
-
         return (
             <TouchableOpacity style={{
                 flex: 1, flexDirection: 'column', margin: 5, padding: 10,
@@ -330,8 +374,8 @@ class DashBoardScreen extends Component {
                     this.props.navigation.navigate("ListOfProvider", {
                         'serviceName': item.service_name, 
                         'serviceId': item.id   })}}>
-                <Image style={{ width: 30, height: 30, margin: 10 }}
-                    source={{ uri: item.image }} />
+                <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
+                    source={{ uri:item.image}} />
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
                     <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
                         {item.service_name}
@@ -357,7 +401,7 @@ class DashBoardScreen extends Component {
         fetch(SERVICES_URL)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : "+JSON.stringify(responseJson))
+                //console.log("Response : "+JSON.stringify(responseJson))
                 this.setState({
                     dataSource: responseJson.data,  //data is key
                     isLoading: false
@@ -398,7 +442,7 @@ class DashBoardScreen extends Component {
     }
 
     render() {
-       
+        const { notificationTotal } = this.state;
         return (  
             <View style={styles.container}>
                
@@ -407,18 +451,10 @@ class DashBoardScreen extends Component {
                 <StatusBarPlaceHolder/>
                
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}
-                        style={styles.touchableHighlight}>
-                        <Image style={{ width: 25, height: 25 }}
-                            source={require('../icons/humberger.png')} />
-                    </TouchableOpacity>
-
-                    <View style={styles.textView}>
-                        <Text style={{fontSize: 20, fontWeight: 'bold',color: 'black', textAlignVertical: 'center' }}>
-                            Harfa
-                        </Text>
-                    </View>
-                    
+                    <Hamburger
+                        navigation={this.props.navigation}
+                        text='Harfa'
+                    />
                     <TouchableOpacity style={{width: '100%' , justifyContent: 'center', alignContent: 'center'}}
                         onPress={() => this.props.navigation.navigate("AddAddress")}>
                         <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
@@ -519,9 +555,29 @@ class DashBoardScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     DashBoard: {
-        screen: DashBoardScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(DashBoardScreen),
         navigationOptions:{
             header : null
         }

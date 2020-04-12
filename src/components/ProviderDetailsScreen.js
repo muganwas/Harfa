@@ -3,12 +3,13 @@ import {View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityInd
    Linking, Alert, BackHandler, StatusBar, Platform } from 'react-native';
 import { Rating, AirbnbRating } from 'react-native-ratings';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import Toast, {DURATION} from 'react-native-easy-toast';
 import UserDetails from './UserDetails';
 import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
+import OnlineUsers from './OnlineUsers';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -25,6 +26,7 @@ const BOOKING_REQUEST = Config.baseURL+"jobrequest/addjobrequest";
 const PRO_GET_PROFILE = Config.baseURL+"employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const database = firebase.database();
 
 function StatusBarPlaceHolder() {
   return (
@@ -52,6 +54,7 @@ export default class ProviderDetailsScreen extends Component {
         surname: this.props.navigation.state.params.surname,
         image: this.props.navigation.state.params.image,
         mobile: this.props.navigation.state.params.mobile,
+        avgRating: this.props.navigation.state.params.avgRating,
         distance: this.props.navigation.state.params.distance,
         address: this.props.navigation.state.params.address,
         description: this.props.navigation.state.params.description,
@@ -285,7 +288,6 @@ export default class ProviderDetailsScreen extends Component {
   componentDidUpdate(){
 
       console.log(this.state.minutes_Counter+" : "+this.state.seconds_Counter);
-    
       if(this.state.minutes_Counter == '00'){ 
         if(this.state.seconds_Counter == '00')
         {
@@ -299,11 +301,37 @@ export default class ProviderDetailsScreen extends Component {
       }
   }
 
-  componentWillMount(){
+  componentDidMount(){
+    const onlineUsers = OnlineUsers.Users;
 
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    const { providerId } = this.state;
+    const userRef = database.ref(`users/${providerId}`);
 
-    firebaseMessaging.notifications().onNotification((notification) => {
+    userRef.on('child_changed', result => {
+        console.log('something changed')
+        if (result.key === "status" && providerId) 
+            if (onlineUsers[providerId] && result.val() === '1') this.setState({status: onlineUsers[providerId].status});
+            else this.setState({status: result.val()});
+        else console.log('provider id unavailable')
+    });
+
+    userRef.once('value', data => {
+        if (data) {
+            const { status } = data.val();
+            if (providerId) {
+                if (onlineUsers[providerId] ) {
+                    console.log('user in api')
+                    if (status === onlineUsers[providerId].status) this.setState({status: onlineUsers[providerId].status});
+                    else {
+                        this.setState({status: status });
+                    }
+                }
+            }
+        }
+    });
+    
+    /*firebase.notifications().onNotification((notification) => {
 
       const { title, body, data } = notification;
 
@@ -481,7 +509,7 @@ export default class ProviderDetailsScreen extends Component {
       PendingJobRequest.Request = jobData;
       this.showRejectionAlert("JOB COMPLETED", "Your job has been completed.")
       }
-    });
+    });*/
   }
 
   componentWillUnmount() {
@@ -574,6 +602,7 @@ export default class ProviderDetailsScreen extends Component {
   }
 
   render() {
+      console.log(this.state.status)
     return (
       <View style={styles.container}>
 
@@ -603,9 +632,9 @@ export default class ProviderDetailsScreen extends Component {
           </View>
 
           <View style={styles.onlineOfflineView}>
-            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status == '1' ? colorGreen : colorRed }]}>
+            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status === '1' ? colorGreen : colorRed }]}>
               <Text style={{color: 'white', fontWeight: 'bold',}}>
-                {this.state.status == 1 ? "ONLINE" : "OFFLINE"}</Text>
+                {this.state.status === '1' ? "ONLINE" : "OFFLINE"}</Text>
             </View>
           </View>
         </View>
@@ -622,6 +651,7 @@ export default class ProviderDetailsScreen extends Component {
               <AirbnbRating
                 type='custom'
                 ratingCount={5}
+                defaultRating={this.state.avgRating}
                 size={10}
                 ratingBackgroundColor={colorBg}
                 showRating={false}

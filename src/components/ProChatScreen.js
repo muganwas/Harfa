@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions, 
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform}  from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ImagePicker from 'react-native-image-picker';
 import ProviderDetails from './ProviderDetails';
-import firebase from 'firebase';
+import firebase from 'react-native-firebase';
 import ProPendingJobRequest from './ProPendingJobRequest';
 import Config from './Config';
 
@@ -43,7 +44,7 @@ function StatusBarPlaceHolder() {
 
 const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
-export default class ProChatScreen extends Component {
+class ProChatScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -94,10 +95,10 @@ export default class ProChatScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount(){
-
+    componentDidMount(){
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
         var that = this;
 
         console.log("Sender Id: "+this.state.senderId);
@@ -173,7 +174,7 @@ export default class ProChatScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
+    getImageURL = async imageObject => {
        
         let message = {
             textMessage: 'uploading',
@@ -351,7 +352,7 @@ export default class ProChatScreen extends Component {
         });
     }
 
-    sendImageTask = async (imageURL) => {
+    sendImageTask = async imageURL => {
        
         console.log("Sender Id : "+this.state.senderId);
         console.log("Receiver Id : "+this.state.receiverId);
@@ -424,6 +425,7 @@ export default class ProChatScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
@@ -433,7 +435,7 @@ export default class ProChatScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -515,6 +517,7 @@ export default class ProChatScreen extends Component {
     }
 
   render() {
+      const receiverImage = this.state.receiverImage;
     return (
 
         <View style={styles.container}>
@@ -536,7 +539,7 @@ export default class ProChatScreen extends Component {
                         </TouchableOpacity>
 
                         <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                            source={{ uri: this.state.receiverImage }} />
+                            source={ receiverImage ? { uri: receiverImage } : require('../images/generic_avatar.png')} />
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                             {this.state.receiverName}
                         </Text>
@@ -564,35 +567,34 @@ export default class ProChatScreen extends Component {
                                 onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
                         </View>
                     </View>
-                </ScrollView>
+                    <View style={styles.footer}>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
+                                placeholder='Type a message'
+                                value={this.state.inputMessage}
+                                multiline={true}
+                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                            </TextInput>
 
-                <View style={styles.footer}>
-                    <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                            placeholder='Type a message'
-                            value={this.state.inputMessage}
-                            multiline={true}
-                            onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                        </TextInput>
-
-                        <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
-                         alignContent: 'center', marginRight: 25}}
-                         onPress={this.selectPhoto.bind(this)}>
-                        <Image style={{width:20, height:20}}
-                            source={require('../icons/camera.png')}/>
-                        </TouchableOpacity>
-
-                        {this.state.showButton &&
-                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                onPress={this.sendMessageTask}>
-                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    SEND
-                                </Text>
+                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
+                            alignContent: 'center', marginRight: 25}}
+                            onPress={this.selectPhoto.bind(this)}>
+                            <Image style={{width:20, height:20}}
+                                source={require('../icons/camera.png')}/>
                             </TouchableOpacity>
-                        }
+
+                            {this.state.showButton &&
+                                <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
+                                    onPress={this.sendMessageTask}>
+                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                        SEND
+                                    </Text>
+                                </TouchableOpacity>
+                            }
+                        </View>
                     </View>
-                </View>
+                </ScrollView>
 
                 {this.state.isLoading && (
                     <View style={styles.loaderStyle}>
@@ -661,3 +663,34 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
       },  
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchMessages: () => {
+            dispatch(startFetchingMessages());
+        },
+        fetchedMessages: data => {
+            dispatch(messagesFetched(data));
+        },
+        fetchingMessagesError: error => {
+            dispatch(messagesError(error));
+        },
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProChatScreen);

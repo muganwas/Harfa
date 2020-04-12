@@ -1,21 +1,23 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, FlatList, ActivityIndicator,
-    BackHandler, StatusBar, Platform, Modal, ToastAndroid, Animated} from 'react-native';
+    BackHandler, StatusBar, Platform, Modal, Animated} from 'react-native';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import ViewPager from "@react-native-community/viewpager";
-import Toast, {DURATION} from 'react-native-easy-toast';
+import Toast from 'react-native-easy-toast';
 import UserDetails from './UserDetails';
 import Config from './Config';
 import BookingDetailsScreen from './BookingDetailsScreen';
 import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
 import WaitingDialog from './WaitingDialog';
+import Hamburger from './Hamburger';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
@@ -245,17 +247,10 @@ class BookingScreen extends Component {
 
                 <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 10, paddingRight: 20, paddingBottom: 5}}>
-                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', }}
-                            onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                            <Image style={{ width: 25, height: 25, alignSelf: 'center' }}
-                                source={require('../icons/humberger.png')} />
-                        </TouchableOpacity>
-
-                        <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                            réservations
-                        </Text>
-                    </View>
+                    <Hamburger
+                        navigation={this.props.navigation}
+                        text='Réservations'
+                    />
                 </View>
 
                 <View style={{ width: screenWidth, height: 50, justifyContent: 'center',
@@ -276,7 +271,7 @@ class BookingScreen extends Component {
                     style={styles.viewPager}
                     initialPage={0}
                     ref={viewPager => { this.viewPager = viewPager }}
-                    onPageSelected={(event) => this.onPageSelected(event)}>
+                    onPageSelected={event => this.onPageSelected(event)}>
                     <View key="1">
                         <View style={styles.listView}>
                             <FlatList
@@ -350,13 +345,13 @@ class BookingScreen extends Component {
 
 const AppStackNavigator = createStackNavigator({
     Booking: {
-        screen: BookingScreen,
+        screen: connect()(BookingScreen),
         navigationOptions: {
             header: null
         }
     },
     BookingDetails: {
-        screen: BookingDetailsScreen,
+        screen: connect()(BookingDetailsScreen),
         navigationOptions: {
             header: null,
         }

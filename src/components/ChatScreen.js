@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions, 
-    ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert}  from 'react-native';
-import firebase from 'firebase';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { View, StyleSheet, TouchableOpacity, Image, Text, FlatList, TextInput, Dimensions, 
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert }  from 'react-native';
 import ImagePicker from 'react-native-image-picker';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import firebase from 'react-native-firebase';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
 
@@ -13,11 +14,11 @@ import Config from './Config';
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+//const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0' 
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -45,7 +46,7 @@ const options = {
     quality: 1
 };
 
-export default class ChatScreen extends Component {
+class ChatScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -56,13 +57,13 @@ export default class ChatScreen extends Component {
         senderName: UserDetails.User.username,
         inputMessage: '',
         showButton: false,
-        dataChatSource: [],
-        isLoading: true,
+        dataChatSource: this.props.messagesInfo.dataChatSource,
+        isLoading: !this.props.messagesInfo.fetched,
         isUploading: false,
         isJobAccepted: this.props.navigation.state.params.isJobAccepted,
 
         receiverId: PendingJobRequest.Request.employee_id,
-        receiverName: PendingJobRequest.Request.name + " " +PendingJobRequest.Request.surName,
+        receiverName: PendingJobRequest.Request.name + " " + PendingJobRequest.Request.surName,
         receiverImage: PendingJobRequest.Request.image,
         serviceName: PendingJobRequest.Request.service_name,
         orderId: PendingJobRequest.Request.order_id,
@@ -71,24 +72,13 @@ export default class ChatScreen extends Component {
       this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount(){
-
+    componentDidMount(){
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
-        //Get Chat Message
-        firebase.database().ref('chatting').child(UserDetails.User.userId).child(PendingJobRequest.Request.employee_id)
-        .on('child_added', (value)=>{
-            this.setState((prevState)=>{
-                return {
-                    dataChatSource: [...prevState.dataChatSource, value.val()],
-                    isLoading: false
-                }
-            })
-        });
-
         //Get Job accept reject status
-        firebaseMessaging.notifications().onNotification((notification) => {
-
+        firebase.notifications().onNotification((notification) => {
             const { title, body, data } = notification;
             console.log('Notification >>> ', notification);
             console.log("Title, body  data >>> " + title + " " + body + " " + data);
@@ -107,10 +97,16 @@ export default class ChatScreen extends Component {
                 this.props.navigation.navigate("ListOfProvider");
             }
         });
+    }
 
-        this.setState({
-            isLoading: false,
-        })
+    componentDidUpdate(){
+        const { fetched, dataChatSource } = this.props.messagesInfo;
+        const { isLoading } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading) 
+            this.setState({isLoading:false});
+        if (JSON.stringify(dataChatSource) !== JSON.stringify(localDataChatSource)) 
+            this.setState({dataChatSource});
     }
 
     componentWillUnmount() {
@@ -156,7 +152,7 @@ export default class ChatScreen extends Component {
         });
     }
 
-    convertTime = (time) => {
+    convertTime = time => {
         let d = new Date(time);
         let c = new Date();
         let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
@@ -188,8 +184,8 @@ export default class ChatScreen extends Component {
 
     sendMessageTask = async () => {
 
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
+        console.log("Sender Id : " + this.state.senderId);
+        console.log("Receiver Id : " + this.state.receiverId);
 
         if(this.state.inputMessage.length > 0)
         {
@@ -252,7 +248,9 @@ export default class ChatScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
+    getImageURL = async imageObject => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
        
         let message = {
             textMessage: 'uploading',
@@ -268,10 +266,10 @@ export default class ChatScreen extends Component {
             orderId: this.state.orderId,
             type: "image",
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
+        };
+
+        const newDataChatSource = [...dataChatSource, message];
+        fetchedMessages(newDataChatSource);
 
         this.setState({
             isUploading: true
@@ -334,8 +332,9 @@ export default class ChatScreen extends Component {
         });
     }
 
-    sendImageTask = async (imageURL) => {
-       
+    sendImageTask = async imageURL => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
         console.log("Sender Id : "+this.state.senderId);
         console.log("Receiver Id : "+this.state.receiverId);
 
@@ -385,10 +384,10 @@ export default class ChatScreen extends Component {
             }
 
             //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
+            var array = [...dataChatSource]; // make a separate copy of the array
             if (array.length > 0) {
                 array.splice(array.length-1, 1);
-                this.setState({ dataChatSource: array });
+                fetchedMessages(array);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -407,6 +406,8 @@ export default class ChatScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
+        console.log('sender image' + senderImage)
         return (
             this.state.senderId != item.senderId
                 ?
@@ -416,7 +417,7 @@ export default class ChatScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -664,3 +665,34 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchMessages: () => {
+            dispatch(startFetchingMessages());
+        },
+        fetchedMessages: data => {
+            dispatch(messagesFetched(data));
+        },
+        fetchingMessagesError: error => {
+            dispatch(messagesError(error));
+        },
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);

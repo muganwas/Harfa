@@ -4,27 +4,27 @@ import {createAppContainer} from 'react-navigation';
 import {createDrawerNavigator } from 'react-navigation-drawer';
 import ProCustomMenuLayout from './ProCustomMenuLayout';
 import ProCheckProfileScreen from './ProCheckProfileScreen'
+import ProAddAddressScreen from './ProAddAddressScreen';
 import ProDashboardScreen from './ProDashboardScreen';
 import ProMyProfileScreen from './ProMyProfileScreen';
 import ProNotificationsScreen from './ProNotificationsScreen';
 import ProAllMessageScreen from './ProAllMessageScreen';
 import ChatWithAdminScreen from './ChatWithAdminScreen';
 import ContactUsScreen from './ContactUsScreen';
-import AboutUsScreen from './AboutUsScreen';
+import ProAboutUsScreen from './ProAboutUsScreen';
 import ProBookingScreen from './ProBookingScreen';
-
-const colorPrimary = '#FFBF0F';
 
 const ProMyDrawerNavigator = createDrawerNavigator({
     
     ProDashboard: {screen: ProDashboardScreen},
+    ProAddAddress: {screen: ProAddAddressScreen},
     ProMyProfile: {screen: ProMyProfileScreen},
     ProCheckProfile: {screen: ProCheckProfileScreen},
     ProNotifications: {screen: ProNotificationsScreen},
     ProAllMessage: {screen: ProAllMessageScreen},
     ChatWithAdmin: {screen: ChatWithAdminScreen},
     ContactUs: {screen: ContactUsScreen},
-    AboutUs: {screen: AboutUsScreen},
+    AboutUs: {screen: ProAboutUsScreen},
     ProBooking: {screen: ProBookingScreen}
 },
 {
@@ -42,9 +42,8 @@ const ProMyDrawerNavigator = createDrawerNavigator({
 const AppContainer = createAppContainer(ProMyDrawerNavigator);
 
 export default class ProDrawerNavigator extends Component{
-
     render(){
-        return <AppContainer/>;
+        return <AppContainer/>
     }
 }
 

@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
 import AsyncStorage from '@react-native-community/async-storage';
 import 'react-native-gesture-handler';
-import firebaeMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import WaitingDialog from './WaitingDialog';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
@@ -22,7 +22,8 @@ const colorBg = '#E8EEE9';
 const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
 const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
-const AUTHENTICATE_URL = Config.baseURL+"employee/authenticate"
+const AUTHENTICATE_URL = Config.baseURL+"employee/authenticate";
+const database = firebase.database();
 
 var that;
 
@@ -91,15 +92,16 @@ export default class FacebookGoogleScreen extends Component {
 
     async facebookLoginTask() {
 
-        LoginManager.logInWithPermissions(["public_profile", "email"]).then(function (result) {
+        LoginManager.logInWithPermissions(["public_profile", "email"]).then(result => {
             if (result.isCancelled) {
                 console.log("Login cancelled");
             } else {
-                console.log("Result " + JSON.stringify(result));
+                console.log("Facebook Result");
+                console.log(result);
                 console.log("Login success: " + result.grantedPermissions.toString());
 
                 AccessToken.getCurrentAccessToken().then(
-                    (data) => {
+                    data => {
                         const infoRequest = new GraphRequest(
                             '/me?fields=email,name,picture',
                             null,
@@ -111,7 +113,7 @@ export default class FacebookGoogleScreen extends Component {
                 )
             }
         },
-            function (error) {
+            error => {
                 console.log("Login fail with error: " + error);
             }
         );
@@ -149,7 +151,7 @@ export default class FacebookGoogleScreen extends Component {
             isLoading: true,
         })
 
-        firebaeMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -175,13 +177,28 @@ export default class FacebookGoogleScreen extends Component {
                         body: JSON.stringify(userData)
                     })
                     .then((response) => response.json())
-                    .then((responseJson) => {
-                        console.log("Response Register" + JSON.stringify(responseJson));
+                    .then(async responseJson => {
+                        // console.log("Response Register" + JSON.stringify(responseJson));
+                        var status;
                         if (responseJson.result) {
                             this.setState({
                                 isLoading: false,
                                 isErrorToast: true,
-                            })
+                            });
+                            const usersRef = database.ref(`users/${responseJson.data.id}`);
+                            await usersRef.once('value', snapshot => {
+                                const value = snapshot.val();
+                                if (value) 
+                                    status = value.status;
+                                else {
+                                    usersRef.set({'status': responseJson.data.status}).then(() => {
+                                        console.log('status set');
+                                    }).
+                                    catch(e => {
+                                        console.log(e.message);
+                                    });
+                                }
+                            });
                             const id = responseJson.data.id;
                             var providerData = {
                                 providerId: responseJson.data.id,
@@ -197,7 +214,7 @@ export default class FacebookGoogleScreen extends Component {
                                 lat: responseJson.data.lat,
                                 lang: responseJson.data.lang,
                                 invoice: responseJson.data.invoice,
-                                status: responseJson.data.status,
+                                status: status != undefined ? status : responseJson.data.status,
                                 fcmId: responseJson.data.fcm_id,
                                 accountType: responseJson.data.account_type
                             }
@@ -290,7 +307,7 @@ export default class FacebookGoogleScreen extends Component {
             isLoading: true,
         })
 
-        firebaeMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {

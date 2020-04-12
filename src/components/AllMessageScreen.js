@@ -1,12 +1,16 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated} from 'react-native';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
-import firebase from 'firebase';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import firebase from 'react-native-firebase';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import Notifications from './Notifications';
+import Hamburger from './Hamburger';
 import UserDetails from './UserDetails';
 import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
 
@@ -14,7 +18,7 @@ const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0';
+//const colorGray = '#C0C0C0';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -55,7 +59,7 @@ class AllMessageScreen extends Component {
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount(){
+    componentDidMount(){
         let dbRef = firebase.database().ref('recentMessage').child(UserDetails.User.userId);
 
         dbRef.once('value', (snapshot) => {
@@ -197,19 +201,12 @@ class AllMessageScreen extends Component {
 
                 <StatusBarPlaceHolder/>
 
-                <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                    paddingLeft: 10, paddingRight: 20, paddingBottom: 5}}>
-                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', }}
-                            onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                            <Image style={{ width: 25, height: 25, alignSelf: 'center' }}
-                                source={require('../icons/humberger.png')} />
-                        </TouchableOpacity>
-
-                        <Text style={{ color: 'black', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
-                            Tous les messages
-                        </Text>
-                    </View>
+                <View style={styles.header}>
+                    <Hamburger 
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Tous les Messages'
+                    />
                 </View>
 
                 <View style={{flexDirection: 'row', width: '100%', height: 55,  backgroundColor: colorYellow,
@@ -272,9 +269,29 @@ class AllMessageScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     AllMessage: {
-        screen: AllMessageScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(AllMessageScreen),
         navigationOptions:{
             header : null
         }
@@ -357,6 +374,15 @@ const styles = StyleSheet.create({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'center'
+    },
+    header: {
+        flexDirection: 'row', 
+        width: '100%', 
+        height: 50, 
+        backgroundColor: colorPrimary,
+        paddingLeft: 10, 
+        paddingRight: 20, 
+        paddingBottom: 5
     }
 });
 

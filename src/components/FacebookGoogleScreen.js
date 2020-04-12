@@ -6,15 +6,16 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
 import AsyncStorage from '@react-native-community/async-storage';
 import 'react-native-gesture-handler';
-import firebaeMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import Config from './Config';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
+import Axios from 'axios';
 
-const colorPrimary = '#262425';
+//const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
@@ -22,7 +23,7 @@ const colorBg = '#E8EEE9';
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
 const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/user_status_check/";
-const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate'
+const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate';
 
 var that;
 
@@ -119,7 +120,6 @@ export default class FacebookGoogleScreen extends Component {
 
     async googleLoginTask() {
         try {
-
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
             console.log("UserInfo >> " + JSON.stringify(result));
@@ -149,7 +149,7 @@ export default class FacebookGoogleScreen extends Component {
             isLoading: true,
         })
 
-        firebaeMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -166,19 +166,11 @@ export default class FacebookGoogleScreen extends Component {
                 }
                 console.log("Data: " + JSON.stringify(userData));
 
-                fetch(REGISTER_URL,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(userData)
-                    })
-                    .then((response) => response.json())
-                    .then((responseJson) => {
-                        console.log("Response Register" + JSON.stringify(responseJson));
-                        if (responseJson.result) {
+                Axios.post(REGISTER_URL, { data: JSON.stringify(userData)})
+                    .then(responseJson => {
+                        // console.log("Response Register")
+                        console.log(responseJson);
+                        if (responseJson.status === 200 && responseJson.data.createdDate) {
                             this.setState({
                                 isLoading: false,
                                 isErrorToast: true,
@@ -214,7 +206,7 @@ export default class FacebookGoogleScreen extends Component {
                             })
                             Alert.alert(
                                 "OOPS !",
-                                responseJson.message,
+                                responseJson.data.message,
                                 [
                                     {
                                         text: 'Cancel',
@@ -276,7 +268,7 @@ export default class FacebookGoogleScreen extends Component {
             isLoading: true,
         })
 
-        firebaeMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -335,7 +327,7 @@ export default class FacebookGoogleScreen extends Component {
                                 isLoading: false,
                             })
                             Alert.alert(
-                                "OUPS !",
+                                "OOPS !",
                                 responseJson.message,
                                 [
                                     {

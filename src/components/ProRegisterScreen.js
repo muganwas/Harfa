@@ -4,11 +4,12 @@ import { View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity
     , Dimensions, ActivityIndicator,ToastAndroid, Alert, Platform, BackHandler, Modal} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import AsyncStorage from '@react-native-community/async-storage';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import WaitingDialog from './WaitingDialog';
+import Axios from 'axios';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -53,7 +54,7 @@ export default class ProRegisterScreen extends Component {
             address: 'Select Address',
             lat: '',
             lang: '',
-            invoice: '1',
+            invoice: 1,
             error: '',
             currentPage: 0,
             account_type: this.props.navigation.state.params.accountType,
@@ -109,7 +110,7 @@ export default class ProRegisterScreen extends Component {
 
     registerTask()
     {
-        firebaseMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("ProRegister FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -132,28 +133,20 @@ export default class ProRegisterScreen extends Component {
                     "account_type": this.state.account_type
                  }
 
-                 console.log("Register Data : "+JSON.stringify(userData));
+                 //console.log("Register Data : "+JSON.stringify(userData));
 
                  this.setState({
                      isLoading: true
                  })
                  
-                 fetch(REGISTER_URL , {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body:  JSON.stringify(userData)
-                 })
-                 .then((response) => response.json())
-                 .then((responseJson) => {
-                    
-                    console.log("Response RegisterPro >> "+JSON.stringify(responseJson));
+                 Axios.post(REGISTER_URL, JSON.stringify(userData))
+                 .then(responseJson => {
+                    // console.log("Response RegisterPro >> "+JSON.stringify(responseJson));
                     this.setState({
                         isLoading: false
-                    })
-                    if(responseJson.result)
+                    });
+
+                    if(responseJson.status === 200 && responseJson.data.createdDate)
                     {
                         const id = responseJson.data.id;
         
@@ -203,7 +196,7 @@ export default class ProRegisterScreen extends Component {
                     {
                         Alert.alert(
                             "OOPS !",
-                            responseJson.message,
+                            responseJson.data.message,
                             [
                                 {
                                     text: 'Cancel',
@@ -383,12 +376,12 @@ export default class ProRegisterScreen extends Component {
                                     Can you provide invoice
                                 </Text>
                                 <View style={{flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center"}}>
-                                    <TouchableOpacity style={this.state.invoice == '1' ? styles.invoiceBorder : styles.invoice}
-                                        onPress={() => this.setState({invoice: '1'})}>
+                                    <TouchableOpacity style={this.state.invoice == 1 ? styles.invoiceBorder : styles.invoice}
+                                        onPress={() => this.setState({invoice: 1})}>
                                         <Text style={{color:'white', alignSelf: 'center', textAlignVertical: 'center',}}>Yes</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={[this.state.invoice == '0' ? styles.invoiceBorder : styles.invoice, {marginLeft: 20,}]}
-                                        onPress={() => this.setState({invoice: '0'})}> 
+                                    <TouchableOpacity style={[this.state.invoice == 0 ? styles.invoiceBorder : styles.invoice, {marginLeft: 20,}]}
+                                        onPress={() => this.setState({invoice: 0})}> 
                                         <Text style={{color:'white', alignSelf: 'center', textAlignVertical: 'center',}}>No</Text>
                                     </TouchableOpacity>
                                 </View>
