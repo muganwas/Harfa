@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
+import {View, StyleSheet, TouchableOpacity, Image, Text,
+    FlatList, TextInput, Dimensions, ActivityIndicator, 
+    BackHandler, ImageBackground, StatusBar, Platform, Alert
 } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import ImagePicker from 'react-native-image-picker';
@@ -9,6 +10,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
+import {imageExists} from '../misc/helpers'
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -17,7 +19,7 @@ const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -59,7 +61,6 @@ class ChatAfterBookingDetailsScreen extends Component {
             dataChatSource: this.props.messagesInfo.dataChatSource,
             isLoading: !this.props.messagesInfo.fetched,
             isUpLoading: false,
-
             receiverId: this.props.navigation.state.params.providerId,
             receiverName: this.props.navigation.state.params.providerName + " " + this.props.navigation.state.params.providerSurname,
             receiverImage: this.props.navigation.state.params.providerImage,
@@ -67,6 +68,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             orderId: this.props.navigation.state.params.orderId,
             titlePage: this.props.navigation.state.params.pageTitle,
             isJobAccepted: this.props.navigation.state.params.isJobAccepted,
+            proImageAvailable: null
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
@@ -76,7 +78,9 @@ class ChatAfterBookingDetailsScreen extends Component {
         fetchedNotifications({type: 'messages', value: 0});
         console.log("Sender Id >> "+UserDetails.User.userId);
         console.log("Receiver ID >> "+this.state.receiverId);
-
+        imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
+            this.setState({proImageAvailable});
+        });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
@@ -128,7 +132,7 @@ class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    convertTime = (time) => {
+    convertTime = time => {
         let d = new Date(time);
         let c = new Date();
         let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
@@ -378,7 +382,6 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
-        console.log('sender image' + senderImage)
         return (
             this.state.senderId != item.senderId
                 ?
@@ -388,7 +391,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
+                                    source={this.state.proImageAvailable ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -465,7 +468,6 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     render() {
         const providerImage = this.props.navigation.state.params.providerImage;
-        console.log('sender image' + providerImage)
         return (
 
             <View style={styles.container}>
@@ -486,7 +488,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={providerImage ? { uri: providerImage } : require('../images/generic_avatar.png')} />
+                                source={this.state.proImageAvailable ? { uri: providerImage } : require('../images/generic_avatar.png')} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                                 {this.state.receiverName + " "}{this.state.surname}
                             </Text>

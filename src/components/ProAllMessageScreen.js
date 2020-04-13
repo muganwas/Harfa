@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import { DrawerActions } from 'react-navigation-drawer';
 import firebase from 'react-native-firebase';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
@@ -11,6 +10,7 @@ import ProviderDetails from './ProviderDetails';
 import ProChatScreen from './ProChatScreen';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import {imageExists} from '../misc/helpers';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -50,19 +50,14 @@ class ProAllMessageScreen extends Component {
             query: "",
             fullData: [],
             isDataMatch: true,
-            backClickCount: 0
+            backClickCount: 0,
         };
         this.springValue = new Animated.Value(100);
     };
 
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
-    }
-
-    componentWillMount() {
-
         let dbRef = firebase.database().ref('recentMessage').child(ProviderDetails.Provider.providerId);
-
         dbRef.once('value', (snapshot) => {
             const key = snapshot.key;
             const message = snapshot.val();
@@ -79,7 +74,6 @@ class ProAllMessageScreen extends Component {
                     });
 
                     this.setState((prevState) => {
-
                         return {
                             dataSource: [...prevState.dataSource, message],
                             fullData: [...prevState.dataSource, message],

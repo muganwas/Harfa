@@ -14,6 +14,7 @@ import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import {MAPS_API_KEY} from 'react-native-dotenv';
+import {imageExists} from '../misc/helpers';
 
 //const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -75,7 +76,8 @@ class ProMapDirectionScreen extends Component {
       deliveryLat: ProPendingJobRequest.Request.delivery_lat,
       deliveryLang: ProPendingJobRequest.Request.delivery_lang,
       chatStatus: ProPendingJobRequest.Request.chat_status,
-      status: ProPendingJobRequest.Request.status
+      status: ProPendingJobRequest.Request.status,
+      proImageAvailable: null
     };
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   };
@@ -86,6 +88,9 @@ class ProMapDirectionScreen extends Component {
     navigation.addListener('willFocus', async () => {
         console.log("willFocus runs >>")
         this.onRefresh();
+    });
+    imageExists(ProPendingJobRequest.Request.image).then(proImageAvailable => {
+        this.setState({proImageAvailable});
     });
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
@@ -235,7 +240,25 @@ class ProMapDirectionScreen extends Component {
           },  
           {
             text: 'OK', 
-            onPress: () => {this.jobCompleteTask()},
+            onPress: this.jobCompleteTask,
+          },  
+      ]  
+    ); 
+  }
+
+  openCancelConfirmation = () => {
+    Alert.alert(  
+      "CANCEL JOB REQUEST",  
+      "Are you sure you want to cancel the job request?",  
+      [  
+          {  
+              text: 'No',  
+              onPress: () => console.log('Cancel Pressed'),  
+              style: 'cancel',  
+          },  
+          {
+            text: 'Yes', 
+            onPress: this.jobCancelTask,
           },  
       ]  
     ); 
@@ -271,6 +294,99 @@ class ProMapDirectionScreen extends Component {
           mainId: ProPendingJobRequest.Request.id,
           chat_status: ProPendingJobRequest.Request.chat_status,
           status: ProPendingJobRequest.Request.status,
+          delivery_address: ProPendingJobRequest.Request.delivery_address,
+          delivery_lat: ProPendingJobRequest.Request.delivery_lat,
+          delivery_lang: ProPendingJobRequest.Request.delivery_lang,
+        },
+      }
+    }
+
+    console.log("Complete Job >> " + JSON.stringify(data));
+
+    fetch(REJECT_ACCEPT_REQUEST, {
+      method: "POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log("Response : " + JSON.stringify(responseJson))
+        if (responseJson.result) {
+          this.setState({
+            isLoading: false,
+            isAcceptJob: true,
+          })
+
+          var jobData = {
+            id: "",
+            order_id: "",
+            user_id: "",
+            image: "",
+            fcm_id: "",
+            name: "",
+            mobile: "",
+            dob: "",
+            address: "",
+            lat: "",
+            lang: "",
+            service_name: "",
+            chat_status: "",
+            status: "",
+            delivery_address: "",
+            delivery_lat: "",
+            delivery_lang: "",
+          }
+          ProPendingJobRequest.Request = jobData;
+          this.props.navigation.navigate("ProDashBoard");
+        }
+        else {
+          ToastAndroid.show("Something went wrong", ToastAndroid.show);
+          this.setState({
+            isLoading: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("Error >>> " + error);
+        this.setState({
+          isLoading: false,
+        });
+      })
+  }
+
+  jobCancelTask = () => {
+
+    this.setState({
+      isLoading: true
+    });
+
+    const data = {
+      main_id: ProPendingJobRequest.Request.id,
+      chat_status: '1',
+      status: 'Canceled',
+      'notification': {
+        "fcm_id": ProPendingJobRequest.Request.fcm_id,
+        "title": "Job Canceled",
+        "body": 'Your job request has been canceled by the service provder : ' + ProviderDetails.Provider.providerId,
+        "data": {
+          ProviderId: ProviderDetails.Provider.providerId,
+          image: ProviderDetails.Provider.imageSource,
+          fcmId: ProviderDetails.Provider.fcmId,
+          name: ProviderDetails.Provider.name,
+          surname: ProviderDetails.Provider.surname,
+          mobile: ProviderDetails.Provider.mobile,
+          description: ProviderDetails.Provider.description,
+          address: ProviderDetails.Provider.address,
+          lat: ProviderDetails.Provider.lat,
+          lang: ProviderDetails.Provider.lang,
+          serviceName: this.state.serviceName,
+          orderId: ProPendingJobRequest.Request.order_id,
+          mainId: ProPendingJobRequest.Request.id,
+          chat_status: ProPendingJobRequest.Request.chat_status,
+          status: 'Canceled',
           delivery_address: ProPendingJobRequest.Request.delivery_address,
           delivery_lat: ProPendingJobRequest.Request.delivery_lat,
           delivery_lang: ProPendingJobRequest.Request.delivery_lang,
@@ -415,7 +531,7 @@ class ProMapDirectionScreen extends Component {
                   <View style={{ flexDirection: 'row', flex: 1 }}>
 
                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
-                      source={{ uri: ProPendingJobRequest.Request.image }} />
+                      source={ this.state.proImageAvailable ? { uri: ProPendingJobRequest.Request.image } : require('../images/generic_avatar.png')} />
                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                       <Text style={{ marginRight: 200, color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
                         numberOfLines={1}>
@@ -461,6 +577,14 @@ class ProMapDirectionScreen extends Component {
                       Completed
                     </Text>
                   </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.buttonContainer}
+                    onPress={this.openCancelConfirmation}>
+                    <Text style={styles.text}>
+                      Cancel Request
+                    </Text>
+                  </TouchableOpacity>
+
                 </View>
               </View>
             }>
@@ -557,11 +681,12 @@ const styles = StyleSheet.create({
   },
   containerSlide: {
     flex: 1,
-    flexDirection: 'column',
+    display: 'flex',
+    flexDirection: 'row',
     width: screenWidth,
     height: screenHeight,
     justifyContent: 'flex-start',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: colorBg,
   },
   slidingPanelLayoutStyle: {
@@ -588,7 +713,8 @@ const styles = StyleSheet.create({
     height: 20,
   }, 
   buttonContainer: {
-    width: 200,
+    flex: 1,
+    //width: 200,
     paddingTop: 10,
     backgroundColor: '#000000',
     paddingBottom: 10,

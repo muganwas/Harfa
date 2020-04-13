@@ -29,6 +29,7 @@ import NetInfo from "@react-native-community/netinfo";
 //import Geocoding from 'react-native-geocoding'
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import { imageExists } from '../misc/helpers';
 
 
 const socket = Config.socket;
@@ -94,7 +95,8 @@ class ProDashBoardScreen extends Component {
             pause: false,
             backClickCount: 0,
             online: false,
-            connectivityAvailable: false
+            connectivityAvailable: false,
+            proImageAvailable: null,
         }
         this.springValue = new Animated.Value(100);
         this.goToProMapDirection = this.goToProMapDirection.bind(this)
@@ -321,9 +323,9 @@ class ProDashBoardScreen extends Component {
     }
 
     renderWorkItem = ({ item }) => {
-        console.log(ProviderDetails.Provider.providerId)
+        console.log(item)
         //console.log(item);
-        if (String(item.employee_id) === String(ProviderDetails.Provider.providerId)) {
+        if (String(item.employee_id) === String(ProviderDetails.Provider.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
             return (
                 <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
                     onPress={() => this.props.navigation.navigate("ProBookingDetails", {
@@ -637,6 +639,10 @@ class ProDashBoardScreen extends Component {
                         delivery_lang: ProPendingJobRequest.Request.delivery_lang,
                     }
                     ProPendingJobRequest.Request = jobData;
+
+                    imageExists(customerImage).then(proImageAvailable => {
+                        this.setState({proImageAvailable});
+                    });
 
                     console.log("acceptJob :>>>" + JSON.stringify(ProPendingJobRequest.Request))
 
@@ -985,7 +991,7 @@ class ProDashBoardScreen extends Component {
                         <LinearGradient style={styles.pendingJobStyle}
                             colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                             <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                                source={ customerImage ? { uri: customerImage } : require('../images/generic_avatar.png')} />
+                                source={ this.state.proImageAvailable ? { uri: customerImage } : require('../images/generic_avatar.png')} />
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
                                     {ProPendingJobRequest.Request.name}

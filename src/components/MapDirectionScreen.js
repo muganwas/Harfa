@@ -319,8 +319,118 @@ class MapDirectionScreen extends Component {
     ); 
   }
 
-  jobCompleteTask = () => {
+  openCancelConfirmation = () => {
+    Alert.alert(  
+      "CANCEL JOB REQUEST",  
+      "Are you sure you want to cancel the job request?",  
+      [  
+          {  
+              text: 'No',  
+              onPress: () => console.log('Cancel Pressed'),  
+              style: 'cancel',  
+          },  
+          {
+            text: 'Yes', 
+            onPress: () => {this.jobCancelTask()},
+          },  
+      ]  
+    ); 
+  }
 
+  jobCancelTask = () => {
+    this.setState({
+        isLoading: true
+      })
+  
+      const data = {
+        main_id: PendingJobRequest.Request.id,
+        chat_status: '1',
+        status: 'Canceled',
+        'notification': {
+          "fcm_id": PendingJobRequest.Request.fcm_id,
+          "title": "Job Canceled",
+          "body": 'Your job request has been canceled by '+' Request Id : ' + PendingJobRequest.Request.order_id,
+          "data": {
+            ProviderId: PendingJobRequest.Request.employee_id,
+            image: PendingJobRequest.Request.image,
+            fcmId: PendingJobRequest.Request.fcm_id,
+            name: PendingJobRequest.Request.name,
+            surname: PendingJobRequest.Request.surname,
+            mobile: PendingJobRequest.Request.mobile,
+            description: PendingJobRequest.Request.description,
+            address: PendingJobRequest.Request.address,
+            lat: PendingJobRequest.Request.lat,
+            lang: PendingJobRequest.Request.lang,
+            serviceName: PendingJobRequest.Request.service_name,
+            orderId: PendingJobRequest.Request.order_id,
+            mainId: PendingJobRequest.Request.id,
+            chat_status: PendingJobRequest.Request.chat_status,
+            status: 'Canceled',
+            delivery_address: PendingJobRequest.Request.delivery_address,
+            delivery_lat: PendingJobRequest.Request.delivery_lat,
+            delivery_lang: PendingJobRequest.Request.delivery_lang,
+          },
+        }
+      }
+  
+      console.log("Complete Job >> " + JSON.stringify(data));
+  
+      fetch(REJECT_ACCEPT_REQUEST, {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then((response) => response.json())
+        .then((responseJson) => {
+          console.log("Response : " + JSON.stringify(responseJson))
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+            })
+  
+            var jobData = {
+              id: '' ,
+              order_id: '',
+              employee_id: '',
+              image: '', 
+              fcm_id: '',
+              name: '',
+              surName: '',
+              mobile: '',
+              description: '',
+              address: '',
+              lat: 0,
+              lang: 0,
+              service_name: '',
+              chat_status : '',
+              status : '',
+              delivery_address: '',
+              delivery_lat: 0,
+              delivery_lang: 0
+            }
+            PendingJobRequest.Request = jobData;
+            this.props.navigation.navigate("DashBoard");
+          }
+          else {
+            Alert.alert("OOPS!", "Something went wrong, try again later");
+            this.setState({
+              isLoading: false,
+            });
+          }
+        })
+        .catch((error) => {
+          console.log("Error >>> " + error);
+          this.setState({
+            isLoading: false,
+          });
+        })
+  }
+
+  jobCompleteTask = () => {
     this.setState({
       isLoading: true
     })
@@ -539,12 +649,21 @@ class MapDirectionScreen extends Component {
           slidingPanelLayout={() =>
             <View style={styles.slidingPanelLayoutStyle}>
               <View style={styles.containerSlide}>
+
                 <TouchableOpacity style={styles.buttonContainer}
                     onPress={this.openCompleteConfirmation}>
                     <Text style={styles.text}>
                       Completed
                     </Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={styles.buttonContainer}
+                    onPress={this.openCancelConfirmation}>
+                    <Text style={styles.text}>
+                      Cancel Request
+                    </Text>
+                </TouchableOpacity>
+
               </View>
             </View>
           }>
@@ -604,11 +723,12 @@ const styles = StyleSheet.create({
   },
   containerSlide: {
     flex: 1,
-    flexDirection: 'column',
+    display: 'flex',
+    flexDirection: 'row',
     width: screenWidth,
     height: screenHeight,
     justifyContent: 'flex-start',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: colorBg,
   },
   slidingPanelLayoutStyle: {
@@ -619,7 +739,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonContainer: {
-    width: 200,
+    flex: 1,
+    //width: 200,
     paddingTop: 10,
     backgroundColor: '#000000',
     paddingBottom: 10,

@@ -281,8 +281,8 @@ class SplashScreen extends Component {
                             ]
                         );
                     }
-                })
-                .catch((error) => {
+                }).
+                catch((error) => {
                     this.setState({
                         isLoading: false
                     })

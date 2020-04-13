@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
-import {View, StyleSheet, Text, TouchableOpacity, Image, ActivityIndicator,ToastAndroid, Dimensions,
+import {View, StyleSheet, Text, TouchableOpacity, Image,ToastAndroid, Dimensions,
   BackHandler, StatusBar, Platform, Modal} from 'react-native';
-import SlidingPanel from 'react-native-sliding-up-down-panels';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+//import SlidingPanel from 'react-native-sliding-up-down-panels';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import { connect } from 'react-redux';
+import firebase from 'react-native-firebase';
 import ProviderDetails from './ProviderDetails';
 import WaitingDialog from './WaitingDialog';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-easy-toast';
 import ProPendingJobRequest from './ProPendingJobRequest';
 import Config from './Config';
+import { getDistance } from '../misc/helpers';
 
 var SoundPlayer = require('react-native-sound');
 var song = null;
@@ -18,7 +21,7 @@ const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const USER_GET_PROFILE = Config.baseURL+"users/"
 const REJECT_ACCEPT_REQUEST = Config.baseURL+"jobrequest/updatejobrequest";
@@ -55,6 +58,7 @@ export default class componentName extends Component {
        userLat: '',
        userLang: '',
        userFcmId: '',
+       distance: 'unavailable',
        isLoading: true,
        isErrorToast: false,
        timer: null,
@@ -77,7 +81,7 @@ export default class componentName extends Component {
     BackHandler.addEventListener('hardwareBackPress', this.backButtonClick);
 
     const userId = this.props.navigation.state.params.userId;
-
+    console.log(this.props.navigation)
     fetch(USER_GET_PROFILE + userId, {
       method: "GET",
       headers: {
@@ -107,7 +111,18 @@ export default class componentName extends Component {
             userFcmId: responseJson.data.fcm_id,
             isLoading: false,
             secondTimeLoader: "1"
-          })
+          });
+          console.log(responseJson.data.id)
+          firebase.database().ref(`liveLocation/${responseJson.data.id}`).once('value', result => {
+                const { latitude, longitude } = result.val();
+                const fullDist = getDistance(latitude, longitude, responseJson.data.lat, responseJson.data.lang, 'K');
+                const distance = parseFloat(fullDist).toFixed(1);
+                this.setState({distance});
+            }).
+         catch(e => {
+            console.log(e.message);
+         });
+          console.log(responseJson.data)
           this.interval = setInterval(() => {
  
             var num = (Number(this.state.seconds_Counter) - 1).toString(),
@@ -459,13 +474,9 @@ export default class componentName extends Component {
           </View>
         </View>
 
-        {!this.state.isLoading && this.state.secondTimeLoader != "" &&
-          <SlidingPanel
-            headerLayoutHeight={350}
-            headerLayout={() =>
+        { !this.state.isLoading && this.state.secondTimeLoader != "" &&
               <View style={styles.headerLayoutStyle}>
                 <View style={styles.mainContainer}>
-                  
                   <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, marginLeft: 10, marginRight: 10 }}>
                     <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.minutes_Counter} : {this.state.seconds_Counter}</Text>
                   </View>
@@ -481,7 +492,7 @@ export default class componentName extends Component {
 
                   <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
                     <Image style={{ width: 80, height: 80, borderRadius: 100, }}
-                      source={{ uri: this.state.userImage }}>
+                      source={ this.state.userImage ? { uri: this.state.userImage } : require('../images/generic_avatar.png')}>
                     </Image>
                   </View>
 
@@ -504,16 +515,10 @@ export default class componentName extends Component {
                     </TouchableOpacity>
                   </View>
                 </View>
-              </View>
-            }
-            slidingPanelLayout={() =>
-              <View style={styles.slidingPanelLayoutStyle}>
+                <View style={styles.slidingPanelLayoutStyle}>
                 <View style={styles.containerSlide}>
-
                   <View style={styles.mainContainerSlide}>
-                    <Image style={{ width: 90, height: 90, borderRadius: 100, borderColor: colorYellow, borderWidth: 2, }}
-                      source={{ uri: this.state.userImage }}>
-                    </Image>
+                    
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 15 }}>{this.state.userName}</Text>
 
                     <Text style={{ fontSize: 14, alignItems: 'center', textAlign: 'center', marginTop: 5 }}>{this.state.userAddress}</Text>
@@ -526,16 +531,15 @@ export default class componentName extends Component {
 
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
                       <Image style={{ width: 15, height: 15 }}
-                        source={require('../icons/calendar.png')} />
-                      <Text style={{ fontSize: 14, marginLeft: 10 }}>{this.state.userDob}</Text>
+                        source={require('../icons/maps_location.png')} />
+                      <Text style={{ fontSize: 14, marginLeft: 10 }}>{`${this.state.distance} Km loin de vous`}</Text>
                     </View>
 
                   </View>
 
                 </View>
               </View>
-            }>
-          </SlidingPanel>
+            </View>
         }
 
         {false &&
@@ -673,7 +677,7 @@ const styles = StyleSheet.create({
   },
   headerLayoutStyle: {
     width: screenWidth, 
-    height: 350, 
+    marginTop: 50,
     backgroundColor: 'orange', 
     justifyContent: 'center', 
     alignItems: 'center',

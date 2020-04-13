@@ -14,13 +14,14 @@ import {
   Modal,
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import {Rating, AirbnbRating} from 'react-native-ratings';
+import {AirbnbRating} from 'react-native-ratings';
 import Toast from 'react-native-easy-toast';
 import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails';
 import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
+import { getDistance } from '../misc/helpers';
 
 //const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -141,10 +142,10 @@ class ListOfProviderScreen extends Component {
     if (dataSource.length > 0 && !distCalculated) {
         Object.keys(dataSource).map(key => {
             // console.log(info)
-            const { _id, id } = dataSource[key];
+            const { _id } = dataSource[key];
             firebase.database().ref(`liveLocation/${_id}`).once('value', result => {
                 const { latitude, longitude } = result.val();
-                const dist = this.distance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
+                const dist = getDistance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
                 distInfo[_id] = parseFloat(dist).toFixed(1);
                 tempDatasource[key].hash = parseFloat(dist).toFixed(1);
                 this.setState({distInfo});
@@ -163,28 +164,6 @@ class ListOfProviderScreen extends Component {
       this.handleBackButtonClick,
     );
   }
-
-  distance = (lat1, lon1, lat2, lon2, unit) => {
-	if ((lat1 == lat2) && (lon1 == lon2)) {
-		return 0;
-	}
-	else {
-		var radlat1 = Math.PI * lat1/180;
-		var radlat2 = Math.PI * lat2/180;
-		var theta = lon1-lon2;
-		var radtheta = Math.PI * theta/180;
-		var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-		if (dist > 1) {
-			dist = 1;
-		}
-		dist = Math.acos(dist);
-		dist = dist * 180/Math.PI;
-		dist = dist * 60 * 1.1515;
-		if (unit=="K") { dist = dist * 1.609344 }
-		if (unit=="N") { dist = dist * 0.8684 }
-		return dist;
-	}
-} 
 
   handleBackButtonClick() {
     this.props.navigation.navigate('DashBoard');

@@ -109,7 +109,7 @@ export default class ProviderDetailsScreen extends Component {
       {
         Alert.alert(  
           "JOB REQUEST ALERT",  
-          "Can't book another request, untill any ONGOING Request will not complete",  
+          "Can't book another request, untill the current request is complete.",  
           [  
             {  
               // text: 'Cancel',  
