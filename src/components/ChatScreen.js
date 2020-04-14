@@ -22,7 +22,8 @@ const screenWidth = Dimensions.get('window').width;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
+const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload";
+const REJECT_ACCEPT_REQUEST = Config.baseURL+"jobrequest/updatejobrequest";
 
 function StatusBarPlaceHolder() {
     return (
@@ -332,6 +333,100 @@ class ChatScreen extends Component {
         });
     }
 
+    jobCancelTask = () => {
+        this.setState({
+            isLoading: true
+          })
+      
+          const data = {
+            main_id: PendingJobRequest.Request.id,
+            chat_status: '1',
+            status: 'Canceled',
+            'notification': {
+              "fcm_id": PendingJobRequest.Request.fcm_id,
+              "title": "Job Canceled",
+              "body": 'Your job request has been canceled by '+' Request Id : ' + PendingJobRequest.Request.order_id,
+              "data": {
+                ProviderId: PendingJobRequest.Request.employee_id,
+                image: PendingJobRequest.Request.image,
+                fcmId: PendingJobRequest.Request.fcm_id,
+                name: PendingJobRequest.Request.name,
+                surname: PendingJobRequest.Request.surname,
+                mobile: PendingJobRequest.Request.mobile,
+                description: PendingJobRequest.Request.description,
+                address: PendingJobRequest.Request.address,
+                lat: PendingJobRequest.Request.lat,
+                lang: PendingJobRequest.Request.lang,
+                serviceName: PendingJobRequest.Request.service_name,
+                orderId: PendingJobRequest.Request.order_id,
+                mainId: PendingJobRequest.Request.id,
+                chat_status: PendingJobRequest.Request.chat_status,
+                status: 'Canceled',
+                delivery_address: PendingJobRequest.Request.delivery_address,
+                delivery_lat: PendingJobRequest.Request.delivery_lat,
+                delivery_lang: PendingJobRequest.Request.delivery_lang,
+              },
+            }
+          }
+      
+          console.log("Complete Job >> " + JSON.stringify(data));
+      
+          fetch(REJECT_ACCEPT_REQUEST, {
+            method: "POST",
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+          })
+          .then((response) => response.json())
+            .then((responseJson) => {
+              console.log("Response : " + JSON.stringify(responseJson))
+              if (responseJson.result) {
+                this.setState({
+                  isLoading: false,
+                  isAcceptJob: true,
+                })
+      
+                var jobData = {
+                  id: '' ,
+                  order_id: '',
+                  employee_id: '',
+                  image: '', 
+                  fcm_id: '',
+                  name: '',
+                  surName: '',
+                  mobile: '',
+                  description: '',
+                  address: '',
+                  lat: 0,
+                  lang: 0,
+                  service_name: '',
+                  chat_status : '',
+                  status : '',
+                  delivery_address: '',
+                  delivery_lat: 0,
+                  delivery_lang: 0
+                }
+                PendingJobRequest.Request = jobData;
+                this.props.navigation.navigate("DashBoard");
+              }
+              else {
+                Alert.alert("OOPS!", "Something went wrong, try again later");
+                this.setState({
+                  isLoading: false,
+                });
+              }
+            })
+            .catch((error) => {
+              console.log("Error >>> " + error);
+              this.setState({
+                isLoading: false,
+            });
+        });
+    }
+
+
     sendImageTask = async imageURL => {
 
         const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
@@ -493,8 +588,8 @@ class ChatScreen extends Component {
     }
 
   render() {
+      const requestStatus = PendingJobRequest.Request.status;
     return (
-
         <View style={styles.container}>
 
             <StatusBarPlaceHolder />
@@ -544,6 +639,18 @@ class ChatScreen extends Component {
 
                 <View style={styles.footer}>
                     <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                    { requestStatus === 'Pending' ? <View style={{
+                            flex: 1, width: screenWidth, justifyContent: 'center',
+                            backgroundColor: 'white', alignItems: 'center'
+                        }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
+                                <TouchableOpacity style={styles.buttonContainer}
+                                    onPress={this.jobCancelTask}>
+                                    <Text style={styles.text}>Cancel Request</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View> :
+                        null }
                     <View style={{ flex: 1, flexDirection: 'row', }}>
                         <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
                             placeholder='Tapez un message'
@@ -619,7 +726,28 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'absolute', //Footer
         bottom: 0, //Footer
-     }, 
+     },
+     buttonContainer : {
+        flex: 1,
+        paddingTop: 10,
+        backgroundColor: '#000000',
+        paddingBottom: 10,
+        paddingLeft: 20,
+        paddingRight: 20,
+        borderRadius: 5,
+        borderColor: colorYellow,
+        borderWidth: 2,
+        textAlign: 'center',
+        justifyContent: 'center',
+        marginLeft: 10,
+        marginRight: 10,
+      },
+      text: {
+        fontSize: 14,
+        color: 'white',
+        textAlign: 'center',
+        justifyContent: 'center',
+      }, 
      itemLeftChatContainer: {
         maxWidth: (screenWidth/2)+30,
         flexDirection: 'row',

@@ -100,6 +100,11 @@ class AllMessageScreen extends Component {
         });   
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
+
+    componentDidUpdate(){
+        console.log('data source')
+        console.log(this.state.dataSource)
+    }
     
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -153,7 +158,7 @@ class AllMessageScreen extends Component {
                     'serviceName': item.serviceName})}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.image }} />
+                        source={item.image ? { uri: item.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -385,4 +390,3 @@ const styles = StyleSheet.create({
         paddingBottom: 5
     }
 });
-

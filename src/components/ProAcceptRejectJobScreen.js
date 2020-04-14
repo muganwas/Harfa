@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, 
-    ActivityIndicator, ToastAndroid, BackHandler, ImageBackground, StatusBar, Platform, Modal} from 'react-native';
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Modal} from 'react-native';
 import firebase from 'react-native-firebase';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import WaitingDialog from './WaitingDialog';
 import ImagePicker from 'react-native-image-picker';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-easy-toast';
 import Geolocation from 'react-native-geolocation-service';
 import ProviderDetails from './ProviderDetails';
+import {imageExists} from '../misc/helpers';
 import Config from './Config';
 import ProPendingJobRequest from './ProPendingJobRequest';
 
@@ -48,7 +50,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ProAcceptRejectJobScreen extends Component {
+class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -65,7 +67,6 @@ export default class ProAcceptRejectJobScreen extends Component {
         dataChatSource: [],
         isLoading: true,
         isErrorToast: false,
-
         receiverId: ProPendingJobRequest.Request.user_id,
         receiverName: ProPendingJobRequest.Request.name,
         receiverImage: ProPendingJobRequest.Request.image,
@@ -82,8 +83,8 @@ export default class ProAcceptRejectJobScreen extends Component {
         deliveryLat: ProPendingJobRequest.Request.delivery_lat,
         deliveryLang: ProPendingJobRequest.Request.delivery_lang,
         chatStatus: ProPendingJobRequest.Request.chat_status,
-        status: ProPendingJobRequest.Request.status
-
+        status: ProPendingJobRequest.Request.status,
+        userImageExists: null
       };
 
       this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -114,9 +115,11 @@ export default class ProAcceptRejectJobScreen extends Component {
             status: ProPendingJobRequest.Request.status
         });
 
+        imageExists(ProPendingJobRequest.Request.image).then( userImageExists => this.setState({userImageExists}));
+
         firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
-        .on('child_added', (value)=>{
-            this.setState((prevState)=>{
+        .on('child_added', value => {
+            this.setState(prevState => {
                 return {
                     dataChatSource: [...prevState.dataChatSource, value.val()],
                     isLoading: false,
@@ -259,7 +262,7 @@ export default class ProAcceptRejectJobScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={this.state.userImageExists ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -766,15 +769,15 @@ export default class ProAcceptRejectJobScreen extends Component {
                     </TouchableOpacity>
 
                     <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                        source={{ uri: this.state.receiverImage }} />
+                        source={ this.state.userImageExists ? { uri: this.state.receiverImage } : require('../images/generic_avatar.png')} />
                     <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                         {this.state.receiverName}
                     </Text>
                 </View>
             </View>
 
-            <ScrollView>
-                <View style={{ flexDirection: 'column', marginBottom: 45 }}>
+            <ScrollView style={{flex: 1}}>
+                <View style={{ flexDirection: 'column', marginBottom: 110 }}>
                     <ImageBackground style={styles.listView}
                         source={require('../icons/bg_chat.png')}>
                         <FlatList
@@ -789,24 +792,6 @@ export default class ProAcceptRejectJobScreen extends Component {
                             onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
                             onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
                     </ImageBackground>
-
-                    {(!this.state.isAcceptJob && !this.state.isRejectJob) &&
-                        <View style={{
-                            flex: 1, width: screenWidth, justifyContent: 'center',
-                            backgroundColor: 'white', alignItems: 'center'
-                        }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
-                                <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.acceptJobTask}>
-                                    <Text style={styles.text}>Accepter l'emploi</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.rejectJobTask}>
-                                    <Text style={styles.text}>Refuser le travail</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    }
 
                     {this.state.isAcceptJob && (
                         <TouchableOpacity style={styles.textViewDirection}
@@ -824,6 +809,23 @@ export default class ProAcceptRejectJobScreen extends Component {
             </ScrollView>
 
             <View style={styles.footer}>
+            {(!this.state.isAcceptJob && !this.state.isRejectJob) &&
+                        <View style={{
+                            flex: 1, width: screenWidth, justifyContent: 'center',
+                            backgroundColor: 'white', alignItems: 'center'
+                        }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
+                                <TouchableOpacity style={styles.buttonContainer}
+                                    onPress={this.acceptJobTask}>
+                                    <Text style={styles.text}>Accepter l'emploi</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.buttonContainer}
+                                    onPress={this.rejectJobTask}>
+                                    <Text style={styles.text}>Refuser le travail</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    }
                 <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
                 <View style={{ flex: 1, flexDirection: 'row' }}>
                     <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
@@ -883,7 +885,7 @@ const styles = StyleSheet.create({
         backgroundColor: colorBg,
     },
     listView: {
-        height: screenHeight/2,
+        height: screenHeight,
         padding: 5,
       },
       itemLeftChatContainer: {
@@ -966,3 +968,25 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
       },
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProAcceptRejectJobScreen);

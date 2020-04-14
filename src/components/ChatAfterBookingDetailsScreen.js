@@ -10,7 +10,8 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
-import {imageExists} from '../misc/helpers'
+import {imageExists} from '../misc/helpers';
+import PendingJobRequest from './PendingJobRequest';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -74,6 +75,8 @@ class ChatAfterBookingDetailsScreen extends Component {
     };
 
     componentDidMount() {
+        console.log('chat after booking...')
+        console.log(PendingJobRequest)
         const { fetchedNotifications } = this.props;
         fetchedNotifications({type: 'messages', value: 0});
         console.log("Sender Id >> "+UserDetails.User.userId);

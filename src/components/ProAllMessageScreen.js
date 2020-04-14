@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
@@ -10,7 +11,6 @@ import ProviderDetails from './ProviderDetails';
 import ProChatScreen from './ProChatScreen';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
-import {imageExists} from '../misc/helpers';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -58,8 +58,8 @@ class ProAllMessageScreen extends Component {
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
         let dbRef = firebase.database().ref('recentMessage').child(ProviderDetails.Provider.providerId);
-        dbRef.once('value', (snapshot) => {
-            const key = snapshot.key;
+        dbRef.once('value', snapshot => {
+            //const key = snapshot.key;
             const message = snapshot.val();
 
             if (message != null) {
@@ -81,7 +81,7 @@ class ProAllMessageScreen extends Component {
                             isRecentMessage: true,
                         }
                     });
-                })
+                });
             }
             else {
                 this.setState({
@@ -90,7 +90,12 @@ class ProAllMessageScreen extends Component {
                     isDataMatch: false,
                 })
             }
-        })
+        });
+    }
+
+    componentDidUpdate(){
+        console.log('data source')
+        console.log(this.state.dataSource)
     }
 
     componentWillUnmount() {
@@ -132,6 +137,7 @@ class ProAllMessageScreen extends Component {
     }
 
     renderRecentMessageItem = ({ item }) => {
+        /** Might need to  */
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => this.props.navigation.navigate("ProChatAfterBookingDetails", {
@@ -144,7 +150,7 @@ class ProAllMessageScreen extends Component {
                 })}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.image }} />
+                        source={item.image ? { uri: item.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -270,7 +276,7 @@ class ProAllMessageScreen extends Component {
 
 const AppStackNavigator = createStackNavigator({
     ProAllMessage: {
-        screen: ProAllMessageScreen,
+        screen: connect()(ProAllMessageScreen),
         navigationOptions:{
             header : null
         }
