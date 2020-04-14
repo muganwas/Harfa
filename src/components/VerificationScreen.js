@@ -1,27 +1,29 @@
 
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View,StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity, 
-    ScrollView,Dimensions, ActivityIndicator} from 'react-native';
+    Dimensions, ActivityIndicator} from 'react-native';
 import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
 import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails'
-import PendingJobRequest from './PendingJobRequest';
+//import PendingJobRequest from './PendingJobRequest';
+import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 
-const colorPrimary = '#262425';
+//const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+//const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
 const MOBILE_EXISTS_URL = Config.baseURL+'users/check/mobile'
 const USER_GET_PROFILE = Config.baseURL+"users/"
-const PENDING_JOB = Config.baseURL+"jobrequest/user_status_check/";
+//const PENDING_JOB = Config.baseURL+"jobrequest/user_status_check/";
 
-export default class VerificationScreen extends Component {
+class VerificationScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -53,6 +55,8 @@ export default class VerificationScreen extends Component {
     }
 
     componentDidUpdate() {
+        const { jobsInfo: { requestsFetched } } = this.props;
+        if (requestsFetched) this.setState({isLoading: false});
         if (this.state.timer === 0) {
             clearInterval(this.interval);
             this.setState({
@@ -147,11 +151,11 @@ export default class VerificationScreen extends Component {
          })
          .then((response) => response.json())
          .then((responseJson) => {
-            
+            const { fetchPendingJobRequest } = this.props;
             console.log(JSON.stringify(responseJson));
             if(responseJson.result)
             {
-                const id = responseJson.data.id;
+                //const id = responseJson.data.id;
 
                 var userData = {
                     userId: responseJson.data.id,
@@ -168,7 +172,7 @@ export default class VerificationScreen extends Component {
                 console.log("UserData1: "+JSON.stringify( UserDetails.User));
                 
                 //Check if any Ongoing Request 
-                this.getPendingJobRequest(id)
+                fetchPendingJobRequest(this.props, userId, 'Home');
             }
             else
             {
@@ -182,13 +186,15 @@ export default class VerificationScreen extends Component {
             this.setState({
                 isLoading: false
             })
-            alert("Error "+error);
+            alert("Error " + error);
             console.log(JSON.stringify(responseJson));
         });
     }
 
-    async getPendingJobRequest(userId)
+    /*async getPendingJobRequest(userId)
     {
+        const { startJobFetch, dispatchFetchedJobRequests, jobRequestFetchError } = this.props;
+        startJobFetch();
         await fetch(PENDING_JOB+userId , {
             method: "GET",
             headers: {
@@ -197,15 +203,16 @@ export default class VerificationScreen extends Component {
             },
          })
          .then((response) => response.json())
-         .then((responseJson) => {
-            
-            console.log("Response getPendingJobRequest: "+JSON.stringify(responseJson));
+         .then(responseJson => {
+            const { jobsInfo: { jobRequests } } = this.props;
+            let newJobRequest = [...jobRequests];
+            console.log("Response getPendingJobRequest: " + JSON.stringify(responseJson));
             this.setState({
                 isLoading: false
             })
             if(responseJson.result)
             {
-                const id = responseJson.data.id;
+                //const id = responseJson.data.id;
 
                 var jobData = {
                     id: responseJson.data._id,
@@ -223,24 +230,27 @@ export default class VerificationScreen extends Component {
                     service_name: responseJson.data.service_details.service_name,
                 }
                 PendingJobRequest.Request = jobData;
-
-                console.log("PendingJob getPendingJobRequest : "+JSON.stringify( PendingJobRequest.Request))
+                newJobRequest.push(jobData);
+                dispatchFetchedJobRequests(newJobRequest);
+                console.log("PendingJob getPendingJobRequest : " + JSON.stringify( PendingJobRequest.Request))
 
                 this.props.navigation.navigate("Home");
             }
             else
             {
+                jobRequestFetchError('no jobs were found');
                 this.props.navigation.navigate("Home");
             }
          })
-        .catch((error) => {
+        .catch(error => {
             this.setState({
                 isLoading: false
             })
             alert("Error "+error);
+            jobRequestFetchError(error.message)
             console.log(JSON.stringify(responseJson));
         });
-    }
+    }*/
 
     render() {
         return (
@@ -401,4 +411,18 @@ const styles = StyleSheet.create({
     }
 });
 
+const mapStateToProps = state => {
+    return {
+        jobsInfo: state.jobsInfo
+    }
+}
 
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchPendingJobRequest: (props, uid, navigateTo) => {
+            dispatch(getPendingJobRequest(props,uid,navigateTo));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(VerificationScreen);

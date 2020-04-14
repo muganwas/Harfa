@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import {Text, StyleSheet, View, Image, FlatList, ActivityIndicator,
+import {Text, StyleSheet, View, Image, FlatList,
     TouchableOpacity, StatusBar, Dimensions, Animated, BackHandler, Alert, Modal} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
@@ -26,6 +26,7 @@ import AddAddressScreen from './AddAddressScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
 import Hamburger from './Hamburger';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError } from '../Redux/Actions/jobsActions';
 //import {Notifications} from 'react-native-notifications';
 
 const socket = Config.socket;
@@ -69,16 +70,15 @@ class DashBoardScreen extends Component {
             connectivityAvailable: false
         }
         this.springValue = new Animated.Value(100);
-        buttonType = this.buttonType.bind(this);
-        this.goToNextPage = this.goToNextPage.bind(this);
     }
 
-    buttonType(buttonType1) {
+    buttonType = buttonType1 => {
         this.setState({ buttonType: buttonType1 });
     }
 
     //Get All Services
     componentDidMount() {
+        console.log(this.props)
         console.log('setting listeners...');
         NetInfo.addEventListener(status => {
             if (!status.isConnected) this.setState({connectivityAvailable: false});
@@ -122,16 +122,26 @@ class DashBoardScreen extends Component {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
     }
 
-    componentWillMount() {
-        console.log("Dashboard Mount")
+    async componentWillMount() {
+        console.log("Dashboard Mount");
         firebase.notifications().onNotification(notification => {
-            const {fetchedNotifications, notificationsInfo} = this.props;
+            const {fetchedNotifications, notificationsInfo, fetchedPendingJobInfo, fetchingPendingJobInfoError, jobsInfo: { jobRequests }} = this.props;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
+            let newJobRequests = [...jobRequests];
+            
             fetchedNotifications({type: 'generic', value: newGenericCount});
             const { title, body, data } = notification;
+
+            const orderId = data.orderId;
+            let pos;
+
+            Object.keys(jobRequests).map(key => {
+                const currOrderId = jobRequests[key].order_Id;
+                if (orderId === currOrderId) pos = key;
+            });
       
-            if (title == "Chat Request Accepted") {
+            if (title == "Chat Request Accepted" && pos != null) {
               this.setState({
                 requestStatus: title,
                 title: title, 
@@ -161,13 +171,11 @@ class DashBoardScreen extends Component {
                 delivery_lat: data.delivery_lat,
                 delivery_lang: data.delivery_lang,
               }
-
-              PendingJobRequest.Request = pendingJobData;
-
+              newJobRequests[pos] = pendingJobData;
+              fetchedPendingJobInfo(newJobRequests);
               this.showToast("Demande de chat acceptée")
             }
-            else if(title == "Chat Request Rejected")
-            {
+            else if (title == "Chat Request Rejected") {
               this.setState({
                 requestStatus: title,
                 title: title, 
@@ -177,8 +185,7 @@ class DashBoardScreen extends Component {
               })
               this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
             }
-            else if(title == "No Response")
-            {
+            else if ((title == "No Response" || title == "Canceled" ) && pos != null) {
               this.setState({
                 requestStatus: title,
                 title: title, 
@@ -205,11 +212,11 @@ class DashBoardScreen extends Component {
                 delivery_lat: '',
                 delivery_lang: '',
             }
-            PendingJobRequest.Request = jobData;
-            
+                newJobRequests[pos] = pendingJobData;
+              fetchedPendingJobInfo(newJobRequests);
               this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
             }
-            else if(title == "Job Accepted")
+            else if(title == "Job Accepted" && pos != null)
             {
                 var pendingJobData = {
                     id: data.mainId,
@@ -231,13 +238,14 @@ class DashBoardScreen extends Component {
                     delivery_lat: data.delivery_lat,
                     delivery_lang: data.delivery_lang,
                 }
-                PendingJobRequest.Request = pendingJobData;
+                newJobRequests[pos] = pendingJobData;
+                fetchedPendingJobInfo(newJobRequests);
 
                 //console.log('After Job Accepted >>> ', JSON.stringify(PendingJobRequest.Request));
 
                 this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
-            else if(title == "Job Rejected")
+            else if(title == "Job Rejected" && pos != null)
             {
               this.setState({
                 isJobAccepted: false
@@ -262,11 +270,11 @@ class DashBoardScreen extends Component {
                 delivery_lat: '',
                 delivery_lang: '',
             }
-            PendingJobRequest.Request = jobData;
+                newJobRequests[pos] = jobData;
+              fetchedPendingJobInfo(newJobRequests);
               this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
             }
-            else if(title == "Job Completed")
-            {
+            else if(title == "Job Completed" && pos != null) {
               var jobData = {
                 id: '',
                 order_id: '',
@@ -287,7 +295,8 @@ class DashBoardScreen extends Component {
                 delivery_lat: '',
                 delivery_lang: '',
             }
-            PendingJobRequest.Request = jobData;
+                newJobRequests[pos] = jobData;
+              fetchedPendingJobInfo(newJobRequests);
             this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
           });
@@ -394,38 +403,34 @@ class DashBoardScreen extends Component {
     }
 
     onRefresh() {
-    
         console.log("Refresh Page");
-        console.log("Pending job Id : "+JSON.stringify(PendingJobRequest.Request.order_id));
 
-        fetch(SERVICES_URL)
-            .then((response) => response.json())
-            .then((responseJson) => {
-                //console.log("Response : "+JSON.stringify(responseJson))
-                this.setState({
-                    dataSource: responseJson.data,  //data is key
-                    isLoading: false
-                })
+        fetch(SERVICES_URL).
+        then((response) => response.json()).
+        then(responseJson => {
+            //console.log("Response : "+JSON.stringify(responseJson))
+            this.setState({
+                dataSource: responseJson.data,  //data is key
+                isLoading: false
             })
-            .catch((error) => {
-                console.log(error);
-                this.setState({
-                    isLoading: false
-                })
-                this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+        }).
+        catch(error => {
+            console.log(error);
+            this.setState({
+                isLoading: false
             })
-            return true;
+            this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+        });
+        return true;
     }
 
-    goToNextPage() {
-        if(PendingJobRequest.Request.chat_status == '0')
-        {
+    goToNextPage = () => {
+        if (PendingJobRequest.Request.chat_status == '0') {
             //ToastAndroid.show("Your chat request not accepted. Please wait...", ToastAndroid.LONG);
             this.showToast("Votre demande de chat n'est pas acceptée. S'il vous plaît, attendez...")
         }
-        else
-        {
-            this.props.navigation.navigate("MapDirection",{
+        else {
+            this.props.navigation.navigate("MapDirection", {
                 titlePage: "Dashboard"
             })
         }
@@ -442,14 +447,10 @@ class DashBoardScreen extends Component {
     }
 
     render() {
-        const { notificationTotal } = this.state;
         return (  
             <View style={styles.container}>
-               
                 {/* <StatusBar barStyle='light-content' backgroundColor='#C5940E' />   */}
-
                 <StatusBarPlaceHolder/>
-               
                 <View style={styles.header}>
                     <Hamburger
                         navigation={this.props.navigation}
@@ -490,7 +491,7 @@ class DashBoardScreen extends Component {
                     />
                 </View>
 
-                {PendingJobRequest.Request.order_id != '' &&
+                { PendingJobRequest.Request.order_id != '' &&
                     <TouchableOpacity style={styles.pendingJobStyle}
                         onPress={this.goToNextPage}>
                         <LinearGradient style={styles.pendingJobStyle}
@@ -557,7 +558,8 @@ class DashBoardScreen extends Component {
 
 const mapStateToProps = state => {
     return {
-        notificationsInfo: state.notificationsInfo
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo
     }
 }
 
@@ -571,6 +573,15 @@ const mapDispatchToProps = dispatch => {
         },
         fetchingNotificationsError: error => {
             dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobCustomer());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobCustomerInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchCustomerJobInfoError(error))
         }
     }
 }

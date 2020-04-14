@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler} from 'react-native';
 import {createAppContainer,} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
@@ -23,13 +24,10 @@ import SelectAddressScreen from './SelectAddressScreen';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
-import PendingJobRequest from './PendingJobRequest';
-import ProPendingRequest from './ProPendingJobRequest';
+import { getPendingJobRequest, getPendingJobRequestProvider } from '../Redux/Actions/jobsActions';
 
 const PRO_GET_PROFILE = Config.baseURL+"employee/";
 const USER_GET_PROFILE = Config.baseURL+"users/";
-const PENDING_JOB_CUSTOMER = Config.baseURL+"jobrequest/user_status_check/";
-const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
 const database = firebase.database();
 
 class SplashScreen extends Component {
@@ -43,8 +41,7 @@ class SplashScreen extends Component {
         };
     };
 
-    componentDidMount()
-    {
+    componentDidMount() {
         setTimeout(this.splashTimeOut, 3000);
          /*
          * no need for initialization
@@ -64,64 +61,69 @@ class SplashScreen extends Component {
         }*/
     }
 
+    componentDidUpdate(){
+        const { jobsInfo: { requestsProvidersFetched, requestsFetched } } = this.props;
+        if (requestsProvidersFetched && requestsFetched) this.setState({isLoading: false});
+    }
+
     splashTimeOut = () => {
         AsyncStorage.getItem('userId')
         .then((userId) => this.getUserType(userId));
     }
 
-    async getUserType(userId){
+    getUserType = async userId => {
 
-     firebase.messaging().hasPermission()
-            .then(async enabled => {
-                if (enabled) {
+        firebase.messaging().hasPermission().
+        then(async enabled => {
+            if (enabled) {
+                this.getFCMToken(userId);
+            }
+            else {
+                await firebase.messaging().requestPermission()
+                .then(() => {
                     this.getFCMToken(userId);
-                }
-                else {
-                    await firebase.messaging().requestPermission()
-                        .then(() => {
-                            this.getFCMToken(userId);
-                        })
-                        .catch(error => {
-                            Alert.alert(  
-                                "Permission Request",  
-                                "You don't have permission for notification. Please enable notification then try again " ,  
-                                [  
-                                  {  
-                                    text: 'Back',  
-                                    onPress: () => {
-                                        if (Platform.OS == 'android')
-                                            BackHandler.exitApp();
-                                        else
-                                            RNExitApp.exitApp();
-                                    },  
-                                    style: 'cancel',  
-                                  },  
-                                  {
-                                    text: 'OK', 
-                                    onPress: () => {
-                                        if (Platform.OS == 'android')
-                                            BackHandler.exitApp();
-                                        else
-                                            RNExitApp.exitApp();
-                                    },
-                                  },  
-                                ]  
-                              );  
+                })
+                .catch(error => {
+                    Alert.alert(  
+                        "Permission Request",  
+                        "You don't have permission for notification. Please enable notification then try again " ,  
+                        [  
+                            {  
+                            text: 'Back',  
+                            onPress: () => {
+                                if (Platform.OS == 'android')
+                                    BackHandler.exitApp();
+                                else
+                                    RNExitApp.exitApp();
+                            },  
+                            style: 'cancel',  
+                            },  
+                            {
+                            text: 'OK', 
+                            onPress: () => {
+                                if (Platform.OS == 'android')
+                                    BackHandler.exitApp();
+                                else
+                                    RNExitApp.exitApp();
+                            },
+                            },  
+                        ]  
+                        );  
 
-                            //User has rejected permissions
-                        });
-                }
-            });
+                    //User has rejected permissions
+                });
+            }
+        });
     }
 
-    async getFCMToken(userId){
+    getFCMToken = async userId => {
 
         const fcmToken = await firebase.messaging().getToken();
         if (fcmToken) {
             console.log("Splash FCMID >> " + fcmToken);
 
             AsyncStorage.getItem('userType')
-                .then((userType) => this.autoLogin(userId, userType, fcmToken));
+            .then((userType) => this.autoLogin(userId, userType, fcmToken));
         }
         else {
             // user doesn't have a device token yet
@@ -129,14 +131,13 @@ class SplashScreen extends Component {
         }
     }
     
-    autoLogin(userId, userType, fcmToken)
-    {
-        if (userId !== null){
+    autoLogin = (userId, userType, fcmToken) => {
+        const { fetchPendingJobProviderInfo, fetchPendingJobRequest } = this.props;
+        if (userId !== null) {
             this.setState({
                 isLoading: true,
             });
-            if(userType == 'Provider')
-            {
+            if (userType == 'Provider') {
                 fetch(PRO_GET_PROFILE+userId+'?fcm_id='+fcmToken, {
                     method: "GET",
                     headers: {
@@ -147,10 +148,7 @@ class SplashScreen extends Component {
                  .then((response) => response.json())
                  .then(async responseJson => {
                     var status;
-                    console.log("Response autoLogin Provider >> "+JSON.stringify(responseJson));
-                   
-                    if(responseJson.result)
-                    {
+                    if (responseJson.result) {
 
                         const id = responseJson.data.id;
                         const usersRef = database.ref(`users/${id}`);
@@ -188,10 +186,9 @@ class SplashScreen extends Component {
                         ProviderDetails.Provider = providerData;
 
                         console.log("AutoLogin ProviderData: "+JSON.stringify(ProviderDetails.Provider));
-                        this.getPendingJobRequestProvider(userId)
+                        fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
                     }
-                    else
-                    {
+                    else {
                         this.setState({
                             isLoading: false
                         })
@@ -215,14 +212,12 @@ class SplashScreen extends Component {
                     this.setState({
                         isLoading: false
                     })
-                    alert("Error " + error);
+                    alert(error);
                     console.log('error in autologin')
                     console.log(JSON.stringify(responseJson));
                 });
             }
-            else if (userType == 'User')
-            {
-                console.log(USER_GET_PROFILE+userId)
+            else if (userType == 'User') {
 
                 fetch(USER_GET_PROFILE+userId+'?fcm_id='+fcmToken , {
                     method: "GET",
@@ -231,15 +226,9 @@ class SplashScreen extends Component {
                         'Content-Type': 'application/json',
                     },
                  })
-                 .then((response) => response.json())
-                 .then((responseJson) => {
-                    
-                    console.log("Response autoLogin: "+JSON.stringify(responseJson));
-                    
-                    if(responseJson.result)
-                    {
-                        const id = responseJson.data.id;
-
+                 .then(response => response.json())
+                 .then(responseJson => {
+                    if (responseJson.result) {
                         var userData = {
                             userId: responseJson.data.id,
                             accountType: responseJson.data.acc_type,
@@ -255,14 +244,11 @@ class SplashScreen extends Component {
                             fcmId: responseJson.data.fcm_id,
                         }
                         UserDetails.User = userData;
-
                         console.log("AutoLogin UserData: "+JSON.stringify(UserDetails.User))
-
                         //Check if any Ongoing Request 
-                        this.getPendingJobRequest(userId)
+                        fetchPendingJobRequest(this.props, userId, 'Home');
                     }
-                    else
-                    {
+                    else {
                         this.setState({
                             isLoading: false
                         })
@@ -286,134 +272,15 @@ class SplashScreen extends Component {
                     this.setState({
                         isLoading: false
                     })
-                    alert("Error "+error);
+                    alert(error);
                     console.log(JSON.stringify(responseJson));
                 });
             }
         }
-        else
-        {
+        else {
             console.log("No Logged User");
             this.props.navigation.navigate("AfterSplash") ;
         } 
-    }
-
-    async getPendingJobRequest(userId)
-    {
-        await fetch(PENDING_JOB_CUSTOMER+userId , {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            
-            console.log("Response getPendingJobRequest: "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                const id = responseJson.data.id;
-
-                var jobData = {
-                    id: responseJson.data._id,
-                    order_id: responseJson.data.order_id,
-                    employee_id: responseJson.data.employee_details._id,
-                    image: responseJson.data.employee_details.image,
-                    fcm_id: responseJson.data.employee_details.fcm_id,
-                    name: responseJson.data.employee_details.username,
-                    surName: responseJson.data.employee_details.surname,
-                    mobile: responseJson.data.employee_details.mobile,
-                    description: responseJson.data.employee_details.description,
-                    address: responseJson.data.employee_details.address,
-                    lat: responseJson.data.employee_details.lat,
-                    lang: responseJson.data.employee_details.lang,
-                    service_name: responseJson.data.service_details.service_name,
-                    chat_status: responseJson.data.chat_status,
-                    status: responseJson.data.status,
-                    delivery_address: responseJson.data.delivery_address,
-                    delivery_lat: responseJson.data.delivery_lat,
-                    delivery_lang: responseJson.data.delivery_lang,
-                }
-                PendingJobRequest.Request = jobData;
-
-                console.log("PendingJob getPendingJobRequest : "+JSON.stringify( PendingJobRequest.Request))
-
-                this.props.navigation.navigate("Home");
-            }
-            else
-            {
-                this.props.navigation.navigate("Home");
-            }
-         })
-        .catch((error) => {
-            this.setState({
-                isLoading: false
-            })
-            alert("Error "+error);
-            console.log(JSON.stringify(responseJson));
-        });
-    }
-
-    async getPendingJobRequestProvider(providerId)
-    {
-        await fetch(PENDING_JOB_PROVIDER+providerId , {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            
-            console.log("Response getPendingJobRequestProvider: "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                const id = responseJson.data.id;
-
-                var jobData = {
-                    id: responseJson.data._id,
-                    order_id: responseJson.data.order_id,
-                    user_id: responseJson.data.customer_details._id,
-                    image: responseJson.data.customer_details.image,
-                    fcm_id: responseJson.data.customer_details.fcm_id,
-                    name: responseJson.data.customer_details.username,
-                    mobile: responseJson.data.customer_details.mobile,
-                    dob: responseJson.data.customer_details.dob,
-                    address: responseJson.data.customer_details.address,
-                    lat: responseJson.data.customer_details.lat,
-                    lang: responseJson.data.customer_details.lang,
-                    service_name: responseJson.data.service_details.service_name,
-                    chat_status: responseJson.data.chat_status,
-                    status: responseJson.data.status,
-                    delivery_address: responseJson.data.delivery_address,
-                    delivery_lat: responseJson.data.delivery_lat,
-                    delivery_lang: responseJson.data.delivery_lang,
-                }
-                ProPendingRequest.Request = jobData;
-                console.log("PendingJob getPendingJobRequestProvider : "+JSON.stringify( ProPendingRequest.Request))
-
-                this.props.navigation.navigate("ProHome");
-            }
-            else
-            {
-                this.props.navigation.navigate("ProHome");
-            }
-         })
-        .catch((error) => {
-            this.setState({
-                isLoading: false
-            })
-            alert("Error "+error);
-            console.log(JSON.stringify(responseJson));
-        });
     }
 
     render() {
@@ -440,18 +307,35 @@ class SplashScreen extends Component {
     }
 }
 
-class App extends Component{
+/*class App extends Component{
     render(){
         return(
             <AppStackNavigator/>
         );
+    }
+}*/
+
+const mapStateToProps = state => {
+    return {
+        jobsInfo: state.jobsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchPendingJobRequest: (props, uid, navigateTo) => {
+            dispatch(getPendingJobRequest(props,uid,navigateTo));
+        },
+        fetchPendingJobProviderInfo: (props, proId, navigateTo) => {
+            dispatch(getPendingJobRequestProvider(props,proId,navigateTo));
+        }
     }
 }
 
 const AppStackNavigator = createStackNavigator({
     Splash : 
     {
-      screen : SplashScreen,
+      screen : connect(mapStateToProps, mapDispatchToProps)(SplashScreen),
       navigationOptions:{
         header : null
       }
@@ -560,8 +444,8 @@ const AppStackNavigator = createStackNavigator({
     },
 });
 
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+const App = createAppContainer(AppStackNavigator);
+export default App;
 
 const styles = {
     container : {

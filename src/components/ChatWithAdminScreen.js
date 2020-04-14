@@ -16,7 +16,7 @@ const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const options = {
     title: 'Select a photo',
