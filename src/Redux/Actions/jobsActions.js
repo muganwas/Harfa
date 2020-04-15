@@ -5,7 +5,8 @@ import {
     FETCHING_JOB_REQUESTS_ERROR,
     FETCHING_JOB_REQUESTS_PROVIDERS,
     FETCHED_JOB_REQUESTS_PROVIDERS,
-    FETCHING_JOB_REQUESTS_PROVIDERS_ERROR
+    FETCHING_JOB_REQUESTS_PROVIDERS_ERROR,
+    SET_SELECTED_JOB_REQUEST
 } from '../types';
 
 const PENDING_JOB_CUSTOMER = Config.baseURL+"jobrequest/user_status_check/";
@@ -50,9 +51,17 @@ export const fetchProviderJobInfoError = payload => {
     }
 }
 
+export const setSelectedJobRequest = payload => {
+    return {
+        type: SET_SELECTED_JOB_REQUEST,
+        payload
+    }
+}
+
 export const getPendingJobRequest = ( props, userId, navTo ) => {
+    //has to change to accomodate multiple requests
     return dispatch => {
-        const { jobsInfo: { jobRequests }, navigation } = props;
+        const { navigation } = props;
         dispatch(startFetchingJobCustomer());
         fetch(PENDING_JOB_CUSTOMER + userId , {
             method: "GET",
@@ -63,7 +72,7 @@ export const getPendingJobRequest = ( props, userId, navTo ) => {
          })
          .then(response => response.json())
          .then(responseJson => {
-            let newJobRequest = [...jobRequests];
+            let newJobRequest = [];
             if (responseJson.result) {
                 //const id = responseJson.data.id;
                 var jobData = {
@@ -104,8 +113,8 @@ export const getPendingJobRequest = ( props, userId, navTo ) => {
 
 export const getPendingJobRequestProvider = ( props, providerId, navTo ) => {
     return dispatch => {
-        const { jobRequestsProviders, navigation }  = props;
-        let newJobRequestsProviders = [...jobRequestsProviders];
+        const { navigation }  = props;
+        let newJobRequestsProviders = [];
         dispatch(startFetchingJobProvider());
         fetch(PENDING_JOB_PROVIDER+providerId , {
             method: "GET",

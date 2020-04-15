@@ -72,7 +72,8 @@ class Hamburger extends React.Component {
             fetchedMessages,
             fetchingOthersCoordinates, 
             fetchedOthersCoordinates, 
-            fetchOthersCoordinatesError
+            fetchOthersCoordinatesError,
+            jobsInfo: { jobRequests }
         } = this.props;
         console.log('hamburger loaded...');
         const providerId = navigation ?
@@ -85,6 +86,7 @@ class Hamburger extends React.Component {
         const receiverId = PendingJobRequest.Request.employee_id || providerId;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
+        var providersLocation = {};
         /** fetch users current position and upload it to db */
         geolocation.getCurrentPosition(info => {
             const { coords: { latitude, longitude} } = info;
@@ -103,14 +105,17 @@ class Hamburger extends React.Component {
         });
 
         /**fetch pros current position */
-        firebase.database().ref(`liveLocation/${receiverId}`).once('value', result => {
-            console.log('others position pro')
-            console.log(result.val());
-            fetchedOthersCoordinates(result.val());
-        }).
-        catch(e => {
-            fetchOthersCoordinatesError(e.message);
-        });
+        jobRequests.map(obj => {
+            const { employee_id } = obj;
+            firebase.database().ref(`liveLocation/${employee_id}`).once('value', result => {
+                const loc = result.val();
+                providersLocation[employee_id] = loc;
+                fetchedOthersCoordinates(providersLocation);
+            }).
+            catch(e => {
+                fetchOthersCoordinatesError(e.message);
+            });
+        })
 
         /** lookout for users changing position */
         geolocation.watchPosition(info => {
@@ -239,7 +244,8 @@ class Hamburger extends React.Component {
 const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
-        messagesInfo: state.messagesInfo
+        messagesInfo: state.messagesInfo,
+        jobsInfo: state.jobsInfo,
     }
 }
 

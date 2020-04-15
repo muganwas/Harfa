@@ -1,7 +1,8 @@
 
 import React, { Component } from 'react';
 import {Text, StyleSheet, View, Image, FlatList,
-    TouchableOpacity, StatusBar, Dimensions, Animated, BackHandler, Alert, Modal} from 'react-native';
+    TouchableOpacity, StatusBar, Dimensions, 
+    Animated, BackHandler, Alert, Modal, Platform} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
@@ -26,7 +27,7 @@ import AddAddressScreen from './AddAddressScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
 import Hamburger from './Hamburger';
-import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError } from '../Redux/Actions/jobsActions';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 //import {Notifications} from 'react-native-notifications';
 
 const socket = Config.socket;
@@ -116,16 +117,16 @@ class DashBoardScreen extends Component {
 
         const {navigation} = this.props;
         navigation.addListener ('willFocus', async () =>{
-          console.log("willFocus runs >>") 
-        this.onRefresh();
+            console.log("willFocus runs >>")
         });
+        this.onRefresh();
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
     }
 
     async componentWillMount() {
         console.log("Dashboard Mount");
         firebase.notifications().onNotification(notification => {
-            const {fetchedNotifications, notificationsInfo, fetchedPendingJobInfo, fetchingPendingJobInfoError, jobsInfo: { jobRequests }} = this.props;
+            const {fetchedNotifications, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests }} = this.props;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
             let newJobRequests = [...jobRequests];
@@ -134,12 +135,14 @@ class DashBoardScreen extends Component {
             const { title, body, data } = notification;
 
             const orderId = data.orderId;
-            let pos;
+            let pos = 0;
 
             Object.keys(jobRequests).map(key => {
                 const currOrderId = jobRequests[key].order_Id;
                 if (orderId === currOrderId) pos = key;
             });
+
+            console.log('pos: ', pos)
       
             if (title == "Chat Request Accepted" && pos != null) {
               this.setState({
@@ -424,29 +427,64 @@ class DashBoardScreen extends Component {
         return true;
     }
 
-    goToNextPage = () => {
-        if (PendingJobRequest.Request.chat_status == '0') {
+    goToNextPage = (chat_status, jobInfo) => {
+        const { dispatchSelectedJobRequest } = this.props;
+        if (chat_status == '0') {
             //ToastAndroid.show("Your chat request not accepted. Please wait...", ToastAndroid.LONG);
             this.showToast("Votre demande de chat n'est pas acceptée. S'il vous plaît, attendez...")
         }
         else {
+            dispatchSelectedJobRequest(jobInfo);
             this.props.navigation.navigate("MapDirection", {
                 titlePage: "Dashboard"
-            })
+            });
         }
     }
 
-    showToast = (message) => {
+    showToast = message => {
         this.refs.toast.show(message);
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
     }
 
+    renderPendingJobRequests = ({item}) => {
+        const { image, name, employee_id, surName, service_name, chat_status, status } = item;
+        return (
+            <TouchableOpacity style={styles.pendingJobRow}
+                onPress={() => this.goToNextPage(chat_status, {userType: 'client', employee_id})}>
+                <LinearGradient
+                    style={styles.pendingJobRow}
+                    colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+                    <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
+                        source={{ uri: image }} />
+                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                        <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
+                            {name + " " + surName}
+                        </Text>
+                        <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                            {service_name}
+                        </Text>
+                        <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold'}}>
+                            {chat_status == "0" ? "Nouvelle demande d'emploi" 
+                            : status == "Pending" ? "Demande de chat acceptée"
+                            : "Travail accepté"}
+                        </Text>
+                    </View>
+                    <View style={styles.arrowView}>
+                        <Image style={styles.arrow}
+                            source={require('../icons/arrow_right_animated.gif')} />
+                    </View>
+                </LinearGradient>
+            </TouchableOpacity>
+        )
+    }
+
     render() {
+        const { jobsInfo: { jobRequests, requestsFetched } } = this.props;
         return (  
             <View style={styles.container}>
                 {/* <StatusBar barStyle='light-content' backgroundColor='#C5940E' />   */}
@@ -485,40 +523,24 @@ class DashBoardScreen extends Component {
                         renderItem={this.renderItem}
                         keyExtractor={(item, index) => index}
                         showsVerticalScrollIndicator={false}
-                        onRefresh={() => this.onRefresh()}
+                        onRefresh={this.onRefresh}
                         refreshing={this.state.isLoading}
                         // ItemSeparatorComponent={this.renderSeparator}
                     />
                 </View>
-
-                { PendingJobRequest.Request.order_id != '' &&
-                    <TouchableOpacity style={styles.pendingJobStyle}
-                        onPress={this.goToNextPage}>
-                        <LinearGradient style={styles.pendingJobStyle}
-                            colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
-                            <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                                source={{ uri: PendingJobRequest.Request.image }} />
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
-                                    {PendingJobRequest.Request.name + " " + PendingJobRequest.Request.surName}
-                                </Text>
-                                <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
-                                    {PendingJobRequest.Request.service_name}
-                                </Text>
-                                <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold'}}>
-                                    {PendingJobRequest.Request.chat_status == "0" ? "Nouvelle demande d'emploi" 
-                                    : PendingJobRequest.Request.status == "Pending" ? "Demande de chat acceptée"
-                                    : "Travail accepté"}
-                                </Text>
-                            </View>
-                            <View style={styles.arrowView}>
-                                <Image style={styles.arrow}
-                                    source={require('../icons/arrow_right_animated.gif')} />
-                            </View>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                }
-
+                {/** show pending requests */}
+                <View style={styles.pendingJobsContainer}>
+                { requestsFetched && jobRequests.length > 0 ? 
+                <FlatList
+                    keyboardShouldPersistTaps={'handled'}
+                    numColumns={1}
+                    data={jobRequests}
+                    renderItem={this.renderPendingJobRequests}
+                    keyExtractor={(item, index) => index}
+                    showsVerticalScrollIndicator={false}
+                    // ItemSeparatorComponent={this.renderSeparator}
+                /> : null }
+                </View>
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
                     <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
                     <TouchableOpacity
@@ -559,7 +581,8 @@ class DashBoardScreen extends Component {
 const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
-        jobsInfo: state.jobsInfo
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
     }
 }
 
@@ -582,6 +605,9 @@ const mapDispatchToProps = dispatch => {
         },
         fetchingPendingJobInfoError: error => {
             dispatch(fetchCustomerJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
         }
     }
 }
@@ -733,6 +759,25 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.75,
         shadowRadius: 5, 
         elevation: 5,
+    },
+    pendingJobsContainer: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        width: screenWidth,
+        position: 'absolute',
+        bottom: 0,
+        shadowColor: '#000', 
+        shadowOffset: { width: 0, height: 0 }, 
+        shadowOpacity: 0.75,
+        shadowRadius: 5, 
+        elevation: 5,
+    },
+    pendingJobRow: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'row',
+        height: 75,
     },
     linearGradient: {
         flex: 1,

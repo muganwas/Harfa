@@ -4,10 +4,12 @@ import {
     FETCHING_JOB_REQUESTS_ERROR,
     FETCHING_JOB_REQUESTS_PROVIDERS,
     FETCHED_JOB_REQUESTS_PROVIDERS,
-    FETCHING_JOB_REQUESTS_PROVIDERS_ERROR
+    FETCHING_JOB_REQUESTS_PROVIDERS_ERROR,
+    SET_SELECTED_JOB_REQUEST
 } from '../types';
 
 const initialState = {
+    selectedJobRequest: null,
     jobRequests: [],
     jobRequestsProviders: [],
     requestsProvidersFetched: false,
@@ -63,6 +65,11 @@ const jobsReducer = (state=initialState, action) => {
                 requestsProvidersError: action.payload,
                 requestsProvidersFetched: false,
                 fetchingRequestsProviders: false
+            }
+        case SET_SELECTED_JOB_REQUEST: 
+            return {
+                ...state,
+                selectedJobRequest: action.payload
             }
         default: 
             return state;

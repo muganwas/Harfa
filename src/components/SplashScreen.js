@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler} from 'react-native';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import { View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler } from 'react-native';
+import { createAppContainer, } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 import AsyncStorage from '@react-native-community/async-storage';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
@@ -19,15 +19,15 @@ import ProRegisterFBScreen from './ProRegisterFBScreen';
 import ProRegisterScreen from './ProRegisterScreen';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
 import ProHomeScreen from './ProHomeScreen';
-import ProAccountTypeScreen from  './ProAccountTypeScreen';
+import ProAccountTypeScreen from './ProAccountTypeScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
 import { getPendingJobRequest, getPendingJobRequestProvider } from '../Redux/Actions/jobsActions';
 
-const PRO_GET_PROFILE = Config.baseURL+"employee/";
-const USER_GET_PROFILE = Config.baseURL+"users/";
+const PRO_GET_PROFILE = Config.baseURL + "employee/";
+const USER_GET_PROFILE = Config.baseURL + "users/";
 const database = firebase.database();
 
 class SplashScreen extends Component {
@@ -43,77 +43,77 @@ class SplashScreen extends Component {
 
     componentDidMount() {
         setTimeout(this.splashTimeOut, 3000);
-         /*
-         * no need for initialization
-         var config = {
-            apiKey: Config.apiKey,
-            authDomain: Config.authDomain,
-            databaseURL: Config.databaseURL,
-            projectId: Config.projectId,
-            storageBucket: Config.storageBucket,
-            messagingSenderId: Config.messagingSenderId,
-            appId: Config.appId
-        };
-        console.log(config)
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(config);
-        }*/
+        /*
+        * no need for initialization
+        var config = {
+           apiKey: Config.apiKey,
+           authDomain: Config.authDomain,
+           databaseURL: Config.databaseURL,
+           projectId: Config.projectId,
+           storageBucket: Config.storageBucket,
+           messagingSenderId: Config.messagingSenderId,
+           appId: Config.appId
+       };
+       console.log(config)
+       // Initialize Firebase
+       if (!firebase.apps.length) {
+           firebase.initializeApp(config);
+       }*/
     }
 
-    componentDidUpdate(){
+    componentDidUpdate() {
         const { jobsInfo: { requestsProvidersFetched, requestsFetched } } = this.props;
-        if (requestsProvidersFetched && requestsFetched) this.setState({isLoading: false});
+        if (requestsProvidersFetched && requestsFetched) this.setState({ isLoading: false });
     }
 
     splashTimeOut = () => {
         AsyncStorage.getItem('userId')
-        .then((userId) => this.getUserType(userId));
+            .then((userId) => this.getUserType(userId));
     }
 
     getUserType = async userId => {
 
         firebase.messaging().hasPermission().
-        then(async enabled => {
-            if (enabled) {
-                this.getFCMToken(userId);
-            }
-            else {
-                await firebase.messaging().requestPermission()
-                .then(() => {
+            then(async enabled => {
+                if (enabled) {
                     this.getFCMToken(userId);
-                })
-                .catch(error => {
-                    Alert.alert(  
-                        "Permission Request",  
-                        "You don't have permission for notification. Please enable notification then try again " ,  
-                        [  
-                            {  
-                            text: 'Back',  
-                            onPress: () => {
-                                if (Platform.OS == 'android')
-                                    BackHandler.exitApp();
-                                else
-                                    RNExitApp.exitApp();
-                            },  
-                            style: 'cancel',  
-                            },  
-                            {
-                            text: 'OK', 
-                            onPress: () => {
-                                if (Platform.OS == 'android')
-                                    BackHandler.exitApp();
-                                else
-                                    RNExitApp.exitApp();
-                            },
-                            },  
-                        ]  
-                        );  
+                }
+                else {
+                    await firebase.messaging().requestPermission()
+                        .then(() => {
+                            this.getFCMToken(userId);
+                        })
+                        .catch(error => {
+                            Alert.alert(
+                                "Permission Request",
+                                "You don't have permission for notification. Please enable notification then try again ",
+                                [
+                                    {
+                                        text: 'Back',
+                                        onPress: () => {
+                                            if (Platform.OS == 'android')
+                                                BackHandler.exitApp();
+                                            else
+                                                RNExitApp.exitApp();
+                                        },
+                                        style: 'cancel',
+                                    },
+                                    {
+                                        text: 'OK',
+                                        onPress: () => {
+                                            if (Platform.OS == 'android')
+                                                BackHandler.exitApp();
+                                            else
+                                                RNExitApp.exitApp();
+                                        },
+                                    },
+                                ]
+                            );
 
-                    //User has rejected permissions
-                });
-            }
-        });
+                            //User has rejected permissions
+                        });
+                }
+            });
     }
 
     getFCMToken = async userId => {
@@ -123,14 +123,14 @@ class SplashScreen extends Component {
             console.log("Splash FCMID >> " + fcmToken);
 
             AsyncStorage.getItem('userType')
-            .then((userType) => this.autoLogin(userId, userType, fcmToken));
+                .then((userType) => this.autoLogin(userId, userType, fcmToken));
         }
         else {
             // user doesn't have a device token yet
             console.log("User don't have Token")
         }
     }
-    
+
     autoLogin = (userId, userType, fcmToken) => {
         const { fetchPendingJobProviderInfo, fetchPendingJobRequest } = this.props;
         if (userId !== null) {
@@ -138,161 +138,161 @@ class SplashScreen extends Component {
                 isLoading: true,
             });
             if (userType == 'Provider') {
-                fetch(PRO_GET_PROFILE+userId+'?fcm_id='+fcmToken, {
+                fetch(PRO_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
                     method: "GET",
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     },
-                 })
-                 .then((response) => response.json())
-                 .then(async responseJson => {
-                    var status;
-                    if (responseJson.result) {
+                })
+                    .then((response) => response.json())
+                    .then(async responseJson => {
+                        var status;
+                        if (responseJson.result) {
 
-                        const id = responseJson.data.id;
-                        const usersRef = database.ref(`users/${id}`);
-                        await usersRef.once('value', snapshot => {
-                            const value = snapshot.val();
-                            if (value) 
-                                status = value.status;
-                            else {
-                                usersRef.set({'status': responseJson.data.status}).then(() => {
-                                    console.log('status set');
-                                }).
-                                catch(e => {
-                                    console.log(e.message);
-                                });
+                            const id = responseJson.data.id;
+                            const usersRef = database.ref(`users/${id}`);
+                            await usersRef.once('value', snapshot => {
+                                const value = snapshot.val();
+                                if (value)
+                                    status = value.status;
+                                else {
+                                    usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                        console.log('status set');
+                                    }).
+                                        catch(e => {
+                                            console.log(e.message);
+                                        });
+                                }
+                            });
+                            var providerData = {
+                                providerId: responseJson.data.id,
+                                name: responseJson.data.username,
+                                email: responseJson.data.email,
+                                password: responseJson.data.password,
+                                imageSource: responseJson.data.image,
+                                surname: responseJson.data.surname,
+                                mobile: responseJson.data.mobile,
+                                services: responseJson.data.services,
+                                description: responseJson.data.description,
+                                address: responseJson.data.address,
+                                lat: responseJson.data.lat,
+                                lang: responseJson.data.lang,
+                                invoice: responseJson.data.invoice,
+                                status: status != undefined ? status : responseJson.data.status,
+                                fcmId: responseJson.data.fcm_id,
+                                accountType: responseJson.data.account_type
                             }
-                        });
-                        var providerData = {
-                            providerId: responseJson.data.id,
-                            name: responseJson.data.username,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            imageSource: responseJson.data.image,
-                            surname: responseJson.data.surname,
-                            mobile: responseJson.data.mobile,
-                            services: responseJson.data.services,
-                            description: responseJson.data.description,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            invoice: responseJson.data.invoice,
-                            status: status != undefined ? status : responseJson.data.status,
-                            fcmId: responseJson.data.fcm_id,
-                            accountType: responseJson.data.account_type
-                        }
-                        ProviderDetails.Provider = providerData;
+                            ProviderDetails.Provider = providerData;
 
-                        console.log("AutoLogin ProviderData: "+JSON.stringify(ProviderDetails.Provider));
-                        fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
-                    }
-                    else {
+                            console.log("AutoLogin ProviderData: " + JSON.stringify(ProviderDetails.Provider));
+                            fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
+                        }
+                        else {
+                            this.setState({
+                                isLoading: false
+                            })
+                            Alert.alert(
+                                "OOPS !",
+                                responseJson.message,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                    },
+                                    {
+                                        text: 'Retry',
+                                        onPress: () => this.autoLogin(userId, userType, fcmToken),
+                                    },
+                                ]
+                            );
+                        }
+                    })
+                    .catch(error => {
                         this.setState({
                             isLoading: false
                         })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                },
-                            ]
-                        );
-                    }
-                 })
-                .catch(error => {
-                    this.setState({
-                        isLoading: false
-                    })
-                    alert(error);
-                    console.log('error in autologin')
-                    console.log(JSON.stringify(responseJson));
-                });
+                        alert(error);
+                        console.log('error in autologin')
+                        console.log(JSON.stringify(responseJson));
+                    });
             }
             else if (userType == 'User') {
 
-                fetch(USER_GET_PROFILE+userId+'?fcm_id='+fcmToken , {
+                fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
                     method: "GET",
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     },
-                 })
-                 .then(response => response.json())
-                 .then(responseJson => {
-                    if (responseJson.result) {
-                        var userData = {
-                            userId: responseJson.data.id,
-                            accountType: responseJson.data.acc_type,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            username: responseJson.data.username,
-                            image: responseJson.data.image,
-                            mobile: responseJson.data.mobile,
-                            dob: responseJson.data.dob,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            fcmId: responseJson.data.fcm_id,
+                })
+                    .then(response => response.json())
+                    .then(responseJson => {
+                        if (responseJson.result) {
+                            var userData = {
+                                userId: responseJson.data.id,
+                                accountType: responseJson.data.acc_type,
+                                email: responseJson.data.email,
+                                password: responseJson.data.password,
+                                username: responseJson.data.username,
+                                image: responseJson.data.image,
+                                mobile: responseJson.data.mobile,
+                                dob: responseJson.data.dob,
+                                address: responseJson.data.address,
+                                lat: responseJson.data.lat,
+                                lang: responseJson.data.lang,
+                                fcmId: responseJson.data.fcm_id,
+                            }
+                            UserDetails.User = userData;
+                            console.log("AutoLogin UserData: " + JSON.stringify(UserDetails.User))
+                            //Check if any Ongoing Request 
+                            fetchPendingJobRequest(this.props, userId, 'Home');
                         }
-                        UserDetails.User = userData;
-                        console.log("AutoLogin UserData: "+JSON.stringify(UserDetails.User))
-                        //Check if any Ongoing Request 
-                        fetchPendingJobRequest(this.props, userId, 'Home');
-                    }
-                    else {
+                        else {
+                            this.setState({
+                                isLoading: false
+                            })
+                            Alert.alert(
+                                "OOPS !",
+                                responseJson.message,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                    },
+                                    {
+                                        text: 'Retry',
+                                        onPress: () => this.autoLogin(userId, userType, fcmToken),
+                                    },
+                                ]
+                            );
+                        }
+                    }).
+                    catch((error) => {
                         this.setState({
                             isLoading: false
                         })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                },
-                            ]
-                        );
-                    }
-                }).
-                catch((error) => {
-                    this.setState({
-                        isLoading: false
-                    })
-                    alert(error);
-                    console.log(JSON.stringify(responseJson));
-                });
+                        alert(error);
+                        console.log(JSON.stringify(responseJson));
+                    });
             }
         }
         else {
             console.log("No Logged User");
-            this.props.navigation.navigate("AfterSplash") ;
-        } 
+            this.props.navigation.navigate("AfterSplash");
+        }
     }
 
     render() {
 
         return (
-            <View style = {styles.container}>
-               
+            <View style={styles.container}>
+
                 <StatusBar barStyle='light-content' backgroundColor='#000000' />
-                
-                <Image 
-                    style ={{width: 250, height: 250}} 
-                    source= {require('../images/harfa_logo.png')}/>
+
+                <Image
+                    style={{ width: 250, height: 250 }}
+                    source={require('../images/harfa_logo.png')} />
 
                 {this.state.isLoading && (
                     <View style={styles.loaderStyle}>
@@ -324,27 +324,27 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         fetchPendingJobRequest: (props, uid, navigateTo) => {
-            dispatch(getPendingJobRequest(props,uid,navigateTo));
+            dispatch(getPendingJobRequest(props, uid, navigateTo));
         },
         fetchPendingJobProviderInfo: (props, proId, navigateTo) => {
-            dispatch(getPendingJobRequestProvider(props,proId,navigateTo));
+            dispatch(getPendingJobRequestProvider(props, proId, navigateTo));
         }
     }
 }
 
 const AppStackNavigator = createStackNavigator({
-    Splash : 
+    Splash:
     {
-      screen : connect(mapStateToProps, mapDispatchToProps)(SplashScreen),
-      navigationOptions:{
-        header : null
-      }
+        screen: connect(mapStateToProps, mapDispatchToProps)(SplashScreen),
+        navigationOptions: {
+            header: null
+        }
     },
-    AfterSplash : {
-        screen : AfterSplashScreen,
-        navigationOptions:{
-        header : null
-       }
+    AfterSplash: {
+        screen: AfterSplashScreen,
+        navigationOptions: {
+            header: null
+        }
     },
     // LoginPhone : {
     //     screen: LoginPhoneScreen,
@@ -352,7 +352,7 @@ const AppStackNavigator = createStackNavigator({
     //         header: null
     //     }
     // },
-    FacebookGoogle:{
+    FacebookGoogle: {
         screen: FacebookGoogleScreen,
         navigationOptions: {
             header: null
@@ -377,13 +377,13 @@ const AppStackNavigator = createStackNavigator({
         }
     },
     Dashboard: {
-        screen: DashboardScreen, 
+        screen: DashboardScreen,
         navigationOptions: {
             header: null
         }
     },
     Home: {
-        screen: HomeScreen, 
+        screen: HomeScreen,
         navigationOptions: {
             header: null
         }
@@ -407,7 +407,7 @@ const AppStackNavigator = createStackNavigator({
         }
     },
     ProAccountType: {
-        screen: ProAccountTypeScreen, 
+        screen: ProAccountTypeScreen,
         navigationOptions: {
             header: null
         }
@@ -429,9 +429,9 @@ const AppStackNavigator = createStackNavigator({
         navigationOptions: {
             header: null
         }
-    }, 
+    },
     SelectAddress: {
-        screen: SelectAddressScreen, 
+        screen: SelectAddressScreen,
         navigationOptions: {
             header: null
         }
@@ -448,11 +448,11 @@ const App = createAppContainer(AppStackNavigator);
 export default App;
 
 const styles = {
-    container : {
-        flex : 1,
-        backgroundColor : '#000000',
-        justifyContent : 'center',
-        alignItems : 'center'
+    container: {
+        flex: 1,
+        backgroundColor: '#000000',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     loaderStyle: {
         position: 'absolute',
