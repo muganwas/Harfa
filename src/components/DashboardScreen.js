@@ -1,13 +1,15 @@
 
 import React, { Component } from 'react';
-import {Text, StyleSheet, View, Image, FlatList,
-    TouchableOpacity, StatusBar, Dimensions, 
-    Animated, BackHandler, Alert, Modal, Platform} from 'react-native';
+import {
+    Text, StyleSheet, View, Image, FlatList,
+    TouchableOpacity, StatusBar, Dimensions,
+    Animated, BackHandler, Alert, Modal, Platform
+} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import { createAppContainer, } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
@@ -28,6 +30,7 @@ import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
 import Hamburger from './Hamburger';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
+import { imageExists } from '../misc/helpers';
 //import {Notifications} from 'react-native-notifications';
 
 const socket = Config.socket;
@@ -38,22 +41,23 @@ const colorPrimaryDark = '#C5940E';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const SERVICES_URL = Config.baseURL+'service/getall'
+const SERVICES_URL = Config.baseURL + 'service/getall'
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -68,7 +72,9 @@ class DashBoardScreen extends Component {
             backClickCount: 0,
             isToastShow: false,
             online: false,
-            connectivityAvailable: false
+            connectivityAvailable: false,
+            availabilityChecked: false,
+            availabilityObj: {}
         }
         this.springValue = new Animated.Value(100);
     }
@@ -82,21 +88,21 @@ class DashBoardScreen extends Component {
         console.log(this.props)
         console.log('setting listeners...');
         NetInfo.addEventListener(status => {
-            if (!status.isConnected) this.setState({connectivityAvailable: false});
-            else this.setState({connectivityAvailable: true});
+            if (!status.isConnected) this.setState({ connectivityAvailable: false });
+            else this.setState({ connectivityAvailable: true });
         });
         NetInfo.fetch().then(status => {
-            if (!status.isConnected) this.setState({connectivityAvailable: false});
-            else this.setState({connectivityAvailable: true});
+            if (!status.isConnected) this.setState({ connectivityAvailable: false });
+            else this.setState({ connectivityAvailable: true });
         });
         socket.on('connect', () => {
             const userId = UserDetails.User.userId;
             if (userId) {
                 socket.emit('connected', userId);
-                this.setState({online:true});
+                this.setState({ online: true });
             }
             console.log('connected');
-        }); 
+        });
         socket.on('user-disconnected', users => {
             console.log('someone disconnected')
             OnlineUsers.Users = users;
@@ -108,15 +114,15 @@ class DashBoardScreen extends Component {
         socket.on('disconnect', info => {
             console.log('you disconnected')
             console.log(info);
-            this.setState({online:false});
+            this.setState({ online: false });
             if (!this.state.online && this.state.connectivityAvailable) socket.open();
         });
         socket.open();
 
         console.log("willFocus runs") // calling it here to make sure it is logged at initial start
 
-        const {navigation} = this.props;
-        navigation.addListener ('willFocus', async () =>{
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
             console.log("willFocus runs >>")
         });
         this.onRefresh();
@@ -126,12 +132,12 @@ class DashBoardScreen extends Component {
     async componentWillMount() {
         console.log("Dashboard Mount");
         firebase.notifications().onNotification(notification => {
-            const {fetchedNotifications, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests }} = this.props;
+            const { fetchedNotifications, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
             let newJobRequests = [...jobRequests];
-            
-            fetchedNotifications({type: 'generic', value: newGenericCount});
+
+            fetchedNotifications({ type: 'generic', value: newGenericCount });
             const { title, body, data } = notification;
 
             const orderId = data.orderId;
@@ -143,84 +149,86 @@ class DashBoardScreen extends Component {
             });
 
             console.log('pos: ', pos)
-      
-            if (title == "Chat Request Accepted" && pos != null) {
-              this.setState({
-                requestStatus: title,
-                title: title, 
-                body: body,
-                data: data,
-                isToastShow: true,
-              })
-              var providerData = JSON.parse(data.ProviderData);
 
-              var pendingJobData = {
-                id: data.mainId,
-                order_id: data.orderId,
-                employee_id: providerData.ProviderId,
-                image: providerData.imageSource,
-                fcm_id: providerData.fcmId,
-                name: providerData.name,
-                surName: providerData.surname,
-                mobile: providerData.mobile,
-                description: providerData.description,
-                address: providerData.address,
-                lat: providerData.lat,
-                lang: providerData.lang,
-                service_name: data.serviceName,
-                chat_status: data.chat_status,
-                status: data.status,
-                delivery_address: data.delivery_address,
-                delivery_lat: data.delivery_lat,
-                delivery_lang: data.delivery_lang,
-              }
-              newJobRequests[pos] = pendingJobData;
-              fetchedPendingJobInfo(newJobRequests);
-              this.showToast("Demande de chat acceptée")
+            if (title == "Chat Request Accepted" && pos != null) {
+                this.setState({
+                    requestStatus: title,
+                    title: title,
+                    body: body,
+                    data: data,
+                    isToastShow: true,
+                })
+                var providerData = JSON.parse(data.ProviderData);
+
+                var pendingJobData = {
+                    id: data.mainId,
+                    order_id: data.orderId,
+                    employee_id: providerData.ProviderId,
+                    image: providerData.imageSource,
+                    fcm_id: providerData.fcmId,
+                    name: providerData.name,
+                    surName: providerData.surname,
+                    mobile: providerData.mobile,
+                    description: providerData.description,
+                    address: providerData.address,
+                    lat: providerData.lat,
+                    lang: providerData.lang,
+                    service_name: data.serviceName,
+                    chat_status: data.chat_status,
+                    status: data.status,
+                    delivery_address: data.delivery_address,
+                    delivery_lat: data.delivery_lat,
+                    delivery_lang: data.delivery_lang,
+                }
+                imageExists(image).then(res => {
+                    pendingJobData.imageAvailable = res;
+                });
+                newJobRequests[pos] = pendingJobData;
+                fetchedPendingJobInfo(newJobRequests);
+                this.showToast("Demande de chat acceptée")
             }
             else if (title == "Chat Request Rejected") {
-              this.setState({
-                requestStatus: title,
-                title: title, 
-                body: body,
-                data: data,
-                isJobAccepted: false,
-              })
-              this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+                this.setState({
+                    requestStatus: title,
+                    title: title,
+                    body: body,
+                    data: data,
+                    isJobAccepted: false,
+                })
+                this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
             }
-            else if ((title == "No Response" || title == "Canceled" ) && pos != null) {
-              this.setState({
-                requestStatus: title,
-                title: title, 
-                body: body,
-                data: data,
-              })
-              var jobData = {
-                id: '',
-                order_id: '',
-                employee_id: '',
-                image: '',
-                fcm_id: '',
-                name: '',
-                surName: '',
-                mobile: '',
-                description: '',
-                address: '',
-                lat: '',
-                lang: '',
-                service_name: '',
-                chat_status: '',
-                status: '',
-                delivery_address: '',
-                delivery_lat: '',
-                delivery_lang: '',
-            }
+            else if ((title == "No Response" || title == "Canceled") && pos != null) {
+                this.setState({
+                    requestStatus: title,
+                    title: title,
+                    body: body,
+                    data: data,
+                })
+                var jobData = {
+                    id: '',
+                    order_id: '',
+                    employee_id: '',
+                    image: '',
+                    fcm_id: '',
+                    name: '',
+                    surName: '',
+                    mobile: '',
+                    description: '',
+                    address: '',
+                    lat: '',
+                    lang: '',
+                    service_name: '',
+                    chat_status: '',
+                    status: '',
+                    delivery_address: '',
+                    delivery_lat: '',
+                    delivery_lang: '',
+                }
                 newJobRequests[pos] = pendingJobData;
-              fetchedPendingJobInfo(newJobRequests);
-              this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
             }
-            else if(title == "Job Accepted" && pos != null)
-            {
+            else if (title == "Job Accepted" && pos != null) {
                 var pendingJobData = {
                     id: data.mainId,
                     order_id: data.orderId,
@@ -248,61 +256,60 @@ class DashBoardScreen extends Component {
 
                 this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
-            else if(title == "Job Rejected" && pos != null)
-            {
-              this.setState({
-                isJobAccepted: false
-              })
-              var jobData = {
-                id: '',
-                order_id: '',
-                employee_id: '',
-                image: '',
-                fcm_id: '',
-                name: '',
-                surName: '',
-                mobile: '',
-                description: '',
-                address: '',
-                lat: '',
-                lang: '',
-                service_name: '',
-                chat_status: '',
-                status: '',
-                delivery_address: '',
-                delivery_lat: '',
-                delivery_lang: '',
-            }
+            else if (title == "Job Rejected" && pos != null) {
+                this.setState({
+                    isJobAccepted: false
+                })
+                var jobData = {
+                    id: '',
+                    order_id: '',
+                    employee_id: '',
+                    image: '',
+                    fcm_id: '',
+                    name: '',
+                    surName: '',
+                    mobile: '',
+                    description: '',
+                    address: '',
+                    lat: '',
+                    lang: '',
+                    service_name: '',
+                    chat_status: '',
+                    status: '',
+                    delivery_address: '',
+                    delivery_lat: '',
+                    delivery_lang: '',
+                }
                 newJobRequests[pos] = jobData;
-              fetchedPendingJobInfo(newJobRequests);
-              this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
             }
-            else if(title == "Job Completed" && pos != null) {
-              var jobData = {
-                id: '',
-                order_id: '',
-                employee_id: '',
-                image: '',
-                fcm_id: '',
-                name: '',
-                surName: '',
-                mobile: '',
-                description: '',
-                address: '',
-                lat: '',
-                lang: '',
-                service_name: '',
-                chat_status: '',
-                status: '',
-                delivery_address: '',
-                delivery_lat: '',
-                delivery_lang: '',
-            }
+            else if (title == "Job Completed" && pos != null) {
+                var jobData = {
+                    id: '',
+                    order_id: '',
+                    employee_id: '',
+                    image: '',
+                    fcm_id: '',
+                    name: '',
+                    surName: '',
+                    mobile: '',
+                    description: '',
+                    address: '',
+                    lat: '',
+                    lang: '',
+                    service_name: '',
+                    chat_status: '',
+                    status: '',
+                    delivery_address: '',
+                    delivery_lat: '',
+                    delivery_lang: '',
+                }
                 newJobRequests[pos] = jobData;
-              fetchedPendingJobInfo(newJobRequests);
-            this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
-          });
+        });
     }
 
     componentWillUnmount() {
@@ -310,31 +317,31 @@ class DashBoardScreen extends Component {
         console.log("Dashboard Unmount");
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
         firebase.database().ref('chatting').child(senderId).child(receiverId)
-        .off('child_changed');
+            .off('child_changed');
         firebase.database().ref('adminChatting').child(senderId).child(receiverId)
-        .off('child_changed');
+            .off('child_changed');
     }
 
-    showRejectionAlert(title, message)
-    {
-      Alert.alert(  
-        title,  
-        message,  
-        [  
-            {  
-                // text: 'Cancel',  
-                // onPress: () => console.log('Cancel Pressed'),  
-                // style: 'cancel',  
-            },  
-            {text: "D'accord", 
-              onPress: () => this.onRefresh(),
-            },  
-        ]  
-      );  
+    showRejectionAlert(title, message) {
+        Alert.alert(
+            title,
+            message,
+            [
+                {
+                    // text: 'Cancel',  
+                    // onPress: () => console.log('Cancel Pressed'),  
+                    // style: 'cancel',  
+                },
+                {
+                    text: "D'accord",
+                    onPress: () => this.onRefresh(),
+                },
+            ]
+        );
     }
 
     _spring() {
-        this.setState({backClickCount: 1}, () => {
+        this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
                     this.springValue,
@@ -355,7 +362,7 @@ class DashBoardScreen extends Component {
                 ),
 
             ]).start(() => {
-                this.setState({backClickCount: 0});
+                this.setState({ backClickCount: 0 });
             });
         });
     }
@@ -381,13 +388,16 @@ class DashBoardScreen extends Component {
                 backgroundColor: 'white',
                 borderRadius: 2,
                 alignItems: 'center',
-                justifyContent: 'center' }}
+                justifyContent: 'center'
+            }}
                 onPress={() => {
                     this.props.navigation.navigate("ListOfProvider", {
-                        'serviceName': item.service_name, 
-                        'serviceId': item.id   })}}>
+                        'serviceName': item.service_name,
+                        'serviceId': item.id
+                    })
+                }}>
                 <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
-                    source={{ uri:item.image}} />
+                    source={{ uri: item.image }} />
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
                     <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
                         {item.service_name}
@@ -409,21 +419,21 @@ class DashBoardScreen extends Component {
         console.log("Refresh Page");
 
         fetch(SERVICES_URL).
-        then((response) => response.json()).
-        then(responseJson => {
-            //console.log("Response : "+JSON.stringify(responseJson))
-            this.setState({
-                dataSource: responseJson.data,  //data is key
-                isLoading: false
-            })
-        }).
-        catch(error => {
-            console.log(error);
-            this.setState({
-                isLoading: false
-            })
-            this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
-        });
+            then((response) => response.json()).
+            then(responseJson => {
+                //console.log("Response : "+JSON.stringify(responseJson))
+                this.setState({
+                    dataSource: responseJson.data,  //data is key
+                    isLoading: false
+                })
+            }).
+            catch(error => {
+                console.log(error);
+                this.setState({
+                    isLoading: false
+                })
+                this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+            });
         return true;
     }
 
@@ -451,16 +461,16 @@ class DashBoardScreen extends Component {
         })
     }
 
-    renderPendingJobRequests = ({item}) => {
-        const { image, name, employee_id, surName, service_name, chat_status, status } = item;
+    renderPendingJobRequests = ({ item }) => {
+        const { image, name, employee_id, imageAvailable, surName, service_name, chat_status, status } = item;
         return (
             <TouchableOpacity style={styles.pendingJobRow}
-                onPress={() => this.goToNextPage(chat_status, {userType: 'client', employee_id})}>
+                onPress={() => this.goToNextPage(chat_status, { userType: 'client', employee_id })}>
                 <LinearGradient
                     style={styles.pendingJobRow}
                     colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                        source={{ uri: image }} />
+                        source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                         <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
                             {name + " " + surName}
@@ -468,10 +478,10 @@ class DashBoardScreen extends Component {
                         <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
                             {service_name}
                         </Text>
-                        <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold'}}>
-                            {chat_status == "0" ? "Nouvelle demande d'emploi" 
-                            : status == "Pending" ? "Demande de chat acceptée"
-                            : "Travail accepté"}
+                        <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                            {chat_status == "0" ? "Nouvelle demande d'emploi"
+                                : status == "Pending" ? "Demande de chat acceptée"
+                                    : "Travail accepté"}
                         </Text>
                     </View>
                     <View style={styles.arrowView}>
@@ -485,37 +495,39 @@ class DashBoardScreen extends Component {
 
     render() {
         const { jobsInfo: { jobRequests, requestsFetched } } = this.props;
-        return (  
+        return (
             <View style={styles.container}>
                 {/* <StatusBar barStyle='light-content' backgroundColor='#C5940E' />   */}
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
                 <View style={styles.header}>
                     <Hamburger
                         navigation={this.props.navigation}
                         text='Harfa'
                     />
-                    <TouchableOpacity style={{width: '100%' , justifyContent: 'center', alignContent: 'center'}}
+                    <TouchableOpacity style={{ width: '100%', justifyContent: 'center', alignContent: 'center' }}
                         onPress={() => this.props.navigation.navigate("AddAddress")}>
                         <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
                             source={require('../icons/maps_location.png')} />
                     </TouchableOpacity>
                 </View>
 
-                <View style={{width: screenWidth, height: 1, backgroundColor: '#C5940E' }}></View>
+                <View style={{ width: screenWidth, height: 1, backgroundColor: '#C5940E' }}></View>
 
                 <View style={{
-                        flexDirection: 'row', width: '100%', height: 45, backgroundColor: colorPrimary,
-                        paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5,shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75,shadowRadius: 5,elevation: 5,}}>
+                    flexDirection: 'row', width: '100%', height: 45, backgroundColor: colorPrimary,
+                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5, shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
+                }}>
                     <View style={{
-                            flex: 1, alignItems: "center", justifyContent: 'center'}}>
+                        flex: 1, alignItems: "center", justifyContent: 'center'
+                    }}>
                         <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', }}>
-                          Prestations de service
+                            Prestations de service
                         </Text>
                     </View>
                 </View>
 
-                <View style={[styles.gridView, { marginBottom: PendingJobRequest.Request.order_id == '' ? 0 : 75}]}>
+                <View style={[styles.gridView, { marginBottom: PendingJobRequest.Request.order_id == '' ? 0 : 75 }]}>
                     <FlatList
                         keyboardShouldPersistTaps={'handled'}
                         numColumns={3}
@@ -525,22 +537,23 @@ class DashBoardScreen extends Component {
                         showsVerticalScrollIndicator={false}
                         onRefresh={this.onRefresh}
                         refreshing={this.state.isLoading}
-                        // ItemSeparatorComponent={this.renderSeparator}
+                    // ItemSeparatorComponent={this.renderSeparator}
                     />
                 </View>
                 {/** show pending requests */}
-                <View style={styles.pendingJobsContainer}>
-                { requestsFetched && jobRequests.length > 0 ? 
-                <FlatList
-                    keyboardShouldPersistTaps={'handled'}
-                    numColumns={1}
-                    data={jobRequests}
-                    renderItem={this.renderPendingJobRequests}
-                    keyExtractor={(item, index) => index}
-                    showsVerticalScrollIndicator={false}
-                    // ItemSeparatorComponent={this.renderSeparator}
-                /> : null }
-                </View>
+                {requestsFetched && jobRequests.length > 0 ?
+                    <View style={styles.pendingJobsContainer}>
+                        <FlatList
+                            keyboardShouldPersistTaps={'handled'}
+                            numColumns={1}
+                            data={jobRequests}
+                            renderItem={this.renderPendingJobRequests}
+                            keyExtractor={(item, index) => index}
+                            showsVerticalScrollIndicator={false}
+                        // ItemSeparatorComponent={this.renderSeparator}
+                        />
+                    </View> : null}
+
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
                     <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
                     <TouchableOpacity
@@ -572,7 +585,7 @@ class DashBoardScreen extends Component {
                     fadeInDuration={750}
                     fadeOutDuration={1000}
                     opacity={0.8}
-                    textStyle={{ color: 'white' }}/>
+                    textStyle={{ color: 'white' }} />
             </View>
         );
     }
@@ -615,44 +628,44 @@ const mapDispatchToProps = dispatch => {
 const AppStackNavigator = createStackNavigator({
     DashBoard: {
         screen: connect(mapStateToProps, mapDispatchToProps)(DashBoardScreen),
-        navigationOptions:{
-            header : null
+        navigationOptions: {
+            header: null
         }
     },
-    ListOfProvider:{
+    ListOfProvider: {
         screen: ListOfProviderScreen,
-        navigationOptions:{
-            header : null
+        navigationOptions: {
+            header: null
         }
     },
-    ProviderDetails :  {
-        screen : ProviderDetailsScreen,
-        navigationOptions:{
-            header : null
+    ProviderDetails: {
+        screen: ProviderDetailsScreen,
+        navigationOptions: {
+            header: null
         }
     },
     Chat: {
         screen: ChatScreen,
-        navigationOptions:{
-            header : null
+        navigationOptions: {
+            header: null
         }
     },
     MapDirection: {
         screen: MapDirectionScreen,
-        navigationOptions:{
+        navigationOptions: {
             header: null
         }
     },
     AddAddress: {
         screen: AddAddressScreen,
-        navigationOptions:{
-            header : null
+        navigationOptions: {
+            header: null
         }
     },
     SelectAddress: {
         screen: SelectAddressScreen,
-        navigationOptions:{
-            header : null
+        navigationOptions: {
+            header: null
         }
     }
 });
@@ -698,9 +711,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     textView: {
-        height: 50, 
+        height: 50,
         justifyContent: 'center',
-        alignItems: 'center', 
+        alignItems: 'center',
     },
     gridView: {
         flex: 1,
@@ -754,10 +767,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         position: 'absolute',
         bottom: 0,
-        shadowColor: '#000', 
-        shadowOffset: { width: 0, height: 0 }, 
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
-        shadowRadius: 5, 
+        shadowRadius: 5,
         elevation: 5,
     },
     pendingJobsContainer: {
@@ -767,10 +780,10 @@ const styles = StyleSheet.create({
         width: screenWidth,
         position: 'absolute',
         bottom: 0,
-        shadowColor: '#000', 
-        shadowOffset: { width: 0, height: 0 }, 
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
-        shadowRadius: 5, 
+        shadowRadius: 5,
         elevation: 5,
     },
     pendingJobRow: {
@@ -784,7 +797,7 @@ const styles = StyleSheet.create({
         paddingLeft: 15,
         paddingRight: 15,
         borderRadius: 5
-      },
+    },
     buttonText: {
         fontSize: 18,
         fontFamily: 'Gill Sans',
@@ -804,6 +817,6 @@ const styles = StyleSheet.create({
         width: 35,
         height: 35,
         alignSelf: 'flex-end',
-        marginRight: 30,       
+        marginRight: 30,
     },
 });

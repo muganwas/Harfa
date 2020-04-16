@@ -51,10 +51,12 @@ class MapDirectionScreen extends Component {
         console.log(this.props)
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
+
         Object.keys(jobRequests).map(key => {
             const currEmpId = jobRequests[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
-        })
+        });
+
         this.state = {
             sourceLocation: othersCoordinates[employee_id].latitude + "," + othersCoordinates[employee_id].longitude,
             sourceLat: parseFloat(othersCoordinates[employee_id].latitude),
@@ -90,7 +92,7 @@ class MapDirectionScreen extends Component {
     };
 
     componentDidMount() {
-        const { generalInfo: { othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { userType, employee_id } } } = this.props;
+        const { fetchedPendingJobInfo, generalInfo: { othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         this.getDirections(othersCoordinates[employee_id].latitude + "," + othersCoordinates[employee_id].longitude, this.state.destinationLocation);
         var that = this;
 
@@ -146,6 +148,7 @@ class MapDirectionScreen extends Component {
                     delivery_lang: '',
                 }
                 newJobRequests[currRequestPos] = jobData;
+                fetchedPendingJobInfo(newJobRequests);
                 that.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
             }
             else if (title == "Job Accepted") {
@@ -170,6 +173,7 @@ class MapDirectionScreen extends Component {
                     delivery_lang: data.delivery_lang,
                 }
                 newJobRequests[currRequestPos] = pendingJobData;
+                fetchedPendingJobInfo(newJobRequests);
                 console.log('After Job Accepted >>> ', JSON.stringify(newJobRequests[currRequestPos]));
                 that.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
@@ -198,6 +202,7 @@ class MapDirectionScreen extends Component {
                     delivery_lang: '',
                 }
                 newJobRequests[currRequestPos] = jobData;
+                fetchedPendingJobInfo(newJobRequests);
                 that.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
             }
             else if (title == "Job Completed") {
@@ -222,13 +227,14 @@ class MapDirectionScreen extends Component {
                     delivery_lang: '',
                 }
                 newJobRequests[currRequestPos] = jobData;
+                fetchedPendingJobInfo(newJobRequests);
                 that.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
         });
     }
 
     componentDidUpdate() {
-        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { selectedJobRequest: { userType, employee_id } } } = this.props;
+        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
         const { latitude, longitude } = othersCoordinates[employee_id];
         const { destinationLat, destinationLng } = this.state;
         if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(destinationLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))) {
@@ -354,7 +360,7 @@ class MapDirectionScreen extends Component {
             isLoading: true
         })
 
-        const { jobsInfo: { jobRequests } } = this.props;
+        const { fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
         const { currRequestPos } = this.state;
         var newJobRequests = [...jobRequests];
         const data = {
@@ -428,6 +434,7 @@ class MapDirectionScreen extends Component {
                         delivery_lang: 0
                     }
                     newJobRequests[currRequestPos] = jobData;
+                    fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
                 }
                 else {
@@ -449,7 +456,7 @@ class MapDirectionScreen extends Component {
         this.setState({
             isLoading: true
         })
-        const { jobsInfo: { jobRequests } } = this.props;
+        const { fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
         const { currRequestPos } = this.state;
         var newJobRequests = [...jobRequests];
         const data = {
@@ -523,6 +530,7 @@ class MapDirectionScreen extends Component {
                         delivery_lang: 0
                     }
                     newJobRequests[currRequestPos] = jobData;
+                    fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
                 }
                 else {
@@ -541,7 +549,7 @@ class MapDirectionScreen extends Component {
     }
 
     render() {
-        const { jobsInfo: { jobRequests }, selectedJobRequest } = this.props;
+        const { jobsInfo: { jobRequests } } = this.props;
         const { currRequestPos } = this.state;
         return (
             <View style={styles.container}>

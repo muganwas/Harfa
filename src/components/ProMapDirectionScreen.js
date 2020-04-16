@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ActivityIndicator, BackHandler, 
+import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, BackHandler, 
   Linking, PermissionsAndroid, Alert, StatusBar, Platform, Modal} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import MapView from 'react-native-maps';
@@ -14,6 +14,8 @@ import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import {MAPS_API_KEY} from 'react-native-dotenv';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import {imageExists} from '../misc/helpers';
 
 //const colorPrimary = '#FFBF0F';
@@ -47,7 +49,8 @@ class ProMapDirectionScreen extends Component {
 
   constructor(props) {
     super(props)
-    const { usersCoordinates, othersCoordinates } = this.props.generalInfo;
+    const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+    //console.log('inda map', user_id)
     this.state = {
       sourcesourceLocation: usersCoordinates.latitude+","+usersCoordinates.longitude,
       sourceLat: parseFloat(usersCoordinates.latitude),
@@ -746,8 +749,36 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo,
         generalInfo: state.generalInfo
     }
 }
 
-export default connect(mapStateToProps)(ProMapDirectionScreen);
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobProvider());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobProviderInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchProviderJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProMapDirectionScreen);

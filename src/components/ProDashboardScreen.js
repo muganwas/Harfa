@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import {
-    Text, StyleSheet, View, Image, ActivityIndicator, Dimensions, FlatList, TouchableOpacity, 
+    Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity, 
     ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import {createAppContainer} from 'react-navigation';
@@ -20,7 +20,6 @@ import ProAllMessageScreen from './ProAllMessageScreen'
 import ProAcceptRejectJobScreen from './ProAcceptRejectJobScreen';
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
-import ProPendingJobRequest from './ProPendingJobRequest';
 import ProBookingScreen from './ProBookingScreen';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
@@ -29,6 +28,9 @@ import NetInfo from "@react-native-community/netinfo";
 //import Geocoding from 'react-native-geocoding'
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import { imageExists } from '../misc/helpers';
 
 
@@ -100,13 +102,10 @@ class ProDashBoardScreen extends Component {
         }
         this.springValue = new Animated.Value(100);
         this.goToProMapDirection = this.goToProMapDirection.bind(this)
-
-        console.log("OrderId >>> " + ProPendingJobRequest.Request.order_id);
     }
 
     //Get All Bookings
     async componentDidMount() {
-        console.log('setting listeners...');
         const { navigation } = this.props;
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
         NetInfo.addEventListener(state => {
@@ -135,7 +134,7 @@ class ProDashBoardScreen extends Component {
         })
         socket.on('disconnect', info => {
             console.log('you disconnected')
-            console.log(info);
+            // console.log(info);
             this.setState({online:false});
             if (!this.state.online && this.state.connectivityAvailable) socket.open();
         })
@@ -169,7 +168,7 @@ class ProDashBoardScreen extends Component {
                     let message = val.val();
                     let id = val.key;
                     console.log("Id Firebase : " + id);
-                    console.log("Message Firebase : " + JSON.stringify(message));
+                    //console.log("Message Firebase : " + JSON.stringify(message));
 
                     this.setState({
                         isLoading: false,
@@ -203,7 +202,7 @@ class ProDashBoardScreen extends Component {
         fetch(BOOKING_HISTORY + ProviderDetails.Provider.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response Booking History : " + JSON.stringify(responseJson))
+                //console.log("Response Booking History : " + JSON.stringify(responseJson))
 
                 if (responseJson.result) {
                     for (let i = 0; i < responseJson.data.length; i++) {
@@ -256,7 +255,7 @@ class ProDashBoardScreen extends Component {
         fetch(RECENT_USER + ProviderDetails.Provider.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response getAllRecentUser : " + JSON.stringify(responseJson))
+                //console.log("Response getAllRecentUser : " + JSON.stringify(responseJson))
 
                 if (responseJson.result) {
                     this.setState({
@@ -323,7 +322,6 @@ class ProDashBoardScreen extends Component {
     }
 
     renderWorkItem = ({ item }) => {
-        console.log(item)
         //console.log(item);
         if (String(item.employee_id) === String(ProviderDetails.Provider.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
             return (
@@ -402,7 +400,7 @@ class ProDashBoardScreen extends Component {
             })
             .then((response) => response.json())
             .then((response) => {
-                console.log("Response" + JSON.stringify(response));
+                //console.log("Response" + JSON.stringify(response));
                 if (response.result) {
                     if (this.state.status == 'ONLINE') {
                         this.setState({
@@ -557,8 +555,8 @@ class ProDashBoardScreen extends Component {
         }
     }
 
-    goToProMapDirection = () => {
-        if (ProPendingJobRequest.Request.chat_status == '0') {
+    goToProMapDirection = (chat_status, status, jobInfo) => {
+        if (chat_status == '0') {
             this.setState({
                 isErrorToast: true,
             })
@@ -566,10 +564,13 @@ class ProDashBoardScreen extends Component {
             this.showToast("Accept Chat Request First");
         }
         else {
-            if (ProPendingJobRequest.Request.status == 'Pending') {
+            const { dispatchSelectedJobRequest } = this.props;
+            if (status == 'Pending') {
+                dispatchSelectedJobRequest(jobInfo);
                 this.props.navigation.navigate("ProAcceptRejectJob");
             }
-            else if (ProPendingJobRequest.Request.status == 'Accepted') {
+            else if (status == 'Accepted') {
+                dispatchSelectedJobRequest(jobInfo);
                 this.props.navigation.navigate("ProMapDirection", {
                     'pageTitle': "ProDashboard",
                 });
@@ -577,32 +578,40 @@ class ProDashBoardScreen extends Component {
         }
     }
 
-    acceptChatRequest = () => {
-
+    acceptChatRequest = pos => {
+        const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        var newjobRequestsProviders = [...jobRequestsProviders];
+        const {
+            id, user_id, fcm_id, name,
+            service_name, order_id, image, mobile, 
+            dob, address, lat, lang, chat_status, 
+            status, delivery_address, delivery_lat, 
+            delivery_lang
+        } = jobRequestsProviders[pos];
         this.setState({
             isLoading: true,
         })
 
         const data = {
-            main_id: ProPendingJobRequest.Request.id,
+            main_id: id,
             chat_status: '1',
             status: 'Pending',
             'notification': {
-                "fcm_id": ProPendingJobRequest.Request.fcm_id,
+                "fcm_id": fcm_id,
                 "title": "Chat Request Accepted",
-                "body": 'Chat request has been accepted by ' + ProviderDetails.Provider.name + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
+                "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
                 "data": {
                     ProviderData: ProviderDetails.Provider,
-                    serviceName: ProPendingJobRequest.Request.service_name,
-                    orderId: ProPendingJobRequest.Request.order_id,
-                    mainId: ProPendingJobRequest.Request.id,
+                    serviceName: service_name,
+                    orderId: order_id,
+                    mainId: id,
                     chat_status: '1',
                     status: 'Pending',
                 },
             }
         }
 
-        console.log("ACCEPT CHAT Data >> " + JSON.stringify(data));
+        //console.log("ACCEPT CHAT Data >> " + JSON.stringify(data));
 
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
@@ -612,39 +621,41 @@ class ProDashBoardScreen extends Component {
             },
             body: JSON.stringify(data)
         })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                console.log("Response acceptChatRequest: " + JSON.stringify(responseJson))
+            .then(response => response.json())
+            .then(responseJson => {
+                //console.log("Response acceptChatRequest: " + JSON.stringify(responseJson))
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
                     })
                     var jobData = {
                         id: responseJson.data.id,
-                        order_id: ProPendingJobRequest.Request.order_id,
-                        user_id: ProPendingJobRequest.Request.user_id,
-                        image: ProPendingJobRequest.Request.image,
-                        fcm_id: ProPendingJobRequest.Request.fcm_id,
-                        name: ProPendingJobRequest.Request.name,
-                        mobile: ProPendingJobRequest.Request.mobile,
-                        dob: ProPendingJobRequest.Request.dob,
-                        address: ProPendingJobRequest.Request.address,
-                        lat: ProPendingJobRequest.Request.lat,
-                        lang: ProPendingJobRequest.Request.lang,
-                        service_name: ProPendingJobRequest.Request.service_name,
-                        chat_status: "1",
-                        status: "Pending",
-                        delivery_address: ProPendingJobRequest.Request.delivery_address,
-                        delivery_lat: ProPendingJobRequest.Request.delivery_lat,
-                        delivery_lang: ProPendingJobRequest.Request.delivery_lang,
+                        order_id,
+                        user_id,
+                        image,
+                        fcm_id,
+                        name,
+                        mobile,
+                        dob,
+                        address,
+                        lat,
+                        lang,
+                        service_name,
+                        chat_status,
+                        status,
+                        delivery_address,
+                        delivery_lat,
+                        delivery_lang,
                     }
-                    ProPendingJobRequest.Request = jobData;
 
-                    imageExists(customerImage).then(proImageAvailable => {
-                        this.setState({proImageAvailable});
+                    imageExists(image).then(res => {
+                        jobData.imageAvailable = res;
                     });
+                    
+                    newjobRequestsProviders[pos] = jobData;
+                    fetchedPendingJobInfo(newjobRequestsProviders);
 
-                    console.log("acceptJob :>>>" + JSON.stringify(ProPendingJobRequest.Request))
+                    //console.log("acceptJob :>>>" + JSON.stringify(ProPendingJobRequest.Request))
 
                     this.props.navigation.navigate("ProAcceptRejectJob");
                 }
@@ -657,7 +668,7 @@ class ProDashBoardScreen extends Component {
                     this.showToast("Something went wrong")  
                 }
             })
-            .catch((error) => {
+            .catch(error => {
                 console.log("Error >>> " + error);
                 this.setState({
                     isLoading: false,
@@ -665,11 +676,48 @@ class ProDashBoardScreen extends Component {
             })
     }
 
+    renderPendingJobs = ({item}) => {
+        const { image, name, imageAvailable, user_id, service_name, chat_status, status } = item;
+        return (
+            <TouchableOpacity style={styles.pendingJobRow}
+                onPress={() => this.goToProMapDirection(chat_status, status, {userType: 'provider', user_id})}>
+                <LinearGradient style={styles.pendingJobRow}
+                    colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+                    <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
+                        source={ imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
+                    <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
+                        <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold'}}>
+                            {name}
+                        </Text>
+                        <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                            {"Request for " + service_name}
+                        </Text>
+                        <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                            {chat_status == "0" ? "New Job Request" : status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
+                        </Text>
+                    </View>
+                    {chat_status == '1' &&
+                        <View style={styles.arrowView}>
+                            <Image style={styles.arrow}
+                                source={require('../icons/arrow_right_animated.gif')} />
+                        </View>
+                    }
+                    {chat_status == '0' &&
+                        <TouchableOpacity style={styles.arrowView}
+                            onPress={this.acceptChatRequest}>
+                            <View style={styles.viewAccept}> 
+                            <Text style={styles.textAccept}>Accept</Text>
+                            </View>   
+                        </TouchableOpacity>
+                    }
+                </LinearGradient>
+            </TouchableOpacity>
+        )
+    }
+
     reviewTask(rating, review) {
 
         console.log("Main Id : " + this.state.mainId);
-        console.log("Rating :  " + rating);
-        console.log("Review : " + review);
 
         this.setState({
             isLoading: true,
@@ -693,7 +741,7 @@ class ProDashBoardScreen extends Component {
             })
             .then((response) => response.json())
             .then((response) => {
-                console.log("Response" + JSON.stringify(response));
+                //console.log("Response" + JSON.stringify(response));
                 if (response.result) {
                     this.setState({
                         isLoading: false,
@@ -741,7 +789,7 @@ class ProDashBoardScreen extends Component {
                 }
             }
 
-            console.log("askReviewData : " + JSON.stringify(askReviewData));
+            //console.log("askReviewData : " + JSON.stringify(askReviewData));
 
             fetch(ASK_FOR_REVIEW,
                 {
@@ -754,7 +802,7 @@ class ProDashBoardScreen extends Component {
                 })
                 .then((response) => response.json())
                 .then((response) => {
-                    console.log("Response" + JSON.stringify(response));
+                    //console.log("Response" + JSON.stringify(response));
                     if (response.result) {
                         this.setState({
                             isLoading: false,
@@ -833,7 +881,7 @@ class ProDashBoardScreen extends Component {
     }*/
 
     render() {
-        const customerImage = ProPendingJobRequest.Request.image;
+        const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders } } = this.props;
         return (
             <View style={styles.container}>
 
@@ -868,7 +916,7 @@ class ProDashBoardScreen extends Component {
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView style={{ marginBottom: ProPendingJobRequest.Request.order_id == '' ? 0 : 80 }}
+                <ScrollView style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80 }}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
@@ -985,41 +1033,18 @@ class ProDashBoardScreen extends Component {
                     }
                 </ScrollView>
 
-                {ProPendingJobRequest.Request.order_id != '' &&
-                    <TouchableOpacity style={styles.pendingJobStyle}
-                        onPress={this.goToProMapDirection}>
-                        <LinearGradient style={styles.pendingJobStyle}
-                            colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
-                            <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                                source={ this.state.proImageAvailable ? { uri: customerImage } : require('../images/generic_avatar.png')} />
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
-                                    {ProPendingJobRequest.Request.name}
-                                </Text>
-                                <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
-                                    {"Request for " + ProPendingJobRequest.Request.service_name}
-                                </Text>
-                                <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
-                                    {ProPendingJobRequest.Request.chat_status == "0" ? "New Job Request" : ProPendingJobRequest.Request.status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
-                                </Text>
-                            </View>
-                            {ProPendingJobRequest.Request.chat_status == '1' &&
-                                <View style={styles.arrowView}>
-                                    <Image style={styles.arrow}
-                                        source={require('../icons/arrow_right_animated.gif')} />
-                                </View>
-                            }
-                            {ProPendingJobRequest.Request.chat_status == '0' &&
-                                <TouchableOpacity style={styles.arrowView}
-                                    onPress={this.acceptChatRequest}>
-                                    <View style={styles.viewAccept}> 
-                                    <Text style={styles.textAccept}>Accept</Text>
-                                    </View>   
-                                </TouchableOpacity>
-                            }
-                        </LinearGradient>
-                    </TouchableOpacity>
-                }
+                {requestsProvidersFetched && jobRequestsProviders.length > 0 ?
+                    <View style={styles.pendingJobsContainer}>
+                        <FlatList
+                            keyboardShouldPersistTaps={'handled'}
+                            numColumns={1}
+                            data={jobRequestsProviders}
+                            renderItem={this.renderPendingJobs}
+                            keyExtractor={(item, index) => index}
+                            showsVerticalScrollIndicator={false}
+                        // ItemSeparatorComponent={this.renderSeparator}
+                        />
+                    </View> : null}
 
                 <Toast
                     ref="toast"
@@ -1058,9 +1083,43 @@ class ProDashBoardScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobProvider());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobProviderInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchProviderJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     ProDashBoard: {
-        screen: ProDashBoardScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(ProDashBoardScreen),
         navigationOptions: {
             header: null
         }
@@ -1329,6 +1388,25 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
+    },
+    pendingJobsContainer: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        width: screenWidth,
+        position: 'absolute',
+        bottom: 0,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    pendingJobRow: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'row',
+        height: 75,
     },
     linearGradient: {
         flex: 1,

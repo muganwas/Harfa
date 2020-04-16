@@ -6,8 +6,10 @@ import {
     FETCHING_JOB_REQUESTS_PROVIDERS,
     FETCHED_JOB_REQUESTS_PROVIDERS,
     FETCHING_JOB_REQUESTS_PROVIDERS_ERROR,
-    SET_SELECTED_JOB_REQUEST
+    SET_SELECTED_JOB_REQUEST,
 } from '../types';
+
+import { imageExists } from '../../misc/helpers';
 
 const PENDING_JOB_CUSTOMER = Config.baseURL+"jobrequest/user_status_check/";
 const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
@@ -91,6 +93,10 @@ export const getPendingJobRequest = ( props, userId, navTo ) => {
                     service_name: responseJson.data.service_details.service_name,
                 }
                 //PendingJobRequest.Request = jobData;
+                //check if image is reachable
+                imageExists(responseJson.data.employee_details.image).then(res => {
+                    jobData.imageAvailable = res;
+                });
                 newJobRequest.push(jobData);
                 dispatch(fetchedJobCustomerInfo(newJobRequest));
                 /** navigate away */
@@ -147,6 +153,10 @@ export const getPendingJobRequestProvider = ( props, providerId, navTo ) => {
                     delivery_lang: responseJson.data.delivery_lang,
                 }
                 //ProPendingRequest.Request = jobData;
+                //check if image is reachable
+                imageExists(responseJson.data.customer_details.image).then(res => {
+                    jobData.imageAvailable = res;
+                });
                 newJobRequestsProviders.push(jobData)
                 dispatch(fetchedJobProviderInfo(newJobRequestsProviders));
                 console.log('before navigating...')

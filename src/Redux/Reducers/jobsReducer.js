@@ -5,7 +5,7 @@ import {
     FETCHING_JOB_REQUESTS_PROVIDERS,
     FETCHED_JOB_REQUESTS_PROVIDERS,
     FETCHING_JOB_REQUESTS_PROVIDERS_ERROR,
-    SET_SELECTED_JOB_REQUEST
+    SET_SELECTED_JOB_REQUEST,
 } from '../types';
 
 const initialState = {
@@ -54,7 +54,7 @@ const jobsReducer = (state=initialState, action) => {
         case FETCHED_JOB_REQUESTS_PROVIDERS: 
             return {
                 ...state,
-                jobRequests: action.payload,
+                jobRequestsProviders: action.payload,
                 requestsProvidersFetched: true,
                 fetchingRequestsProviders: false,
                 requestsProvidersError: null
