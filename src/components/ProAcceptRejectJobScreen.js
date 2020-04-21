@@ -72,7 +72,7 @@ class ProAcceptRejectJobScreen extends Component {
             senderSurname: ProviderDetails.Provider.surname,
             inputMessage: '',
             showButton: false,
-            isAcceptJob: ProPendingJobRequest.Request.status == "Accepted" ? true : false,
+            isAcceptJob: jobRequestsProviders[currRequestPos].status === "Accepted",
             isRejectJob: false,
             dataChatSource: [],
             isLoading: true,
@@ -195,7 +195,7 @@ class ProAcceptRejectJobScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response getImageURL >> " + JSON.stringify(responseJson));
+                //console.log("Response getImageURL >> " + JSON.stringify(responseJson));
                 this.setState({
                     isLoading: false
                 })
@@ -500,14 +500,14 @@ class ProAcceptRejectJobScreen extends Component {
 
         this.setState({
             isLoading: true
-        })
+        });
 
         const data = {
-            main_id: ProPendingJobRequest.Request.id,
+            main_id: this.state.mainId,
             chat_status: '1',
             status: 'Accepted',
             'notification': {
-                "fcm_id": ProPendingJobRequest.Request.fcm_id,
+                "fcm_id": this.state.receiverFcmId,
                 "title": "Job Accepted",
                 "body": 'Your request has been accepted by ' + ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
                 "data": {
@@ -545,10 +545,11 @@ class ProAcceptRejectJobScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson));
+                //console.log("Response : " + JSON.stringify(responseJson));
                 const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
                 const { currRequestPos } = this.state;
                 var newjobRequestsProviders = [...jobRequestsProviders];
+                console.log(responseJson)
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false,
@@ -580,7 +581,7 @@ class ProAcceptRejectJobScreen extends Component {
                     //Send Location to Firebase for tracking
                     Geolocation.getCurrentPosition(
                         (position) => {
-                            console.log("Position : " + JSON.stringify(position));
+                            //console.log("Position : " + JSON.stringify(position));
                             let locationData = {
                                 latitude: position.coords.latitude,
                                 longitude: position.coords.longitude,
@@ -645,7 +646,7 @@ class ProAcceptRejectJobScreen extends Component {
             }
         }
 
-        console.log("REJECT JOB Data >> " + JSON.stringify(data));
+        //console.log("REJECT JOB Data >> " + JSON.stringify(data));
 
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
@@ -657,7 +658,7 @@ class ProAcceptRejectJobScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
+                //console.log("Response : " + JSON.stringify(responseJson))
                 const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
                 const { currRequestPos } = this.state;
                 var newjobRequestsProviders = [...jobRequestsProviders];
@@ -735,7 +736,7 @@ class ProAcceptRejectJobScreen extends Component {
         newjobRequestsProviders[currRequestPos] = jobData;
         fetchedPendingJobInfo(newjobRequestsProviders);
 
-        console.log("goToMapDirection :>>> " + JSON.stringify(ProPendingJobRequest.Request))
+        //console.log("goToMapDirection :>>> " + JSON.stringify(ProPendingJobRequest.Request))
 
         this.props.navigation.navigate("ProMapDirection", {
             'pageTitle': "ProAcceptRejectJob",

@@ -85,6 +85,8 @@ export const getPendingJobRequest = ( props, userId, navTo ) => {
                     fcm_id: responseJson.data.employee_details.fcm_id,
                     name: responseJson.data.employee_details.username,
                     surName: responseJson.data.employee_details.surname,
+                    status: responseJson.data.status,
+                    chat_status: responseJson.data.chat_status,
                     mobile: responseJson.data.employee_details.mobile,
                     description: responseJson.data.employee_details.description,
                     address: responseJson.data.employee_details.address,

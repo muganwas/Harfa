@@ -52,7 +52,13 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
-
+        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        var currRequestPos;
+        Object.keys(jobRequests).map(key => {
+            const currEmpId = jobRequests[key].employee_id;
+            if (currEmpId === employee_id) currRequestPos = key;
+        });
+        console.log(jobRequests[currRequestPos])
         this.state = {
             senderId: UserDetails.User.userId,
             senderImage: UserDetails.User.image,
@@ -648,7 +654,9 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
-        messagesInfo: state.messagesInfo
+        messagesInfo: state.messagesInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
     }
 }
 

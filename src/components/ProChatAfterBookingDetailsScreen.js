@@ -51,7 +51,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
-
+        console.log('chat after booking')
         this.state = {
             showButton: false,
             senderId: ProviderDetails.Provider.providerId,

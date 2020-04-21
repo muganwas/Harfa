@@ -51,12 +51,10 @@ class MapDirectionScreen extends Component {
         console.log(this.props)
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
-
         Object.keys(jobRequests).map(key => {
             const currEmpId = jobRequests[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
-
         this.state = {
             sourceLocation: othersCoordinates[employee_id].latitude + "," + othersCoordinates[employee_id].longitude,
             sourceLat: parseFloat(othersCoordinates[employee_id].latitude),
@@ -86,6 +84,7 @@ class MapDirectionScreen extends Component {
             providerLat: jobRequests[currRequestPos].lat,
             providerLang: jobRequests[currRequestPos].lang,
             serviceName: jobRequests[currRequestPos].service_name,
+            isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
             titlePage: this.props.navigation.state.params.titlePage
         };
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -628,7 +627,7 @@ class MapDirectionScreen extends Component {
                                 <View style={{ flexDirection: 'row', flex: 1 }}>
 
                                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
-                                        source={{ uri: jobRequests[currRequestPos].image }} />
+                                        source={jobRequests[currRequestPos].imageAvailable ? { uri: jobRequests[currRequestPos].image } : require('../images/generic_avatar.png')} />
                                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                         <Text style={{ marginRight: 200, color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
                                             numberOfLines={1}>
@@ -677,19 +676,20 @@ class MapDirectionScreen extends Component {
                         <View style={styles.slidingPanelLayoutStyle}>
                             <View style={styles.containerSlide}>
 
+                                { this.state.isJobAccepted && 
                                 <TouchableOpacity style={styles.buttonContainer}
                                     onPress={this.openCompleteConfirmation}>
                                     <Text style={styles.text}>
                                         Completed
-                    </Text>
-                                </TouchableOpacity>
+                                    </Text>
+                                </TouchableOpacity> }
 
-                                <TouchableOpacity style={styles.buttonContainer}
+                                { !this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
                                     onPress={this.openCancelConfirmation}>
                                     <Text style={styles.text}>
                                         Cancel Request
-                    </Text>
-                                </TouchableOpacity>
+                                    </Text>
+                                </TouchableOpacity> }
 
                             </View>
                         </View>

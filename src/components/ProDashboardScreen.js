@@ -101,7 +101,6 @@ class ProDashBoardScreen extends Component {
             proImageAvailable: null,
         }
         this.springValue = new Animated.Value(100);
-        this.goToProMapDirection = this.goToProMapDirection.bind(this)
     }
 
     //Get All Bookings
@@ -167,7 +166,6 @@ class ProDashBoardScreen extends Component {
 
                     let message = val.val();
                     let id = val.key;
-                    console.log("Id Firebase : " + id);
                     //console.log("Message Firebase : " + JSON.stringify(message));
 
                     this.setState({
@@ -202,8 +200,6 @@ class ProDashBoardScreen extends Component {
         fetch(BOOKING_HISTORY + ProviderDetails.Provider.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
-                //console.log("Response Booking History : " + JSON.stringify(responseJson))
-
                 if (responseJson.result) {
                     for (let i = 0; i < responseJson.data.length; i++) {
                         if (responseJson.data[i].chat_status == "1") {
@@ -255,8 +251,6 @@ class ProDashBoardScreen extends Component {
         fetch(RECENT_USER + ProviderDetails.Provider.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
-                //console.log("Response getAllRecentUser : " + JSON.stringify(responseJson))
-
                 if (responseJson.result) {
                     this.setState({
                         dataUserSource: responseJson.data,
@@ -293,7 +287,8 @@ class ProDashBoardScreen extends Component {
                     'image': item.image,
                     'orderId': item.orderId,
                     'serviceName': item.serviceName,
-                    'pageTitle': "ProDashboard"
+                    'pageTitle': "ProDashboard",
+                    'imageAvailable': item.imageAvailable
                 })}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
@@ -611,8 +606,6 @@ class ProDashBoardScreen extends Component {
             }
         }
 
-        //console.log("ACCEPT CHAT Data >> " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -623,7 +616,6 @@ class ProDashBoardScreen extends Component {
         })
             .then(response => response.json())
             .then(responseJson => {
-                //console.log("Response acceptChatRequest: " + JSON.stringify(responseJson))
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
@@ -655,8 +647,6 @@ class ProDashBoardScreen extends Component {
                     newjobRequestsProviders[pos] = jobData;
                     fetchedPendingJobInfo(newjobRequestsProviders);
 
-                    //console.log("acceptJob :>>>" + JSON.stringify(ProPendingJobRequest.Request))
-
                     this.props.navigation.navigate("ProAcceptRejectJob");
                 }
                 else {
@@ -664,7 +654,7 @@ class ProDashBoardScreen extends Component {
                         isLoading: false,
                         isErrorToast: true,
                     });
-                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
+
                     this.showToast("Something went wrong")  
                 }
             })
@@ -716,8 +706,6 @@ class ProDashBoardScreen extends Component {
     }
 
     reviewTask(rating, review) {
-
-        console.log("Main Id : " + this.state.mainId);
 
         this.setState({
             isLoading: true,
@@ -789,8 +777,6 @@ class ProDashBoardScreen extends Component {
                 }
             }
 
-            //console.log("askReviewData : " + JSON.stringify(askReviewData));
-
             fetch(ASK_FOR_REVIEW,
                 {
                     method: 'POST',
@@ -802,7 +788,6 @@ class ProDashBoardScreen extends Component {
                 })
                 .then((response) => response.json())
                 .then((response) => {
-                    //console.log("Response" + JSON.stringify(response));
                     if (response.result) {
                         this.setState({
                             isLoading: false,
