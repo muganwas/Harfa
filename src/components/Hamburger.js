@@ -3,20 +3,19 @@ import { connect } from 'react-redux';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
-import { 
-    updatingCoordinates, 
-    updateCoordinates, 
+import {
+    updatingCoordinates,
+    updateCoordinates,
     updateCoordinatesError,
-    updateOthersCoordinates, 
-    updatingOthersCoordinates, 
-    updateOthersCoordinatesError 
+    updateOthersCoordinates,
+    updatingOthersCoordinates,
+    updateOthersCoordinatesError
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
-import PendingJobRequest from './PendingJobRequest';
 import firebase from 'react-native-firebase';
 import geolocation from '@react-native-community/geolocation';
 import UserDetails from './UserDetails';
-import {Notifications} from 'react-native-notifications';
+import { Notifications } from 'react-native-notifications';
 
 const Android = Platform.OS === 'android';
 
@@ -48,187 +47,185 @@ const styles = StyleSheet.create({
         marginTop: !Android ? 13 : 0
     },
     image: { width: 25, height: 25 },
-    titleText: {fontSize: 20, fontWeight: 'bold',color: 'black', textAlignVertical: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }
+    titleText: { fontSize: 20, fontWeight: 'bold', color: 'black', textAlignVertical: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }
 })
 class Hamburger extends React.Component {
-    constructor(){
+    constructor() {
         super()
         Notifications.events().registerRemoteNotificationsRegistered(event => {
             // TODO: Send the token to my server so it could send back push notifications...
             console.log("Device Token Received", event.deviceToken);
         });
-        
+
         Notifications.events().registerRemoteNotificationsRegistrationFailed(event => {
             console.error(event);
         });
 
         Notifications.registerRemoteNotifications();
     }
-    componentDidMount(){
+    componentDidMount() {
         const {
-            navigation, 
-            fetchNotifications, 
-            fetchedNotifications, 
+            navigation,
+            fetchNotifications,
+            fetchedNotifications,
             fetchedMessages,
-            fetchingOthersCoordinates, 
-            fetchedOthersCoordinates, 
+            fetchingOthersCoordinates,
+            fetchedOthersCoordinates,
             fetchOthersCoordinatesError,
             jobsInfo: { jobRequests }
         } = this.props;
-        console.log('hamburger loaded...');
-        const providerId = navigation ?
-        navigation.state.params ? 
-        navigation.satate.params.providerId ? 
-        navigation.state.params.providerId : 
-        null : 
-        null :
-        null;
-        const receiverId = PendingJobRequest.Request.employee_id || providerId;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
         var providersLocation = {};
         /** fetch users current position and upload it to db */
+        console.log('about to check geolocation')
         geolocation.getCurrentPosition(info => {
-            const { coords: { latitude, longitude} } = info;
+            const { coords: { latitude, longitude } } = info;
             const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
-            fetchingCoordinates();
-            userRef.update({latitude, longitude}).then(() => {
-                console.log('set position');
-                fetchedCoordinates({latitude, longitude});
+            fetchedCoordinates({ latitude, longitude });
+            userRef.update({ latitude, longitude }).then(() => {
+                //console.log('set position');
             }).
-            catch(e => {
-                console.log(e.message);
-                fetchCoordinatesError(e.message);
-            });
+                catch(e => {
+                    console.log(e.message);
+                    fetchCoordinatesError(e.message);
+                });
         }, error => {
             console.log(error)
         });
 
-        /**fetch pros current position */
+        /** lookout for users changing position */
+        geolocation.watchPosition(info => {
+            const { coords: { latitude, longitude } } = info;
+            const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
+            fetchedCoordinates({ latitude, longitude });
+            console.log('updated position')
+            userRef.update({ latitude, longitude }).then(() => {
+                //fetchedCoordinates({ latitude, longitude });
+            }).
+                catch(e => {
+                    console.log(e.message);
+                    fetchCoordinatesError(e.message);
+                })
+        }, error => {
+            console.log(error)
+        }, { enableHighAccuracy: true });
+        /** lookout for pros changing position */
         jobRequests.map(obj => {
             const { employee_id } = obj;
+
             firebase.database().ref(`liveLocation/${employee_id}`).once('value', result => {
                 const loc = result.val();
                 providersLocation[employee_id] = loc;
                 fetchedOthersCoordinates(providersLocation);
             }).
-            catch(e => {
-                fetchOthersCoordinatesError(e.message);
-            });
-        })
+                catch(e => {
+                    fetchOthersCoordinatesError(e.message);
+                });
 
-        /** lookout for users changing position */
-        geolocation.watchPosition(info => {
-            console.log('position');
-            console.log(info);
-            const { coords: { latitude, longitude} } = info;
-            const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
-            fetchingCoordinates();
-            userRef.update({latitude, longitude}).then(() => {
-                console.log('updated position');
-                fetchedCoordinates({latitude, longitude});
-            }).
-            catch(e => {
-                console.log(e.message);
-                fetchCoordinatesError(e.message);
-            })
-        }, error => {
-            console.log(error)
-        }, {enableHighAccuracy: true});
-        /** lookout for pros changing position */
-        firebase.database().ref(`liveLocation/${receiverId}`).on('child_changed', () => {
-            fetchingOthersCoordinates();
-            firebase.database().ref(`liveLocation/${receiverId}`).once('value', result => {
-                console.log('others position');
-                console.log(result.val());
-                fetchedOthersCoordinates(result.val());
-            }).
-            catch(e => {
-                fetchOthersCoordinatesError(e.message);
-            });
-        });
-
-        firebase.database().ref('chatting').child(senderId).child(receiverId)
-            .on('child_added', data => {
-                const { dataChatSource } = this.props.messagesInfo;
-                let newDataChatSource = [...dataChatSource, data.val()];
-                fetchedMessages(newDataChatSource);
-            });
-        firebase.database().ref('chatting').child(senderId).on('child_changed', result => {
-            const { notificationsInfo } = this.props;
-            fetchNotifications({type: 'messages'});
-            firebase.database().ref('chatting').child(senderId).child(receiverId).limitToLast(1).once('value', result => {
-                let value = result.val();
-                Object.keys(value).map(key => {
-                    let sentById = value[key].senderId;
-                    if (String(senderId) !== String(sentById)){
-                        //creat a notification
-                        Android ? Notifications.postLocalNotification({
-                            title: "Harfa Messages",
-                            body: "You have a new message!",
-                            extra: "data"
-                        }) :
-                        Notifications.postLocalNotification({
-                            body: "You have a new Message",
-                            title: "Harfa Messages",
-                            sound: "chime.aiff",
-                            silent: false,
-                            category: "SOME_CATEGORY",
-                            userInfo: { }
+            firebase.database().ref(`liveLocation/${employee_id}`).
+                on('child_changed', () => {
+                    const { generalInfo: { othersCoordinates } } = this.props;
+                    let newOthersCoordinates = Object.assign({}, othersCoordinates);
+                    fetchingOthersCoordinates();
+                    firebase.database().ref(`liveLocation/${employee_id}`).
+                        once('value', result => {
+                            newOthersCoordinates[employee_id] = result.val();
+                            fetchedOthersCoordinates(newOthersCoordinates);
+                        }).
+                        catch(e => {
+                            fetchOthersCoordinatesError(e.message);
                         });
+                });
 
-                        let currentMessagesCount = notificationsInfo.messages;
-                        let newMessagesCount = currentMessagesCount + 1;
-                        fetchedNotifications({type: 'messages', value: newMessagesCount});
-                    }
-                })
-                //console.log(value); 
-            });
+            firebase.database().ref('chatting').
+                child(senderId).
+                child(employee_id)
+                .on('child_added', data => {
+                    const { messagesInfo: { dataChatSource } } = this.props;
+                    let newDataChatSource = Object.assign({}, dataChatSource);
+                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                    newArr.push(data.val())
+                    newDataChatSource[employee_id] = newArr;
+                    fetchedMessages(newDataChatSource);
+                });
+            firebase.database().ref('chatting').
+                child(senderId).
+                child(employee_id)
+                .once('child_added', data => {
+                    const { dataChatSource } = this.props.messagesInfo;
+                    let newDataChatSource = Object.assign({}, dataChatSource);
+                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                    newArr.push(data.val())
+                    newDataChatSource[employee_id] = newArr;
+                    fetchedMessages(newDataChatSource);
+                });
+
         });
-        firebase.database().ref('adminChatting').child(senderId).on('child_changed', result => {
-            const {notificationsInfo} = this.props;
-            const adminMessageCount = notificationsInfo.adminMessages;
-            const sentById = value[key].senderId;
-            if ( senderId !== sentById) {
-                Android ? Notifications.postLocalNotification({
-                    title: "Harfa Messages",
-                    body: "You have a new message!",
-                    extra: "data"
-                }) :
+
+        firebase.database().ref('chatting').child(senderId).on('child_changed', result => {
+            console.log('chat notification result', result);
+            const { notificationsInfo } = this.props;
+            Android ? Notifications.postLocalNotification({
+                title: "Harfa Messages",
+                body: "You have a new message!",
+                extra: "data"
+            }) :
                 Notifications.postLocalNotification({
                     body: "You have a new Message",
                     title: "Harfa Messages",
                     sound: "chime.aiff",
                     silent: false,
                     category: "SOME_CATEGORY",
-                    userInfo: { }
+                    userInfo: {}
                 });
-            }
-            fetchedNotifications({type: 'adminMessages', value: adminMessageCount});
+
+            let currentMessagesCount = notificationsInfo.messages;
+            let newMessagesCount = currentMessagesCount + 1;
+            fetchedNotifications({ type: 'messages', value: newMessagesCount });
+        });
+
+        firebase.database().ref('adminChatting').child(senderId).on('child_changed', result => {
+            const { notificationsInfo } = this.props;
+            const adminMessageCount = notificationsInfo.adminMessages;
+            Android ? Notifications.postLocalNotification({
+                title: "Harfa Messages",
+                body: "You have a new message!",
+                extra: "data"
+            }) :
+                Notifications.postLocalNotification({
+                    body: "You have a new Message",
+                    title: "Harfa Messages",
+                    sound: "chime.aiff",
+                    silent: false,
+                    category: "SOME_CATEGORY",
+                    userInfo: {}
+                });
+            fetchedNotifications({ type: 'adminMessages', value: adminMessageCount });
         });
     }
-    componentWillUnmount(){
+    componentWillUnmount() {
         console.log('burger unmount..');
-        const senderId = PendingJobRequest.Request.employee_id;
+        const senderId = UserDetails.User.userId;
         //const receiverId = ProviderDetails.Provider.providerId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
         firebase.database().ref('chatting').child(senderId).off('child_changed');
     }
-    render(){
+    render() {
         const {
-            text, 
+            text,
             navigation,
-            notificationsInfo 
+            notificationsInfo
         } = this.props;
         console.log(this.props)
         const notificationTotal = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
         return (
             <>
-                <TouchableOpacity onPress={ navigation ? () => navigation.dispatch(DrawerActions.openDrawer()) : () => {}}
+                <TouchableOpacity onPress={navigation ? () => navigation.dispatch(DrawerActions.openDrawer()) : () => { }}
                     style={styles.touchableHighlight}>
                     <Image style={styles.image}
                         source={require('../icons/humberger.png')} />
-                    { notificationTotal > 0 ? <Text style={styles.noticationsCount}>{notificationTotal}</Text> : null }
+                    {notificationTotal > 0 ? <Text style={styles.noticationsCount}>{notificationTotal}</Text> : null}
                 </TouchableOpacity>
 
                 <View style={styles.textView}>
@@ -245,6 +242,7 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         messagesInfo: state.messagesInfo,
+        generalInfo: state.generalInfo,
         jobsInfo: state.jobsInfo,
     }
 }

@@ -1,11 +1,12 @@
 
 import React, { Component } from 'react';
 import {
-    Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity, 
-    ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform} from 'react-native';
+    Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity,
+    ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform
+} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import {createAppContainer} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 //import { DrawerActions } from 'react-navigation-drawer';
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
@@ -58,15 +59,16 @@ const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -101,6 +103,7 @@ class ProDashBoardScreen extends Component {
             proImageAvailable: null,
         }
         this.springValue = new Animated.Value(100);
+        console.log('props at dash', this.props)
     }
 
     //Get All Bookings
@@ -108,18 +111,18 @@ class ProDashBoardScreen extends Component {
         const { navigation } = this.props;
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
         NetInfo.addEventListener(state => {
-            if (!state.isConnected) this.setState({connectivityAvailable: false});
-            else this.setState({connectivityAvailable: true});
+            if (!state.isConnected) this.setState({ connectivityAvailable: false });
+            else this.setState({ connectivityAvailable: true });
         });
         NetInfo.fetch().then(state => {
-            if (!state.isConnected) this.setState({connectivityAvailable: false});
-            else this.setState({connectivityAvailable: true});
+            if (!state.isConnected) this.setState({ connectivityAvailable: false });
+            else this.setState({ connectivityAvailable: true });
         });
         socket.on('connect', () => {
             const userId = ProviderDetails.Provider.providerId;
             if (userId) {
                 socket.emit('connected', userId);
-                this.setState({online:true});
+                this.setState({ online: true });
             }
             console.log('connected');
         });
@@ -134,7 +137,7 @@ class ProDashBoardScreen extends Component {
         socket.on('disconnect', info => {
             console.log('you disconnected')
             // console.log(info);
-            this.setState({online:false});
+            this.setState({ online: false });
             if (!this.state.online && this.state.connectivityAvailable) socket.open();
         })
         socket.open();
@@ -272,27 +275,40 @@ class ProDashBoardScreen extends Component {
                     isRecentUser: true,
                     isErrorToast: true
                 })
-               // ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
+                // ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
                 this.showToast("Something went wrong, Check your internet connection");
             })
     }
 
     renderRecentMessageItem = ({ item }) => {
+        const { dispatchSelectedJobRequest, jobsInfo: { jobRequestsProviders } } = this.props;
+        let currentPos;
+        Object.keys(jobRequestsProviders).map(key => {
+            if(jobRequestsProviders[key].user_id === item.id) {
+                currentPos = key;
+            }
+        });
         const customerImage = item.image;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
-                onPress={() => this.props.navigation.navigate("ProChat", {
-                    'userId': item.id,
-                    'name': item.name,
-                    'image': item.image,
-                    'orderId': item.orderId,
-                    'serviceName': item.serviceName,
-                    'pageTitle': "ProDashboard",
-                    'imageAvailable': item.imageAvailable
-                })}>
+                onPress={() => {
+                    dispatchSelectedJobRequest({user_id: item.id});
+                    setTimeout(() => {
+                        this.props.navigation.navigate("ProChat", {
+                            currentPos,
+                            'userId': item.id,
+                            'name': item.name,
+                            'image': item.image,
+                            'orderId': item.orderId,
+                            'serviceName': item.serviceName,
+                            'pageTitle': "ProDashboard",
+                            'imageAvailable': item.imageAvailable
+                        })
+                    }, 100);
+                }}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={ customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                        source={customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -348,10 +364,10 @@ class ProDashBoardScreen extends Component {
         const recentUserImage = item.user_details.image;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
-                onPress={()=> this.props.navigation.navigate("ProBooking")}>
+                onPress={() => this.props.navigation.navigate("ProBooking")}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={ recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
+                        source={recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -427,7 +443,7 @@ class ProDashBoardScreen extends Component {
             .catch((error) => {
                 console.log("Error :" + error);
                 this.setState({
-                    isLoading: false,   
+                    isLoading: false,
                 })
             })
             .done()
@@ -458,17 +474,17 @@ class ProDashBoardScreen extends Component {
                     console.log("updated");
                     this.updateAvailabilityInMongoDB(userData);
                 }).
-                catch(e => {
-                    console.log(e.message)
-                });
+                    catch(e => {
+                        console.log(e.message)
+                    });
             }
             else {
                 usersRef.set(userData).then(() => {
                     this.updateAvailabilityInMongoDB(userData);
                 }).
-                catch(e => {
-                    console.log(e.message);
-                });
+                    catch(e => {
+                        console.log(e.message);
+                    });
             }
         })
 
@@ -574,15 +590,28 @@ class ProDashBoardScreen extends Component {
     }
 
     acceptChatRequest = pos => {
-        const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { fetchedPendingJobInfo, jobsInfo, jobsInfo: { jobRequestsProviders } } = this.props;
         var newjobRequestsProviders = [...jobRequestsProviders];
+        console.log('pos', pos)
+        console.log('job requests', jobRequestsProviders)
         const {
-            id, user_id, fcm_id, name,
-            service_name, order_id, image, mobile, 
-            dob, address, lat, lang, chat_status, 
-            status, delivery_address, delivery_lat, 
+            id, 
+            user_id, 
+            fcm_id, name,
+            service_name, 
+            order_id, 
+            image, mobile,
+            dob, 
+            address, 
+            lat, 
+            lang, 
+            chat_status,
+            status, 
+            delivery_address, 
+            delivery_lat,
             delivery_lang
         } = jobRequestsProviders[pos];
+        
         this.setState({
             isLoading: true,
         })
@@ -643,7 +672,7 @@ class ProDashBoardScreen extends Component {
                     imageExists(image).then(res => {
                         jobData.imageAvailable = res;
                     });
-                    
+
                     newjobRequestsProviders[pos] = jobData;
                     fetchedPendingJobInfo(newjobRequestsProviders);
 
@@ -655,7 +684,7 @@ class ProDashBoardScreen extends Component {
                         isErrorToast: true,
                     });
 
-                    this.showToast("Something went wrong")  
+                    this.showToast("Something went wrong")
                 }
             })
             .catch(error => {
@@ -666,17 +695,18 @@ class ProDashBoardScreen extends Component {
             })
     }
 
-    renderPendingJobs = ({item}) => {
+    renderPendingJobs = ({ item, index }) => {
         const { image, name, imageAvailable, user_id, service_name, chat_status, status } = item;
+  
         return (
             <TouchableOpacity style={styles.pendingJobRow}
-                onPress={() => this.goToProMapDirection(chat_status, status, {userType: 'provider', user_id})}>
+                onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id })}>
                 <LinearGradient style={styles.pendingJobRow}
                     colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                        source={ imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
+                        source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
                     <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
-                        <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold'}}>
+                        <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold' }}>
                             {name}
                         </Text>
                         <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
@@ -694,10 +724,10 @@ class ProDashBoardScreen extends Component {
                     }
                     {chat_status == '0' &&
                         <TouchableOpacity style={styles.arrowView}
-                            onPress={this.acceptChatRequest}>
-                            <View style={styles.viewAccept}> 
-                            <Text style={styles.textAccept}>Accept</Text>
-                            </View>   
+                            onPress={() => this.acceptChatRequest(index)}>
+                            <View style={styles.viewAccept}>
+                                <Text style={styles.textAccept}>Accept</Text>
+                            </View>
                         </TouchableOpacity>
                     }
                 </LinearGradient>
@@ -824,7 +854,7 @@ class ProDashBoardScreen extends Component {
             this.setState({
                 isErrorToast: true
             })
-           // ToastAndroid.show("You have already asked, Please wait for customer feedback", ToastAndroid.show);
+            // ToastAndroid.show("You have already asked, Please wait for customer feedback", ToastAndroid.show);
             this.showToast("You have already asked, Please wait for customer feedback");
         }
     }
@@ -867,18 +897,19 @@ class ProDashBoardScreen extends Component {
 
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders } } = this.props;
+        console.log('requests from providers', jobRequestsProviders);
         return (
             <View style={styles.container}>
 
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
 
                 <View style={styles.header}>
-                    <Hamburger 
+                    <Hamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
                         text='Harfa'
                     />
-                    <TouchableOpacity style={{width: '100%' , justifyContent: 'center', alignContent: 'center'}}
+                    <TouchableOpacity style={{ width: '100%', justifyContent: 'center', alignContent: 'center' }}
                         onPress={() => this.props.navigation.navigate("ProAddAddress")}>
                         <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
                             source={require('../icons/maps_location.png')} />
@@ -887,13 +918,14 @@ class ProDashBoardScreen extends Component {
                 <View style={styles.onlineOfflineHeader}>
                     <Text style={{
                         flex: 1, textAlignVertical: 'center', alignItems: 'flex-start',
-                        alignContent: 'flex-start', justifyContent: 'flex-start', marginLeft: 15, fontWeight: 'bold'}}>
+                        alignContent: 'flex-start', justifyContent: 'flex-start', marginLeft: 15, fontWeight: 'bold'
+                    }}>
                         Availability
                     </Text>
-            
+
                     <TouchableOpacity style={styles.onlineOfflineView}
                         onPress={this.changeAvailabilityStaus}>
-                        <View style={[styles.onlineOfflineText, { backgroundColor: this.state.availBackground  }]}>
+                        <View style={[styles.onlineOfflineText, { backgroundColor: this.state.availBackground }]}>
                             <Text style={{ color: 'white', fontWeight: 'bold', alignSelf: 'center' }}>
                                 {this.state.status}
                             </Text>
@@ -919,10 +951,10 @@ class ProDashBoardScreen extends Component {
                                         Recent Message
                                     </Text>
                                     {false &&
-                                    <TouchableOpacity style={styles.viewAll}
-                                        onPress={() => this.props.navigation.navigate("ProAllMessage")}>
-                                        <Text style={styles.textViewAll}>View All</Text>
-                                    </TouchableOpacity>
+                                        <TouchableOpacity style={styles.viewAll}
+                                            onPress={() => this.props.navigation.navigate("ProAllMessage")}>
+                                            <Text style={styles.textViewAll}>View All</Text>
+                                        </TouchableOpacity>
                                     }
                                 </View>
 
@@ -947,9 +979,9 @@ class ProDashBoardScreen extends Component {
                                         Work
                                     </Text>
                                     {false &&
-                                    <TouchableOpacity style={styles.viewAll}>
-                                        <Text style={styles.textViewAll}>View All</Text>
-                                    </TouchableOpacity>
+                                        <TouchableOpacity style={styles.viewAll}>
+                                            <Text style={styles.textViewAll}>View All</Text>
+                                        </TouchableOpacity>
                                     }
                                 </View>
                                 <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
@@ -1001,9 +1033,10 @@ class ProDashBoardScreen extends Component {
                             onRequestClose={() => this.changeDialogVisibility(false, "", "", "", "", "")}>
                             <ReviewDialog style={{
                                 shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                                shadowOpacity: 0.75, shadowRadius: 5, elevation: 5}}
+                                shadowOpacity: 0.75, shadowRadius: 5, elevation: 5
+                            }}
                                 changeDialogVisibility={this.changeDialogVisibility}
-                                data={JSON.stringify(this.state.reviewData)+"//////"+"0"} />
+                                data={JSON.stringify(this.state.reviewData) + "//////" + "0"} />
                         </Modal>
                     </View>
 
@@ -1145,7 +1178,7 @@ const AppStackNavigator = createStackNavigator({
         screen: ProBookingScreen,
         navigationOptions: {
             header: null
-        }  
+        }
     },
     ProBookingDetails: {
         screen: ProBookingDetailsScreen,
@@ -1241,7 +1274,7 @@ const styles = StyleSheet.create({
         backgroundColor: colorBg,
         alignItems: 'center'
     },
-    viewAll : {
+    viewAll: {
         paddingLeft: 10,
         paddingRight: 10,
         paddingTop: 5,

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
     Dimensions, ActivityIndicator, Alert, ToastAndroid, Platform, BackHandler
 } from 'react-native';
@@ -9,6 +10,7 @@ import 'react-native-gesture-handler';
 import firebase from 'react-native-firebase';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
+import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
@@ -55,7 +57,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class FacebookGoogleScreen extends Component {
+class FacebookGoogleScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -144,7 +146,7 @@ export default class FacebookGoogleScreen extends Component {
     }
 
     fbGoogleLoginCustomerTask = (name, email, image) => {
-
+        const { fetchJobRequests } = this.props;
         this.setState({
             isLoading: true,
         })
@@ -197,7 +199,7 @@ export default class FacebookGoogleScreen extends Component {
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'User');
 
-                            this.getPendingJobRequest(id);
+                            fetchJobRequests(this.props, id, "Home");
                         }
                         else {
                             console.log("Response Else ");
@@ -261,7 +263,7 @@ export default class FacebookGoogleScreen extends Component {
     }
 
     authenticateTask = () => {
-
+        const { fetchJobRequests } = this.props;
         console.log("authenticateTask")
 
         this.setState({
@@ -319,7 +321,7 @@ export default class FacebookGoogleScreen extends Component {
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'User');
 
-                            this.getPendingJobRequest(id);
+                            fetchJobRequests(this.props, id, "Home");
                         }
                         else {
                             console.log("Response Else ");
@@ -365,67 +367,6 @@ export default class FacebookGoogleScreen extends Component {
                     .done()
             }
         })
-    }
-
-    async getPendingJobRequest(userId) {
-        this.setState({
-            isLoading: true
-        })
-        await fetch(PENDING_JOB_CUSTOMER + userId, {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-            .then((response) => response.json())
-            .then((responseJson) => {
-
-                console.log("Response getPendingJobRequest: " + JSON.stringify(responseJson));
-                this.setState({
-                    isLoading: false
-                })
-                if (responseJson.result) {
-                    const id = responseJson.data.id;
-
-                    var jobData = {
-                        id: responseJson.data._id,
-                        order_id: responseJson.data.order_id,
-                        employee_id: responseJson.data.employee_details._id,
-                        image: responseJson.data.employee_details.image,
-                        fcm_id: responseJson.data.employee_details.fcm_id,
-                        name: responseJson.data.employee_details.username,
-                        surName: responseJson.data.employee_details.surname,
-                        mobile: responseJson.data.employee_details.mobile,
-                        description: responseJson.data.employee_details.description,
-                        address: responseJson.data.employee_details.address,
-                        lat: responseJson.data.employee_details.lat,
-                        lang: responseJson.data.employee_details.lang,
-                        service_name: responseJson.data.service_details.service_name,
-                        chat_status: responseJson.data.chat_status,
-                        status: responseJson.data.status,
-                        delivery_address: responseJson.data.delivery_address,
-                        delivery_lat: responseJson.data.delivery_lat,
-                        delivery_lang: responseJson.data.delivery_lang,
-                    }
-                    PendingJobRequest.Request = jobData;
-
-                    console.log("PendingJob getPendingJobRequest : " + JSON.stringify(PendingJobRequest.Request))
-
-                    this.props.navigation.navigate("Home");
-                    
-                }
-                else {
-                    this.props.navigation.navigate("Home"); 
-                }
-            })
-            .catch((error) => {
-                this.setState({
-                    isLoading: false
-                })
-                alert("Error " + error);
-                console.log(JSON.stringify(responseJson));
-            });
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -555,6 +496,22 @@ export default class FacebookGoogleScreen extends Component {
         );
     }
 }
+
+const mapStateToProps = state => {
+    return {
+        jobsInfo: state.jobsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchJobRequests: (props, providerId, navTo) => {
+            dispatch(getPendingJobRequest(props, providerId, navTo));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(FacebookGoogleScreen);
 
 const styles = StyleSheet.create({
     container: {

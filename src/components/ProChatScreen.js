@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform
@@ -50,100 +51,53 @@ class ProChatScreen extends Component {
 
     constructor(props) {
         super(props)
-        const { navigation:{ state: { params : { currentPos } } }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
-        if (this.props.navigation.state.params.pageTitle == 'ProMapDirection') {
-            this.state = {
-                showButton: false,
-                senderId: ProviderDetails.Provider.providerId,
-                senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
-                senderImage: ProviderDetails.Provider.imageSource,
-                inputMessage: '',
-                showButton: false,
-                dataChatSource: [],
-                isLoading: true,
-                //From ProDashboardScreen && ProMapDirection
-                pageTitle: this.props.navigation.state.params.pageTitle,
+        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        this.state = {
+            showButton: false,
+            senderId: ProviderDetails.Provider.providerId,
+            senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
+            senderImage: ProviderDetails.Provider.imageSource,
+            inputMessage: '',
+            showButton: false,
+            dataChatSource: dataChatSource[user_id],
+            isLoading: !fetched,
+            //From ProDashboardScreen && ProMapDirection
+            pageTitle: this.props.navigation.state.params.pageTitle,
 
-                receiverId: jobRequestsProviders[currentPos].user_id,
-                receiverName: jobRequestsProviders[currentPos].name,
-                receiverImage: jobRequestsProviders[currentPos].image,
-                orderId: jobRequestsProviders[currentPos].order_id,
-                serviceName: jobRequestsProviders[currentPos].service_name,
-                userImageAvailable: jobRequestsProviders[currentPos].imageAvailable
-            };
-        }
-        else if (this.props.navigation.state.params.pageTitle == 'ProDashboard') {
-            this.state = {
-                showButton: false,
-                senderId: ProviderDetails.Provider.providerId,
-                senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
-                senderImage: ProviderDetails.Provider.imageSource,
-                inputMessage: '',
-                showButton: false,
-                dataChatSource: [],
-                isLoading: true,
-
-                //From ProDashboardScreen && ProMapDirection            
-                receiverId: this.props.navigation.state.params.userId,
-                receiverName: this.props.navigation.state.params.name,
-                receiverImage: this.props.navigation.state.params.image,
-                orderId: this.props.navigation.state.params.orderId,
-                serviceName: this.props.navigation.state.params.serviceName,
-                pageTitle: this.props.navigation.state.params.pageTitle,
-                userImageAvailable: this.props.navigation.state.params.imageAvailable
-            }
-        }
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+            receiverId: jobRequestsProviders[currentPos].user_id,
+            receiverName: jobRequestsProviders[currentPos].name,
+            receiverImage: jobRequestsProviders[currentPos].image,
+            orderId: jobRequestsProviders[currentPos].order_id,
+            serviceName: jobRequestsProviders[currentPos].service_name,
+            userImageAvailable: jobRequestsProviders[currentPos].imageAvailable
+        };
     };
 
     componentDidMount() {
-        const { fetchedNotifications } = this.props;
-        fetchedNotifications({ type: 'messages', value: 0 });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-        var that = this;
+    }
 
-        console.log("Sender Id: " + this.state.senderId);
-        console.log("Receiver Id: " + this.state.receiverId);
-
-        firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
-            .on('child_added', (value) => {
-                console.log("Value >> " + JSON.stringify(value));
-                this.setState((prevState) => {
-                    return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
-                        isLoading: false,
-                    }
-                })
-            })
-
-        firebase.database().ref("chatting").child(that.state.senderId).child(that.state.receiverId)
-            .once('value', function (snapshot) {
-                if (snapshot.exists()) {
-                    console.log('exist');
-                    that.setState({
-                        isLoading: false,
-                    })
-                } else {
-                    console.log('not exist');
-                    that.setState({
-                        isLoading: false,
-                    })
-                }
-            });
-
+    componentDidUpdate(){
+        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
+        const { isLoading } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading)
+            this.setState({ isLoading: false });
+        if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
+            this.setState({ dataChatSource: dataChatSource[user_id]});
     }
 
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
-        if (this.state.pageTitle == "ProMapDirection")
+    handleBackButtonClick = () => {
+        if (this.state.pageTitle === "ProMapDirection")
             this.props.navigation.navigate("ProMapDirection");
-        else if (this.state.pageTitle == "ProDashboard")
+        else if (this.state.pageTitle === "ProDashboard")
             this.props.navigation.navigate("ProDashBoard");
-
+        else if (this.state.pageTitle === 'ProAllMessage')
+            this.props.navigation.navigate("ProAllMessage");
         return true;
     }
 
@@ -285,9 +239,6 @@ class ProChatScreen extends Component {
     }
 
     sendMessageTask = async () => {
-
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
 
         if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
@@ -673,6 +624,7 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
+        messagesInfo: state.messagesInfo,
         generalInfo: state.generalInfo
     }
 }

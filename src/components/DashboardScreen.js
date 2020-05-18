@@ -85,8 +85,6 @@ class DashBoardScreen extends Component {
 
     //Get All Services
     componentDidMount() {
-        console.log(this.props)
-        console.log('setting listeners...');
         NetInfo.addEventListener(status => {
             if (!status.isConnected) this.setState({ connectivityAvailable: false });
             else this.setState({ connectivityAvailable: true });
@@ -101,10 +99,8 @@ class DashBoardScreen extends Component {
                 socket.emit('connected', userId);
                 this.setState({ online: true });
             }
-            console.log('connected');
         });
         socket.on('user-disconnected', users => {
-            console.log('someone disconnected')
             OnlineUsers.Users = users;
         })
         socket.on('user-joined', users => {
@@ -112,8 +108,6 @@ class DashBoardScreen extends Component {
             OnlineUsers.Users = users;
         })
         socket.on('disconnect', info => {
-            console.log('you disconnected')
-            console.log(info);
             this.setState({ online: false });
             if (!this.state.online && this.state.connectivityAvailable) socket.open();
         });
@@ -147,8 +141,6 @@ class DashBoardScreen extends Component {
                 const currOrderId = jobRequests[key].order_Id;
                 if (orderId === currOrderId) pos = key;
             });
-
-            console.log('pos: ', pos)
 
             if (title == "Chat Request Accepted" && pos != null) {
                 this.setState({

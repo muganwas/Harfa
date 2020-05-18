@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
-    ActivityIndicator, BackHandler, StatusBar, Platform, Animated} from 'react-native';
+import {
+    View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
+    ActivityIndicator, BackHandler, StatusBar, Platform, Animated
+} from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import { setSelectedJobRequest } from '../Redux/Actions/jobsActions';
+import { createAppContainer, } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
@@ -28,59 +31,59 @@ const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
 class AllMessageScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
-      this.state = {
-        isLoading: true,
-        dataSource: [],
-        isRecentMessage: false,
-        query: "",
-        fullData: [],
-        isDataMatch: true,
-        backClickCount: 0,
+        super(props)
+
+        this.state = {
+            isLoading: true,
+            dataSource: [],
+            isRecentMessage: false,
+            query: "",
+            fullData: [],
+            isDataMatch: true,
+            backClickCount: 0,
+        };
+
+        this.springValue = new Animated.Value(100);
+        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    this.springValue = new Animated.Value(100);
-    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
-    };
-
-    componentDidMount(){
+    componentDidMount() {
         let dbRef = firebase.database().ref('recentMessage').child(UserDetails.User.userId);
 
         dbRef.once('value', (snapshot) => {
             const key = snapshot.key;
             const message = snapshot.val();
-            
-            if(message != null)
-            {
+
+            if (message != null) {
                 dbRef.on('child_added', (val) => {
-        
+
                     let message = val.val();
                     let id = val.key;
-                    console.log("componentDidMount Id : "+id);
-                    console.log("componentDidMount Message : "+JSON.stringify(message));
-        
+                    console.log("componentDidMount Id : " + id);
+                    console.log("componentDidMount Message : " + JSON.stringify(message));
+
                     this.setState({
                         isLoading: false,
                     });
-        
+
                     this.setState((prevState) => {
-                                        
+
                         return {
                             dataSource: [...prevState.dataSource, message],
                             fullData: [...prevState.fullData, message],
@@ -90,22 +93,22 @@ class AllMessageScreen extends Component {
                     })
                 })
             }
-            else{
+            else {
                 this.setState({
                     isLoading: false,
                     isRecentMessage: false,
                     isDataMatch: false,
                 })
             }
-        });   
+        });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    componentDidUpdate(){
+    componentDidUpdate() {
         console.log('data source')
         console.log(this.state.dataSource)
     }
-    
+
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
@@ -113,14 +116,14 @@ class AllMessageScreen extends Component {
     handleBackButtonClick() {
         // this.props.navigation.navigate("DashBoard");
         // return true;
-        if(Platform.OS == 'ios')
+        if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
     }
 
     _spring() {
-        this.setState({backClickCount: 1}, () => {
+        this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
                     this.springValue,
@@ -141,21 +144,27 @@ class AllMessageScreen extends Component {
                 ),
 
             ]).start(() => {
-                this.setState({backClickCount: 0});
+                this.setState({ backClickCount: 0 });
             });
         });
     }
 
     renderRecentMessageItem = ({ item }) => {
+        const { dispatchSelectedJobRequest } = this.props;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
-                onPress={() => this.props.navigation.navigate("ChatAfterBookingDetails", {
-                    'providerId': item.id, 
-                    'providerName': item.name,
-                    'providerSurname': '',
-                    'providerImage': item.image,
-                    'orderId': item.orderId,
-                    'serviceName': item.serviceName})}>
+                onPress={() => {
+                    dispatchSelectedJobRequest({employee_id: item.id});
+                    this.props.navigation.navigate("Chat", {
+                        'providerId': item.id,
+                        'providerName': item.name,
+                        'providerSurname': '',
+                        'providerImage': item.image,
+                        'orderId': item.orderId,
+                        'serviceName': item.serviceName,
+                        'titlePage': "AllMessage"
+                    })
+                }}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
                         source={item.image ? { uri: item.image } : require('../images/generic_avatar.png')} />
@@ -164,8 +173,10 @@ class AllMessageScreen extends Component {
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
                         {item.name}
                     </Text>
-                    <Text style={{width: screenWidth - 150, fontSize: 10, color: 'black',
-                        textAlignVertical: 'center', color: 'gray', marginTop: 3,}}
+                    <Text style={{
+                        width: screenWidth - 150, fontSize: 10, color: 'black',
+                        textAlignVertical: 'center', color: 'gray', marginTop: 3,
+                    }}
                         numberOfLines={2}>
                         {item.textMessage}
                     </Text>
@@ -180,50 +191,55 @@ class AllMessageScreen extends Component {
         )
     }
 
-    searchTask(textInput){
+    searchTask(textInput) {
 
         let text = textInput.toLowerCase()
         let tracks = this.state.fullData
         let filterTracks = tracks.filter(item => {
-        if(item.name.toLowerCase().match(text)) {
-            this.setState({
-            isDataMatch: true,
-            })
-          return item
-        }
-        else{
-            // this.setState({
-            //     isDataMatch: false,
-            // })
-        }
-      })
-      this.setState({ dataSource: filterTracks })
+            if (item.name.toLowerCase().match(text)) {
+                this.setState({
+                    isDataMatch: true,
+                })
+                return item
+            }
+            else {
+                // this.setState({
+                //     isDataMatch: false,
+                // })
+            }
+        })
+        this.setState({ dataSource: filterTracks })
     }
 
     render() {
         return (
-        <View style={styles.container}> 
+            <View style={styles.container}>
 
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
 
                 <View style={styles.header}>
-                    <Hamburger 
+                    <Hamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
                         text='Tous les Messages'
                     />
                 </View>
 
-                <View style={{flexDirection: 'row', width: '100%', height: 55,  backgroundColor: colorYellow,
-                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5}}>
-                    <View style={{ flexDirection: 'row', width: screenWidth-40, height: 45, justifyContent: 'center', 
-                        alignItems:'center', borderRadius: 5, backgroundColor: 'white', shadowColor: '#000', 
-                        shadowOffset: { width: 0, height: 0 },shadowOpacity: 0.75,shadowRadius: 5,
-                        elevation: 5,}}>
+                <View style={{
+                    flexDirection: 'row', width: '100%', height: 55, backgroundColor: colorYellow,
+                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
+                }}>
+                    <View style={{
+                        flexDirection: 'row', width: screenWidth - 40, height: 45, justifyContent: 'center',
+                        alignItems: 'center', borderRadius: 5, backgroundColor: 'white', shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5,
+                        elevation: 5,
+                    }}>
                         <Image style={{ width: 15, height: 15, marginLeft: 20 }}
                             source={require('../icons/search.png')}></Image>
                         <TextInput style={{
-                            width: screenWidth - 60, height: 45, fontWeight: 'bold', marginLeft: 10}}
+                            width: screenWidth - 60, height: 45, fontWeight: 'bold', marginLeft: 10
+                        }}
                             placeholder='Recherche ...'
                             onChangeText={(inputText) => this.searchTask(inputText)}>
                         </TextInput>
@@ -240,11 +256,11 @@ class AllMessageScreen extends Component {
                                 keyExtractor={(item, index) => index.toString()}
                                 showsVerticalScrollIndicator={false}
                                 extraData={this.state} />
-                        </View> 
+                        </View>
                     </ScrollView>
                 )}
 
-                {this.state.dataSource.length == 0  && !this.state.isLoading && (
+                {this.state.dataSource.length == 0 && !this.state.isLoading && (
                     <View style={styles.noDataStyle}>
                         <Text style={{ color: 'black', fontSize: 20, }}>
                             Aucune correspondance de données!
@@ -269,7 +285,7 @@ class AllMessageScreen extends Component {
                             size="large" />
                     </View>
                 )}
-        </View>
+            </View>
         );
     }
 }
@@ -290,6 +306,9 @@ const mapDispatchToProps = dispatch => {
         },
         fetchingNotificationsError: error => {
             dispatch(notificationError(error));
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
         }
     }
 }
@@ -297,11 +316,11 @@ const mapDispatchToProps = dispatch => {
 const AppStackNavigator = createStackNavigator({
     AllMessage: {
         screen: connect(mapStateToProps, mapDispatchToProps)(AllMessageScreen),
-        navigationOptions:{
-            header : null
+        navigationOptions: {
+            header: null
         }
     },
-    ChatAfterBookingDetails : {
+    ChatAfterBookingDetails: {
         screen: ChatAfterBookingDetailsScreen,
         navigationOptions: {
             header: null
@@ -344,7 +363,7 @@ const styles = StyleSheet.create({
         marginLeft: 5,
     },
     noDataStyle: {
-        height: screenHeight-105,
+        height: screenHeight - 105,
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'center'
@@ -381,12 +400,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     header: {
-        flexDirection: 'row', 
-        width: '100%', 
-        height: 50, 
+        flexDirection: 'row',
+        width: '100%',
+        height: 50,
         backgroundColor: colorPrimary,
-        paddingLeft: 10, 
-        paddingRight: 20, 
+        paddingLeft: 10,
+        paddingRight: 20,
         paddingBottom: 5
     }
 });

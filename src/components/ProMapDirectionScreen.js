@@ -52,6 +52,7 @@ class ProMapDirectionScreen extends Component {
         super(props)
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
         var currentPos;
+        console.log('pro props', this.props)
         Object.keys(jobRequestsProviders).map(pos => {
             jobRequestsProviders[pos].user_id === user_id ? currentPos = pos : null;
         });

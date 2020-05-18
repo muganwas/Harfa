@@ -1,16 +1,20 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
-    ActivityIndicator, BackHandler, StatusBar, Platform, Animated} from 'react-native';
+import {
+    View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
+    ActivityIndicator, BackHandler, StatusBar, Platform, Animated
+} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import firebase from 'react-native-firebase';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import { createAppContainer, } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
 import ProviderDetails from './ProviderDetails';
 import ProChatScreen from './ProChatScreen';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -26,15 +30,16 @@ const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -93,7 +98,7 @@ class ProAllMessageScreen extends Component {
         });
     }
 
-    componentDidUpdate(){
+    componentDidUpdate() {
         console.log('data source')
         console.log(this.state.dataSource)
     }
@@ -137,17 +142,28 @@ class ProAllMessageScreen extends Component {
     }
 
     renderRecentMessageItem = ({ item }) => {
+        const { dispatchSelectedJobRequest, jobsInfo: { jobRequestsProviders } } = this.props;
+        let currentPos;
+        Object.keys(jobRequestsProviders).map(key => {
+            if (jobRequestsProviders[key].user_id === item.id) {
+                currentPos = key;
+            }
+        });
         /** Might need to  */
         return (
             <TouchableOpacity style={styles.itemMainContainer}
-                onPress={() => this.props.navigation.navigate("ProChatAfterBookingDetails", {
-                    'receiverId': item.id,
-                    'receiverName': item.name,
-                    'receiverImage': item.image,
-                    'orderId': item.orderId,
-                    'serviceName': item.serviceName,
-                    'pageTitle': "ProAllMessage"
-                })}>
+                onPress={() => {
+                    dispatchSelectedJobRequest({user_id: item.id});
+                    this.props.navigation.navigate("ProChat", {
+                        currentPos,
+                        'receiverId': item.id,
+                        'receiverName': item.name,
+                        'receiverImage': item.image,
+                        'orderId': item.orderId,
+                        'serviceName': item.serviceName,
+                        'pageTitle': "ProAllMessage"
+                    })
+                }}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
                         source={item.image ? { uri: item.image } : require('../images/generic_avatar.png')} />
@@ -170,61 +186,64 @@ class ProAllMessageScreen extends Component {
                         {item.date}
                     </Text>
                 </View>
-            </TouchableOpacity>
+            </TouchableOpacity >
         )
     }
 
-    searchTask(textInput){
+    searchTask(textInput) {
 
-        console.log("Pro Message Search >> "+textInput);
+        console.log("Pro Message Search >> " + textInput);
 
         let text = textInput.toLowerCase()
         let tracks = this.state.fullData
         let filterTracks = tracks.filter(item => {
 
-            console.log("Pro >> "+text+" == "+item.name.toLowerCase());
-        if(item.name.toLowerCase().match(text)) {
-            console.log("Pro Message Search >> "+text+" == "+item.name.toLowerCase());
-            this.setState({
-            isDataMatch: true,
-            })
-          return item
-        }
-        else{
-            console.log("False")
-            // this.setState({
-            //     isDataMatch: false,
-            // })
-        }
-      })
-      this.setState({ dataSource: filterTracks })
+            console.log("Pro >> " + text + " == " + item.name.toLowerCase());
+            if (item.name.toLowerCase().match(text)) {
+                console.log("Pro Message Search >> " + text + " == " + item.name.toLowerCase());
+                this.setState({
+                    isDataMatch: true,
+                })
+                return item
+            }
+            else {
+                console.log("False")
+                // this.setState({
+                //     isDataMatch: false,
+                // })
+            }
+        })
+        this.setState({ dataSource: filterTracks })
     }
 
     render() {
         return (
             <View style={styles.container}>
 
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
 
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                    paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5 }}>
+                    paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
+                }}>
                     <Hamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
-                        text='Tous les messages' 
+                        text='Tous les messages'
                     />
                 </View>
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 55, backgroundColor: colorYellow,
-                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5}}>
+                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
+                }}>
                     <View style={{
                         flexDirection: 'row', width: screenWidth - 40, height: 45, justifyContent: 'center',
                         alignItems: 'center', borderRadius: 5, backgroundColor: 'white', shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5,elevation: 5, }}>
+                        shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
+                    }}>
                         <Image style={{ width: 15, height: 15, marginLeft: 20 }}
-                            source={require('../icons/search.png')}/>
-                        <TextInput style={{width: screenWidth - 60, height: 45, fontWeight: 'bold', marginLeft: 10}}
+                            source={require('../icons/search.png')} />
+                        <TextInput style={{ width: screenWidth - 60, height: 45, fontWeight: 'bold', marginLeft: 10 }}
                             placeholder='Chercher...'
                             onChangeText={(inputText) => this.searchTask(inputText)}>
                         </TextInput>
@@ -249,7 +268,7 @@ class ProAllMessageScreen extends Component {
                             Aucune correspondance de données!
                         </Text>
                     </View>
-                 )}
+                )}
 
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
                     <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
@@ -260,7 +279,7 @@ class ProAllMessageScreen extends Component {
                     </TouchableOpacity>
                 </Animated.View>
 
-               {this.state.isLoading && (
+                {this.state.isLoading && (
                     <View style={styles.loaderStyle}>
                         <ActivityIndicator
                             style={{ height: 80 }}
@@ -268,25 +287,59 @@ class ProAllMessageScreen extends Component {
                             size="large" />
                     </View>
                 )}
-                
+
             </View>
         );
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobProvider());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobProviderInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchProviderJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     ProAllMessage: {
-        screen: connect()(ProAllMessageScreen),
-        navigationOptions:{
-            header : null
+        screen: connect(mapStateToProps, mapDispatchToProps)(ProAllMessageScreen),
+        navigationOptions: {
+            header: null
         }
     },
     ProChat: {
         screen: ProChatScreen,
-        navigationOptions:{
-            header : null
+        navigationOptions: {
+            header: null
         }
-    }, 
+    },
     ProChatAfterBookingDetails: {
         screen: ProChatAfterBookingDetailsScreen,
         navigationOptions: {
@@ -330,7 +383,7 @@ const styles = StyleSheet.create({
         marginLeft: 5,
     },
     noDataStyle: {
-        height: screenHeight-105,
+        height: screenHeight - 105,
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'center'

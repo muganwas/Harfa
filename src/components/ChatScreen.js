@@ -65,7 +65,7 @@ class ChatScreen extends Component {
             senderName: UserDetails.User.username,
             inputMessage: '',
             showButton: false,
-            dataChatSource: this.props.messagesInfo.dataChatSource,
+            dataChatSource: this.props.messagesInfo.dataChatSource[employee_id] || [],
             isLoading: !this.props.messagesInfo.fetched,
             isUploading: false,
             isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
@@ -76,8 +76,10 @@ class ChatScreen extends Component {
             serviceName: jobRequests[currRequestPos].service_name,
             orderId: jobRequests[currRequestPos].order_id,
             titlePage: this.props.navigation.state.params.titlePage,
+            dataChatSourceSynced: false
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+        console.log('messages fetched', this.props.messagesInfo.fetched)
     };
 
     componentDidMount() {
@@ -88,9 +90,6 @@ class ChatScreen extends Component {
         //Get Job accept reject status
         firebase.notifications().onNotification((notification) => {
             const { title, body, data } = notification;
-            console.log('Notification >>> ', notification);
-            console.log("Title, body  data >>> " + title + " " + body + " " + data);
-
             if (title == "Job Accepted") {
                 this.setState({
                     isJobAccepted: true,
@@ -108,13 +107,13 @@ class ChatScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { fetched, dataChatSource } = this.props.messagesInfo;
+        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
         const { isLoading } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
-        if (JSON.stringify(dataChatSource) !== JSON.stringify(localDataChatSource))
-            this.setState({ dataChatSource });
+        if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced) 
+            this.setState({ dataChatSource: dataChatSource[employee_id], dataChatSourceSynced: true});     
     }
 
     componentWillUnmount() {
@@ -190,9 +189,6 @@ class ChatScreen extends Component {
 
     sendMessageTask = async () => {
 
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
-
         if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
@@ -255,7 +251,7 @@ class ChatScreen extends Component {
 
     getImageURL = async imageObject => {
 
-        const { fetchedMessages, messagesInfo: { dataChatSource } } = this.props;
+        const { fetchedMessages, messagesInfo: { dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
 
         let message = {
             textMessage: 'uploading',
@@ -273,7 +269,9 @@ class ChatScreen extends Component {
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
         };
 
-        const newDataChatSource = [...dataChatSource, message];
+        const newDataChatSource = Object.assign({}, dataChatSource);
+        let newArray = [...newDataChatSource[employee_id], message];
+        newDataChatSource[employee_id] = newArray;
         fetchedMessages(newDataChatSource);
 
         this.setState({
@@ -379,8 +377,6 @@ class ChatScreen extends Component {
             }
         }
 
-        console.log("Complete Job >> " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -440,9 +436,7 @@ class ChatScreen extends Component {
 
     sendImageTask = async imageURL => {
 
-        const { fetchedMessages, messagesInfo: { dataChatSource } } = this.props;
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
+        const { fetchedMessages, messagesInfo: { dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
 
         if (imageURL != '' && imageURL != null) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
@@ -489,10 +483,12 @@ class ChatScreen extends Component {
             }
 
             //Remove Last item from Array
-            var array = [...dataChatSource]; // make a separate copy of the array
+            let newDataChatSource = [...dataChatSource];
+            var array = [...newDataChatSource[employee_id]]; // make a separate copy of the array
             if (array.length > 0) {
-                array.splice(array.length - 1, 1);
-                fetchedMessages(array);
+                array.splice(array.length-1, 1);
+                newDataChatSource[employee_id] = array;
+                fetchedMessages(newDataChatSource);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -512,7 +508,7 @@ class ChatScreen extends Component {
 
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
-        console.log('sender image' + senderImage)
+        console.log('message items', item)
         return (
             this.state.senderId != item.senderId
                 ?
@@ -609,6 +605,7 @@ class ChatScreen extends Component {
 
     render() {
         const { requestStatus } = this.state;
+
         return (
             <View style={styles.container}>
 
@@ -656,7 +653,8 @@ class ChatScreen extends Component {
                                     ItemSeparatorComponent={this.renderSeparator}
                                     ref={(ref) => { this.myFlatListRef = ref }}
                                     onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} 
+                                />
                             </View>
                         </View>
                     </KeyboardAwareScrollView>
@@ -833,15 +831,6 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        fetchMessages: () => {
-            dispatch(startFetchingMessages());
-        },
-        fetchedMessages: data => {
-            dispatch(messagesFetched(data));
-        },
-        fetchingMessagesError: error => {
-            dispatch(messagesError(error));
-        },
         fetchNotifications: data => {
             dispatch(startFetchingNotification(data));
         },

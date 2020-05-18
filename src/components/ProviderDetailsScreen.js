@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityIndicator, Modal,
    Linking, Alert, BackHandler, StatusBar, Platform } from 'react-native';
 import { Rating, AirbnbRating } from 'react-native-ratings';
@@ -10,6 +11,8 @@ import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
 import OnlineUsers from './OnlineUsers';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -43,7 +46,7 @@ function StatusBarPlaceHolder() {
   );
 }
 
-export default class ProviderDetailsScreen extends Component {
+class ProviderDetailsScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -105,24 +108,6 @@ export default class ProviderDetailsScreen extends Component {
         //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
         this.showToast('Service provider is Offline');
       }
-      else if(PendingJobRequest.Request.order_id != "")
-      {
-        Alert.alert(  
-          "JOB REQUEST ALERT",  
-          "Can't book another request, untill the current request is complete.",  
-          [  
-            {  
-              // text: 'Cancel',  
-              // onPress: () => console.log('Cancel Pressed'),  
-              // style: 'cancel',  
-            },  
-            {
-              text: 'OK', 
-              onPress: () => this.props.navigation.goBack(),
-            },  
-          ]  
-        );  
-      }
       else
       {
         this.setState({
@@ -150,7 +135,6 @@ export default class ProviderDetailsScreen extends Component {
             },
           } 
         }
-        console.log("SEND REQUEST : "+JSON.stringify(data));
   
         fetch(BOOKING_REQUEST, {
           method: "POST",
@@ -190,7 +174,7 @@ export default class ProviderDetailsScreen extends Component {
               {
                 Alert.alert(  
                   "JOB REQUEST ALERT",  
-                  "Can't book another request, untill any ONGOING Request will not complete",  
+                  "You already have a running job with this provider",  
                   [  
                     {  
                       // text: 'Cancel',  
@@ -330,186 +314,7 @@ export default class ProviderDetailsScreen extends Component {
             }
         }
     });
-    
-    /*firebase.notifications().onNotification((notification) => {
 
-      const { title, body, data } = notification;
-
-      console.log('Notification >>> ', notification);
-      console.log("Title, body  data >>> " + title + " >>>" + body+ " >>> "+JSON.stringify(data));
-
-      if (title == "Chat Request Accepted") {
-        this.setState({
-          requestStatus: title,
-          title: title, 
-          body: body,
-          data: data,
-        })
-
-        var providerData = JSON.parse(data.ProviderData);
-
-        var pendingJobData = {
-          id: data.mainId,
-          order_id: data.orderId,
-          employee_id: providerData.ProviderId,
-          image: providerData.imageSource,
-          fcm_id: providerData.fcmId,
-          name: providerData.name,
-          surName: providerData.surname,
-          mobile: providerData.mobile,
-          description: providerData.description,
-          address: providerData.address,
-          lat: providerData.lat,
-          lang: providerData.lang,
-          service_name: data.serviceName,
-          chat_status: data.chat_status,
-          status: data.status,
-          delivery_address: data.delivery_address,
-          delivery_lat: data.delivery_lat,
-          delivery_lang: data.delivery_lang,
-        }
-        PendingJobRequest.Request = pendingJobData;
-        //ToastAndroid.show("Chat Request Accepted", ToastAndroid.SHORT);
-        //this.showToast('Chat Request Accepted');
-        Alert.alert(  
-          "Accepted !",  
-          "Chat Request Accepted",  
-          [  
-            {  
-              // text: 'Cancel',  
-              // onPress: () => console.log('Cancel Pressed'),  
-              // style: 'cancel',  
-            },  
-            {
-              text: 'OK', 
-              onPress: () => console.log("OK"),
-            },  
-          ]  
-        );  
-      }
-      else if(title == "Chat Request Rejected")
-      {
-        this.setState({
-          requestStatus: title,
-          title: title, 
-          body: body,
-          data: data,
-          isJobAccepted: false,
-        })
-        this.showRejectionAlert("CHAT REQUEST REJECTED", "Service provider is rejected your request.")
-      }
-      else if(title == "No Response")
-      {
-        this.setState({
-          requestStatus: title,
-          title: title, 
-          body: body,
-          data: data,
-        })
-        var pendingJobData = {
-          id: '',
-          order_id: '',
-          employee_id: '',
-          image: '',
-          fcm_id: '',
-          name: '',
-          surName: '',
-          mobile: '',
-          description: '',
-          address: '',
-          lat: '',
-          lang: '',
-          service_name: '',
-          chat_status: '',
-          status: '',
-          delivery_address: '',
-          delivery_lat: '',
-          delivery_lang: '',
-        }
-        PendingJobRequest.Request = pendingJobData;
-        this.showRejectionAlert("No RESPONSE", "Service provider not responded to your request. Please try again later")
-      }
-      else if(title == "Job Accepted")
-      {
-        this.setState({
-          isJobAccepted: true
-        })       
-        var pendingJobData = {
-          id: data.mainId,
-          order_id: data.orderId,
-          employee_id: data.ProviderId,
-          image: data.image,
-          fcm_id: data.fcmId,
-          name: data.name,
-          surName: data.surname,
-          mobile: data.mobile,
-          description: data.description,
-          address: data.address,
-          lat: data.lat,
-          lang: data.lang,
-          service_name: data.serviceName,
-          chat_status: data.chat_status,
-          status: data.status,
-          delivery_address: data.delivery_address,
-          delivery_lat: data.delivery_lat,
-          delivery_lang: data.delivery_lang,
-        }
-        PendingJobRequest.Request = pendingJobData;
-      }
-      else if(title == "Job Rejected")
-      {
-        this.setState({
-          isJobAccepted: false
-        })
-        var pendingJobData = {
-          id: '',
-          order_id: '',
-          employee_id: '',
-          image: '',
-          fcm_id: '',
-          name: '',
-          surName: '',
-          mobile: '',
-          description: '',
-          address: '',
-          lat: '',
-          lang: '',
-          service_name: '',
-          chat_status: '',
-          status: '',
-          delivery_address: '',
-          delivery_lat: '',
-          delivery_lang: '',
-        }
-        PendingJobRequest.Request = pendingJobData;
-        this.showRejectionAlert("JOB REJECTED", "Your job has been rejected. Please try again later")
-      }
-      else if(title == "Job Completed")
-      {
-        var jobData = {
-          id: '',
-          order_id: '',
-          employee_id: '',
-          image: '',
-          fcm_id: '',
-          name: '',
-          surName: '',
-          mobile: '',
-          description: '',
-          address: '',
-          lat: '',
-          lang: '',
-          service_name: '',
-          chat_status: '',
-          status: '',
-          delivery_address:'',
-          delivery_lat: '',
-          delivery_lang: '',
-      }
-      PendingJobRequest.Request = jobData;
-      this.showRejectionAlert("JOB COMPLETED", "Your job has been completed.")
-      }
-    });*/
   }
 
   componentWillUnmount() {
@@ -527,9 +332,6 @@ export default class ProviderDetailsScreen extends Component {
     data = this.state.data;
 
     const providerData = JSON.parse(data.ProviderData);
-
-    console.log("Data : "+JSON.stringify(data));
-    console.log("ProviderData : "+JSON.stringify(providerData));
 
     var pendingJobData = {
       id: data.mainId,
@@ -759,6 +561,42 @@ export default class ProviderDetailsScreen extends Component {
     );
   }
 }
+
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobCustomer());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobCustomerInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchCustomerJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProviderDetailsScreen);
 
 const styles = StyleSheet.create({ 
     container: {

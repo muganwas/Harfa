@@ -43,22 +43,6 @@ class SplashScreen extends Component {
 
     componentDidMount() {
         setTimeout(this.splashTimeOut, 3000);
-        /*
-        * no need for initialization
-        var config = {
-           apiKey: Config.apiKey,
-           authDomain: Config.authDomain,
-           databaseURL: Config.databaseURL,
-           projectId: Config.projectId,
-           storageBucket: Config.storageBucket,
-           messagingSenderId: Config.messagingSenderId,
-           appId: Config.appId
-       };
-       console.log(config)
-       // Initialize Firebase
-       if (!firebase.apps.length) {
-           firebase.initializeApp(config);
-       }*/
     }
 
     componentDidUpdate() {
@@ -306,14 +290,6 @@ class SplashScreen extends Component {
         );
     }
 }
-
-/*class App extends Component{
-    render(){
-        return(
-            <AppStackNavigator/>
-        );
-    }
-}*/
 
 const mapStateToProps = state => {
     return {

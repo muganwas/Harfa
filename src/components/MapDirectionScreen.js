@@ -47,14 +47,14 @@ class MapDirectionScreen extends Component {
 
     constructor(props) {
         super(props)
-        console.log('props..')
-        console.log(this.props)
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
         Object.keys(jobRequests).map(key => {
             const currEmpId = jobRequests[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
+        console.log('users cordinates', usersCoordinates),
+        //console.log(employee_id)
         this.state = {
             sourceLocation: othersCoordinates[employee_id].latitude + "," + othersCoordinates[employee_id].longitude,
             sourceLat: parseFloat(othersCoordinates[employee_id].latitude),
@@ -85,19 +85,16 @@ class MapDirectionScreen extends Component {
             providerLang: jobRequests[currRequestPos].lang,
             serviceName: jobRequests[currRequestPos].service_name,
             isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
-            titlePage: this.props.navigation.state.params.titlePage
+            titlePage: this.props.navigation.state.params.titlePage,
+            mapKey: Math.random(2)
         };
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
         const { fetchedPendingJobInfo, generalInfo: { othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         this.getDirections(othersCoordinates[employee_id].latitude + "," + othersCoordinates[employee_id].longitude, this.state.destinationLocation);
-        var that = this;
-
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         firebase.notifications().onNotification((notification) => {
-
             const { title, body, data } = notification;
             var currRequestPos = jobRequests.length + 1;
             var newJobRequests = [...jobRequests];
@@ -110,17 +107,17 @@ class MapDirectionScreen extends Component {
             console.log("Title, body  data >>> " + title + " >>>" + body + " >>> " + JSON.stringify(data));
 
             if (title == "Chat Request Rejected") {
-                that.setState({
+                this.setState({
                     requestStatus: title,
                     title: title,
                     body: body,
                     data: data,
                     isJobAccepted: false,
                 })
-                that.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+                this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
             }
             else if (title == "No Response") {
-                that.setState({
+                this.setState({
                     requestStatus: title,
                     title: title,
                     body: body,
@@ -148,7 +145,7 @@ class MapDirectionScreen extends Component {
                 }
                 newJobRequests[currRequestPos] = jobData;
                 fetchedPendingJobInfo(newJobRequests);
-                that.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
+                this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
             }
             else if (title == "Job Accepted") {
                 var pendingJobData = {
@@ -174,10 +171,10 @@ class MapDirectionScreen extends Component {
                 newJobRequests[currRequestPos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
                 console.log('After Job Accepted >>> ', JSON.stringify(newJobRequests[currRequestPos]));
-                that.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
+                this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
             else if (title == "Job Rejected") {
-                that.setState({
+                this.setState({
                     isJobAccepted: false
                 })
                 var jobData = {
@@ -202,7 +199,7 @@ class MapDirectionScreen extends Component {
                 }
                 newJobRequests[currRequestPos] = jobData;
                 fetchedPendingJobInfo(newJobRequests);
-                that.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
+                this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
             }
             else if (title == "Job Completed") {
                 var jobData = {
@@ -227,7 +224,7 @@ class MapDirectionScreen extends Component {
                 }
                 newJobRequests[currRequestPos] = jobData;
                 fetchedPendingJobInfo(newJobRequests);
-                that.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
+                this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
         });
     }
@@ -235,7 +232,7 @@ class MapDirectionScreen extends Component {
     componentDidUpdate() {
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
         const { latitude, longitude } = othersCoordinates[employee_id];
-        const { destinationLat, destinationLng } = this.state;
+        const { destinationLat, destinationLng, coords } = this.state;
         if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(destinationLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))) {
             this.setState({
                 sourceLocation: latitude + "," + longitude,
@@ -247,13 +244,22 @@ class MapDirectionScreen extends Component {
             });
             this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
         }
+
+        if (this.state.coords.length === 0) {
+            this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
+        }
+        else {
+            let actualLat1 = coords[0].latitude;
+            let actualLong1 = coords[0].longitude;
+            if (actualLat1 && actualLong1 && !this.state.keyReset) this.setState({ mapKey: Math.random(2), keyReset: true });
+        }
     }
 
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (this.state.titlePage == "Dashboard")
             this.props.navigation.navigate("DashBoard");
         else if (this.state.titlePage == "ProviderDetails")
@@ -263,8 +269,9 @@ class MapDirectionScreen extends Component {
         return true;
     }
 
+
     async getDirections(startLoc, destinationLoc) {
-        
+
         console.log("Start Location : " + startLoc);
         console.log("Destination Location : " + destinationLoc);
 
@@ -549,21 +556,22 @@ class MapDirectionScreen extends Component {
 
     render() {
         const { jobsInfo: { jobRequests } } = this.props;
-        const { currRequestPos } = this.state;
+        const { currRequestPos, mapKey, destinationLat, destinationLng } = this.state;
+        console.log('currentRequestPost', currRequestPos)
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder />
 
-                <MapView style={styles.map}
+                <MapView key={mapKey} style={styles.map}
                     region={{
-                        latitude: this.state.destinationLat,
-                        longitude: this.state.destinationLng,
-                        latitudeDelta: 0.922,
-                        longitudeDelta: 0.0121,
+                        latitude: destinationLat,
+                        longitude: destinationLng,
+                        latitudeDelta: 0.00922,
+                        longitudeDelta: 0.00121,
                     }}
-                    zoomEnabled={true}
-                    minZoomLevel={16}
+                    zoomEnabled={false}
+                    minZoomLevel={1}
                     maxZoomLevel={20}>
                     {Platform.OS === 'ios' && (
                         <View style={styles.header}>
@@ -676,20 +684,20 @@ class MapDirectionScreen extends Component {
                         <View style={styles.slidingPanelLayoutStyle}>
                             <View style={styles.containerSlide}>
 
-                                { this.state.isJobAccepted && 
-                                <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.openCompleteConfirmation}>
-                                    <Text style={styles.text}>
-                                        Completed
+                                {this.state.isJobAccepted &&
+                                    <TouchableOpacity style={styles.buttonContainer}
+                                        onPress={this.openCompleteConfirmation}>
+                                        <Text style={styles.text}>
+                                            Completed
                                     </Text>
-                                </TouchableOpacity> }
+                                    </TouchableOpacity>}
 
-                                { !this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
+                                {!this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
                                     onPress={this.openCancelConfirmation}>
                                     <Text style={styles.text}>
                                         Cancel Request
                                     </Text>
-                                </TouchableOpacity> }
+                                </TouchableOpacity>}
 
                             </View>
                         </View>

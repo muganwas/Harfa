@@ -52,7 +52,7 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
-        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        const { jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
         Object.keys(jobRequests).map(key => {
             const currEmpId = jobRequests[key].employee_id;
@@ -65,7 +65,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             senderName: UserDetails.User.username,
             inputMessage: '',
             showButton: false,
-            dataChatSource: this.props.messagesInfo.dataChatSource,
+            dataChatSource: this.props.messagesInfo.dataChatSource[employee_id],
             isLoading: !this.props.messagesInfo.fetched,
             isUpLoading: false,
             receiverId: this.props.navigation.state.params.providerId,
@@ -94,13 +94,13 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     componentDidUpdate(){
-        const { fetched, dataChatSource } = this.props.messagesInfo;
+        const { messagesInfo : { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
         const { isLoading } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading) 
             this.setState({isLoading:false});
-        if ( JSON.stringify(dataChatSource) !== JSON.stringify(localDataChatSource)) 
-            this.setState({dataChatSource});
+        if ( JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource)) 
+            this.setState({dataChatSource: dataChatSource[employee_id]});
     }
 
     componentWillUnmount() {
@@ -235,8 +235,8 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     getImageURL = async imageObject => {
 
-        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
-       
+        const { fetchedMessages, messagesInfo: { dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+
         let message = {
             textMessage: 'uploading',
             imageMessage: imageObject,
@@ -251,10 +251,13 @@ class ChatAfterBookingDetailsScreen extends Component {
             orderId: this.state.orderId,
             type: "image",
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
+        };
 
-        const newDataChatSource = [...dataChatSource, message];
+        const newDataChatSource = Object.assign({}, dataChatSource);
+        let newArray = [...newDataChatSource[employee_id], message];
+        newDataChatSource[employee_id] = newArray;
         fetchedMessages(newDataChatSource);
+
         this.setState({
             isUploading: true
         })
@@ -272,7 +275,7 @@ class ChatAfterBookingDetailsScreen extends Component {
          })
          .then((response) => response.json())
          .then((responseJson) => {
-            console.log("Response getImageURL >> "+JSON.stringify(responseJson));
+
             this.setState({
                 isLoading: false
             })
@@ -318,9 +321,7 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     sendImageTask = async imageURL => {
 
-        const { fetchedMessages, messagesInfo: { dataChatSource} } = this.props;
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
+        const { fetchedMessages, messagesInfo: { dataChatSource}, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
 
         if(imageURL != '' && imageURL != null)
         {
@@ -368,10 +369,12 @@ class ChatAfterBookingDetailsScreen extends Component {
             }
 
             //Remove Last item from Array
-            var array = [...dataChatSource]; // make a separate copy of the array
+            let newDataChatSource = [...dataChatSource];
+            var array = [...newDataChatSource[employee_id]]; // make a separate copy of the array
             if (array.length > 0) {
                 array.splice(array.length-1, 1);
-                fetchedMessages(array);
+                newDataChatSource[employee_id] = array;
+                fetchedMessages(newDataChatSource);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -391,6 +394,7 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
+        console.log('message item', item)
         return (
             this.state.senderId != item.senderId
                 ?
@@ -476,7 +480,7 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
-        const providerImage = this.props.navigation.state.params.providerImage;
+        const { navigation: {state : {params: { providerImage } } } } = this.props
         return (
 
             <View style={styles.container}>
@@ -662,15 +666,6 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        fetchMessages: () => {
-            dispatch(startFetchingMessages());
-        },
-        fetchedMessages: data => {
-            dispatch(messagesFetched(data));
-        },
-        fetchingMessagesError: error => {
-            dispatch(messagesError(error));
-        },
         fetchNotifications: data => {
             dispatch(startFetchingNotification(data));
         },

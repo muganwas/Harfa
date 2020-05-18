@@ -5,7 +5,7 @@ import {
 } from '../types';
 
 const initialState = {
-    dataChatSource: [],
+    dataChatSource: {},
     fetched: false,
     fetching: false,
     error: null

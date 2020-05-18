@@ -11,8 +11,8 @@ import {
 } from '../types';
 
 const initialState = {
-    usersCoordinates: null,
-    othersCoordinates: null,
+    usersCoordinates: {latitude: 0, longitude: 0},
+    othersCoordinates: {},
     coordinatesFetched: false,
     fetchingCoordinates: false,
     fetched: false,
