@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
     View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, BackHandler,
-    Linking, PermissionsAndroid, Alert, StatusBar, Platform, Modal
+    Linking, PermissionsAndroid, Alert, StatusBar, Platform, Modal,
+    ActivityIndicator
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import MapView from 'react-native-maps';
@@ -52,7 +53,7 @@ class ProMapDirectionScreen extends Component {
         super(props)
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
         var currentPos;
-        console.log('pro props', this.props)
+        //console.log('users Coordinates', usersCoordinates)
         Object.keys(jobRequestsProviders).map(pos => {
             jobRequestsProviders[pos].user_id === user_id ? currentPos = pos : null;
         });
@@ -112,7 +113,7 @@ class ProMapDirectionScreen extends Component {
     }
 
     async onRefresh() {
-        const { generalInfo: { usersCoordinates, othersCoordinates } } = this.props;
+        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
         //Get latitude & longitude on Location change
         if (Platform.OS == 'ios') {
             let locationData = {
@@ -128,9 +129,9 @@ class ProMapDirectionScreen extends Component {
                 sourcesourceLocation: usersCoordinates.latitude + "," + usersCoordinates.longitude,
                 sourceLat: parseFloat(usersCoordinates.latitude),
                 sourceLng: parseFloat(usersCoordinates.longitude),
-                destinationLocation: othersCoordinates.latitude + ',' + othersCoordinates.longitude,
-                destinationLat: parseFloat(othersCoordinates.latitude),
-                destinationLng: parseFloat(othersCoordinates.longitude)
+                destinationLocation: othersCoordinates[user_id].latitude + ',' + othersCoordinates[user_id].longitude,
+                destinationLat: parseFloat(othersCoordinates[user_id].latitude),
+                destinationLng: parseFloat(othersCoordinates[user_id].longitude)
             })
 
             this.getDirections(usersCoordinates.latitude + "," + usersCoordinates.longitude, this.state.destinationLocation);
@@ -459,15 +460,27 @@ class ProMapDirectionScreen extends Component {
     }
 
     render() {
+        const { 
+            sourceLat, 
+            sourceLng, 
+            destinationLat, 
+            destinationLng, 
+            routeCoordinates,
+            userName,
+            proImageAvailable,
+            userImage,
+            serviceName,
+            status
+            } = this.state;
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder />
-
+                { sourceLat && sourceLng && destinationLat && destinationLng ?
                 <MapView style={styles.map}
                     region={{
-                        latitude: this.state.sourceLat,
-                        longitude: this.state.sourceLng,
+                        latitude: sourceLat,
+                        longitude: sourceLng,
                         latitudeDelta: 0.0922,
                         longitudeDelta: 0.0121,
                     }}
@@ -486,8 +499,8 @@ class ProMapDirectionScreen extends Component {
                     )}
                     <MapView.Marker
                         coordinate={{
-                            latitude: this.state.sourceLat,
-                            longitude: this.state.sourceLng,
+                            latitude: sourceLat,
+                            longitude: sourceLng,
                         }}
                         title="You"
                         description={""}>
@@ -496,16 +509,16 @@ class ProMapDirectionScreen extends Component {
                     </MapView.Marker>
                     <MapView.Marker
                         coordinate={{
-                            latitude: this.state.destinationLat,
-                            longitude: this.state.destinationLng,
+                            latitude: destinationLat,
+                            longitude: destinationLng,
                         }}
                         title="Destination"
-                        description={this.state.userName}>
+                        description={userName}>
                         <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
                             source={require('../icons/home_marker.png')} />
                     </MapView.Marker>
                     <MapView.Polyline
-                        coordinates={this.state.routeCoordinates}
+                        coordinates={routeCoordinates}
                         strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
                         strokeColors={[
                             '#7F0000',
@@ -516,8 +529,12 @@ class ProMapDirectionScreen extends Component {
                             '#7F0000'
                         ]}
                         strokeWidth={6} />
-                </MapView>
-
+                </MapView> :
+                <ActivityIndicator 
+                    size={30}
+                    color={'#000'}
+                /> }
+                
                 <SlidingPanel
                     headerLayoutHeight={140}
                     headerLayout={() =>
@@ -534,17 +551,17 @@ class ProMapDirectionScreen extends Component {
                                 <View style={{ flexDirection: 'row', flex: 1 }}>
 
                                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
-                                        source={this.state.proImageAvailable ? { uri: this.state.userImage } : require('../images/generic_avatar.png')} />
+                                        source={proImageAvailable ? { uri: userImage } : require('../images/generic_avatar.png')} />
                                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                         <Text style={{ marginRight: 200, color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
                                             numberOfLines={1}>
-                                            {this.state.userName}
+                                            {userName}
                                         </Text>
                                         <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
-                                            {this.state.serviceName}
+                                            {serviceName}
                                         </Text>
                                         <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
-                                            {this.state.status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
+                                            {status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
                                         </Text>
                                     </View>
 

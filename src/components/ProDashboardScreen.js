@@ -897,7 +897,7 @@ class ProDashBoardScreen extends Component {
 
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders } } = this.props;
-        console.log('requests from providers', jobRequestsProviders);
+        //console.log('requests from providers', jobRequestsProviders);
         return (
             <View style={styles.container}>
 

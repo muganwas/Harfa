@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Linking,
-    BackHandler, Alert, StatusBar, Platform,
+    BackHandler, Alert, StatusBar, Platform, ActivityIndicator
 } from 'react-native';
 //import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import { connect } from 'react-redux';
@@ -556,13 +556,27 @@ class MapDirectionScreen extends Component {
 
     render() {
         const { jobsInfo: { jobRequests } } = this.props;
-        const { currRequestPos, mapKey, destinationLat, destinationLng } = this.state;
-        console.log('currentRequestPost', currRequestPos)
+        const { 
+            currRequestPos,
+            sourceLat, 
+            sourceLng, 
+            destinationLat, 
+            destinationLng, 
+            routeCoordinates,
+            userName,
+            proImageAvailable,
+            userImage,
+            serviceName,
+            status,
+            coords,
+            providerName,
+            mapKey
+            } = this.state;
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder />
-
+                { sourceLat && sourceLng && destinationLat && destinationLng ?
                 <MapView key={mapKey} style={styles.map}
                     region={{
                         latitude: destinationLat,
@@ -586,8 +600,8 @@ class MapDirectionScreen extends Component {
                     )}
                     <MapView.Marker
                         coordinate={{
-                            latitude: this.state.sourceLat,
-                            longitude: this.state.sourceLng,
+                            latitude: sourceLat,
+                            longitude: sourceLng,
                         }}
                         title={UserDetails.User.username}
                         description="Vous">
@@ -597,17 +611,17 @@ class MapDirectionScreen extends Component {
 
                     <MapView.Marker
                         coordinate={{
-                            latitude: this.state.destinationLat,
-                            longitude: this.state.destinationLng,
+                            latitude: destinationLat,
+                            longitude: destinationLng,
                         }}
                         title="Fournisseur"
-                        description={this.state.providerName}>
+                        description={providerName}>
 
                         <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
                             source={require('../icons/car_marker.png')} />
                     </MapView.Marker>
                     <MapView.Polyline
-                        coordinates={this.state.coords}
+                        coordinates={coords}
                         strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
                         strokeColors={[
                             '#7F0000',
@@ -618,7 +632,11 @@ class MapDirectionScreen extends Component {
                             '#7F0000'
                         ]}
                         strokeWidth={6} />
-                </MapView>
+                </MapView> :
+                <ActivityIndicator 
+                    size={30}
+                    color={'#000'}
+                /> }
                 <SlidingPanel
                     headerLayoutHeight={140}
                     headerLayout={() =>
