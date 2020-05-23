@@ -11,7 +11,7 @@ import firebase from 'react-native-firebase';
 import WaitingDialog from './WaitingDialog';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
-import { getPendingJobRequestProvider } from '../Redux/Actions/jobsActions';
+import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import ProPendingRequest from './ProPendingJobRequest';
@@ -155,7 +155,7 @@ class FacebookGoogleScreen extends Component {
 
         firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
-            const { fetchProvidersJobRequests } = this.props;
+            const { fetchProvidersJobRequests, fetchJobRequestHistory } = this.props;
 
             if (fcmToken) {
 
@@ -226,7 +226,7 @@ class FacebookGoogleScreen extends Component {
                             //Store data like sharedPreference
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'Provider');
-
+                            fetchJobRequestHistory(id);
                             fetchProvidersJobRequests(this.props, id, "ProHome");
                         }
                         else {
@@ -304,7 +304,7 @@ class FacebookGoogleScreen extends Component {
 
     authenticateProTask = () => {
 
-        const { fetchProvidersJobRequests } = this.props;
+        const { fetchProvidersJobRequests, fetchJobRequestHistory } = this.props;
 
         this.setState({
             isLoading: true,
@@ -365,11 +365,10 @@ class FacebookGoogleScreen extends Component {
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'Provider');
 
-                            console.log("FbGmailLogin ProviderData: "+JSON.stringify(ProviderDetails.Provider));
+                            fetchJobRequestHistory(id);
                             fetchProvidersJobRequests(this.props, id, "ProHome");
                         }
                         else {
-                            console.log("Response Else ");
                             this.setState({
                                 isLoading: false,
                             })
@@ -553,6 +552,9 @@ const mapDispatchToProps = dispatch => {
     return {
         fetchProvidersJobRequests: (props, providerId, navTo) => {
             dispatch(getPendingJobRequestProvider(props, providerId, navTo));
+        },
+        fetchJobRequestHistory: providerId => {
+            dispatch(getAllWorkRequestPro(providerId));
         }
     }
 }

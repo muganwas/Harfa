@@ -6,14 +6,26 @@ import {
     FETCHED_JOB_REQUESTS_PROVIDERS,
     FETCHING_JOB_REQUESTS_PROVIDERS_ERROR,
     SET_SELECTED_JOB_REQUEST,
+    FETCHED_ALL_JOB_REQUESTS_PRO,
+    FETCH_ALL_JOB_REQUESTS_PRO_ERROR,
+    FETCHED_ALL_JOB_REQUESTS_CLIENT,
+    FETCH_ALL_JOB_REQUESTS_CLIENT_ERROR,
+    FETCHED_DATA_WORK_SOURCE,
+    FETCH_DATA_WORK_SOURCE_ERROR
 } from '../types';
 
 const initialState = {
     selectedJobRequest: null,
     jobRequests: [],
+    dataWorkSource: [],
     jobRequestsProviders: [],
+    allJobRequestsProviders: [],
+    allJobRequestsClient: [],
     requestsProvidersFetched: false,
+    allJobRequestsProvidersFetched: false,
+    allJobRequestsClientFetched: false,
     fetchingRequestsProviders: false,
+    dataWorkSourceFetched: false,
     requestsProvidersError: null,
     requestsFetched: false,
     fetchingRequests: false,
@@ -70,6 +82,39 @@ const jobsReducer = (state=initialState, action) => {
             return {
                 ...state,
                 selectedJobRequest: action.payload
+            }
+        case FETCHED_ALL_JOB_REQUESTS_PRO:
+            return {
+                ...state,
+                allJobRequestsProviders: action.payload,
+                allJobRequestsProvidersFetched: true
+            }
+        case FETCH_ALL_JOB_REQUESTS_PRO_ERROR:
+            return {
+                ...state,
+                allJobRequestsProvidersFetched: false
+            }
+        case FETCHED_ALL_JOB_REQUESTS_CLIENT:
+            return {
+                ...state,
+                allJobRequestsClient: action.payload,
+                allJobRequestsClientFetched: true
+            }
+        case FETCH_ALL_JOB_REQUESTS_CLIENT_ERROR:
+            return {
+                ...state,
+                allJobRequestsClientFetched: false
+            }
+        case FETCHED_DATA_WORK_SOURCE:
+            return {
+                ...state,
+                dataWorkSource: action.payload,
+                dataWorkSourceFetched: true
+            }
+        case FETCH_DATA_WORK_SOURCE_ERROR:
+            return {
+                ...state,
+                dataWorkSourceFetched: false
             }
         default: 
             return state;

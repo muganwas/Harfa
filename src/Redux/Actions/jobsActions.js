@@ -7,12 +7,20 @@ import {
     FETCHED_JOB_REQUESTS_PROVIDERS,
     FETCHING_JOB_REQUESTS_PROVIDERS_ERROR,
     SET_SELECTED_JOB_REQUEST,
+    FETCHED_ALL_JOB_REQUESTS_PRO,
+    FETCH_ALL_JOB_REQUESTS_PRO_ERROR,
+    FETCHED_ALL_JOB_REQUESTS_CLIENT,
+    FETCH_ALL_JOB_REQUESTS_CLIENT_ERROR,
+    FETCHED_DATA_WORK_SOURCE,
+    FETCH_DATA_WORK_SOURCE_ERROR
 } from '../types';
 
 import { imageExists } from '../../misc/helpers';
 
 const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/user_status_check/";
 const PENDING_JOB_PROVIDER = Config.baseURL + "jobrequest/customer_status_check/";
+const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/';
+const CUSTOMER_BOOKING_HISTORY = Config.baseURL + 'jobrequest/customer_request/';
 
 export const startFetchingJobCustomer = () => {
     return {
@@ -60,6 +68,45 @@ export const setSelectedJobRequest = payload => {
     }
 }
 
+export const fetchedAllJobRequestsPro = payload => {
+    return {
+        type: FETCHED_ALL_JOB_REQUESTS_PRO,
+        payload
+    }
+}
+
+export const fetchAllJobRequestsProError = () => {
+    return {
+        type: FETCH_ALL_JOB_REQUESTS_PRO_ERROR
+    }
+}
+
+export const fetchedAllJobRequestsClient = payload => {
+    return {
+        type: FETCHED_ALL_JOB_REQUESTS_CLIENT,
+        payload
+    }
+}
+
+export const fetchAllJobRequestsClientError = () => {
+    return {
+        type: FETCH_ALL_JOB_REQUESTS_CLIENT_ERROR
+    }
+}
+
+export const fetchedDataWorkSource = payload => {
+    return {
+        type: FETCHED_DATA_WORK_SOURCE,
+        payload
+    }
+}
+
+export const fetchDataWorkSourceError = () => {
+    return {
+        type: FETCH_DATA_WORK_SOURCE_ERROR,
+    }
+}
+
 export const getPendingJobRequest = (props, userId, navTo) => {
     //has to change to accomodate multiple requests
     return dispatch => {
@@ -75,7 +122,6 @@ export const getPendingJobRequest = (props, userId, navTo) => {
             .then(response => response.json())
             .then(responseJson => {
                 let newJobRequest = [];
-                console.log('job requests gen info', responseJson)
                 if (responseJson.result) {
                     //const id = responseJson.data.id;
                     responseJson.data.map((job, index) => {
@@ -125,6 +171,77 @@ export const getPendingJobRequest = (props, userId, navTo) => {
     }
 }
 
+export const getAllWorkRequestClient = clientId => {
+    return dispatch => {
+        fetch(CUSTOMER_BOOKING_HISTORY + clientId)
+            .then((response) => response.json())
+            .then((responseJson) => {
+                let newAllClientDetails = [...responseJson.data];
+                let dataWorkSource = [];
+                if (responseJson.result) {
+                    for (let i = 0; i < responseJson.data.length; i++) {
+                        imageExists(responseJson.data[i].employee_details.image).then(res => {
+                            newAllClientDetails[i].imageAvailable = res;
+                        })
+                        if (responseJson.data[i].chat_status == "1") {
+                            dataWorkSource.push(responseJson.data[i]);
+                        }
+                        else if (responseJson.data[i].chat_status == "0") {
+                            if (responseJson.data[i].status != "Pending") {
+                                dataWorkSource.push(responseJson.data[i]);
+                            }
+                        }
+                    }
+                    dispatch(fetchedDataWorkSource(dataWorkSource));
+                    dispatch(fetchedAllJobRequestsClient(newAllClientDetails));
+                }
+                else {
+                    dispatch(fetchAllJobRequestsClientError());
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+                dispatch(fetchAllJobRequestsClientError());
+            })
+    }
+}
+
+export const getAllWorkRequestPro = providerId => {
+    return dispatch => {
+        fetch(BOOKING_HISTORY + providerId)
+            .then((response) => response.json())
+            .then((responseJson) => {
+                if (responseJson.result) {
+                    let newAllProvidersDetails = [...responseJson.data];
+                    let dataWorkSource = [];
+                    for (let i = 0; i < responseJson.data.length; i++) {
+                        imageExists(responseJson.data[i].user_details.image).then(res => {
+                            newAllProvidersDetails[i].imageAvailable = res;
+                        })
+                        if (responseJson.data[i].chat_status == "1") {
+                            dataWorkSource.push(responseJson.data[i]);
+                        }
+                        else if (responseJson.data[i].chat_status == "0") {
+                            if (responseJson.data[i].status != "Pending") {
+                                dataWorkSource.push(responseJson.data[i]);
+                            }
+                        }
+                    }
+                    dispatch(fetchedDataWorkSource(dataWorkSource));
+                    dispatch(fetchedAllJobRequestsPro(newAllProvidersDetails));
+                }
+                else {
+                    dispatch(fetchAllJobRequestsProError());
+                }
+            })
+            .catch((error) => {
+                dispatch(fetchDataWorkSourceError());
+                dispatch(fetchAllJobRequestsProError());
+                console.log(error);
+            })
+    }
+}
+
 export const getPendingJobRequestProvider = (props, providerId, navTo) => {
     return dispatch => {
         const { navigation } = props;
@@ -140,7 +257,6 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
         })
             .then(response => response.json())
             .then(responseJson => {
-                console.log('response', responseJson)
                 if (responseJson.result) {
                     //const id = responseJson.data.id;
                     responseJson.data.map((job, index) => {

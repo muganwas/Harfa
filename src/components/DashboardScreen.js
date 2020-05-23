@@ -104,7 +104,6 @@ class DashBoardScreen extends Component {
             OnlineUsers.Users = users;
         })
         socket.on('user-joined', users => {
-            console.log('someone connected')
             OnlineUsers.Users = users;
         })
         socket.on('disconnect', info => {
@@ -112,19 +111,11 @@ class DashBoardScreen extends Component {
             if (!this.state.online && this.state.connectivityAvailable) socket.open();
         });
         socket.open();
-
-        console.log("willFocus runs") // calling it here to make sure it is logged at initial start
-
-        const { navigation } = this.props;
-        navigation.addListener('willFocus', async () => {
-            console.log("willFocus runs >>")
-        });
         this.onRefresh();
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
     }
 
     async componentWillMount() {
-        console.log("Dashboard Mount");
         firebase.notifications().onNotification(notification => {
             const { fetchedNotifications, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
@@ -244,8 +235,6 @@ class DashBoardScreen extends Component {
                 newJobRequests[pos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
 
-                //console.log('After Job Accepted >>> ', JSON.stringify(PendingJobRequest.Request));
-
                 this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
             else if (title == "Job Rejected" && pos != null) {
@@ -306,7 +295,6 @@ class DashBoardScreen extends Component {
 
     componentWillUnmount() {
         Config.socket.close();
-        console.log("Dashboard Unmount");
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
         firebase.database().ref('chatting').child(senderId).child(receiverId)
             .off('child_changed');
@@ -408,12 +396,9 @@ class DashBoardScreen extends Component {
     }
 
     onRefresh() {
-        console.log("Refresh Page");
-
         fetch(SERVICES_URL).
             then((response) => response.json()).
             then(responseJson => {
-                //console.log("Response : "+JSON.stringify(responseJson))
                 this.setState({
                     dataSource: responseJson.data,  //data is key
                     isLoading: false

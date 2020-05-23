@@ -70,10 +70,6 @@ class ProAllMessageScreen extends Component {
             if (message != null) {
                 dbRef.on('child_added', val => {
                     let message = val.val();
-                    let id = val.key;
-                    console.log("ProAllMessageScreen Id : " + id);
-                    console.log("ProAllMessageScreen Message : " + JSON.stringify(message));
-
                     this.setState({
                         isLoading: false,
                     });
@@ -96,11 +92,6 @@ class ProAllMessageScreen extends Component {
                 })
             }
         });
-    }
-
-    componentDidUpdate() {
-        console.log('data source')
-        console.log(this.state.dataSource)
     }
 
     componentWillUnmount() {
@@ -142,10 +133,10 @@ class ProAllMessageScreen extends Component {
     }
 
     renderRecentMessageItem = ({ item }) => {
-        const { dispatchSelectedJobRequest, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { dispatchSelectedJobRequest, jobsInfo: { allJobRequestsProviders } } = this.props;
         let currentPos;
-        Object.keys(jobRequestsProviders).map(key => {
-            if (jobRequestsProviders[key].user_id === item.id) {
+        Object.keys(allJobRequestsProviders).map(key => {
+            if (allJobRequestsProviders[key].user_id === item.id) {
                 currentPos = key;
             }
         });

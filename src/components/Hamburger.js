@@ -54,7 +54,6 @@ class Hamburger extends React.Component {
         super()
         Notifications.events().registerRemoteNotificationsRegistered(event => {
             // TODO: Send the token to my server so it could send back push notifications...
-            console.log("Device Token Received", event.deviceToken);
         });
 
         Notifications.events().registerRemoteNotificationsRegistrationFailed(event => {
@@ -72,19 +71,18 @@ class Hamburger extends React.Component {
             fetchingOthersCoordinates,
             fetchedOthersCoordinates,
             fetchOthersCoordinatesError,
-            jobsInfo: { jobRequests }
+            jobsInfo: { allJobRequestsClient }
         } = this.props;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
         var providersLocation = {};
         /** fetch users current position and upload it to db */
-        console.log('about to check geolocation')
         geolocation.getCurrentPosition(info => {
             const { coords: { latitude, longitude } } = info;
             const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
             fetchedCoordinates({ latitude, longitude });
             userRef.update({ latitude, longitude }).then(() => {
-                //console.log('set position');
+                //updated loc
             }).
                 catch(e => {
                     console.log(e.message);
@@ -99,7 +97,6 @@ class Hamburger extends React.Component {
             const { coords: { latitude, longitude } } = info;
             const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
             fetchedCoordinates({ latitude, longitude });
-            console.log('updated position')
             userRef.update({ latitude, longitude }).then(() => {
                 //fetchedCoordinates({ latitude, longitude });
             }).
@@ -111,7 +108,7 @@ class Hamburger extends React.Component {
             console.log(error)
         }, { enableHighAccuracy: true });
         /** lookout for pros changing position */
-        jobRequests.map(obj => {
+        allJobRequestsClient.map(obj => {
             const { employee_id } = obj;
 
             firebase.database().ref(`liveLocation/${employee_id}`).once('value', result => {
@@ -152,7 +149,7 @@ class Hamburger extends React.Component {
             firebase.database().ref('chatting').
                 child(senderId).
                 child(employee_id)
-                .once('child_added', data => {
+                .once('value', data => {
                     const { dataChatSource } = this.props.messagesInfo;
                     let newDataChatSource = Object.assign({}, dataChatSource);
                     let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
@@ -164,7 +161,6 @@ class Hamburger extends React.Component {
         });
 
         firebase.database().ref('chatting').child(senderId).on('child_changed', result => {
-            console.log('chat notification result', result);
             const { notificationsInfo } = this.props;
             Android ? Notifications.postLocalNotification({
                 title: "Harfa Messages",
@@ -205,7 +201,6 @@ class Hamburger extends React.Component {
         });
     }
     componentWillUnmount() {
-        console.log('burger unmount..');
         const senderId = UserDetails.User.userId;
         //const receiverId = ProviderDetails.Provider.providerId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
@@ -217,7 +212,6 @@ class Hamburger extends React.Component {
             navigation,
             notificationsInfo
         } = this.props;
-        console.log(this.props)
         const notificationTotal = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
         return (
             <>

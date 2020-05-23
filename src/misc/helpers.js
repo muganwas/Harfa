@@ -23,12 +23,14 @@ export const getDistance = (lat1, lon1, lat2, lon2, unit) => {
 
 export const imageExists = async image_url => {
     let result
-    await axios.get(image_url).then(res => {
-        result = true;
-    }).
-    catch(e => {
-        console.log(e.message);
-        result = false;
-    });
+    if (image_url)
+        await axios.get(image_url).then(res => {
+            result = true;
+        }).
+        catch(e => {
+            console.log(e.message);
+            result = false;
+        });
+    else result = false;
     return result;
 }

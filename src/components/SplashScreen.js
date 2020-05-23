@@ -24,7 +24,7 @@ import SelectAddressScreen from './SelectAddressScreen';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
-import { getPendingJobRequest, getPendingJobRequestProvider } from '../Redux/Actions/jobsActions';
+import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
 
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
 const USER_GET_PROFILE = Config.baseURL + "users/";
@@ -116,7 +116,7 @@ class SplashScreen extends Component {
     }
 
     autoLogin = (userId, userType, fcmToken) => {
-        const { fetchPendingJobProviderInfo, fetchPendingJobRequest } = this.props;
+        const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest } = this.props;
         if (userId !== null) {
             this.setState({
                 isLoading: true,
@@ -168,8 +168,7 @@ class SplashScreen extends Component {
                                 accountType: responseJson.data.account_type
                             }
                             ProviderDetails.Provider = providerData;
-
-                            console.log("AutoLogin ProviderData: " + JSON.stringify(ProviderDetails.Provider));
+                            fetchJobRequestHistoryPro(userId);
                             fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
                         }
                         else {
@@ -228,8 +227,8 @@ class SplashScreen extends Component {
                                 fcmId: responseJson.data.fcm_id,
                             }
                             UserDetails.User = userData;
-                            console.log("AutoLogin UserData: " + JSON.stringify(UserDetails.User))
                             //Check if any Ongoing Request 
+                            fetchJobRequestHistoryClient(userId);
                             fetchPendingJobRequest(this.props, userId, 'Home');
                         }
                         else {
@@ -304,6 +303,12 @@ const mapDispatchToProps = dispatch => {
         },
         fetchPendingJobProviderInfo: (props, proId, navigateTo) => {
             dispatch(getPendingJobRequestProvider(props, proId, navigateTo));
+        },
+        fetchJobRequestHistoryPro: providerId => {
+            dispatch(getAllWorkRequestPro(providerId));
+        },
+        fetchJobRequestHistoryClient: clientId => {
+            dispatch(getAllWorkRequestClient(clientId));
         }
     }
 }

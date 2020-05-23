@@ -51,7 +51,9 @@ class ProChatScreen extends Component {
 
     constructor(props) {
         super(props)
-        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        console.log('data chat source', dataChatSource)
+        console.log('selected job req', user_id)
         this.state = {
             showButton: false,
             senderId: ProviderDetails.Provider.providerId,
@@ -59,17 +61,17 @@ class ProChatScreen extends Component {
             senderImage: ProviderDetails.Provider.imageSource,
             inputMessage: '',
             showButton: false,
-            dataChatSource: dataChatSource[user_id],
+            dataChatSource: dataChatSource[user_id] || [],
             isLoading: !fetched,
             //From ProDashboardScreen && ProMapDirection
             pageTitle: this.props.navigation.state.params.pageTitle,
 
-            receiverId: jobRequestsProviders[currentPos].user_id,
-            receiverName: jobRequestsProviders[currentPos].name,
-            receiverImage: jobRequestsProviders[currentPos].image,
-            orderId: jobRequestsProviders[currentPos].order_id,
-            serviceName: jobRequestsProviders[currentPos].service_name,
-            userImageAvailable: jobRequestsProviders[currentPos].imageAvailable
+            receiverId: allJobRequestsProviders[currentPos].user_id,
+            receiverName: allJobRequestsProviders[currentPos].user_details.username,
+            receiverImage: allJobRequestsProviders[currentPos].user_details.image,
+            orderId: allJobRequestsProviders[currentPos].order_id,
+            serviceName: allJobRequestsProviders[currentPos].service_details.service_name,
+            userImageAvailable: allJobRequestsProviders[currentPos].imageAvailable
         };
     };
 
@@ -83,6 +85,8 @@ class ProChatScreen extends Component {
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
+        console.log('local', localDataChatSource)
+        console.log('up state', dataChatSource)
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[user_id]});
     }

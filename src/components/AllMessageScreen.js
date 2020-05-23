@@ -74,10 +74,6 @@ class AllMessageScreen extends Component {
                 dbRef.on('child_added', (val) => {
 
                     let message = val.val();
-                    let id = val.key;
-                    console.log("componentDidMount Id : " + id);
-                    console.log("componentDidMount Message : " + JSON.stringify(message));
-
                     this.setState({
                         isLoading: false,
                     });
@@ -102,11 +98,6 @@ class AllMessageScreen extends Component {
             }
         });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
-
-    componentDidUpdate() {
-        console.log('data source')
-        console.log(this.state.dataSource)
     }
 
     componentWillUnmount() {

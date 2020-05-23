@@ -52,10 +52,9 @@ const styles = StyleSheet.create({
 class Hamburger extends React.Component {
 
     componentDidMount() {
-        const { jobsInfo: { jobRequestsProviders }, fetchedMessages, fetchedNotifications, fetchingOthersCoordinates, fetchedOthersCoordinates, fetchOthersCoordinatesError } = this.props;
+        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, fetchingOthersCoordinates, fetchedOthersCoordinates, fetchOthersCoordinatesError } = this.props;
         const receiverId = ProviderDetails.Provider.providerId;
-
-        jobRequestsProviders.map(obj => {
+        allJobRequestsProviders.map(obj => {
             const { user_id } = obj;
             /** lookout for users changed position */
             firebase.database().ref(`liveLocation/${user_id}`).on('child_changed', () => {
@@ -82,6 +81,7 @@ class Hamburger extends React.Component {
                     fetchOthersCoordinatesError(e.message);
                 });
 
+                console.log('receiver id', receiverId)
 
             firebase.database().ref('chatting').child(receiverId).child(user_id)
                 .on('child_added', data => {
@@ -106,7 +106,6 @@ class Hamburger extends React.Component {
 
         const userRef = firebase.database().ref(`liveLocation/${receiverId}`);
         /** get pros current position and upload it to db */
-        console.log('about to get location')
         geolocation.getCurrentPosition(info => {
             const { coords: { latitude, longitude } } = info;
             const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props

@@ -30,9 +30,9 @@ import NetInfo from "@react-native-community/netinfo";
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { connect } from 'react-redux';
+import { fetchedAllJobRequestsPro, fetchAllJobRequestsProError }  from '../Redux/Actions/jobsActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { imageExists } from '../misc/helpers';
+import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 
 
 const socket = Config.socket;
@@ -47,9 +47,9 @@ const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const PRO_INFO_UPDATE = Config.baseURL + "employee/";
-const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/';
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
+import { imageExists } from '../misc/helpers';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
 const database = firebase.database();
@@ -76,7 +76,7 @@ class ProDashBoardScreen extends Component {
 
     constructor(props) {
         super(props)
-
+        const { jobsInfo: { dataWorkSource} } = this.props;
         this.state = {
             isLoading: true,
             isErrorToast: false,
@@ -87,7 +87,7 @@ class ProDashBoardScreen extends Component {
             availBackground: ProviderDetails.Provider.status == '1' ? 'green' : 'red',
             dataSource: [],
             dataUserSource: [],
-            dataWorkSource: [],
+            dataWorkSource: dataWorkSource || [],
             isDialogLogoutVisible: false,
             isRecentMessage: false,
             isWorkRequest: false,
@@ -103,12 +103,12 @@ class ProDashBoardScreen extends Component {
             proImageAvailable: null,
         }
         this.springValue = new Animated.Value(100);
-        console.log('props at dash', this.props)
+        this.onRefresh();
     }
 
     //Get All Bookings
     async componentDidMount() {
-        const { navigation } = this.props;
+        const { navigation, jobsInfo: { dataWorkSource } } = this.props;
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
         NetInfo.addEventListener(state => {
             if (!state.isConnected) this.setState({ connectivityAvailable: false });
@@ -142,10 +142,16 @@ class ProDashBoardScreen extends Component {
         })
         socket.open();
         navigation.addListener('willFocus', async () => {
-            console.log("willFocus runs >>")
             this.onRefresh();
         });
+        this.onRefresh();
+        this.setState({dataWorkSource, isLoading: false, isWorkRequest: true});
+    }
 
+    componentDidUpdate() {
+        const { jobsInfo: { dataWorkSource }, fetchJobRequestHistory } = this.props;
+        if (!dataWorkSource.length)
+            fetchJobRequestHistory(ProviderDetails.Provider.providerId);
     }
 
     componentWillUnmount() {
@@ -165,24 +171,16 @@ class ProDashBoardScreen extends Component {
             })
 
             if (message != null) {
-                dbRef.on('child_added', (val) => {
-
+                dbRef.on('child_added', val => {
+                    const { dataSource } = this.state;
                     let message = val.val();
-                    let id = val.key;
-                    //console.log("Message Firebase : " + JSON.stringify(message));
-
-                    this.setState({
-                        isLoading: false,
+                    let present = false;
+                    dataSource.map(obj => {
+                        if (JSON.stringify(obj) === JSON.stringify(message))
+                            present = true;
                     })
-
-                    this.setState((prevState) => {
-
-                        return {
-                            dataSource: [...prevState.dataSource, message],
-                            isLoading: false,
-                            isRecentMessage: true,
-                        }
-                    })
+                    if (!present) 
+                        this.setState(prevState => ({dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true}));
                 })
             }
             else {
@@ -192,58 +190,6 @@ class ProDashBoardScreen extends Component {
                 })
             }
         })
-    }
-
-    getAllWorkRequest() {
-
-        this.setState({
-            isLoading: true
-        })
-
-        fetch(BOOKING_HISTORY + ProviderDetails.Provider.providerId)
-            .then((response) => response.json())
-            .then((responseJson) => {
-                if (responseJson.result) {
-                    for (let i = 0; i < responseJson.data.length; i++) {
-                        if (responseJson.data[i].chat_status == "1") {
-                            this.state.dataWorkSource.push(responseJson.data[i]);
-                        }
-                        else if (responseJson.data[i].chat_status == "0") {
-                            if (responseJson.data[i].status != "Pending") {
-                                this.state.dataWorkSource.push(responseJson.data[i]);
-                            }
-                        }
-                    }
-                    if (this.state.dataWorkSource.length > 0) {
-                        this.setState({
-                            isLoading: false,
-                            isWorkRequest: true,
-                        })
-                    }
-                    else {
-                        this.setState({
-                            isLoading: false,
-                            isWorkRequest: false,
-                        })
-                    }
-                }
-                else {
-                    this.setState({
-                        isLoading: false,
-                        isWorkRequest: false,
-                    })
-                }
-            })
-            .catch((error) => {
-                console.log(error);
-                this.setState({
-                    isLoading: false,
-                    isWorkRequest: true,
-                    isErrorToast: true
-                })
-                //ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
-                this.showToast("Something went wrong, Check your internet connection");
-            })
     }
 
     getAllRecentUser() {
@@ -281,10 +227,10 @@ class ProDashBoardScreen extends Component {
     }
 
     renderRecentMessageItem = ({ item }) => {
-        const { dispatchSelectedJobRequest, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { dispatchSelectedJobRequest, jobsInfo: { dataWorkSource } } = this.props;
         let currentPos;
-        Object.keys(jobRequestsProviders).map(key => {
-            if(jobRequestsProviders[key].user_id === item.id) {
+        Object.keys(dataWorkSource).map(key => {
+            if(dataWorkSource[key].user_id === item.id) {
                 currentPos = key;
             }
         });
@@ -592,8 +538,6 @@ class ProDashBoardScreen extends Component {
     acceptChatRequest = pos => {
         const { fetchedPendingJobInfo, jobsInfo, jobsInfo: { jobRequestsProviders } } = this.props;
         var newjobRequestsProviders = [...jobRequestsProviders];
-        console.log('pos', pos)
-        console.log('job requests', jobRequestsProviders)
         const {
             id, 
             user_id, 
@@ -790,7 +734,7 @@ class ProDashBoardScreen extends Component {
     }
 
     askForReview(item) {
-
+        const { fetchJobRequestHistory } = this.props;
         if (item.customer_review != "Requested" && item.customer_rating == "") {
             this.setState({
                 isLoading: true,
@@ -827,7 +771,7 @@ class ProDashBoardScreen extends Component {
                         //ToastAndroid.show("Request submitted successfully", ToastAndroid.show);
                         this.showToast("Request submitted successfully")
 
-                        this.getAllWorkRequest();
+                        fetchJobRequestHistory(ProviderDetails.Provider.providerId);
                     }
                     else {
                         this.setState({
@@ -865,20 +809,16 @@ class ProDashBoardScreen extends Component {
 
     onRefresh() {
         this.state.refreshing = true;
-
         this.setState({
             dataSource: [],
-            dataWorkSource: [],
             dataUserSource: [],
             isRecentMessage: false,
-            isWorkRequest: false,
+            //isWorkRequest: false,
             isJobRequest: false,
             isRecentUser: false
         })
         this.getAllRecentChat();
-        this.getAllWorkRequest();
         this.getAllRecentUser();
-
         this.state.refreshing = false;
     }
 
@@ -896,8 +836,7 @@ class ProDashBoardScreen extends Component {
     }*/
 
     render() {
-        const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders } } = this.props;
-        //console.log('requests from providers', jobRequestsProviders);
+        const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
         return (
             <View style={styles.container}>
 
@@ -995,7 +934,7 @@ class ProDashBoardScreen extends Component {
                                 <View style={styles.listView}>
                                     <FlatList
                                         numColumns={1}
-                                        data={this.state.dataWorkSource}
+                                        data={dataWorkSource}
                                         renderItem={this.renderWorkItem}
                                         keyExtractor={(item, index) => index.toString()}
                                         showsVerticalScrollIndicator={false}
@@ -1131,6 +1070,15 @@ const mapDispatchToProps = dispatch => {
         },
         dispatchSelectedJobRequest: job => {
             dispatch(setSelectedJobRequest(job));
+        },
+        dispatchAllFetchedProJobRequests: jobs => {
+            dispatch(fetchedAllJobRequestsPro(jobs));
+        },
+        fetchAllProJobRequestsError: () => {
+            dispatch(fetchAllJobRequestsProError());
+        },
+        fetchJobRequestHistory: providerId => {
+            dispatch(getAllWorkRequestPro(providerId));
         }
     }
 }

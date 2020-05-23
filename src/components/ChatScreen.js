@@ -53,10 +53,10 @@ class ChatScreen extends Component {
 
     constructor(props) {
         super(props)
-        const { jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        const { jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched } } = this.props;
         var currRequestPos;
-        Object.keys(jobRequests).map(key => {
-            const currEmpId = jobRequests[key].employee_id;
+        Object.keys(allJobRequestsClient).map(key => {
+            const currEmpId = allJobRequestsClient[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
         this.state = {
@@ -65,21 +65,20 @@ class ChatScreen extends Component {
             senderName: UserDetails.User.username,
             inputMessage: '',
             showButton: false,
-            dataChatSource: this.props.messagesInfo.dataChatSource[employee_id] || [],
-            isLoading: !this.props.messagesInfo.fetched,
+            dataChatSource: dataChatSource[employee_id] || [],
+            isLoading: !fetched,
             isUploading: false,
-            isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
-            requestStatus: jobRequests[currRequestPos].status,
-            receiverId: jobRequests[currRequestPos].employee_id,
-            receiverName: jobRequests[currRequestPos].name + " " + jobRequests[currRequestPos].surName,
-            receiverImage: jobRequests[currRequestPos].image,
-            serviceName: jobRequests[currRequestPos].service_name,
-            orderId: jobRequests[currRequestPos].order_id,
+            isJobAccepted: allJobRequestsClient[currRequestPos].status === 'Accepted',
+            requestStatus: allJobRequestsClient[currRequestPos].status,
+            receiverId: allJobRequestsClient[currRequestPos].employee_id,
+            receiverName: allJobRequestsClient[currRequestPos].employee_details.username,
+            receiverImage: allJobRequestsClient[currRequestPos].employee_details.image,
+            serviceName: allJobRequestsClient[currRequestPos].service_details.service_name,
+            orderId: allJobRequestsClient[currRequestPos].order_id,
             titlePage: this.props.navigation.state.params.titlePage,
             dataChatSourceSynced: false
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
-        console.log('messages fetched', this.props.messagesInfo.fetched)
     };
 
     componentDidMount() {
@@ -108,7 +107,7 @@ class ChatScreen extends Component {
 
     componentDidUpdate() {
         const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
-        const { isLoading } = this.state;
+        const { isLoading, dataChatSourceSynced } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
@@ -508,7 +507,6 @@ class ChatScreen extends Component {
 
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
-        console.log('message items', item)
         return (
             this.state.senderId != item.senderId
                 ?
