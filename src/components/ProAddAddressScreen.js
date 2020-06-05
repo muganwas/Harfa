@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions, PermissionsAndroid, BackHandler, Platform, StatusBar, Modal} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
@@ -393,7 +393,7 @@ export default class AddAddressScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -459,16 +459,6 @@ export default class AddAddressScreen extends Component {
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1000}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
-
             </View>
         );
     }

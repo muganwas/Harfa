@@ -5,7 +5,7 @@ import {View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityInd
 import { Rating, AirbnbRating } from 'react-native-ratings';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import firebase from 'react-native-firebase';
-import Toast, {DURATION} from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import UserDetails from './UserDetails';
 import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
@@ -304,8 +304,7 @@ class ProviderDetailsScreen extends Component {
         if (data) {
             const { status } = data.val();
             if (providerId) {
-                if (onlineUsers[providerId] ) {
-                    console.log('user in api')
+                if (onlineUsers[providerId]) {
                     if (status === onlineUsers[providerId].status) this.setState({status: onlineUsers[providerId].status});
                     else {
                         this.setState({status: status });
@@ -394,7 +393,7 @@ class ProviderDetailsScreen extends Component {
   }
 
   showToast = (message) => {
-    this.refs.toast.show(message);
+    Toast.show(message);
   }
 
   changeWaitingDialogVisibility = (bool) => {
@@ -543,16 +542,6 @@ class ProviderDetailsScreen extends Component {
             </View>
           </View>
         }
-        <Toast
-          ref="toast"
-          style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-          position='bottom'
-          positionValue={200}
-          fadeInDuration={750}
-          fadeOutDuration={1000}
-          opacity={0.8}
-          textStyle={{ color: 'white' }}/>
-
         <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
           onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
           <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />

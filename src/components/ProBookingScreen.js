@@ -7,7 +7,7 @@ import {createStackNavigator} from 'react-navigation-stack';
 import RNExitApp from 'react-native-exit-app';
 import WaitingDialog from './WaitingDialog';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import ViewPager from "@react-native-community/viewpager";
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
@@ -236,7 +236,7 @@ class ProBookingScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -330,17 +330,6 @@ class ProBookingScreen extends Component {
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1500}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
-
             </View>
         );
     }

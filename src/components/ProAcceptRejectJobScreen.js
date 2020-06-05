@@ -8,7 +8,7 @@ import firebase from 'react-native-firebase';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import WaitingDialog from './WaitingDialog';
 import ImagePicker from 'react-native-image-picker';
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
 import ProviderDetails from './ProviderDetails';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
@@ -533,8 +533,6 @@ class ProAcceptRejectJobScreen extends Component {
             }
         }
 
-        console.log("ACCEPT JOB Data >> " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -550,7 +548,7 @@ class ProAcceptRejectJobScreen extends Component {
                 const { currRequestPos } = this.state;
                 var newjobRequestsProviders = [...jobRequestsProviders];
                 console.log(responseJson)
-                if (responseJson.result) {
+                if (responseJson.data) {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
@@ -616,11 +614,11 @@ class ProAcceptRejectJobScreen extends Component {
         })
 
         const data = {
-            main_id: ProPendingJobRequest.Request.id,
+            main_id: this.state.mainId,
             chat_status: '1',
             status: 'Rejected',
             'notification': {
-                "fcm_id": ProPendingJobRequest.Request.fcm_id,
+                "fcm_id": this.state.receiverFcmId,
                 "title": "Job Rejected",
                 "body": 'Your request has been rejected by ' + ProviderDetails.Provider.name + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
                 "data": {
@@ -646,8 +644,6 @@ class ProAcceptRejectJobScreen extends Component {
             }
         }
 
-        //console.log("REJECT JOB Data >> " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -658,7 +654,6 @@ class ProAcceptRejectJobScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                //console.log("Response : " + JSON.stringify(responseJson))
                 const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
                 const { currRequestPos } = this.state;
                 var newjobRequestsProviders = [...jobRequestsProviders];
@@ -667,29 +662,8 @@ class ProAcceptRejectJobScreen extends Component {
                         isLoading: false,
                         isRejectJob: true
                     });
-
-                    var jobData = {
-                        id: '',
-                        order_id: '',
-                        user_id: '',
-                        image: '',
-                        fcm_id: '',
-                        name: '',
-                        mobile: '',
-                        dob: '',
-                        address: '',
-                        lat: '',
-                        lang: '',
-                        service_name: '',
-                        chat_status: '',
-                        status: '',
-                        delivery_address: '',
-                        delivery_lat: '',
-                        delivery_lang: '',
-                    }
-                    newjobRequestsProviders[currRequestPos] = jobData;
+                    delete newjobRequestsProviders[currRequestPos];
                     fetchedPendingJobInfo(newjobRequestsProviders);
-
                     this.props.navigation.navigate("ProDashBoard");
                 }
                 else {
@@ -744,7 +718,7 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -853,16 +827,6 @@ class ProAcceptRejectJobScreen extends Component {
                         }
                     </View>
                 </View>
-
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1500}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
 
                 {/* {this.state.isLoading && (
                 <View style={styles.loaderStyle}>

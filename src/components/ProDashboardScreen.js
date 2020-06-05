@@ -12,7 +12,7 @@ import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
 import ProChatScreen from './ProChatScreen';
 import ProChatAcceptScreen from './ProChatAcceptScreen';
@@ -30,7 +30,7 @@ import NetInfo from "@react-native-community/netinfo";
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { connect } from 'react-redux';
-import { fetchedAllJobRequestsPro, fetchAllJobRequestsProError }  from '../Redux/Actions/jobsActions';
+import { fetchedAllJobRequestsPro, fetchAllJobRequestsProError } from '../Redux/Actions/jobsActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 
@@ -76,7 +76,7 @@ class ProDashBoardScreen extends Component {
 
     constructor(props) {
         super(props)
-        const { jobsInfo: { dataWorkSource} } = this.props;
+        const { jobsInfo: { dataWorkSource } } = this.props;
         this.state = {
             isLoading: true,
             isErrorToast: false,
@@ -145,7 +145,7 @@ class ProDashBoardScreen extends Component {
             this.onRefresh();
         });
         this.onRefresh();
-        this.setState({dataWorkSource, isLoading: false, isWorkRequest: true});
+        this.setState({ dataWorkSource, isLoading: false, isWorkRequest: true });
     }
 
     componentDidUpdate() {
@@ -179,8 +179,8 @@ class ProDashBoardScreen extends Component {
                         if (JSON.stringify(obj) === JSON.stringify(message))
                             present = true;
                     })
-                    if (!present) 
-                        this.setState(prevState => ({dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true}));
+                    if (!present)
+                        this.setState(prevState => ({ dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true }));
                 })
             }
             else {
@@ -227,60 +227,62 @@ class ProDashBoardScreen extends Component {
     }
 
     renderRecentMessageItem = ({ item }) => {
-        const { dispatchSelectedJobRequest, jobsInfo: { dataWorkSource } } = this.props;
-        let currentPos;
-        Object.keys(dataWorkSource).map(key => {
-            if(dataWorkSource[key].user_id === item.id) {
-                currentPos = key;
-            }
-        });
-        const customerImage = item.image;
-        return (
-            <TouchableOpacity style={styles.itemMainContainer}
-                onPress={() => {
-                    dispatchSelectedJobRequest({user_id: item.id});
-                    setTimeout(() => {
-                        this.props.navigation.navigate("ProChat", {
-                            currentPos,
-                            'userId': item.id,
-                            'name': item.name,
-                            'image': item.image,
-                            'orderId': item.orderId,
-                            'serviceName': item.serviceName,
-                            'pageTitle': "ProDashboard",
-                            'imageAvailable': item.imageAvailable
-                        })
-                    }, 100);
-                }}>
-                <View style={styles.itemImageView}>
-                    <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
-                </View>
-                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
-                        {item.name}
-                    </Text>
-                    <Text style={{
-                        width: screenWidth - 150, fontSize: 10, color: 'black',
-                        textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                    }}
-                        numberOfLines={2}>
-                        {item.textMessage}
-                    </Text>
-                </View>
+        if (item) {
+            const { dispatchSelectedJobRequest, jobsInfo: { dataWorkSource } } = this.props;
+            let currentPos;
+            Object.keys(dataWorkSource).map(key => {
+                if (dataWorkSource[key].user_id === item.id) {
+                    currentPos = key;
+                }
+            });
+            const customerImage = item.image;
+            return (
+                <TouchableOpacity style={styles.itemMainContainer}
+                    onPress={() => {
+                        dispatchSelectedJobRequest({ user_id: item.id });
+                        setTimeout(() => {
+                            this.props.navigation.navigate("ProChat", {
+                                currentPos,
+                                'userId': item.id,
+                                'name': item.name,
+                                'image': item.image,
+                                'orderId': item.orderId,
+                                'serviceName': item.serviceName,
+                                'pageTitle': "ProDashboard",
+                                'imageAvailable': item.imageAvailable
+                            })
+                        }, 100);
+                    }}>
+                    <View style={styles.itemImageView}>
+                        <Image style={{ width: 40, height: 40, borderRadius: 100 }}
+                            source={customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
+                            {item.name}
+                        </Text>
+                        <Text style={{
+                            width: screenWidth - 150, fontSize: 10, color: 'black',
+                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
+                        }}
+                            numberOfLines={2}>
+                            {item.textMessage}
+                        </Text>
+                    </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
-                    <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
-                        {item.date}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        )
+                    <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
+                        <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
+                            {item.date}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            )
+        }
     }
 
     renderWorkItem = ({ item }) => {
         //console.log(item);
-        if (String(item.employee_id) === String(ProviderDetails.Provider.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
+        if (item && String(item.employee_id) === String(ProviderDetails.Provider.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
             return (
                 <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
                     onPress={() => this.props.navigation.navigate("ProBookingDetails", {
@@ -307,41 +309,43 @@ class ProDashBoardScreen extends Component {
     }
 
     renderRecentUserItem = ({ item }) => {
-        const recentUserImage = item.user_details.image;
-        return (
-            <TouchableOpacity style={styles.itemMainContainer}
-                onPress={() => this.props.navigation.navigate("ProBooking")}>
-                <View style={styles.itemImageView}>
-                    <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
-                </View>
-                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
-                        {item.user_details.username}
-                    </Text>
-                    <Text style={{
-                        width: screenWidth - 150, fontSize: 10, color: 'black',
-                        textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                    }}
-                        numberOfLines={1} >
-                        {item.user_details.address}
-                    </Text>
-                    <Text style={{
-                        width: screenWidth - 150, fontSize: 12, color: 'black', fontWeight: 'bold',
-                        textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                    }}
-                        numberOfLines={2} >
-                        {item.service_details.service_name}
-                    </Text>
-                </View>
+        if (item) {
+            const recentUserImage = item.user_details.image;
+            return (
+                <TouchableOpacity style={styles.itemMainContainer}
+                    onPress={() => this.props.navigation.navigate("ProBooking")}>
+                    <View style={styles.itemImageView}>
+                        <Image style={{ width: 40, height: 40, borderRadius: 100 }}
+                            source={recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
+                            {item.user_details.username}
+                        </Text>
+                        <Text style={{
+                            width: screenWidth - 150, fontSize: 10, color: 'black',
+                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
+                        }}
+                            numberOfLines={1} >
+                            {item.user_details.address}
+                        </Text>
+                        <Text style={{
+                            width: screenWidth - 150, fontSize: 12, color: 'black', fontWeight: 'bold',
+                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
+                        }}
+                            numberOfLines={2} >
+                            {item.service_details.service_name}
+                        </Text>
+                    </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
-                    <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
-                        {item.createdDate}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        )
+                    <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
+                        <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
+                            {item.createdDate}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            )
+        }
     }
 
     updateAvailabilityInMongoDB = userData => {
@@ -536,26 +540,29 @@ class ProDashBoardScreen extends Component {
     }
 
     acceptChatRequest = pos => {
-        const { fetchedPendingJobInfo, jobsInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { fetchedPendingJobInfo, jobsInfo, jobsInfo: { jobRequestsProviders }, dispatchSelectedJobRequest } = this.props;
         var newjobRequestsProviders = [...jobRequestsProviders];
         const {
-            id, 
-            user_id, 
+            id,
+            user_id,
             fcm_id, name,
-            service_name, 
-            order_id, 
-            image, mobile,
-            dob, 
-            address, 
-            lat, 
-            lang, 
+            service_name,
+            order_id,
+            image,
+            mobile,
+            dob,
+            address,
+            lat,
+            lang,
             chat_status,
-            status, 
-            delivery_address, 
+            status,
+            delivery_address,
             delivery_lat,
             delivery_lang
         } = jobRequestsProviders[pos];
-        
+
+        dispatchSelectedJobRequest(jobRequestsProviders[pos]);
+
         this.setState({
             isLoading: true,
         })
@@ -640,43 +647,45 @@ class ProDashBoardScreen extends Component {
     }
 
     renderPendingJobs = ({ item, index }) => {
-        const { image, name, imageAvailable, user_id, service_name, chat_status, status } = item;
-  
-        return (
-            <TouchableOpacity style={styles.pendingJobRow}
-                onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id })}>
-                <LinearGradient style={styles.pendingJobRow}
-                    colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
-                    <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                        source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
-                    <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
-                        <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold' }}>
-                            {name}
-                        </Text>
-                        <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
-                            {"Request for " + service_name}
-                        </Text>
-                        <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
-                            {chat_status == "0" ? "New Job Request" : status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
-                        </Text>
-                    </View>
-                    {chat_status == '1' &&
-                        <View style={styles.arrowView}>
-                            <Image style={styles.arrow}
-                                source={require('../icons/arrow_right_animated.gif')} />
+        if (item) {
+            const { image, name, imageAvailable, user_id, service_name, chat_status, status } = item;
+            return (
+                <TouchableOpacity style={styles.pendingJobRow}
+                    onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id })}>
+                    <LinearGradient style={styles.pendingJobRow}
+                        colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+                        <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
+                            source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
+                        <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
+                            <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold' }}>
+                                {name}
+                            </Text>
+                            <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                                {"Request for " + service_name}
+                            </Text>
+                            <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                                {chat_status == "0" ? "New Job Request" : status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
+                            </Text>
                         </View>
-                    }
-                    {chat_status == '0' &&
-                        <TouchableOpacity style={styles.arrowView}
-                            onPress={() => this.acceptChatRequest(index)}>
-                            <View style={styles.viewAccept}>
-                                <Text style={styles.textAccept}>Accept</Text>
+                        {chat_status == '1' &&
+                            <View style={styles.arrowView}>
+                                <Image style={styles.arrow}
+                                    source={require('../icons/arrow_right_animated.gif')} />
                             </View>
-                        </TouchableOpacity>
-                    }
-                </LinearGradient>
-            </TouchableOpacity>
-        )
+                        }
+                        {chat_status == '0' &&
+                            <TouchableOpacity style={styles.arrowView}
+                                onPress={() => this.acceptChatRequest(index)}>
+                                <View style={styles.viewAccept}>
+                                    <Text style={styles.textAccept}>Accept</Text>
+                                </View>
+                            </TouchableOpacity>
+                        }
+                    </LinearGradient>
+                </TouchableOpacity>
+            )
+        }
+
     }
 
     reviewTask(rating, review) {
@@ -804,7 +813,7 @@ class ProDashBoardScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     onRefresh() {
@@ -837,6 +846,7 @@ class ProDashBoardScreen extends Component {
 
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
+        console.log('job requests', jobRequestsProviders);
         return (
             <View style={styles.container}>
 
@@ -1002,16 +1012,6 @@ class ProDashBoardScreen extends Component {
                         // ItemSeparatorComponent={this.renderSeparator}
                         />
                     </View> : null}
-
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1500}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
 
                 {/* {this.state.isLoading && (
                     <View style={styles.loaderStyle}>

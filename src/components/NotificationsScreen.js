@@ -5,7 +5,7 @@ import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList,
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import Toast, {DURATION} from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
@@ -147,7 +147,7 @@ class NotificationsScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     //GridView Items
@@ -239,15 +239,6 @@ class NotificationsScreen extends Component {
                 onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                 <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
             </Modal>
-            <Toast
-                ref="toast"
-                style={{ backgroundColor: 'red' }}
-                position='bottom'
-                positionValue={200}
-                fadeInDuration={750}
-                fadeOutDuration={1000}
-                opacity={0.8}
-                textStyle={{ color: 'white' }}/>
         </View>
     );
   }

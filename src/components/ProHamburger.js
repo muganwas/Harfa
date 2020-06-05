@@ -51,38 +51,16 @@ const styles = StyleSheet.create({
 })
 class Hamburger extends React.Component {
 
+    state = {
+        fetchedOthersLocations: false
+    }
+
     componentDidMount() {
         const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, fetchingOthersCoordinates, fetchedOthersCoordinates, fetchOthersCoordinatesError } = this.props;
         const receiverId = ProviderDetails.Provider.providerId;
+        this.fetchOthersLocations();
         allJobRequestsProviders.map(obj => {
             const { user_id } = obj;
-            /** lookout for users changed position */
-            firebase.database().ref(`liveLocation/${user_id}`).on('child_changed', () => {
-                fetchingOthersCoordinates();
-                const { generalInfo: { othersCoordinates } } = this.props;
-                let newOthersCoordinates = Object.assign({}, othersCoordinates);
-                firebase.database().ref(`liveLocation/${user_id}`).once('value', result => {
-                    newOthersCoordinates[user_id] = result.val();
-                    fetchedOthersCoordinates(newOthersCoordinates);
-                }).
-                    catch(e => {
-                        fetchOthersCoordinatesError(e.message);
-                    });
-            });
-
-            /**fetch users current position */
-            firebase.database().ref(`liveLocation/${user_id}`).once('value', result => {
-                const { generalInfo: { othersCoordinates } } = this.props;
-                let newOthersCoordinates = Object.assign({}, othersCoordinates);
-                newOthersCoordinates[user_id] = result.val();
-                fetchedOthersCoordinates(newOthersCoordinates);
-            }).
-                catch(e => {
-                    fetchOthersCoordinatesError(e.message);
-                });
-
-                console.log('receiver id', receiverId)
-
             firebase.database().ref('chatting').child(receiverId).child(user_id)
                 .on('child_added', data => {
                     const { messagesInfo: { dataChatSource } } = this.props;
@@ -103,7 +81,6 @@ class Hamburger extends React.Component {
                     fetchedMessages(newDataChatSource);
                 });
         });
-
         const userRef = firebase.database().ref(`liveLocation/${receiverId}`);
         /** get pros current position and upload it to db */
         geolocation.getCurrentPosition(info => {
@@ -141,10 +118,6 @@ class Hamburger extends React.Component {
         firebase.notifications().onNotification(notification => {
             const { notificationsInfo, navigation } = this.props;
             const { title, body, data } = notification;
-            console.log("Title, body , data >>> " + title + " >> " + body + " >> " + JSON.stringify(data));
-            console.log('DeliveryAddress >>> ', data.delivery_address);
-            console.log('DeliveryLat >>> ', data.delivery_lat);
-
             if (title == "Booking Request") {
                 navigation.navigate("ProChatAccept", {
                     'userId': data.userId,
@@ -203,6 +176,12 @@ class Hamburger extends React.Component {
 
     }
 
+    componentDidUpdate() {
+        const { jobsInfo: { allJobRequestsProviders, jobRequestsProviders } } = this.props;
+        if (jobRequestsProviders.length && !this.state.fetchedOthersLocations)
+            this.fetchOthersLocations();
+    }
+
     componentWillUnmount() {
         console.log('pro burger unmount..');
         const senderId = ProviderDetails.Provider.providerId;
@@ -210,6 +189,39 @@ class Hamburger extends React.Component {
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
         firebase.database().ref('chatting').child(senderId).off('child_changed');
     }
+
+    fetchOthersLocations = () => {
+        const { jobsInfo: { jobRequestsProviders }, fetchingOthersCoordinates, fetchedOthersCoordinates, fetchOthersCoordinatesError } = this.props;
+        jobRequestsProviders.map(obj => {
+            const { user_id } = obj;
+            /** lookout for users changed position */
+            firebase.database().ref(`liveLocation/${user_id}`).on('child_changed', () => {
+                fetchingOthersCoordinates();
+                const { generalInfo: { othersCoordinates } } = this.props;
+                let newOthersCoordinates = Object.assign({}, othersCoordinates);
+                firebase.database().ref(`liveLocation/${user_id}`).once('value', result => {
+                    newOthersCoordinates[user_id] = result.val();
+                    fetchedOthersCoordinates(newOthersCoordinates);
+                }).
+                    catch(e => {
+                        fetchOthersCoordinatesError(e.message);
+                    });
+            });
+
+            /**fetch users current position */
+            firebase.database().ref(`liveLocation/${user_id}`).once('value', result => {
+                const { generalInfo: { othersCoordinates } } = this.props;
+                let newOthersCoordinates = Object.assign({}, othersCoordinates);
+                newOthersCoordinates[user_id] = result.val();
+                fetchedOthersCoordinates(newOthersCoordinates);
+            }).
+                catch(e => {
+                    fetchOthersCoordinatesError(e.message);
+                });
+        });
+        this.setState({fetchedOthersLocations: true})
+    }
+
     render() {
         const {
             text,

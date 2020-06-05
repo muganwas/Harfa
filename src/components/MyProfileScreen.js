@@ -24,7 +24,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import UserDetails from './UserDetails';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import moment from 'moment';
-import Toast, {DURATION} from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 
@@ -329,7 +329,7 @@ export default class MyProfileScreen extends Component {
   }
 
   showToast = message => {
-    this.refs.toast.show(message);
+    Toast.show(message);
   };
 
   render() {
@@ -537,19 +537,6 @@ export default class MyProfileScreen extends Component {
               />
             </View>
           )}
-          <Toast
-            ref="toast"
-            style={{
-              backgroundColor:
-                this.state.isErrorToast == true ? 'red' : 'green',
-            }}
-            position="bottom"
-            positionValue={200}
-            fadeInDuration={750}
-            fadeOutDuration={1000}
-            opacity={0.8}
-            textStyle={{color: 'white'}}
-          />
         </KeyboardAwareScrollView>
 
         <Animated.View

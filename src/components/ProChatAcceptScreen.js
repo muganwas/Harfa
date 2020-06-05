@@ -9,7 +9,7 @@ import { connect } from 'react-redux';
 import firebase from 'react-native-firebase';
 import ProviderDetails from './ProviderDetails';
 import WaitingDialog from './WaitingDialog';
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import ProPendingJobRequest from './ProPendingJobRequest';
 import Config from './Config';
 import { getDistance } from '../misc/helpers';
@@ -52,14 +52,16 @@ class ProChatAcceptScreen extends Component {
 
     constructor(props) {
         super(props)
-        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { employee_id } } } = this.props;
+        /*const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
         
-        console.log(this.props)
-        /*Object.keys(jobRequestsProviders).map(key => {
+        console.log('selected job', this.props.selectedJobRequest)
+        Object.keys(jobRequestsProviders).map(key => {
             const currEmpId = jobRequestsProviders[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
-        });*/
+        });
+        const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
+        const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;*/
         this.state = {
             userId: '',
             userName: '',
@@ -189,7 +191,7 @@ class ProChatAcceptScreen extends Component {
             });
         }
         else {
-            ToastAndroid.show("Songs not found", ToastAndroid.SHORT);
+            Toast.show("Songs not found");
         }
     }
 
@@ -444,8 +446,7 @@ class ProChatAcceptScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
-
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -592,17 +593,6 @@ class ProChatAcceptScreen extends Component {
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1500}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
-
             </View>
         );
     }

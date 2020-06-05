@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { DrawerActions } from 'react-navigation-drawer';
 import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
@@ -363,7 +363,7 @@ class ProMyProfileScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -534,18 +534,6 @@ class ProMyProfileScreen extends Component {
                     </View>
                 </View>
             </KeyboardAwareScrollView>
-
-            <Toast
-                ref="toast"
-                style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                position='bottom'
-                positionValue={200}
-                fadeInDuration={750}
-                fadeOutDuration={1000}
-                opacity={0.8}
-                textStyle={{ color: 'white' }} />
-
-
             <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                 onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                 <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />

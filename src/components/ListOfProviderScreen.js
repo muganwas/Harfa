@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import {AirbnbRating} from 'react-native-ratings';
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails';
@@ -79,13 +79,6 @@ class ListOfProviderScreen extends Component {
       'hardwareBackPress',
       this.handleBackButtonClick,
     );
-
-    console.log(
-      'URL : ' +
-        GET_ALL_PROVIDER_URL +
-        this.props.navigation.state.params.serviceId,
-    );
-
     const data = {
       lat: UserDetails.User.lat,
       lang: UserDetails.User.lang,
@@ -100,8 +93,6 @@ class ListOfProviderScreen extends Component {
     })
       .then(response => response.json())
       .then(responseJson => {
-        // console.log('Response : ' + JSON.stringify(responseJson));
-        // console.log(responseJson)
         if (responseJson.result) {
           this.setState({
             dataSource: responseJson.data, //data is key
@@ -141,7 +132,6 @@ class ListOfProviderScreen extends Component {
     const { generalInfo: { usersCoordinates } } = this.props;
     if (dataSource.length > 0 && !distCalculated) {
         Object.keys(dataSource).map(key => {
-            // console.log(info)
             const { _id } = dataSource[key];
             firebase.database().ref(`liveLocation/${_id}`).once('value', result => {
                 const { latitude, longitude } = result.val();
@@ -171,13 +161,12 @@ class ListOfProviderScreen extends Component {
   }
 
   showToast = message => {
-    this.refs.toast.show(message);
+    Toast.show(message);
   };
 
   renderItem = ({item}) => {
     const { accountType } = UserDetails.User;
     const { showClasses } = this.state;
-    console.log(item)
     if ( accountType === 'Individual' || item.invoice === 1)/** only return providers with invoices for enterprise clients */
         return (
         <TouchableOpacity
@@ -279,7 +268,6 @@ class ListOfProviderScreen extends Component {
 
   rerenderList = order => {
       const { dataSource, reviewOrder, distanceOrder } = this.state
-      // console.log(dataSource);
       let hashsArr = [];
       let ratingArr = [];
       let newDataSource = [];
@@ -295,7 +283,6 @@ class ListOfProviderScreen extends Component {
             }
           });
         });
-        //console.log(newDataSource);
         this.setState({dataSource: newDataSource, distanceOrder: !distanceOrder });
       } else {
         dataSource.map(obj => ratingArr.push([obj._id, obj.avgRating]));
@@ -424,16 +411,6 @@ class ListOfProviderScreen extends Component {
             changeWaitingDialogVisibility={this.changeWaitingDialogVisibility}
           />
         </Modal>
-        <Toast
-          ref="toast"
-          style={{backgroundColor: 'green'}}
-          position="bottom"
-          positionValue={200}
-          fadeInDuration={750}
-          fadeOutDuration={1000}
-          opacity={0.8}
-          textStyle={{color: 'white'}}
-        />
       </View>
     );
   }
@@ -445,6 +422,7 @@ const styles = StyleSheet.create({
     backgroundColor: colorBg
   },
   header: {
+    position: 'relative',
     width: '100%',
     height: 50,
     flexDirection: 'row',
@@ -454,9 +432,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
+    zIndex: 8
   },
   listView: {
     flex: 1,
+    position: 'relative',
     backgroundColor: colorBg,
     padding: 5,
     elevation: Platform.OS === 'android' ? 3 : 0,
@@ -513,7 +493,7 @@ const styles = StyleSheet.create({
       right: 2,
       top: 3,
       elevation: Platform.OS === 'android' ? 10 : 0,
-      zIndex: 4
+      zIndex: 10
   },
   classTextContainer: {
       flex: 1,

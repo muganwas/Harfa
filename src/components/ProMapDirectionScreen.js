@@ -65,7 +65,7 @@ class ProMapDirectionScreen extends Component {
             destinationLat: parseFloat(othersCoordinates[user_id].latitude),
             destinationLng: parseFloat(othersCoordinates[user_id].longitude),
             routeCoordinates: [],
-            isLoading: true,
+            isLoading: othersCoordinates[user_id],
             pageTitle: this.props.navigation.state.params.pageTitle,
             currentPos,
             //From ProAcceptRejectJobScreen & ProDashboardScreen
@@ -265,10 +265,7 @@ class ProMapDirectionScreen extends Component {
 
     jobCompleteTask = () => {
 
-        this.setState({
-            isLoading: true,
-            currentPos
-        });
+        this.setState({isLoading: true});
 
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
@@ -317,28 +314,8 @@ class ProMapDirectionScreen extends Component {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
-                    })
-
-                    var jobData = {
-                        id: "",
-                        order_id: "",
-                        user_id: "",
-                        image: "",
-                        fcm_id: "",
-                        name: "",
-                        mobile: "",
-                        dob: "",
-                        address: "",
-                        lat: "",
-                        lang: "",
-                        service_name: "",
-                        chat_status: "",
-                        status: "",
-                        delivery_address: "",
-                        delivery_lat: "",
-                        delivery_lang: "",
-                    }
-                    newJobRequestsProviders[currentPos] = jobData;
+                    });
+                    delete newJobRequestsProviders[this.state.currentPos]
                     fetchedPendingJobInfo(newJobRequestsProviders);
                     this.props.navigation.navigate("ProDashBoard");
                 }
@@ -359,10 +336,7 @@ class ProMapDirectionScreen extends Component {
 
     jobCancelTask = () => {
 
-        this.setState({
-            isLoading: true,
-            currentPos
-        });
+        this.setState({isLoading: true});
 
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
@@ -415,26 +389,7 @@ class ProMapDirectionScreen extends Component {
                         isAcceptJob: true,
                     })
 
-                    var jobData = {
-                        id: "",
-                        order_id: "",
-                        user_id: "",
-                        image: "",
-                        fcm_id: "",
-                        name: "",
-                        mobile: "",
-                        dob: "",
-                        address: "",
-                        lat: "",
-                        lang: "",
-                        service_name: "",
-                        chat_status: "",
-                        status: "",
-                        delivery_address: "",
-                        delivery_lat: "",
-                        delivery_lang: "",
-                    }
-                    newJobRequestsProviders[currentPos] = jobData;
+                    delete newJobRequestsProviders[this.state.currentPos];
                     fetchedPendingJobInfo(newJobRequestsProviders);
                     this.props.navigation.navigate("ProDashBoard");
                 }

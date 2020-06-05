@@ -14,7 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import RNExitApp from 'react-native-exit-app';
 import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
-import Toast from 'react-native-easy-toast'
+import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 
 import Config from './Config';
@@ -163,7 +163,7 @@ class DashBoardScreen extends Component {
                     delivery_lat: data.delivery_lat,
                     delivery_lang: data.delivery_lang,
                 }
-                imageExists(image).then(res => {
+                imageExists(providerData.imageSource).then(res => {
                     pendingJobData.imageAvailable = res;
                 });
                 newJobRequests[pos] = pendingJobData;
@@ -187,27 +187,7 @@ class DashBoardScreen extends Component {
                     body: body,
                     data: data,
                 })
-                var jobData = {
-                    id: '',
-                    order_id: '',
-                    employee_id: '',
-                    image: '',
-                    fcm_id: '',
-                    name: '',
-                    surName: '',
-                    mobile: '',
-                    description: '',
-                    address: '',
-                    lat: '',
-                    lang: '',
-                    service_name: '',
-                    chat_status: '',
-                    status: '',
-                    delivery_address: '',
-                    delivery_lat: '',
-                    delivery_lang: '',
-                }
-                newJobRequests[pos] = pendingJobData;
+                delete newJobRequests[pos];
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
             }
@@ -241,56 +221,22 @@ class DashBoardScreen extends Component {
                 this.setState({
                     isJobAccepted: false
                 })
-                var jobData = {
-                    id: '',
-                    order_id: '',
-                    employee_id: '',
-                    image: '',
-                    fcm_id: '',
-                    name: '',
-                    surName: '',
-                    mobile: '',
-                    description: '',
-                    address: '',
-                    lat: '',
-                    lang: '',
-                    service_name: '',
-                    chat_status: '',
-                    status: '',
-                    delivery_address: '',
-                    delivery_lat: '',
-                    delivery_lang: '',
-                }
-                newJobRequests[pos] = jobData;
+                delete newJobRequests[pos];
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
             }
             else if (title == "Job Completed" && pos != null) {
-                var jobData = {
-                    id: '',
-                    order_id: '',
-                    employee_id: '',
-                    image: '',
-                    fcm_id: '',
-                    name: '',
-                    surName: '',
-                    mobile: '',
-                    description: '',
-                    address: '',
-                    lat: '',
-                    lang: '',
-                    service_name: '',
-                    chat_status: '',
-                    status: '',
-                    delivery_address: '',
-                    delivery_lat: '',
-                    delivery_lang: '',
-                }
-                newJobRequests[pos] = jobData;
+                delete newJobRequests[pos];
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
         });
+    }
+
+    componentDidUpdate() {
+        const { generalInfo: { othersCoordinates, coordinatesFetched } } = this.props;
+        console.log('fetched', coordinatesFetched)
+        console.log('others coords', othersCoordinates)
     }
 
     componentWillUnmount() {
@@ -357,34 +303,35 @@ class DashBoardScreen extends Component {
 
     //GridView Items
     renderItem = ({ item }) => {
-        return (
-            <TouchableOpacity style={{
-                flex: 1, flexDirection: 'column', margin: 5, padding: 10,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.75,
-                shadowRadius: 5,
-                elevation: 5,
-                backgroundColor: 'white',
-                borderRadius: 2,
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}
-                onPress={() => {
-                    this.props.navigation.navigate("ListOfProvider", {
-                        'serviceName': item.service_name,
-                        'serviceId': item.id
-                    })
-                }}>
-                <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
-                    source={{ uri: item.image }} />
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
-                    <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
-                        {item.service_name}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        )
+        if (item)
+            return (
+                <TouchableOpacity style={{
+                    flex: 1, flexDirection: 'column', margin: 5, padding: 10,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.75,
+                    shadowRadius: 5,
+                    elevation: 5,
+                    backgroundColor: 'white',
+                    borderRadius: 2,
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+                    onPress={() => {
+                        this.props.navigation.navigate("ListOfProvider", {
+                            'serviceName': item.service_name,
+                            'serviceId': item.id
+                        })
+                    }}>
+                    <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
+                        source={{ uri: item.image }} />
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
+                        <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
+                            {item.service_name}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            )
     }
 
     renderSeparator = () => {
@@ -429,7 +376,7 @@ class DashBoardScreen extends Component {
     }
 
     showToast = message => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = bool => {
@@ -439,35 +386,37 @@ class DashBoardScreen extends Component {
     }
 
     renderPendingJobRequests = ({ item }) => {
-        const { image, name, employee_id, imageAvailable, surName, service_name, chat_status, status } = item;
-        return (
-            <TouchableOpacity style={styles.pendingJobRow}
-                onPress={() => this.goToNextPage(chat_status, { userType: 'client', employee_id })}>
-                <LinearGradient
-                    style={styles.pendingJobRow}
-                    colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
-                    <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                        source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
-                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                        <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
-                            {name + " " + surName}
-                        </Text>
-                        <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
-                            {service_name}
-                        </Text>
-                        <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
-                            {chat_status == "0" ? "Nouvelle demande d'emploi"
-                                : status == "Pending" ? "Demande de chat acceptée"
-                                    : "Travail accepté"}
-                        </Text>
-                    </View>
-                    <View style={styles.arrowView}>
-                        <Image style={styles.arrow}
-                            source={require('../icons/arrow_right_animated.gif')} />
-                    </View>
-                </LinearGradient>
-            </TouchableOpacity>
-        )
+        if (item) {
+            const { image, name, employee_id, imageAvailable, surName, service_name, chat_status, status } = item;
+            return (
+                <TouchableOpacity style={styles.pendingJobRow}
+                    onPress={() => this.goToNextPage(chat_status, { userType: 'client', employee_id })}>
+                    <LinearGradient
+                        style={styles.pendingJobRow}
+                        colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+                        <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
+                            source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
+                        <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                            <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
+                                {name + " " + surName}
+                            </Text>
+                            <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                                {service_name}
+                            </Text>
+                            <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                                {chat_status == "0" ? "Nouvelle demande d'emploi"
+                                    : status == "Pending" ? "Demande de chat acceptée"
+                                        : "Travail accepté"}
+                            </Text>
+                        </View>
+                        <View style={styles.arrowView}>
+                            <Image style={styles.arrow}
+                                source={require('../icons/arrow_right_animated.gif')} />
+                        </View>
+                    </LinearGradient>
+                </TouchableOpacity>
+            )
+        }
     }
 
     render() {
@@ -553,16 +502,6 @@ class DashBoardScreen extends Component {
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1000}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
             </View>
         );
     }

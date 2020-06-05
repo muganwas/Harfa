@@ -53,12 +53,12 @@ class MapDirectionScreen extends Component {
             const currEmpId = jobRequests[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
-        console.log('users cordinates', usersCoordinates),
-        //console.log(employee_id)
+        const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
+        const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
         this.state = {
-            sourceLocation: othersCoordinates[employee_id].latitude + "," + othersCoordinates[employee_id].longitude,
-            sourceLat: parseFloat(othersCoordinates[employee_id].latitude),
-            sourceLng: parseFloat(othersCoordinates[employee_id].longitude),
+            sourceLocation: employeeLatitude + "," + employeeLongitude,
+            sourceLat: parseFloat(employeeLatitude),
+            sourceLng: parseFloat(employeeLongitude),
             destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
             destinationLat: parseFloat(usersCoordinates.latitude),
             destinationLng: parseFloat(usersCoordinates.longitude),
@@ -86,13 +86,20 @@ class MapDirectionScreen extends Component {
             serviceName: jobRequests[currRequestPos].service_name,
             isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
             titlePage: this.props.navigation.state.params.titlePage,
-            mapKey: Math.random(2)
+            mapKey: Math.random(2),
+            employeeLocationFetched: othersCoordinates[employee_id] ? true : false
         };
     };
 
     componentDidMount() {
-        const { fetchedPendingJobInfo, generalInfo: { othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
-        this.getDirections(othersCoordinates[employee_id].latitude + "," + othersCoordinates[employee_id].longitude, this.state.destinationLocation);
+        const { fetchedPendingJobInfo, generalInfo: { othersCoordinates, usersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        if (othersCoordinates[employee_id]) {
+
+        }
+        const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
+        const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
+
+        this.getDirections(employeeLatitude + "," + employeeLongitude, this.state.destinationLocation);
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         firebase.notifications().onNotification((notification) => {
             const { title, body, data } = notification;
@@ -102,9 +109,6 @@ class MapDirectionScreen extends Component {
                 const currEmpId = jobRequests[key].employee_id;
                 if (currEmpId === data.providerId) currRequestPos = key;
             });
-
-            console.log('Notification >>> ', notification);
-            console.log("Title, body  data >>> " + title + " >>>" + body + " >>> " + JSON.stringify(data));
 
             if (title == "Chat Request Rejected") {
                 this.setState({
@@ -170,7 +174,6 @@ class MapDirectionScreen extends Component {
                 }
                 newJobRequests[currRequestPos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
-                console.log('After Job Accepted >>> ', JSON.stringify(newJobRequests[currRequestPos]));
                 this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
             }
             else if (title == "Job Rejected") {
@@ -231,20 +234,21 @@ class MapDirectionScreen extends Component {
 
     componentDidUpdate() {
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
-        const { latitude, longitude } = othersCoordinates[employee_id];
+        const { latitude, longitude } = othersCoordinates[employee_id] || {};
         const { destinationLat, destinationLng, coords } = this.state;
-        if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(destinationLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))) {
-            this.setState({
-                sourceLocation: latitude + "," + longitude,
-                sourceLat: parseFloat(latitude),
-                sourceLng: parseFloat(longitude),
-                destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-                destinationLat: parseFloat(usersCoordinates.latitude),
-                destinationLng: parseFloat(usersCoordinates.longitude),
-            });
-            this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
+        if ( latitude !== undefined && longitude !== undefined ) {
+             if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(destinationLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))) {
+                this.setState({
+                    sourceLocation: latitude + "," + longitude,
+                    sourceLat: parseFloat(latitude),
+                    sourceLng: parseFloat(longitude),
+                    destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+                    destinationLat: parseFloat(usersCoordinates.latitude),
+                    destinationLng: parseFloat(usersCoordinates.longitude),
+                });
+                this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
+            }
         }
-
         if (this.state.coords.length === 0) {
             this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
         }
@@ -271,10 +275,6 @@ class MapDirectionScreen extends Component {
 
 
     async getDirections(startLoc, destinationLoc) {
-
-        console.log("Start Location : " + startLoc);
-        console.log("Destination Location : " + destinationLoc);
-
         try {
             let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`)
             let respJson = await resp.json();
@@ -362,9 +362,8 @@ class MapDirectionScreen extends Component {
     }
 
     jobCancelTask = () => {
-        this.setState({
-            isLoading: true
-        })
+
+        this.setState({isLoading: true })
 
         const { fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
         const { currRequestPos } = this.state;
@@ -400,8 +399,6 @@ class MapDirectionScreen extends Component {
             }
         }
 
-        console.log("Complete Job >> " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -412,34 +409,12 @@ class MapDirectionScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
-                    })
-
-                    var jobData = {
-                        id: '',
-                        order_id: '',
-                        employee_id: '',
-                        image: '',
-                        fcm_id: '',
-                        name: '',
-                        surName: '',
-                        mobile: '',
-                        description: '',
-                        address: '',
-                        lat: 0,
-                        lang: 0,
-                        service_name: '',
-                        chat_status: '',
-                        status: '',
-                        delivery_address: '',
-                        delivery_lat: 0,
-                        delivery_lang: 0
-                    }
-                    newJobRequests[currRequestPos] = jobData;
+                    });
+                    delete newJobRequests[currRequestPos];
                     fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
                 }
@@ -496,8 +471,6 @@ class MapDirectionScreen extends Component {
             }
         }
 
-        console.log("Complete Job >> " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -508,34 +481,12 @@ class MapDirectionScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
-                    })
-
-                    var jobData = {
-                        id: '',
-                        order_id: '',
-                        employee_id: '',
-                        image: '',
-                        fcm_id: '',
-                        name: '',
-                        surName: '',
-                        mobile: '',
-                        description: '',
-                        address: '',
-                        lat: 0,
-                        lang: 0,
-                        service_name: '',
-                        chat_status: '',
-                        status: '',
-                        delivery_address: '',
-                        delivery_lat: 0,
-                        delivery_lang: 0
-                    }
-                    newJobRequests[currRequestPos] = jobData;
+                    });
+                    delete newJobRequests[currRequestPos];
                     fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
                 }
@@ -555,28 +506,24 @@ class MapDirectionScreen extends Component {
     }
 
     render() {
-        const { jobsInfo: { jobRequests } } = this.props;
+        const { jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, generalInfo: { othersCoordinates } } = this.props;
         const { 
             currRequestPos,
             sourceLat, 
             sourceLng, 
             destinationLat, 
             destinationLng, 
-            routeCoordinates,
-            userName,
-            proImageAvailable,
-            userImage,
-            serviceName,
-            status,
             coords,
             providerName,
             mapKey
-            } = this.state;
+        } = this.state;
+        const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : undefined;
+        const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : undefined;
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder />
-                { sourceLat && sourceLng && destinationLat && destinationLng ?
+                { employeeLatitude && employeeLongitude && destinationLat && destinationLng ?
                 <MapView key={mapKey} style={styles.map}
                     region={{
                         latitude: destinationLat,

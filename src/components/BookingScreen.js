@@ -7,7 +7,7 @@ import {createStackNavigator} from 'react-navigation-stack';
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import ViewPager from "@react-native-community/viewpager";
-import Toast from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import UserDetails from './UserDetails';
 import Config from './Config';
 import BookingDetailsScreen from './BookingDetailsScreen';
@@ -230,7 +230,7 @@ class BookingScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -329,15 +329,6 @@ class BookingScreen extends Component {
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1000}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
             </View>
         );
     }

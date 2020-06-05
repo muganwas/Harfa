@@ -51,7 +51,10 @@ const styles = StyleSheet.create({
 })
 class Hamburger extends React.Component {
     constructor() {
-        super()
+        super();
+        this.state = {
+            employeesLocationsFetched: false
+        }
         Notifications.events().registerRemoteNotificationsRegistered(event => {
             // TODO: Send the token to my server so it could send back push notifications...
         });
@@ -63,6 +66,7 @@ class Hamburger extends React.Component {
         Notifications.registerRemoteNotifications();
     }
     componentDidMount() {
+        console.log('hamburger mounted..')
         const {
             navigation,
             fetchNotifications,
@@ -75,7 +79,32 @@ class Hamburger extends React.Component {
         } = this.props;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
-        var providersLocation = {};
+
+        allJobRequestsClient.map(obj => {
+            const { employee_id } = obj;
+            firebase.database().ref('chatting').
+                child(senderId).
+                child(employee_id)
+                .on('child_added', data => {
+                    const { messagesInfo: { dataChatSource } } = this.props;
+                    let newDataChatSource = Object.assign({}, dataChatSource);
+                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                    newArr.push(data.val())
+                    newDataChatSource[employee_id] = newArr;
+                    fetchedMessages(newDataChatSource);
+                });
+            firebase.database().ref('chatting').
+                child(senderId).
+                child(employee_id)
+                .once('value', data => {
+                    const { dataChatSource } = this.props.messagesInfo;
+                    let newDataChatSource = Object.assign({}, dataChatSource);
+                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                    newArr.push(data.val())
+                    newDataChatSource[employee_id] = newArr;
+                    fetchedMessages(newDataChatSource);
+                });
+        });
         /** fetch users current position and upload it to db */
         geolocation.getCurrentPosition(info => {
             const { coords: { latitude, longitude } } = info;
@@ -108,57 +137,7 @@ class Hamburger extends React.Component {
             console.log(error)
         }, { enableHighAccuracy: true });
         /** lookout for pros changing position */
-        allJobRequestsClient.map(obj => {
-            const { employee_id } = obj;
-
-            firebase.database().ref(`liveLocation/${employee_id}`).once('value', result => {
-                const loc = result.val();
-                providersLocation[employee_id] = loc;
-                fetchedOthersCoordinates(providersLocation);
-            }).
-                catch(e => {
-                    fetchOthersCoordinatesError(e.message);
-                });
-
-            firebase.database().ref(`liveLocation/${employee_id}`).
-                on('child_changed', () => {
-                    const { generalInfo: { othersCoordinates } } = this.props;
-                    let newOthersCoordinates = Object.assign({}, othersCoordinates);
-                    fetchingOthersCoordinates();
-                    firebase.database().ref(`liveLocation/${employee_id}`).
-                        once('value', result => {
-                            newOthersCoordinates[employee_id] = result.val();
-                            fetchedOthersCoordinates(newOthersCoordinates);
-                        }).
-                        catch(e => {
-                            fetchOthersCoordinatesError(e.message);
-                        });
-                });
-
-            firebase.database().ref('chatting').
-                child(senderId).
-                child(employee_id)
-                .on('child_added', data => {
-                    const { messagesInfo: { dataChatSource } } = this.props;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val())
-                    newDataChatSource[employee_id] = newArr;
-                    fetchedMessages(newDataChatSource);
-                });
-            firebase.database().ref('chatting').
-                child(senderId).
-                child(employee_id)
-                .once('value', data => {
-                    const { dataChatSource } = this.props.messagesInfo;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val())
-                    newDataChatSource[employee_id] = newArr;
-                    fetchedMessages(newDataChatSource);
-                });
-
-        });
+        this.fetchEmployeeLocations();
 
         firebase.database().ref('chatting').child(senderId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
@@ -200,11 +179,58 @@ class Hamburger extends React.Component {
             fetchedNotifications({ type: 'adminMessages', value: adminMessageCount });
         });
     }
+
+    componentDidUpdate() {
+        const {
+            jobsInfo: { jobRequests }
+        } = this.props;
+        if (jobRequests && !this.state.employeesLocationsFetched)
+            this.fetchEmployeeLocations();
+    }
+
     componentWillUnmount() {
         const senderId = UserDetails.User.userId;
         //const receiverId = ProviderDetails.Provider.providerId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
         firebase.database().ref('chatting').child(senderId).off('child_changed');
+    }
+
+    fetchEmployeeLocations = () => {
+        const {
+            fetchingOthersCoordinates,
+            fetchedOthersCoordinates,
+            fetchOthersCoordinatesError,
+            jobsInfo: { jobRequests }
+        } = this.props;
+        jobRequests.map(obj => {
+            const { employee_id } = obj;
+            firebase.database().ref(`liveLocation/${employee_id}`).once('value', result => {
+                const { generalInfo: { othersCoordinates } } = this.props;
+                let newOthersCoordinates = Object.assign({}, othersCoordinates);
+                const loc = result.val();
+                newOthersCoordinates[employee_id] = loc;
+                fetchedOthersCoordinates(newOthersCoordinates);
+            }).
+                catch(e => {
+                    fetchOthersCoordinatesError(e.message);
+                });
+
+            firebase.database().ref(`liveLocation/${employee_id}`).
+                on('child_changed', () => {
+                    const { generalInfo: { othersCoordinates } } = this.props;
+                    let newOthersCoordinates = Object.assign({}, othersCoordinates);
+                    fetchingOthersCoordinates();
+                    firebase.database().ref(`liveLocation/${employee_id}`).
+                        once('value', result => {
+                            newOthersCoordinates[employee_id] = result.val();
+                            fetchedOthersCoordinates(newOthersCoordinates);
+                        }).
+                        catch(e => {
+                            fetchOthersCoordinatesError(e.message);
+                        });
+                });
+        });
+        this.setState({employeesLocationsFetched:true});
     }
     render() {
         const {
