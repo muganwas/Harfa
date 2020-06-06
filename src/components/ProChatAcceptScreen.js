@@ -226,11 +226,12 @@ class ProChatAcceptScreen extends Component {
     //Accept Chat Request
     acceptJob = () => {
         clearInterval(this.interval);
-        song.stop(() => {});
+        song.stop(() => { });
 
         this.setState({
             isLoading: true,
-        })
+        });
+
         const data = {
             main_id: this.props.navigation.state.params.mainId,
             chat_status: '1',
@@ -253,8 +254,6 @@ class ProChatAcceptScreen extends Component {
             }
         }
 
-        console.log("ACCEPT CHAT Data >> " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -263,9 +262,10 @@ class ProChatAcceptScreen extends Component {
             },
             body: JSON.stringify(data)
         })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
+            .then(response => response.json())
+            .then(responseJson => {
+                const { jobsInfo: { jobRequestsProviders }, fetchedPendingJobInfo, dispatchSelectedJobRequest, navigation } = this.props;
+                let newProJobsInfo = jobRequestsProviders.filter( Boolean );
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
@@ -289,10 +289,11 @@ class ProChatAcceptScreen extends Component {
                         delivery_lat: this.state.delivery_lat,
                         delivery_lang: this.state.delivery_lang,
                     }
-                    ProPendingJobRequest.Request = jobData;
 
-                    console.log("acceptJob :>>> " + JSON.stringify(ProPendingJobRequest.Request));
-                    this.props.navigation.navigate("ProAcceptRejectJob");
+                    newProJobsInfo.push(jobData)
+                    dispatchSelectedJobRequest(jobData);
+                    fetchedPendingJobInfo(newProJobsInfo);
+                    navigation.navigate("ProAcceptRejectJob");
                 }
                 else {
                     this.setState({
@@ -301,13 +302,12 @@ class ProChatAcceptScreen extends Component {
                         isLoading: false,
                         isErrorToast: true
                     });
-                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
                     this.showToast("Quelque chose a mal tourné")
 
                 }
             })
             .catch((error) => {
-                console.log("Error >>> " + error);
+                console.log("accept job error " + error);
                 this.setState({
                     timer: null,
                     requestStatus: 'No Response',
@@ -316,9 +316,7 @@ class ProChatAcceptScreen extends Component {
             })
     }
 
-    //Reject Chat Request
     rejectJob = () => {
-
         const data = {
             main_id: this.props.navigation.state.params.mainId,
             chat_status: '0',
@@ -340,8 +338,6 @@ class ProChatAcceptScreen extends Component {
             isLoading: true,
         })
 
-        console.log("REJECT CHAT Data : " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -350,11 +346,9 @@ class ProChatAcceptScreen extends Component {
             },
             body: JSON.stringify(data)
         })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
+            .then(response => response.json())
+            .then(responseJson => {
                 if (responseJson.result) {
-                    this.props.navigation.goBack();
                     this.setState({
                         isLoading: false
                     })
@@ -367,12 +361,11 @@ class ProChatAcceptScreen extends Component {
                         isErrorToast: true
                     });
                     this.showToast("Quelque chose a mal tourné")
-                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-
                 }
+                this.getBackFromProAcceptRejectJob()
             })
-            .catch((error) => {
-                console.log("Error >>> " + error);
+            .catch(error => {
+                console.log('reject error', error)
                 this.setState({
                     timer: null,
                     requestStatus: 'No Response',
@@ -399,8 +392,6 @@ class ProChatAcceptScreen extends Component {
             }
         }
 
-        console.log("REJECT CHAT Data : " + JSON.stringify(data));
-
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
@@ -411,24 +402,21 @@ class ProChatAcceptScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
                 if (responseJson.result) {
-                    this.props.navigation.goBack();
                     this.setState({
                         isLoading: false
                     })
                 }
                 else {
-
                     this.setState({
                         timer: null,
                         requestStatus: 'No Response',
                         isLoading: false,
                         isErrorToast: true
                     });
-                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
                     this.showToast("Quelque chose a mal tourné")
                 }
+                this.getBackFromProAcceptRejectJob();
             })
             .catch((error) => {
                 console.log("Error >>> " + error);
@@ -441,12 +429,11 @@ class ProChatAcceptScreen extends Component {
     }
 
     getBackFromProAcceptRejectJob = () => {
-        console.log("Go Back");
         this.props.navigation.goBack();
     }
 
     showToast = (message) => {
-        Toast.show(message);
+        Toast.show(message, Toast.LONG);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -474,7 +461,7 @@ class ProChatAcceptScreen extends Component {
 
                         <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
                             Demande
-            </Text>
+                        </Text>
                     </View>
                 </View>
 
@@ -546,48 +533,37 @@ class ProChatAcceptScreen extends Component {
                     </View>
                 }
 
-                {false &&
-
-                    <View style={styles.mainContainer}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
-                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.timer}</Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
-                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hi,</Text>
-                            <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname}</Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
-                            <Image style={{ width: 80, height: 80, borderRadius: 100, }}
-                                source={{ uri: this.state.userImage }}>
-                            </Image>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
-                            <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
-                                {this.state.userName + " veux te parler!"}
-                            </Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
-
-                            <TouchableOpacity style={styles.buttonContainer}
-                                onPress={this.acceptJob}>
-                                <Text style={styles.text}>Accepter le chat</Text>
-                            </TouchableOpacity>
-                        </View>
+                {false && <View style={styles.mainContainer}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
+                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.timer}</Text>
                     </View>
-                }
 
-                {/* {this.state.isLoading && (
-          <View style={styles.loaderStyle}>
-            <ActivityIndicator
-              style={{ height: 80 }}
-              color="#C00"
-              size="large" />
-          </View>
-        )} */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
+                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hi,</Text>
+                        <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname}</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
+                        <Image style={{ width: 80, height: 80, borderRadius: 100, }}
+                            source={{ uri: this.state.userImage }}>
+                        </Image>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
+                        <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
+                            {this.state.userName + " veux te parler!"}
+                        </Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
+
+                        <TouchableOpacity style={styles.buttonContainer}
+                            onPress={this.acceptJob}>
+                            <Text style={styles.text}>Accepter le chat</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                }
 
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>

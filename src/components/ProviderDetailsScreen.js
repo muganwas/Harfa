@@ -12,7 +12,7 @@ import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
 import OnlineUsers from './OnlineUsers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -163,7 +163,7 @@ class ProviderDetailsScreen extends Component {
                   seconds_Counter: num.length == 1 ? '0' + num : num
                 });
               }, 1000);
-
+              this.props.updateActiveRequest(true);
               this.setState({
                 requestStatus: "Waiting for acceptance...",
                 isLoading: false,
@@ -270,8 +270,8 @@ class ProviderDetailsScreen extends Component {
   } 
 
   componentDidUpdate(){
-
-      console.log(this.state.minutes_Counter+" : "+this.state.seconds_Counter);
+    const { jobsInfo: { activeRequest } } = this.props;
+    const { requestStatus } = this.state;
       if(this.state.minutes_Counter == '00'){ 
         if(this.state.seconds_Counter == '00')
         {
@@ -283,6 +283,8 @@ class ProviderDetailsScreen extends Component {
         });
         }
       }
+    if (!activeRequest && requestStatus == 'Waiting for acceptance...') 
+      this.setState({requestStatus: ''});
   }
 
   componentDidMount(){
@@ -581,6 +583,9 @@ const mapDispatchToProps = dispatch => {
         },
         dispatchSelectedJobRequest: job => {
             dispatch(setSelectedJobRequest(job));
+        },
+        updateActiveRequest: val => {
+          dispatch(updateActiveRequest(val));
         }
     }
 }

@@ -29,7 +29,7 @@ import AddAddressScreen from './AddAddressScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
 import Hamburger from './Hamburger';
-import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
 import { imageExists } from '../misc/helpers';
 //import {Notifications} from 'react-native-notifications';
 
@@ -168,7 +168,9 @@ class DashBoardScreen extends Component {
                 });
                 newJobRequests[pos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Demande de chat acceptée")
+                this.showToast("Demande de chat acceptée");
+                this.props.updateActiveRequest(false);
+                this.props.navigation.goBack();
             }
             else if (title == "Chat Request Rejected") {
                 this.setState({
@@ -233,12 +235,6 @@ class DashBoardScreen extends Component {
         });
     }
 
-    componentDidUpdate() {
-        const { generalInfo: { othersCoordinates, coordinatesFetched } } = this.props;
-        console.log('fetched', coordinatesFetched)
-        console.log('others coords', othersCoordinates)
-    }
-
     componentWillUnmount() {
         Config.socket.close();
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
@@ -260,7 +256,10 @@ class DashBoardScreen extends Component {
                 },
                 {
                     text: "D'accord",
-                    onPress: () => this.onRefresh(),
+                    onPress: () => {
+                        this.props.updateActiveRequest(false);
+                        this.onRefresh()
+                    }
                 },
             ]
         );
@@ -489,15 +488,6 @@ class DashBoardScreen extends Component {
                     </TouchableOpacity>
                 </Animated.View>
 
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
-
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -537,6 +527,9 @@ const mapDispatchToProps = dispatch => {
         },
         dispatchSelectedJobRequest: job => {
             dispatch(setSelectedJobRequest(job));
+        },
+        updateActiveRequest: val => {
+          dispatch(updateActiveRequest(val));
         }
     }
 }

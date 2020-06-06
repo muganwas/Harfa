@@ -12,7 +12,8 @@ import {
     FETCHED_ALL_JOB_REQUESTS_CLIENT,
     FETCH_ALL_JOB_REQUESTS_CLIENT_ERROR,
     FETCHED_DATA_WORK_SOURCE,
-    FETCH_DATA_WORK_SOURCE_ERROR
+    FETCH_DATA_WORK_SOURCE_ERROR,
+    UPDATE_ACTIVE_REQUREST
 } from '../types';
 
 import { imageExists } from '../../misc/helpers';
@@ -97,6 +98,13 @@ export const fetchAllJobRequestsClientError = () => {
 export const fetchedDataWorkSource = payload => {
     return {
         type: FETCHED_DATA_WORK_SOURCE,
+        payload
+    }
+}
+
+export const updateActiveRequest = payload => {
+    return {
+        type: UPDATE_ACTIVE_REQUREST,
         payload
     }
 }

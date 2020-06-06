@@ -1012,16 +1012,7 @@ class ProDashBoardScreen extends Component {
                         // ItemSeparatorComponent={this.renderSeparator}
                         />
                     </View> : null}
-
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
-
+                    
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />

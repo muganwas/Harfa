@@ -11,7 +11,8 @@ import {
     FETCHED_ALL_JOB_REQUESTS_CLIENT,
     FETCH_ALL_JOB_REQUESTS_CLIENT_ERROR,
     FETCHED_DATA_WORK_SOURCE,
-    FETCH_DATA_WORK_SOURCE_ERROR
+    FETCH_DATA_WORK_SOURCE_ERROR,
+    UPDATE_ACTIVE_REQUREST
 } from '../types';
 
 const initialState = {
@@ -29,6 +30,7 @@ const initialState = {
     requestsProvidersError: null,
     requestsFetched: false,
     fetchingRequests: false,
+    activeRequest:false,
     requestsError: null
 }
 
@@ -115,6 +117,11 @@ const jobsReducer = (state=initialState, action) => {
             return {
                 ...state,
                 dataWorkSourceFetched: false
+            }
+        case UPDATE_ACTIVE_REQUREST:
+            return {
+                ...state,
+                activeRequest: action.payload
             }
         default: 
             return state;
