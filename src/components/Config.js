@@ -13,7 +13,7 @@ import {
 } from 'react-native-dotenv';
 //local
 export default class Config {
-  static baseURL = BASE_URL_LOCAL
+  static baseURL = BASE_URL_CLOUD
   static apiKey = FIREBASE_API_KEY
   static authDomain = FIREBASE_AUTH_DOMAIN
   static databaseURL = FIREBASE_DATABASE_URL
