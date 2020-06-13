@@ -279,7 +279,7 @@ export default class RegisterScreen extends Component {
               this.setState({
                 isLoading: false,
               });
-              Alert.alert('OOPS !', 'Something went wrong, Try again later', [
+              Alert.alert('OOPS !', error.message, [
                 {
                   text: 'Cancel',
                   onPress: () => console.log('Cancel Pressed'),

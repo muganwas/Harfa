@@ -388,6 +388,8 @@ PODS:
     - React
   - RNReanimated (1.3.0):
     - React
+  - RNScreens (2.8.0):
+    - React
   - RNSound (0.11.0):
     - React
     - RNSound/Core (= 0.11.0)
@@ -444,6 +446,7 @@ DEPENDENCIES:
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-community/google-signin`)"
   - RNReanimated (from `../node_modules/react-native-reanimated`)
+  - RNScreens (from `../node_modules/react-native-screens`)
   - RNSound (from `../node_modules/react-native-sound`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
@@ -557,6 +560,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/google-signin"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
+  RNScreens:
+    :path: "../node_modules/react-native-screens"
   RNSound:
     :path: "../node_modules/react-native-sound"
   Yoga:
@@ -629,6 +634,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: 4cb47a93019c1a201df2644413a0a1569a51c8aa
   RNGoogleSignin: a8504be96dea98b2fd006ec3f2bbe04cef8b3692
   RNReanimated: 6abbbae2e5e72609d85aabd92a982a94566885f1
+  RNScreens: 62211832af51e0aebcf6e8c36bcf7dd65592f244
   RNSound: c980916b596cc15c8dcd2f6ecd3b13c4881dbe20
   Toast: 91b396c56ee72a5790816f40d3a94dd357abc196
   Yoga: 14927e37bd25376d216b150ab2a561773d57911f

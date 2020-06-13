@@ -182,7 +182,7 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
-    implementation project(':react-native-fbsdk')
+    implementation 'com.android.support:multidex:1.0.3'
 
     // Firebase dependencies
     implementation "com.google.android.gms:play-services-base:16.1.0"
@@ -194,7 +194,6 @@ dependencies {
     implementation 'com.facebook.android:facebook-core:5.11.2'
     implementation "com.google.firebase:firebase-database:17.0.0"
     //implementation project(':react-native-system-notification')
-    implementation project(':react-native-notifications')
 
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/";

@@ -269,7 +269,7 @@ class FacebookGoogleScreen extends Component {
                         })
                         Alert.alert(
                             "OOPS !",
-                            "Something went wrong, Try again later",
+                            error.message,
                             [
                                 {
                                     text: 'Cancel',
@@ -395,7 +395,7 @@ class FacebookGoogleScreen extends Component {
                         })
                         Alert.alert(
                             "OOPS !",
-                            "Something went wrong, Try again later",
+                            error.message,
                             [
                                 {
                                     text: 'Cancel',

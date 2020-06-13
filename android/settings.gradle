@@ -3,6 +3,4 @@ apply from: file("../node_modules/@react-native-community/cli-platform-android/n
 include ':app'
 //include ':react-native-system-notification'
 //project(':react-native-system-notification').projectDir = new File(settingsDir, '../node_modules/react-native-system-notification/android')
-include ':react-native-notifications'
-project(':react-native-notifications').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-notifications/lib/android/app')
 project(':react-native-gesture-handler').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-gesture-handler/android')

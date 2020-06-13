@@ -519,6 +519,7 @@ class MapDirectionScreen extends Component {
         } = this.state;
         const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : undefined;
         const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : undefined;
+        const userAvatarAvailable = jobRequests && jobRequests[currRequestPos] ? jobRequests[currRequestPos].image : false;
         return (
             <View style={styles.container}>
 
@@ -584,6 +585,7 @@ class MapDirectionScreen extends Component {
                     size={30}
                     color={'#000'}
                 /> }
+                { jobRequests && jobRequests[currRequestPos] ?
                 <SlidingPanel
                     headerLayoutHeight={140}
                     headerLayout={() =>
@@ -600,7 +602,7 @@ class MapDirectionScreen extends Component {
                                 <View style={{ flexDirection: 'row', flex: 1 }}>
 
                                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
-                                        source={jobRequests[currRequestPos].imageAvailable ? { uri: jobRequests[currRequestPos].image } : require('../images/generic_avatar.png')} />
+                                        source={ userAvatarAvailable ? { uri: jobRequests[currRequestPos].image } : require('../images/generic_avatar.png')} />
                                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                         <Text style={{ marginRight: 200, color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
                                             numberOfLines={1}>
@@ -667,7 +669,11 @@ class MapDirectionScreen extends Component {
                             </View>
                         </View>
                     }>
-                </SlidingPanel>
+                </SlidingPanel> :
+                <ActivityIndicator 
+                    color = {'black'}
+                />
+                }
             </View>
         );
     }
