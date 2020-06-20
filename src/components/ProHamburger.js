@@ -15,7 +15,9 @@ import { DrawerActions } from 'react-navigation-drawer';
 import geolocation from '@react-native-community/geolocation';
 import firebase from 'react-native-firebase';
 import ProviderDetails from './ProviderDetails';
+import Toast from 'react-native-simple-toast';
 import { Notifications } from 'react-native-notifications';
+import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 
 const Android = Platform.OS === 'android';
 
@@ -104,7 +106,6 @@ class Hamburger extends React.Component {
             const { coords: { latitude, longitude } } = info;
             fetchingCoordinates();
             userRef.update({ latitude, longitude }).then(() => {
-                console.log('updated pro position');
                 fetchedCoordinates({ latitude, longitude });
             }).
                 catch(e => {
@@ -116,8 +117,18 @@ class Hamburger extends React.Component {
         }, { enableHighAccuracy: true });
 
         firebase.notifications().onNotification(notification => {
-            const { notificationsInfo, navigation } = this.props;
+            const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body, data } = notification;
+
+            const orderId = data.orderId;
+            let pos = 0;
+
+            jobRequestsProviders.map((obj, key) => {
+                const currOrderId = obj.order_Id;
+                if (orderId === currOrderId) pos = key;
+            });
+
+            let newJobRequestsProviders = [...jobRequestsProviders]
             if (title == "Booking Request") {
                 navigation.navigate("ProChatAccept", {
                     'userId': data.userId,
@@ -131,6 +142,11 @@ class Hamburger extends React.Component {
                 const currentGenericCount = notificationsInfo.generic;
                 const newGenericCount = currentGenericCount + 1;
                 fetchedNotifications({ type: 'generic', value: newGenericCount });
+            }
+            else if (title.toLowerCase() == "job canceled") {
+                Toast.show(title + ' has been canceled by client');
+                newJobRequestsProviders.splice(pos, 1);
+                dispatchFetchedProJobRequests(newJobRequestsProviders);
             }
         });
 
@@ -183,7 +199,6 @@ class Hamburger extends React.Component {
     }
 
     componentWillUnmount() {
-        console.log('pro burger unmount..');
         const senderId = ProviderDetails.Provider.providerId;
         //const receiverId = ProviderDetails.Provider.providerId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
@@ -294,7 +309,10 @@ const mapDispatchToProps = dispatch => {
         },
         fetchOthersCoordinatesError: error => {
             dispatch(updateOthersCoordinatesError(error))
-        }
+        },
+        dispatchFetchedProJobRequests: jobs => {
+            dispatch(fetchedJobProviderInfo(jobs));
+        },
     }
 }
 

@@ -11,7 +11,6 @@ import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
 import {imageExists} from '../misc/helpers';
-import PendingJobRequest from './PendingJobRequest';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -53,12 +52,10 @@ class ChatAfterBookingDetailsScreen extends Component {
     constructor(props) {
         super(props)
         const { jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
-        var currRequestPos;
         Object.keys(jobRequests).map(key => {
             const currEmpId = jobRequests[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
-        console.log(jobRequests[currRequestPos])
         this.state = {
             senderId: UserDetails.User.userId,
             senderImage: UserDetails.User.image,
@@ -81,12 +78,8 @@ class ChatAfterBookingDetailsScreen extends Component {
     };
 
     componentDidMount() {
-        console.log('chat after booking...')
-        console.log(PendingJobRequest)
         const { fetchedNotifications } = this.props;
         fetchedNotifications({type: 'messages', value: 0});
-        console.log("Sender Id >> "+UserDetails.User.userId);
-        console.log("Receiver ID >> "+this.state.receiverId);
         imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
             this.setState({proImageAvailable});
         });
@@ -394,7 +387,6 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
-        console.log('message item', item)
         return (
             this.state.senderId != item.senderId
                 ?

@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
 import {
     updatingCoordinates,
     updateCoordinates,
@@ -13,8 +14,10 @@ import {
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import firebase from 'react-native-firebase';
+import Toast from 'react-native-simple-toast';
 import geolocation from '@react-native-community/geolocation';
 import UserDetails from './UserDetails';
+import { imageExists } from '../misc/helpers';
 import { Notifications } from 'react-native-notifications';
 
 const Android = Platform.OS === 'android';
@@ -66,7 +69,6 @@ class Hamburger extends React.Component {
         Notifications.registerRemoteNotifications();
     }
     componentDidMount() {
-        console.log('hamburger mounted..')
         const {
             navigation,
             fetchNotifications,
@@ -79,6 +81,125 @@ class Hamburger extends React.Component {
         } = this.props;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
+
+        firebase.notifications().onNotification( async notification => {
+            const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
+            const currentGenericCount = notificationsInfo.generic;
+            const newGenericCount = currentGenericCount + 1;
+            let newJobRequests = [...jobRequests];
+
+            fetchedNotifications({ type: 'generic', value: newGenericCount });
+            const { title, body, data } = notification;
+
+            console.log('notification', notification);
+            const orderId = data.orderId;
+            let pos = 0;
+
+            jobRequests.map((obj, key) => {
+                const currOrderId = obj.order_Id;
+                if (orderId === currOrderId) pos = key;
+            });
+
+            if (title == "Chat Request Accepted" && pos != null) {
+                /*this.setState({
+                    requestStatus: title,
+                    title: title,
+                    body: body,
+                    data: data,
+                    isToastShow: true,
+                })*/
+                var providerData = JSON.parse(data.ProviderData);
+
+                var pendingJobData = {
+                    id: data.mainId,
+                    order_id: data.orderId,
+                    employee_id: providerData.ProviderId,
+                    image: providerData.imageSource,
+                    fcm_id: providerData.fcmId,
+                    name: providerData.name,
+                    surName: providerData.surname,
+                    mobile: providerData.mobile,
+                    description: providerData.description,
+                    address: providerData.address,
+                    lat: providerData.lat,
+                    lang: providerData.lang,
+                    service_name: data.serviceName,
+                    chat_status: data.chat_status,
+                    status: data.status,
+                    delivery_address: data.delivery_address,
+                    delivery_lat: data.delivery_lat,
+                    delivery_lang: data.delivery_lang,
+                }
+                imageExists(providerData.imageSource).then(res => {
+                    pendingJobData.imageAvailable = res;
+                });
+                newJobRequests[pos] = pendingJobData;
+                fetchedPendingJobInfo(newJobRequests);
+                this.showToast("Demande de chat acceptée");
+                updateActiveRequest(false);
+                navigation.goBack();
+            }
+            else if (title == "Chat Request Rejected") {
+                this.setState({
+                    requestStatus: title,
+                    title: title,
+                    body: body,
+                    data: data,
+                    isJobAccepted: false,
+                })
+                this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+            }
+            else if ((title == "No Response" || title == "Canceled") && pos != null) {
+                this.setState({
+                    requestStatus: title,
+                    title: title,
+                    body: body,
+                    data: data,
+                })
+                newJobRequests.splice(pos, 1);
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
+            }
+            else if (title == "Job Accepted" && pos != null) {
+                var pendingJobData = {
+                    id: data.mainId,
+                    order_id: data.orderId,
+                    employee_id: data.ProviderId,
+                    image: data.image,
+                    fcm_id: data.fcmId,
+                    name: data.name,
+                    surName: data.surname,
+                    mobile: data.mobile,
+                    description: data.description,
+                    address: data.address,
+                    lat: data.lat,
+                    lang: data.lang,
+                    service_name: data.serviceName,
+                    chat_status: data.chat_status,
+                    status: data.status,
+                    delivery_address: data.delivery_address,
+                    delivery_lat: data.delivery_lat,
+                    delivery_lang: data.delivery_lang,
+                }
+                newJobRequests[pos] = pendingJobData;
+                fetchedPendingJobInfo(newJobRequests);
+
+                this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
+            }
+            else if (title == "Job Rejected" && pos != null) {
+                this.setState({
+                    isJobAccepted: false
+                })
+                newJobRequests.splice(pos, 1);
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
+            }
+            else if (title == "Job Completed" && pos != null) {
+                newJobRequests.splice(pos, 1);
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
+            }
+        });
 
         allJobRequestsClient.map(obj => {
             const { employee_id } = obj;
@@ -230,8 +351,13 @@ class Hamburger extends React.Component {
                         });
                 });
         });
-        this.setState({employeesLocationsFetched:true});
+        this.setState({ employeesLocationsFetched: true });
     }
+
+    showToast = message => {
+        Toast.show(message);
+    }
+
     render() {
         const {
             text,
@@ -304,6 +430,21 @@ const mapDispatchToProps = dispatch => {
         },
         fetchOthersCoordinatesError: error => {
             dispatch(updateOthersCoordinatesError(error))
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobCustomer());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobCustomerInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchCustomerJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        },
+        updateActiveRequest: val => {
+            dispatch(updateActiveRequest(val));
         }
     }
 }

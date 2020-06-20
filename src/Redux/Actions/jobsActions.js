@@ -253,7 +253,6 @@ export const getAllWorkRequestPro = providerId => {
 export const getPendingJobRequestProvider = (props, providerId, navTo) => {
     return dispatch => {
         const { navigation } = props;
-        console.log('navigation', navigation, 'providerId', providerId, 'navTo', navTo)
         let newJobRequestsProviders = [];
         dispatch(startFetchingJobProvider());
         fetch(PENDING_JOB_PROVIDER + providerId, {

@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
   View,
@@ -14,7 +14,7 @@ import {
   Modal,
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import {AirbnbRating} from 'react-native-ratings';
+import { AirbnbRating } from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
 import firebase from 'react-native-firebase';
 import Config from './Config';
@@ -22,6 +22,7 @@ import UserDetails from './UserDetails';
 import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
 import { getDistance } from '../misc/helpers';
+import { imageExists } from '../misc/helpers';
 
 //const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -48,8 +49,8 @@ function StatusBarPlaceHolder() {
       <StatusBar barStyle="light-content" />
     </View>
   ) : (
-    <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
-  );
+      <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
+    );
 }
 
 class ListOfProviderScreen extends Component {
@@ -92,10 +93,24 @@ class ListOfProviderScreen extends Component {
       body: JSON.stringify(data),
     })
       .then(response => response.json())
-      .then(responseJson => {
+      .then( async responseJson => {
         if (responseJson.result) {
+          let dataSource = responseJson.data;
+          dataSource.map(async (obj, key) => {
+            const { image } = obj;
+            let imageAvaliable = true;
+            if (image) {
+              await imageExists(image).then(res => {
+                imageAvaliable = res;
+              });
+            }
+            else {
+              imageAvaliable = false;
+            }
+            dataSource[key].imageAvailable = imageAvaliable;
+          })
           this.setState({
-            dataSource: responseJson.data, //data is key
+            dataSource, 
             isLoading: false,
             isNoData: false,
             isData: true,
@@ -109,7 +124,6 @@ class ListOfProviderScreen extends Component {
         }
       })
       .catch(error => {
-        console.log(error);
         this.setState({
           isLoading: false,
         });
@@ -122,29 +136,39 @@ class ListOfProviderScreen extends Component {
     await axios.get(GET_EMPLOYEE_RATINGS + id).then(res => {
       if (res.data.rating > 0) avg = res.data.rating;
     });
-    return(avg)
+    return (avg)
   }
 
-  componentDidUpdate(){
+  componentDidUpdate() {
     const { dataSource, distCalculated } = this.state;
     var distInfo = {};
     var tempDatasource = [...dataSource];
     const { generalInfo: { usersCoordinates } } = this.props;
     if (dataSource.length > 0 && !distCalculated) {
-        Object.keys(dataSource).map(key => {
-            const { _id } = dataSource[key];
-            firebase.database().ref(`liveLocation/${_id}`).once('value', result => {
-                const { latitude, longitude } = result.val();
-                const dist = getDistance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
-                distInfo[_id] = parseFloat(dist).toFixed(1);
-                tempDatasource[key].hash = parseFloat(dist).toFixed(1);
-                this.setState({distInfo});
-            }).
-            catch(e => {
-                console.log(e.message);
-            });
-        });
-        this.setState({distCalculated: true, dataSource: tempDatasource});
+      dataSource.map(async (obj, key) => {
+        const { _id, image } = obj;
+        let imageAvaliable = true;
+        if (image) {
+          await imageExists(image).then(res => {
+            imageAvaliable = res;
+          });
+        }
+        else {
+          imageAvaliable = false;
+        }
+        tempDatasource[key].imageAvailable = imageAvaliable;
+        firebase.database().ref(`liveLocation/${_id}`).once('value', result => {
+          const { latitude, longitude } = result.val();
+          const dist = getDistance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
+          distInfo[_id] = parseFloat(dist).toFixed(1);
+          tempDatasource[key].hash = parseFloat(dist).toFixed(1);
+          this.setState({ distInfo });
+        }).
+          catch(e => {
+            //console.log(e.message);
+          });
+      });
+      this.setState({ distCalculated: true, dataSource: tempDatasource });
     }
   }
 
@@ -164,99 +188,99 @@ class ListOfProviderScreen extends Component {
     Toast.show(message);
   };
 
-  renderItem = ({item}) => {
+  renderItem = ({ item }) => {
     const { accountType } = UserDetails.User;
     const { showClasses } = this.state;
-    if ( accountType === 'Individual' || item.invoice === 1)/** only return providers with invoices for enterprise clients */
-        return (
+    if (accountType === 'Individual' || item.invoice === 1)/** only return providers with invoices for enterprise clients */
+      return (
         <TouchableOpacity
-            style={styles.itemMainContainer}
-            onPress={() => {
-                !showClasses ?
-                this.props.navigation.navigate('ProviderDetails', {
-                    providerId: item.id,
-                    name: item.username,
-                    surname: item.surname,
-                    image: item.image,
-                    mobile: item.mobile,
-                    avgRating: item.avgRating,
-                    distance: item.hash,
-                    address: item.address,
-                    description: item.description,
-                    status: item.status,
-                    fcmId: item.fcm_id,
-                    accountType: item.account_type,
-                    serviceName: this.state.serviceName,
-                    serviceId: this.state.serviceId,
-                }) :
-                null;
-            }
-            }>
-            <View
+          style={styles.itemMainContainer}
+          onPress={() => {
+            !showClasses ?
+              this.props.navigation.navigate('ProviderDetails', {
+                providerId: item.id,
+                name: item.username,
+                surname: item.surname,
+                image: item.image,
+                mobile: item.mobile,
+                avgRating: item.avgRating,
+                distance: item.hash,
+                address: item.address,
+                description: item.description,
+                status: item.status,
+                fcmId: item.fcm_id,
+                accountType: item.account_type,
+                serviceName: this.state.serviceName,
+                serviceId: this.state.serviceId,
+              }) :
+              null;
+          }
+          }>
+          <View
+            style={{
+              width: screenWidth,
+              flexDirection: 'row',
+              backgroundColor: 'white',
+              alignContent: 'center',
+              padding: 10,
+            }}
+          >
+            <View style={{ flexDirection: 'column', marginLeft: 10 }}>
+              <Image
                 style={{
-                    width: screenWidth,
-                    flexDirection: 'row',
-                    backgroundColor: 'white',
-                    alignContent: 'center',
-                    padding: 10,
+                  width: 60,
+                  height: 60,
+                  borderRadius: 100,
+                  alignSelf: 'center',
                 }}
-            >
-            <View style={{flexDirection: 'column', marginLeft: 10}}>
-                <Image
-                    style={{
-                        width: 60,
-                        height: 60,
-                        borderRadius: 100,
-                        alignSelf: 'center',
-                    }}
-                    source={{uri: item.image}}
-                />
+                source={item.imageAvailable ? { uri: item.image } : require('../images/generic_avatar.png')}
+              />
 
-                <View style={{backgroundColor: 'white', marginTop: 5}}>
+              <View style={{ backgroundColor: 'white', marginTop: 5 }}>
 
                 <AirbnbRating
-                    type="custom"
-                    ratingCount={5}
-                    defaultRating={item.avgRating}
-                    size={10}
-                    ratingBackgroundColor={colorBg}
-                    showRating={false}
+                  type="custom"
+                  ratingCount={5}
+                  defaultRating={item.avgRating}
+                  size={10}
+                  ratingBackgroundColor={colorBg}
+                  showRating={false}
                 />
-                </View>
+              </View>
             </View>
 
             <View
-                style={{
+              style={{
                 flexDirection: 'column',
                 width: screenWidth - 130,
                 marginLeft: 10,
-                }}
+              }}
             >
-                <Text style={{fontWeight: 'bold', color: 'black', fontSize: 16}}>
+              <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 16 }}>
                 {item.username + ' ' + item.surname}
-                </Text>
-                <Text
-                style={{width: screenWidth - 120, color: 'black', fontSize: 12}}>
+              </Text>
+              <Text
+                style={{ width: screenWidth - 120, color: 'black', fontSize: 12 }}>
                 {item.address}
-                </Text>
-                <Text style={{marginTop: 5}}>
-                <Text style={{fontWeight: 'bold', color: 'black', fontSize: 14}}>
-                    {'Position:' + item.hash + ' Km'}
+              </Text>
+              <Text style={{ marginTop: 5 }}>
+                <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 14 }}>
+                  {'Position:' + item.hash + ' Km'}
                 </Text>
                 <Text
-                    style={{
+                  style={{
                     color: 'black',
                     width: screenWidth - 120,
                     fontSize: 14,
-                    }}>
-                    {' '}
+                  }}>
+                  {' '}
                     loin de vous
                 </Text>
-                </Text>
+              </Text>
             </View>
-            </View>
+          </View>
         </TouchableOpacity>
-        );
+      );
     else return null;
   };
 
@@ -267,54 +291,54 @@ class ListOfProviderScreen extends Component {
   };
 
   rerenderList = order => {
-      const { dataSource, reviewOrder, distanceOrder } = this.state
-      let hashsArr = [];
-      let ratingArr = [];
-      let newDataSource = [];
-      if (order === 'distance') {
-        dataSource.map(obj => hashsArr.push([obj._id, obj.hash]));
-        distanceOrder ? hashsArr.sort(function(a,b){return a[1]-b[1]}) : hashsArr.sort(function(a,b){return b[1]-a[1]});
-        /**rearrange datasource according to distance */
-        hashsArr.map(innerArr => {
-          dataSource.map(obj => {
-            const id = obj._id;
-            if (id === innerArr[0]) {
-                newDataSource.push(obj);
-            }
-          });
+    const { dataSource, reviewOrder, distanceOrder } = this.state
+    let hashsArr = [];
+    let ratingArr = [];
+    let newDataSource = [];
+    if (order === 'distance') {
+      dataSource.map(obj => hashsArr.push([obj._id, obj.hash]));
+      distanceOrder ? hashsArr.sort(function (a, b) { return a[1] - b[1] }) : hashsArr.sort(function (a, b) { return b[1] - a[1] });
+      /**rearrange datasource according to distance */
+      hashsArr.map(innerArr => {
+        dataSource.map(obj => {
+          const id = obj._id;
+          if (id === innerArr[0]) {
+            newDataSource.push(obj);
+          }
         });
-        this.setState({dataSource: newDataSource, distanceOrder: !distanceOrder });
-      } else {
-        dataSource.map(obj => ratingArr.push([obj._id, obj.avgRating]));
-        reviewOrder ? ratingArr.sort(function(a,b){return a[1]-b[1]}) : ratingArr.sort(function(a,b){return b[1]-a[1]});
-        /**rearrange datasource according to ratings */
-        ratingArr.map(innerArr => {
-            dataSource.map(obj => {
-                const id = obj._id;
-                //const rating = obj.avgRating;
-                if (id === innerArr[0]) {
-                    newDataSource.push(obj);
-                }
-            }); 
+      });
+      this.setState({ dataSource: newDataSource, distanceOrder: !distanceOrder });
+    } else {
+      dataSource.map(obj => ratingArr.push([obj._id, obj.avgRating]));
+      reviewOrder ? ratingArr.sort(function (a, b) { return a[1] - b[1] }) : ratingArr.sort(function (a, b) { return b[1] - a[1] });
+      /**rearrange datasource according to ratings */
+      ratingArr.map(innerArr => {
+        dataSource.map(obj => {
+          const id = obj._id;
+          //const rating = obj.avgRating;
+          if (id === innerArr[0]) {
+            newDataSource.push(obj);
+          }
         });
-        this.setState({ dataSource: newDataSource, reviewOrder: !reviewOrder});
-      }
-      
-      this.toggleShowClasses();
+      });
+      this.setState({ dataSource: newDataSource, reviewOrder: !reviewOrder });
+    }
+
+    this.toggleShowClasses();
   }
 
   toggleShowClasses = () => {
-      this.setState({showClasses: !this.state.showClasses});
+    this.setState({ showClasses: !this.state.showClasses });
   }
 
   render() {
-      const { showClasses } = this.state;
+    const { showClasses } = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
 
         <View style={styles.header}>
-          <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity
               style={{
                 width: 35,
@@ -324,7 +348,7 @@ class ListOfProviderScreen extends Component {
               }}
               onPress={() => this.props.navigation.goBack()}>
               <Image
-                style={{width: 20, height: 20, alignSelf: 'center'}}
+                style={{ width: 20, height: 20, alignSelf: 'center' }}
                 source={require('../icons/arrow_back.png')}
               />
             </TouchableOpacity>
@@ -340,15 +364,15 @@ class ListOfProviderScreen extends Component {
               {this.state.serviceName}
             </Text>
             <TouchableOpacity onPress={this.toggleShowClasses} style={styles.classedByContainer}>
-                <Text style={styles.classedByText}>Classed By</Text>
+              <Text style={styles.classedByText}>Classed By</Text>
             </TouchableOpacity>
-            <View style={ showClasses ? styles.classList : styles.hidden}>
-                <TouchableOpacity onPress={() => this.rerenderList('distance')} style={styles.classTextContainer}>
-                    <Text style={styles.classText}> Distance </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => this.rerenderList('reviews')} style={styles.classTextContainer}>
-                    <Text style={styles.classText}> Reviews </Text>
-                </TouchableOpacity>
+            <View style={showClasses ? styles.classList : styles.hidden}>
+              <TouchableOpacity onPress={() => this.rerenderList('distance')} style={styles.classTextContainer}>
+                <Text style={styles.classText}> Distance </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => this.rerenderList('reviews')} style={styles.classTextContainer}>
+                <Text style={styles.classText}> Reviews </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -385,11 +409,11 @@ class ListOfProviderScreen extends Component {
                 alignItems: 'center',
               }}>
               <Image
-                style={{width: 50, height: 50}}
+                style={{ width: 50, height: 50 }}
                 source={require('../icons/service_provider_tool.png')}
               />
             </View>
-            <Text style={{fontSize: 18, marginTop: 10}}>
+            <Text style={{ fontSize: 18, marginTop: 10 }}>
               Aucun fournisseur trouvé
             </Text>
           </View>
@@ -428,7 +452,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colorYellow,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 0},
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -447,7 +471,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'white',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 0},
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
     shadowRadius: 5,
     padding: 5,
@@ -467,53 +491,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   classedByContainer: {
-      position: 'absolute',
-      right: 10
+    position: 'absolute',
+    right: 10
   },
   classedByText: {
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: 15
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15
   },
   hidden: {
-      display: 'none'
+    display: 'none'
   },
   classList: {
-      position: 'absolute',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: '#fff',
-      alignContent: 'center',
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: {width: 0, height: 0},
-      shadowOpacity: 0.75,
-      shadowRadius: 5,
-      width: 100,
-      right: 2,
-      top: 3,
-      elevation: Platform.OS === 'android' ? 10 : 0,
-      zIndex: 10
+    position: 'absolute',
+    display: 'flex',
+    flexDirection: 'column',
+    backgroundColor: '#fff',
+    alignContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    width: 100,
+    right: 2,
+    top: 3,
+    elevation: Platform.OS === 'android' ? 10 : 0,
+    zIndex: 10
   },
   classTextContainer: {
-      flex: 1,
-      display: 'flex',
-      alignContent: 'center',
-      padding: 5,
-      alignItems: 'center',
-      elevation: Platform.OS === 'android' ? 10 : 0,
-      zIndex: 9
+    flex: 1,
+    display: 'flex',
+    alignContent: 'center',
+    padding: 5,
+    alignItems: 'center',
+    elevation: Platform.OS === 'android' ? 10 : 0,
+    zIndex: 9
   },
   classText: {
-      flex: 1,
-      textAlign: 'center'
+    flex: 1,
+    textAlign: 'center'
   }
 });
 
 const mapStateToProps = state => {
-    return {
-        generalInfo: state.generalInfo
-    }
+  return {
+    generalInfo: state.generalInfo
+  }
 }
 
 export default connect(mapStateToProps)(ListOfProviderScreen);

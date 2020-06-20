@@ -30,10 +30,8 @@ import NetInfo from "@react-native-community/netinfo";
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { connect } from 'react-redux';
-import { fetchedAllJobRequestsPro, fetchAllJobRequestsProError } from '../Redux/Actions/jobsActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
-
+import { startFetchingJobProvider, fetchAllJobRequestsProError, fetchedAllJobRequestsPro, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 
 const socket = Config.socket;
 
@@ -108,7 +106,7 @@ class ProDashBoardScreen extends Component {
 
     //Get All Bookings
     async componentDidMount() {
-        const { navigation, jobsInfo: { dataWorkSource } } = this.props;
+        const { navigation, jobsInfo: { dataWorkSource, jobRequestsProviders } } = this.props;
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
         NetInfo.addEventListener(state => {
             if (!state.isConnected) this.setState({ connectivityAvailable: false });

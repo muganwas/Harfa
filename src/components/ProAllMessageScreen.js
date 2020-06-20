@@ -135,8 +135,8 @@ class ProAllMessageScreen extends Component {
     renderRecentMessageItem = ({ item }) => {
         const { dispatchSelectedJobRequest, jobsInfo: { allJobRequestsProviders } } = this.props;
         let currentPos;
-        Object.keys(allJobRequestsProviders).map(key => {
-            if (allJobRequestsProviders[key].user_id === item.id) {
+        allJobRequestsProviders.map((obj, key) => {
+            if (obj.user_id === item.id) {
                 currentPos = key;
             }
         });

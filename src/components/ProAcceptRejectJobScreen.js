@@ -60,9 +60,9 @@ class ProAcceptRejectJobScreen extends Component {
         super(props)
         const { jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
         var currRequestPos;
-        Object.keys(jobRequestsProviders).map(key => {
-            if (jobRequestsProviders[key]) {
-                const currEmpId = jobRequestsProviders[key].user_id;
+        jobRequestsProviders.map((obj, key) => {
+            if (obj) {
+                const currEmpId = obj.user_id;
                 if (currEmpId === user_id) currRequestPos = key;
             }
         });
@@ -359,10 +359,6 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     sendMessageTask = () => {
-
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
-        console.log("Sender Id : " + this.state.orderId);
         if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
@@ -429,8 +425,6 @@ class ProAcceptRejectJobScreen extends Component {
 
     sendImageTask = async (imageURL) => {
 
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
 
         if (imageURL != '' && imageURL != null) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
@@ -664,7 +658,7 @@ class ProAcceptRejectJobScreen extends Component {
                         isLoading: false,
                         isRejectJob: true
                     });
-                    delete newjobRequestsProviders[currRequestPos];
+                    newjobRequestsProviders.splice(currRequestPos, 1);
                     fetchedPendingJobInfo(newjobRequestsProviders);
                     this.props.navigation.navigate("ProDashBoard");
                 }

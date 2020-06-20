@@ -34,7 +34,6 @@ class CustomMenuLayout extends Component {
     render() {
         const imageSource = UserDetails.User.image; 
         const { notificationsInfo, fetchedNotifications } = this.props;
-        console.log(imageSource)
         return (
             <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
                 <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>

@@ -49,8 +49,8 @@ class MapDirectionScreen extends Component {
         super(props)
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
-        Object.keys(jobRequests).map(key => {
-            const currEmpId = jobRequests[key].employee_id;
+        jobRequests.map((obj, key) => {
+            const currEmpId = obj.employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
         const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
@@ -101,12 +101,13 @@ class MapDirectionScreen extends Component {
 
         this.getDirections(employeeLatitude + "," + employeeLongitude, this.state.destinationLocation);
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        
         firebase.notifications().onNotification((notification) => {
             const { title, body, data } = notification;
             var currRequestPos = jobRequests.length + 1;
             var newJobRequests = [...jobRequests];
-            Object.keys(jobRequests).map(key => {
-                const currEmpId = jobRequests[key].employee_id;
+            jobRequests.map((obj, key) => {
+                const currEmpId = obj.employee_id;
                 if (currEmpId === data.providerId) currRequestPos = key;
             });
 
@@ -414,7 +415,7 @@ class MapDirectionScreen extends Component {
                         isLoading: false,
                         isAcceptJob: true,
                     });
-                    delete newJobRequests[currRequestPos];
+                    newJobRequests.splice(currRequestPos, 1);
                     fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
                 }
@@ -486,7 +487,7 @@ class MapDirectionScreen extends Component {
                         isLoading: false,
                         isAcceptJob: true,
                     });
-                    delete newJobRequests[currRequestPos];
+                    newJobRequests.splice(currRequestPos, 1);
                     fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
                 }

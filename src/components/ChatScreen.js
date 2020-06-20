@@ -336,14 +336,14 @@ class ChatScreen extends Component {
 
         const { fetchedPendingJobInfo, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
-        Object.keys(jobRequests).map(key => {
-            const currEmpId = jobRequests[key].employee_id;
+        jobRequests.map((obj, key) => {
+            const currEmpId = obj.employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
         var newJobRequests = [...jobRequests];
         this.setState({
             isLoading: true
-        })
+        });
 
         const data = {
             main_id: jobRequests[currRequestPos].id,
@@ -360,7 +360,7 @@ class ChatScreen extends Component {
                     name: jobRequests[currRequestPos].name,
                     surname: jobRequests[currRequestPos].surname,
                     mobile: jobRequests[currRequestPos].mobile,
-                    description: jobRequests[currRequestPos].Request.description,
+                    description: jobRequests[currRequestPos].description,
                     address: jobRequests[currRequestPos].address,
                     lat: jobRequests[currRequestPos].lat,
                     lang: jobRequests[currRequestPos].lang,
@@ -386,7 +386,6 @@ class ChatScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false,
@@ -413,7 +412,8 @@ class ChatScreen extends Component {
                         delivery_lat: 0,
                         delivery_lang: 0
                     }
-                    newJobRequests[currRequestPos] = jobData;
+
+                    newJobRequests.splice(currRequestPos, 1);
                     fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
                 }
@@ -425,7 +425,6 @@ class ChatScreen extends Component {
                 }
             })
             .catch((error) => {
-                console.log("Error >>> " + error);
                 this.setState({
                     isLoading: false,
                 });

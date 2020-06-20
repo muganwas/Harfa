@@ -54,9 +54,10 @@ class ProMapDirectionScreen extends Component {
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
         var currentPos;
         //console.log('users Coordinates', usersCoordinates)
-        Object.keys(jobRequestsProviders).map(pos => {
-            jobRequestsProviders[pos].user_id === user_id ? currentPos = pos : null;
+        jobRequestsProviders.map((obj, pos) => {
+            obj.user_id === user_id ? currentPos = pos : null;
         });
+        const currentRequest = jobRequestsProviders[currentPos] || {};
         this.state = {
             sourcesourceLocation: usersCoordinates.latitude + "," + usersCoordinates.longitude,
             sourceLat: parseFloat(usersCoordinates.latitude),
@@ -69,25 +70,25 @@ class ProMapDirectionScreen extends Component {
             pageTitle: this.props.navigation.state.params.pageTitle,
             currentPos,
             //From ProAcceptRejectJobScreen & ProDashboardScreen
-            userId: jobRequestsProviders[currentPos].user_id,
-            userName: jobRequestsProviders[currentPos].name,
-            userImage: jobRequestsProviders[currentPos].image,
-            userMobile: jobRequestsProviders[currentPos].mobile,
-            userDob: jobRequestsProviders[currentPos].dob,
-            userAddress: jobRequestsProviders[currentPos].address,
-            userLat: jobRequestsProviders[currentPos].lat,
-            userLang: jobRequestsProviders[currentPos].lang,
-            userFcmId: jobRequestsProviders[currentPos].fcm_id,
-            orderId: jobRequestsProviders[currentPos].order_id,
-            serviceName: jobRequestsProviders[currentPos].service_name,
-            mainId: jobRequestsProviders[currentPos].id,
-            delivertAddress: jobRequestsProviders[currentPos].delivery_address,
-            deliveryLat: jobRequestsProviders[currentPos].delivery_lat,
-            deliveryLang: jobRequestsProviders[currentPos].delivery_lang,
-            chatStatus: jobRequestsProviders[currentPos].chat_status,
-            status: jobRequestsProviders[currentPos].status,
-            proImageAvailable: jobRequestsProviders[currentPos].imageAvailable,
-            isJobAccepted: jobRequestsProviders[currentPos].status === 'Accepted',
+            userId: currentRequest.user_id,
+            userName: currentRequest.name,
+            userImage: currentRequest.image,
+            userMobile: currentRequest.mobile,
+            userDob: currentRequest.dob,
+            userAddress: currentRequest.address,
+            userLat: currentRequest.lat,
+            userLang: currentRequest.lang,
+            userFcmId: currentRequest.fcm_id,
+            orderId: currentRequest.order_id,
+            serviceName: currentRequest.service_name,
+            mainId: currentRequest.id,
+            delivertAddress: currentRequest.delivery_address,
+            deliveryLat: currentRequest.delivery_lat,
+            deliveryLang: currentRequest.delivery_lang,
+            chatStatus: currentRequest.chat_status,
+            status: currentRequest.status,
+            proImageAvailable: currentRequest.imageAvailable,
+            isJobAccepted: currentRequest.status === 'Accepted',
         };
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
@@ -315,7 +316,7 @@ class ProMapDirectionScreen extends Component {
                         isLoading: false,
                         isAcceptJob: true,
                     });
-                    delete newJobRequestsProviders[this.state.currentPos]
+                    newJobRequestsProviders.splice(this.state.currentPos, 1)
                     fetchedPendingJobInfo(newJobRequestsProviders);
                     this.props.navigation.navigate("ProDashBoard");
                 }
@@ -389,7 +390,7 @@ class ProMapDirectionScreen extends Component {
                         isAcceptJob: true,
                     })
 
-                    delete newJobRequestsProviders[this.state.currentPos];
+                    newJobRequestsProviders.splice(this.state.currentPos, 1);
                     fetchedPendingJobInfo(newJobRequestsProviders);
                     this.props.navigation.navigate("ProDashBoard");
                 }

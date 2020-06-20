@@ -11,6 +11,7 @@ import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
 import OnlineUsers from './OnlineUsers';
+import { imageExists } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
 
@@ -56,6 +57,7 @@ class ProviderDetailsScreen extends Component {
         name: this.props.navigation.state.params.name,
         surname: this.props.navigation.state.params.surname,
         image: this.props.navigation.state.params.image,
+        imageAvailable: false,
         mobile: this.props.navigation.state.params.mobile,
         avgRating: this.props.navigation.state.params.avgRating,
         distance: this.props.navigation.state.params.distance,
@@ -146,7 +148,6 @@ class ProviderDetailsScreen extends Component {
         })
           .then((response) => response.json())
           .then((responseJson) => {
-            console.log("Response : " + JSON.stringify(responseJson))
             if (responseJson.result) {
               this.interval = setInterval(() => {
 
@@ -288,6 +289,10 @@ class ProviderDetailsScreen extends Component {
   }
 
   componentDidMount(){
+    const { image } = this.props.navigation.state.params;
+    imageExists(image).then(imageAvailable => {
+      this.setState({imageAvailable});
+    })
     const onlineUsers = OnlineUsers.Users;
 
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -295,8 +300,7 @@ class ProviderDetailsScreen extends Component {
     const userRef = database.ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {
-        console.log('something changed')
-        if (result.key === "status" && providerId) 
+        if (result && result.key === "status" && providerId) 
             if (onlineUsers[providerId] && result.val() === '1') this.setState({status: onlineUsers[providerId].status});
             else this.setState({status: result.val()});
         else console.log('provider id unavailable')
@@ -405,7 +409,7 @@ class ProviderDetailsScreen extends Component {
   }
 
   render() {
-      console.log(this.state.status)
+    const { imageAvailable } = this.state;
     return (
       <View style={styles.container}>
 
@@ -448,7 +452,7 @@ class ProviderDetailsScreen extends Component {
 
           <View style={{ flexDirection: 'column', marginLeft: 10 }}>
             <Image style={{ width: 60, height: 60, borderRadius: 100, alignSelf: 'center' }}
-              source={{ uri: this.state.image }} />
+              source={imageAvailable ? { uri: this.state.image } : require('../images/generic_avatar.png')} />
 
             <View style={{ backgroundColor: 'white', marginTop: 5 }}>
               <AirbnbRating
