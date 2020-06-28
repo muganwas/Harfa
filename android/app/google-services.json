@@ -15,11 +15,19 @@
       },
       "oauth_client": [
         {
-          "client_id": "28855864302-ia8br1v71934qvur6f7qr4v6cvru0hpp.apps.googleusercontent.com",
+          "client_id": "28855864302-8q652aq113bmmo2op5v0j8g8hnj46rjs.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.harfa",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+            "certificate_hash": "7c2c9e068239fd0c5d286e9c0d24d1d7d00176b3"
+          }
+        },
+        {
+          "client_id": "28855864302-sf27fgo2q1qop6vs6p1b1la8d04ivfjv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.harfa",
+            "certificate_hash": "27c0850be8b859a6c00ace3bc6cf81a2b169120f"
           }
         },
         {
@@ -40,10 +48,10 @@
               "client_type": 3
             },
             {
-              "client_id": "28855864302-lu8ebvta5j4aak7g8lmtqkb6vmnj10d7.apps.googleusercontent.com",
+              "client_id": "28855864302-r0eqbqmu71n3h1a217edg4kmqbd3ejmn.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "org.reactjs.native.example.Harfa"
+                "bundle_id": "com.abc.Harfa"
               }
             }
           ]

@@ -175,7 +175,7 @@ class VerificationScreen extends Component {
                     this.setState({
                         isLoading: false
                     })
-                    ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+                    ToastAndroid.show('Something went wrong with verification', ToastAndroid.SHORT);
                 }
             })
             .catch((error) => {

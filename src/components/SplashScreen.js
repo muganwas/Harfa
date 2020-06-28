@@ -47,7 +47,7 @@ class SplashScreen extends Component {
 
     componentDidUpdate() {
         const { jobsInfo: { requestsProvidersFetched, requestsFetched } } = this.props;
-        if (requestsProvidersFetched && requestsFetched) this.setState({ isLoading: false });
+        if (requestsProvidersFetched && requestsFetched && this.state.isLoading === true) this.setState({ isLoading: false });
     }
 
     splashTimeOut = () => {

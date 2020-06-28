@@ -288,7 +288,6 @@ class FacebookGoogleScreen extends Component {
     }
 
     checkValidation() {
-        console.log("CheckValidation");
         if (this.state.email == '') {
             this.setState({ error: 'Enter valid email' })
         }
@@ -311,7 +310,6 @@ class FacebookGoogleScreen extends Component {
         })
 
         firebase.messaging().getToken().then((fcmToken) => {
-            console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {
 
