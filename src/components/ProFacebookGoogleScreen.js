@@ -14,7 +14,6 @@ import { GoogleSignin, statusCodes } from '@react-native-community/google-signin
 import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
-import ProPendingRequest from './ProPendingJobRequest';
 
 const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
@@ -93,7 +92,6 @@ class FacebookGoogleScreen extends Component {
     }
 
     async facebookLoginTask() {
-
         LoginManager.logInWithPermissions(["public_profile", "email"]).then(result => {
             if (result.isCancelled) {
                 console.log("Login cancelled");

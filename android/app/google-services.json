@@ -15,7 +15,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "28855864302-8q652aq113bmmo2op5v0j8g8hnj46rjs.apps.googleusercontent.com",
+          "client_id": "28855864302-d64sdca1o28dr5fsvmvgvhudflqvc24b.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.harfa",
@@ -23,11 +23,11 @@
           }
         },
         {
-          "client_id": "28855864302-sf27fgo2q1qop6vs6p1b1la8d04ivfjv.apps.googleusercontent.com",
+          "client_id": "28855864302-ca98q1nrtjni3nco23khg20gv8oc12gi.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.harfa",
-            "certificate_hash": "27c0850be8b859a6c00ace3bc6cf81a2b169120f"
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
