@@ -149,10 +149,7 @@ export default class MyProfileScreen extends Component {
       })
         .then(response => response.json())
         .then(responseJson => {
-          console.log(JSON.stringify(responseJson));
-
           if (responseJson.result) {
-            console.log(responseJson.data.image);
             this.setState({
               userId: responseJson.data.id,
               imageSource: responseJson.data.image,
@@ -180,8 +177,6 @@ export default class MyProfileScreen extends Component {
 
   selectPhoto = () => {
     ImagePicker.showImagePicker(options, response => {
-      console.log('Response = ', response);
-
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.error) {
@@ -255,7 +250,6 @@ export default class MyProfileScreen extends Component {
     })
       .then(response => response.json())
       .then(response => {
-        console.log('Response' + JSON.stringify(response));
         if (response.result) {
           this.setState({
             isLoading: false,
@@ -291,9 +285,6 @@ export default class MyProfileScreen extends Component {
       uri: imageObject.uri,
       name: imageObject.fileName,
     });
-
-    console.log('ImageData : ' + JSON.stringify(imageData));
-
     fetch(USER_IMAGE_UPDATE + userId, {
       method: 'POST',
       headers: {
@@ -304,7 +295,6 @@ export default class MyProfileScreen extends Component {
     })
       .then(response => response.json())
       .then(response => {
-        console.log('Response' + JSON.stringify(response));
         if (response.result) {
           this.setState({
             isLoading: false,
