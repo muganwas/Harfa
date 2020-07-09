@@ -45,8 +45,12 @@ target 'Harfa' do
   pod 'DoubleConversion', :podspec => '../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec'
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
+  pod 'Firebase/Database', '~> 6.13.0'
 
 
+
+
+  pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo'
 
   target 'HarfaTests' do
     inherit! :search_paths

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
     Dimensions, ActivityIndicator, Alert, ToastAndroid, Platform, BackHandler
 } from 'react-native';
@@ -6,23 +7,25 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
 import AsyncStorage from '@react-native-community/async-storage';
 import 'react-native-gesture-handler';
-import firebaeMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
+import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import UserDetails from './UserDetails';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
+import Axios from 'axios';
 
-const colorPrimary = '#262425';
+//const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const REGISTER_URL = Config.BASEURL + "users/register/create";
-const PENDING_JOB_CUSTOMER = Config.BASEURL + "jobrequest/user_status_check/";
-const AUTHENTICATE_URL = Config.BASEURL + 'users/authenticate'
+const REGISTER_URL = Config.baseURL + "users/register/create";
+const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/user_status_check/";
+const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate';
 
 var that;
 
@@ -54,7 +57,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class FacebookGoogleScreen extends Component {
+class FacebookGoogleScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -119,7 +122,6 @@ export default class FacebookGoogleScreen extends Component {
 
     async googleLoginTask() {
         try {
-
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
             console.log("UserInfo >> " + JSON.stringify(result));
@@ -144,12 +146,12 @@ export default class FacebookGoogleScreen extends Component {
     }
 
     fbGoogleLoginCustomerTask = (name, email, image) => {
-
+        const { fetchJobRequests } = this.props;
         this.setState({
             isLoading: true,
         })
 
-        firebaeMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -166,19 +168,11 @@ export default class FacebookGoogleScreen extends Component {
                 }
                 console.log("Data: " + JSON.stringify(userData));
 
-                fetch(REGISTER_URL,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(userData)
-                    })
-                    .then((response) => response.json())
-                    .then((responseJson) => {
-                        console.log("Response Register" + JSON.stringify(responseJson));
-                        if (responseJson.result) {
+                Axios.post(REGISTER_URL, { data: JSON.stringify(userData)})
+                    .then(responseJson => {
+                        // console.log("Response Register")
+                        console.log(responseJson);
+                        if (responseJson.status === 200 && responseJson.data.createdDate) {
                             this.setState({
                                 isLoading: false,
                                 isErrorToast: true,
@@ -205,7 +199,7 @@ export default class FacebookGoogleScreen extends Component {
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'User');
 
-                            this.getPendingJobRequest(id);
+                            fetchJobRequests(this.props, id, "Home");
                         }
                         else {
                             console.log("Response Else ");
@@ -214,7 +208,7 @@ export default class FacebookGoogleScreen extends Component {
                             })
                             Alert.alert(
                                 "OOPS !",
-                                responseJson.message,
+                                responseJson.data.message,
                                 [
                                     {
                                         text: 'Cancel',
@@ -235,7 +229,7 @@ export default class FacebookGoogleScreen extends Component {
                         })
                         Alert.alert(
                             "OOPS !",
-                            "Something went wrong, Try again later",
+                            error.message,
                             [
                                 {
                                     text: 'Cancel',
@@ -269,14 +263,14 @@ export default class FacebookGoogleScreen extends Component {
     }
 
     authenticateTask = () => {
-
+        const { fetchJobRequests } = this.props;
         console.log("authenticateTask")
 
         this.setState({
             isLoading: true,
         })
 
-        firebaeMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("RegisterTask FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -327,7 +321,7 @@ export default class FacebookGoogleScreen extends Component {
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'User');
 
-                            this.getPendingJobRequest(id);
+                            fetchJobRequests(this.props, id, "Home");
                         }
                         else {
                             console.log("Response Else ");
@@ -335,7 +329,7 @@ export default class FacebookGoogleScreen extends Component {
                                 isLoading: false,
                             })
                             Alert.alert(
-                                "OUPS !",
+                                "OOPS !",
                                 responseJson.message,
                                 [
                                     {
@@ -373,67 +367,6 @@ export default class FacebookGoogleScreen extends Component {
                     .done()
             }
         })
-    }
-
-    async getPendingJobRequest(userId) {
-        this.setState({
-            isLoading: true
-        })
-        await fetch(PENDING_JOB_CUSTOMER + userId, {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-            .then((response) => response.json())
-            .then((responseJson) => {
-
-                console.log("Response getPendingJobRequest: " + JSON.stringify(responseJson));
-                this.setState({
-                    isLoading: false
-                })
-                if (responseJson.result) {
-                    const id = responseJson.data.id;
-
-                    var jobData = {
-                        id: responseJson.data._id,
-                        order_id: responseJson.data.order_id,
-                        employee_id: responseJson.data.employee_details._id,
-                        image: responseJson.data.employee_details.image,
-                        fcm_id: responseJson.data.employee_details.fcm_id,
-                        name: responseJson.data.employee_details.username,
-                        surName: responseJson.data.employee_details.surname,
-                        mobile: responseJson.data.employee_details.mobile,
-                        description: responseJson.data.employee_details.description,
-                        address: responseJson.data.employee_details.address,
-                        lat: responseJson.data.employee_details.lat,
-                        lang: responseJson.data.employee_details.lang,
-                        service_name: responseJson.data.service_details.service_name,
-                        chat_status: responseJson.data.chat_status,
-                        status: responseJson.data.status,
-                        delivery_address: responseJson.data.delivery_address,
-                        delivery_lat: responseJson.data.delivery_lat,
-                        delivery_lang: responseJson.data.delivery_lang,
-                    }
-                    PendingJobRequest.Request = jobData;
-
-                    console.log("PendingJob getPendingJobRequest : " + JSON.stringify(PendingJobRequest.Request))
-
-                    this.props.navigation.navigate("Home");
-                    
-                }
-                else {
-                    this.props.navigation.navigate("Home"); 
-                }
-            })
-            .catch((error) => {
-                this.setState({
-                    isLoading: false
-                })
-                alert("Error " + error);
-                console.log(JSON.stringify(responseJson));
-            });
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -563,6 +496,22 @@ export default class FacebookGoogleScreen extends Component {
         );
     }
 }
+
+const mapStateToProps = state => {
+    return {
+        jobsInfo: state.jobsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchJobRequests: (props, providerId, navTo) => {
+            dispatch(getPendingJobRequest(props, providerId, navTo));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(FacebookGoogleScreen);
 
 const styles = StyleSheet.create({
     container: {

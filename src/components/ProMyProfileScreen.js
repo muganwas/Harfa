@@ -9,15 +9,17 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { DrawerActions } from 'react-navigation-drawer';
 import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import WaitingDialog from './WaitingDialog';
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
 
-const bgColor = '#E8EEE9';
-const colorPrimary = '#262425';
+//const bgColor = '#E8EEE9';
+//const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 
@@ -30,9 +32,9 @@ const options = {
     quality: 1
 };
 
-const PRO_GET_PROFILE = Config.BASEURL+"employee/";
-const PRO_IMAGE_UPDATE = Config.BASEURL+"employee/upload/";
-const PRO_INFO_UPDATE = Config.BASEURL+"employee/";
+const PRO_GET_PROFILE = Config.baseURL+"employee/";
+const PRO_IMAGE_UPDATE = Config.baseURL+"employee/upload/";
+const PRO_INFO_UPDATE = Config.baseURL+"employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -361,7 +363,7 @@ class ProMyProfileScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -377,16 +379,11 @@ class ProMyProfileScreen extends Component {
             <StatusBarPlaceHolder/>
             
             <View style={styles.header} >
-                <View style={{ flex: 1, flexDirection: 'row',  }}>
-                    <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', marginLeft: 5,}}
-                        onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                        <Image style={{ width: 25, height: 25, alignSelf: 'center',  }}
-                            source={require('../icons/humberger.png')} />
-                    </TouchableOpacity>
-                    <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                        Profile
-                    </Text>
-                </View>
+                <Hamburger 
+                    Notifications={Notifications}
+                    navigation={this.props.navigation}
+                    text='Mon Profil'
+                />
             </View>
 
             <KeyboardAwareScrollView contentContainerStyle={{
@@ -402,7 +399,13 @@ class ProMyProfileScreen extends Component {
                         justifyContent: 'center', alignItems: 'center', }}>
                         <Image
                             style={{ width: 100, height: 100, borderRadius: 100, marginTop: 20 }}
-                            source={this.state.galleryCameraImage == '' ? {uri: this.state.imageSource}: this.state.imageSource} />
+                            source={
+                                this.state.galleryCameraImage == '' ? 
+                                this.state.imageSource ? 
+                                {uri: this.state.imageSource} : 
+                                require('../images/generic_avatar.png') :
+                                this.state.imageSource
+                            }/>
 
                         <TouchableOpacity style={{
                             width: 40, height: 40, alignSelf: 'flex-end', alignContent: 'center', justifyContent: 'center', borderRadius: 50, backgroundColor: '#fff',
@@ -492,7 +495,7 @@ class ProMyProfileScreen extends Component {
                                 value={this.state.address}
                                 multiline={true}
                                 onPress={() => this.props.navigation.navigate('SelectAddress', {
-                                    onGoBack: this.getDataFromAddAddressScreen, })}>
+                                    onGoBack: this.getDataFromAddAddressScreen })}>
                                 {this.state.address}
                             </Text>
                         </View>
@@ -531,18 +534,6 @@ class ProMyProfileScreen extends Component {
                     </View>
                 </View>
             </KeyboardAwareScrollView>
-
-            <Toast
-                ref="toast"
-                style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                position='bottom'
-                positionValue={200}
-                fadeInDuration={750}
-                fadeOutDuration={1000}
-                opacity={0.8}
-                textStyle={{ color: 'white' }} />
-
-
             <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                 onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                 <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />

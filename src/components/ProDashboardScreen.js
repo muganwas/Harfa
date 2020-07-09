@@ -1,18 +1,18 @@
 
 import React, { Component } from 'react';
 import {
-    Text, StyleSheet, View, Image, ActivityIndicator, Dimensions, FlatList, TouchableOpacity, 
-    ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import { createAppContainer} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+    Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity,
+    ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform
+} from 'react-native';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
+//import { DrawerActions } from 'react-navigation-drawer';
 import WaitingDialog from './WaitingDialog';
-import firebase from 'firebase';
 import RNExitApp from 'react-native-exit-app';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import LinearGradient from 'react-native-linear-gradient';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
 import ProChatScreen from './ProChatScreen';
 import ProChatAcceptScreen from './ProChatAcceptScreen';
@@ -21,10 +21,19 @@ import ProAllMessageScreen from './ProAllMessageScreen'
 import ProAcceptRejectJobScreen from './ProAcceptRejectJobScreen';
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
-import ProPendingJobRequest from './ProPendingJobRequest';
 import ProBookingScreen from './ProBookingScreen';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
+//import Geocoding from 'react-native-geocoding'
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobProvider, fetchAllJobRequestsProError, fetchedAllJobRequestsPro, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
+
+const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -35,46 +44,48 @@ const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const PRO_INFO_UPDATE = Config.BASEURL + "employee/";
-const BOOKING_HISTORY = Config.BASEURL + 'jobrequest/employee_request/';
-const REVIEW_RATING = Config.BASEURL + 'jobrequest/ratingreview';
-const RECENT_USER = Config.BASEURL + 'jobrequest/usergroupby/';
-const REJECT_ACCEPT_REQUEST = Config.BASEURL + "jobrequest/updatejobrequest";
-const ASK_FOR_REVIEW = Config.BASEURL + "notification/addreviewrequest";
+const PRO_INFO_UPDATE = Config.baseURL + "employee/";
+const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
+const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
+import { imageExists } from '../misc/helpers';
+const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
+const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
+const database = firebase.database();
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
 class ProDashBoardScreen extends Component {
 
-    constructor() {
-        super()
-
+    constructor(props) {
+        super(props)
+        const { jobsInfo: { dataWorkSource } } = this.props;
         this.state = {
             isLoading: true,
             isErrorToast: false,
             mainId: '',
             reviewData: '',
             width: Dimensions.get('window').width,
-            status: ProviderDetails.Provider.status == 1 ? "ONLINE" : "OFFLINE",
+            status: ProviderDetails.Provider.status == '1' ? "ONLINE" : "OFFLINE",
             availBackground: ProviderDetails.Provider.status == '1' ? 'green' : 'red',
             dataSource: [],
             dataUserSource: [],
-            dataWorkSource: [],
+            dataWorkSource: dataWorkSource || [],
             isDialogLogoutVisible: false,
             isRecentMessage: false,
             isWorkRequest: false,
@@ -84,53 +95,65 @@ class ProDashBoardScreen extends Component {
             review: '',
             refreshing: false,
             pause: false,
-            backClickCount: 0
+            backClickCount: 0,
+            online: false,
+            connectivityAvailable: false,
+            proImageAvailable: null,
         }
         this.springValue = new Animated.Value(100);
-        this.goToProMapDirection = this.goToProMapDirection.bind(this)
-
-        console.log("OrderId >>> " + ProPendingJobRequest.Request.order_id);
+        this.onRefresh();
     }
 
     //Get All Bookings
-    componentDidMount() {
-        const { navigation } = this.props;
+    async componentDidMount() {
+        const { navigation, jobsInfo: { dataWorkSource, jobRequestsProviders } } = this.props;
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
+        NetInfo.addEventListener(state => {
+            if (!state.isConnected) this.setState({ connectivityAvailable: false });
+            else this.setState({ connectivityAvailable: true });
+        });
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) this.setState({ connectivityAvailable: false });
+            else this.setState({ connectivityAvailable: true });
+        });
+        socket.on('connect', () => {
+            const userId = ProviderDetails.Provider.providerId;
+            if (userId) {
+                socket.emit('connected', userId);
+                this.setState({ online: true });
+            }
+            console.log('connected');
+        });
+        socket.on('user-disconnected', users => {
+            console.log('someone disconnected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('someone connected')
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            console.log('you disconnected')
+            // console.log(info);
+            this.setState({ online: false });
+            if (!this.state.online && this.state.connectivityAvailable) socket.open();
+        })
+        socket.open();
         navigation.addListener('willFocus', async () => {
-            console.log("willFocus runs >>")
             this.onRefresh();
         });
+        this.onRefresh();
+        this.setState({ dataWorkSource, isLoading: false, isWorkRequest: true });
     }
 
-    componentWillMount() {
-
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
-        firebaseMessaging.notifications().onNotification((notification) => {
-
-            const { title, body, data } = notification;
-
-            console.log("Title, body , data >>> " + title + " >> " + body + " >> " + JSON.stringify(data));
-            console.log('DeliveryAddress >>> ', data.delivery_address);
-            console.log('DeliveryLat >>> ', data.delivery_lat);
-
-            if(title == "Booking Request")
-            {
-                this.props.navigation.navigate("ProChatAccept", {
-                    'userId': data.userId,
-                    'serviceName': data.serviceName,
-                    'mainId': data.main_id,
-                    'orderId': data.order_id,
-                    'delivery_address': data.delivery_address,
-                    'delivery_lat': data.delivery_lat,
-                    'delivery_lang': data.delivery_lang,
-                })
-            }
-        });
+    componentDidUpdate() {
+        const { jobsInfo: { dataWorkSource }, fetchJobRequestHistory } = this.props;
+        if (!dataWorkSource.length)
+            fetchJobRequestHistory(ProviderDetails.Provider.providerId);
     }
 
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-
         this.notificationOpenedListener();
     }
 
@@ -146,25 +169,16 @@ class ProDashBoardScreen extends Component {
             })
 
             if (message != null) {
-                dbRef.on('child_added', (val) => {
-
+                dbRef.on('child_added', val => {
+                    const { dataSource } = this.state;
                     let message = val.val();
-                    let id = val.key;
-                    console.log("Id Firebase : " + id);
-                    console.log("Message Firebase : " + JSON.stringify(message));
-
-                    this.setState({
-                        isLoading: false,
+                    let present = false;
+                    dataSource.map(obj => {
+                        if (JSON.stringify(obj) === JSON.stringify(message))
+                            present = true;
                     })
-
-                    this.setState((prevState) => {
-
-                        return {
-                            dataSource: [...prevState.dataSource, message],
-                            isLoading: false,
-                            isRecentMessage: true,
-                        }
-                    })
+                    if (!present)
+                        this.setState(prevState => ({ dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true }));
                 })
             }
             else {
@@ -176,60 +190,6 @@ class ProDashBoardScreen extends Component {
         })
     }
 
-    getAllWorkRequest() {
-
-        this.setState({
-            isLoading: true
-        })
-
-        fetch(BOOKING_HISTORY + ProviderDetails.Provider.providerId)
-            .then((response) => response.json())
-            .then((responseJson) => {
-                console.log("Response Booking History : " + JSON.stringify(responseJson))
-
-                if (responseJson.result) {
-                    for (let i = 0; i < responseJson.data.length; i++) {
-                        if (responseJson.data[i].chat_status == "1") {
-                            this.state.dataWorkSource.push(responseJson.data[i]);
-                        }
-                        else if (responseJson.data[i].chat_status == "0") {
-                            if (responseJson.data[i].status != "Pending") {
-                                this.state.dataWorkSource.push(responseJson.data[i]);
-                            }
-                        }
-                    }
-                    if (this.state.dataWorkSource.length > 0) {
-                        this.setState({
-                            isLoading: false,
-                            isWorkRequest: true,
-                        })
-                    }
-                    else {
-                        this.setState({
-                            isLoading: false,
-                            isWorkRequest: false,
-                        })
-                    }
-                }
-                else {
-                    this.setState({
-                        isLoading: false,
-                        isWorkRequest: false,
-                    })
-                }
-            })
-            .catch((error) => {
-                console.log(error);
-                this.setState({
-                    isLoading: false,
-                    isWorkRequest: true,
-                    isErrorToast: true
-                })
-                //ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
-                this.showToast("Something went wrong, Check your internet connection");
-            })
-    }
-
     getAllRecentUser() {
         this.setState({
             isLoading: true
@@ -238,8 +198,6 @@ class ProDashBoardScreen extends Component {
         fetch(RECENT_USER + ProviderDetails.Provider.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response getAllRecentUser : " + JSON.stringify(responseJson))
-
                 if (responseJson.result) {
                     this.setState({
                         dataUserSource: responseJson.data,
@@ -261,126 +219,134 @@ class ProDashBoardScreen extends Component {
                     isRecentUser: true,
                     isErrorToast: true
                 })
-               // ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
+                // ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
                 this.showToast("Something went wrong, Check your internet connection");
             })
     }
 
     renderRecentMessageItem = ({ item }) => {
-        return (
-            <TouchableOpacity style={styles.itemMainContainer}
-                onPress={() => this.props.navigation.navigate("ProChat", {
-                    'userId': item.id,
-                    'name': item.name,
-                    'image': item.image,
-                    'orderId': item.orderId,
-                    'serviceName': item.serviceName,
-                    'pageTitle': "ProDashboard"
-                })}>
-                <View style={styles.itemImageView}>
-                    <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.image }} />
-                </View>
-                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
-                        {item.name}
-                    </Text>
-                    <Text style={{
-                        width: screenWidth - 150, fontSize: 10, color: 'black',
-                        textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                    }}
-                        numberOfLines={2}>
-                        {item.textMessage}
-                    </Text>
-                </View>
+        if (item) {
+            const { dispatchSelectedJobRequest, jobsInfo: { dataWorkSource } } = this.props;
+            let currentPos;
+            Object.keys(dataWorkSource).map(key => {
+                if (dataWorkSource[key].user_id === item.id) {
+                    currentPos = key;
+                }
+            });
+            const customerImage = item.image;
+            return (
+                <TouchableOpacity style={styles.itemMainContainer}
+                    onPress={() => {
+                        dispatchSelectedJobRequest({ user_id: item.id });
+                        setTimeout(() => {
+                            this.props.navigation.navigate("ProChat", {
+                                currentPos,
+                                'userId': item.id,
+                                'name': item.name,
+                                'image': item.image,
+                                'orderId': item.orderId,
+                                'serviceName': item.serviceName,
+                                'pageTitle': "ProDashboard",
+                                'imageAvailable': item.imageAvailable
+                            })
+                        }, 100);
+                    }}>
+                    <View style={styles.itemImageView}>
+                        <Image style={{ width: 40, height: 40, borderRadius: 100 }}
+                            source={customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
+                            {item.name}
+                        </Text>
+                        <Text style={{
+                            width: screenWidth - 150, fontSize: 10, color: 'black',
+                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
+                        }}
+                            numberOfLines={2}>
+                            {item.textMessage}
+                        </Text>
+                    </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
-                    <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
-                        {item.date}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        )
+                    <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
+                        <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
+                            {item.date}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            )
+        }
     }
 
     renderWorkItem = ({ item }) => {
-
-        return (
-            <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
-                onPress={() => this.props.navigation.navigate("ProBookingDetails", {
-                    "bookingDetails": item
-                })}>
-                <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
-                    <Text style={{ fontSize: 12, fontWeight: 'bold' }}>{item.service_details.service_name}</Text>
-                </View>
-                <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
-                    <Text style={{ fontSize: 12, fontWeight: 'bold', ...item.status == 'Pending' ? styles.colorYellow : item.status == 'Accepted' ? styles.colorGreen : item.status == 'Completed' ? styles.colorBlack : styles.colorRed }}>{item.status}</Text>
-                </View>
-                <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}
-                    onPress={() => this.askForReview(item)}>
-                    <Text style={{ fontSize: 12, }}>{item.customer_review == "Requested" ? 'Waiting' : item.customer_rating == "" ? 'Ask for review' : item.customer_rating + "/5"}</Text>
+        //console.log(item);
+        if (item && String(item.employee_id) === String(ProviderDetails.Provider.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
+            return (
+                <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
+                    onPress={() => this.props.navigation.navigate("ProBookingDetails", {
+                        "bookingDetails": item
+                    })}>
+                    <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold' }}>{item.service_details.service_name}</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', ...item.status == 'Pending' ? styles.colorYellow : item.status == 'Accepted' ? styles.colorGreen : item.status == 'Completed' ? styles.colorBlack : styles.colorRed }}>{item.status}</Text>
+                    </View>
+                    <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}
+                        onPress={() => this.askForReview(item)}>
+                        <Text style={{ fontSize: 12, }}>{item.customer_review == "Requested" ? 'Waiting' : item.customer_rating == "" ? 'Ask for review' : item.customer_rating + "/5"}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5, }}
+                        onPress={() => this.changeDialogVisibility(true, "", item, "", "")}>
+                        <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
+                    </TouchableOpacity>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5, }}
-                    onPress={() => this.changeDialogVisibility(true, "", item, "", "")}>
-                    <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
-                </TouchableOpacity>
-            </TouchableOpacity>
-        )
+            )
+        }
+        else return null;
     }
 
     renderRecentUserItem = ({ item }) => {
-        return (
-            <TouchableOpacity style={styles.itemMainContainer}
-                onPress={()=> this.props.navigation.navigate("ProBooking")}>
-                <View style={styles.itemImageView}>
-                    <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.user_details.image }} />
-                </View>
-                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
-                        {item.user_details.username}
-                    </Text>
-                    <Text style={{
-                        width: screenWidth - 150, fontSize: 10, color: 'black',
-                        textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                    }}
-                        numberOfLines={1} >
-                        {item.user_details.address}
-                    </Text>
-                    <Text style={{
-                        width: screenWidth - 150, fontSize: 12, color: 'black', fontWeight: 'bold',
-                        textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                    }}
-                        numberOfLines={2} >
-                        {item.service_details.service_name}
-                    </Text>
-                </View>
+        if (item) {
+            const recentUserImage = item.user_details.image;
+            return (
+                <TouchableOpacity style={styles.itemMainContainer}
+                    onPress={() => this.props.navigation.navigate("ProBooking")}>
+                    <View style={styles.itemImageView}>
+                        <Image style={{ width: 40, height: 40, borderRadius: 100 }}
+                            source={recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
+                    </View>
+                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
+                            {item.user_details.username}
+                        </Text>
+                        <Text style={{
+                            width: screenWidth - 150, fontSize: 10, color: 'black',
+                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
+                        }}
+                            numberOfLines={1} >
+                            {item.user_details.address}
+                        </Text>
+                        <Text style={{
+                            width: screenWidth - 150, fontSize: 12, color: 'black', fontWeight: 'bold',
+                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
+                        }}
+                            numberOfLines={2} >
+                            {item.service_details.service_name}
+                        </Text>
+                    </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
-                    <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
-                        {item.createdDate}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        )
+                    <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
+                        <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
+                            {item.createdDate}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            )
+        }
     }
 
-    changeAvailabilityStaus = () => {
-        var statusValue = null;
-        this.setState({
-            isLoading: true,
-        })
-
-        if (this.state.status == 'ONLINE') {
-            statusValue = '0';
-        }
-        else if (this.state.status == 'OFFLINE') {
-            statusValue = '1';
-        }
-
-        const userData = {
-            "status": statusValue
-        }
+    updateAvailabilityInMongoDB = userData => {
 
         fetch(PRO_INFO_UPDATE + ProviderDetails.Provider.providerId,
             {
@@ -393,7 +359,7 @@ class ProDashBoardScreen extends Component {
             })
             .then((response) => response.json())
             .then((response) => {
-                console.log("Response" + JSON.stringify(response));
+                //console.log("Response" + JSON.stringify(response));
                 if (response.result) {
                     if (this.state.status == 'ONLINE') {
                         this.setState({
@@ -425,10 +391,51 @@ class ProDashBoardScreen extends Component {
             .catch((error) => {
                 console.log("Error :" + error);
                 this.setState({
-                    isLoading: false,   
+                    isLoading: false,
                 })
             })
             .done()
+
+    }
+
+    changeAvailabilityStaus = () => {
+        var statusValue = null;
+        const providerId = ProviderDetails.Provider.providerId;
+        const usersRef = database.ref('users/' + providerId);
+        this.setState({
+            isLoading: true,
+        })
+
+        if (this.state.status == 'ONLINE') {
+            statusValue = '0';
+        }
+        else if (this.state.status == 'OFFLINE') {
+            statusValue = '1';
+        }
+
+        const userData = {
+            "status": statusValue
+        }
+        usersRef.once('value', data => {
+            if (data) {
+                usersRef.update(userData).then(() => {
+                    console.log("updated");
+                    this.updateAvailabilityInMongoDB(userData);
+                }).
+                    catch(e => {
+                        console.log(e.message)
+                    });
+            }
+            else {
+                usersRef.set(userData).then(() => {
+                    this.updateAvailabilityInMongoDB(userData);
+                }).
+                    catch(e => {
+                        console.log(e.message);
+                    });
+            }
+        })
+
     };
 
     _spring() {
@@ -507,8 +514,8 @@ class ProDashBoardScreen extends Component {
         }
     }
 
-    goToProMapDirection = () => {
-        if (ProPendingJobRequest.Request.chat_status == '0') {
+    goToProMapDirection = (chat_status, status, jobInfo) => {
+        if (chat_status == '0') {
             this.setState({
                 isErrorToast: true,
             })
@@ -516,10 +523,13 @@ class ProDashBoardScreen extends Component {
             this.showToast("Accept Chat Request First");
         }
         else {
-            if (ProPendingJobRequest.Request.status == 'Pending') {
+            const { dispatchSelectedJobRequest } = this.props;
+            if (status == 'Pending') {
+                dispatchSelectedJobRequest(jobInfo);
                 this.props.navigation.navigate("ProAcceptRejectJob");
             }
-            else if (ProPendingJobRequest.Request.status == 'Accepted') {
+            else if (status == 'Accepted') {
+                dispatchSelectedJobRequest(jobInfo);
                 this.props.navigation.navigate("ProMapDirection", {
                     'pageTitle': "ProDashboard",
                 });
@@ -527,32 +537,52 @@ class ProDashBoardScreen extends Component {
         }
     }
 
-    acceptChatRequest = () => {
+    acceptChatRequest = pos => {
+        const { fetchedPendingJobInfo, jobsInfo, jobsInfo: { jobRequestsProviders }, dispatchSelectedJobRequest } = this.props;
+        var newjobRequestsProviders = [...jobRequestsProviders];
+        const {
+            id,
+            user_id,
+            fcm_id, name,
+            service_name,
+            order_id,
+            image,
+            mobile,
+            dob,
+            address,
+            lat,
+            lang,
+            chat_status,
+            status,
+            delivery_address,
+            delivery_lat,
+            delivery_lang
+        } = jobRequestsProviders[pos];
+
+        dispatchSelectedJobRequest(jobRequestsProviders[pos]);
 
         this.setState({
             isLoading: true,
         })
 
         const data = {
-            main_id: ProPendingJobRequest.Request.id,
+            main_id: id,
             chat_status: '1',
             status: 'Pending',
             'notification': {
-                "fcm_id": ProPendingJobRequest.Request.fcm_id,
+                "fcm_id": fcm_id,
                 "title": "Chat Request Accepted",
-                "body": 'Chat request has been accepted by ' + ProviderDetails.Provider.name + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
+                "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
                 "data": {
                     ProviderData: ProviderDetails.Provider,
-                    serviceName: ProPendingJobRequest.Request.service_name,
-                    orderId: ProPendingJobRequest.Request.order_id,
-                    mainId: ProPendingJobRequest.Request.id,
+                    serviceName: service_name,
+                    orderId: order_id,
+                    mainId: id,
                     chat_status: '1',
                     status: 'Pending',
                 },
             }
         }
-
-        console.log("ACCEPT CHAT Data >> " + JSON.stringify(data));
 
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
@@ -562,35 +592,38 @@ class ProDashBoardScreen extends Component {
             },
             body: JSON.stringify(data)
         })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                console.log("Response acceptChatRequest: " + JSON.stringify(responseJson))
+            .then(response => response.json())
+            .then(responseJson => {
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
                     })
                     var jobData = {
                         id: responseJson.data.id,
-                        order_id: ProPendingJobRequest.Request.order_id,
-                        user_id: ProPendingJobRequest.Request.user_id,
-                        image: ProPendingJobRequest.Request.image,
-                        fcm_id: ProPendingJobRequest.Request.fcm_id,
-                        name: ProPendingJobRequest.Request.name,
-                        mobile: ProPendingJobRequest.Request.mobile,
-                        dob: ProPendingJobRequest.Request.dob,
-                        address: ProPendingJobRequest.Request.address,
-                        lat: ProPendingJobRequest.Request.lat,
-                        lang: ProPendingJobRequest.Request.lang,
-                        service_name: ProPendingJobRequest.Request.service_name,
-                        chat_status: "1",
-                        status: "Pending",
-                        delivery_address: ProPendingJobRequest.Request.delivery_address,
-                        delivery_lat: ProPendingJobRequest.Request.delivery_lat,
-                        delivery_lang: ProPendingJobRequest.Request.delivery_lang,
+                        order_id,
+                        user_id,
+                        image,
+                        fcm_id,
+                        name,
+                        mobile,
+                        dob,
+                        address,
+                        lat,
+                        lang,
+                        service_name,
+                        chat_status,
+                        status,
+                        delivery_address,
+                        delivery_lat,
+                        delivery_lang,
                     }
-                    ProPendingJobRequest.Request = jobData;
 
-                    console.log("acceptJob :>>>" + JSON.stringify(ProPendingJobRequest.Request))
+                    imageExists(image).then(res => {
+                        jobData.imageAvailable = res;
+                    });
+
+                    newjobRequestsProviders[pos] = jobData;
+                    fetchedPendingJobInfo(newjobRequestsProviders);
 
                     this.props.navigation.navigate("ProAcceptRejectJob");
                 }
@@ -599,11 +632,11 @@ class ProDashBoardScreen extends Component {
                         isLoading: false,
                         isErrorToast: true,
                     });
-                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-                    this.showToast("Something went wrong")  
+
+                    this.showToast("Something went wrong")
                 }
             })
-            .catch((error) => {
+            .catch(error => {
                 console.log("Error >>> " + error);
                 this.setState({
                     isLoading: false,
@@ -611,11 +644,49 @@ class ProDashBoardScreen extends Component {
             })
     }
 
-    reviewTask(rating, review) {
+    renderPendingJobs = ({ item, index }) => {
+        if (item) {
+            const { image, name, imageAvailable, user_id, service_name, chat_status, status } = item;
+            return (
+                <TouchableOpacity style={styles.pendingJobRow}
+                    onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id })}>
+                    <LinearGradient style={styles.pendingJobRow}
+                        colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+                        <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
+                            source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
+                        <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
+                            <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold' }}>
+                                {name}
+                            </Text>
+                            <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                                {"Request for " + service_name}
+                            </Text>
+                            <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                                {chat_status == "0" ? "New Job Request" : status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
+                            </Text>
+                        </View>
+                        {chat_status == '1' &&
+                            <View style={styles.arrowView}>
+                                <Image style={styles.arrow}
+                                    source={require('../icons/arrow_right_animated.gif')} />
+                            </View>
+                        }
+                        {chat_status == '0' &&
+                            <TouchableOpacity style={styles.arrowView}
+                                onPress={() => this.acceptChatRequest(index)}>
+                                <View style={styles.viewAccept}>
+                                    <Text style={styles.textAccept}>Accept</Text>
+                                </View>
+                            </TouchableOpacity>
+                        }
+                    </LinearGradient>
+                </TouchableOpacity>
+            )
+        }
 
-        console.log("Main Id : " + this.state.mainId);
-        console.log("Rating :  " + rating);
-        console.log("Review : " + review);
+    }
+
+    reviewTask(rating, review) {
 
         this.setState({
             isLoading: true,
@@ -639,7 +710,7 @@ class ProDashBoardScreen extends Component {
             })
             .then((response) => response.json())
             .then((response) => {
-                console.log("Response" + JSON.stringify(response));
+                //console.log("Response" + JSON.stringify(response));
                 if (response.result) {
                     this.setState({
                         isLoading: false,
@@ -670,7 +741,7 @@ class ProDashBoardScreen extends Component {
     }
 
     askForReview(item) {
-
+        const { fetchJobRequestHistory } = this.props;
         if (item.customer_review != "Requested" && item.customer_rating == "") {
             this.setState({
                 isLoading: true,
@@ -687,8 +758,6 @@ class ProDashBoardScreen extends Component {
                 }
             }
 
-            console.log("askReviewData : " + JSON.stringify(askReviewData));
-
             fetch(ASK_FOR_REVIEW,
                 {
                     method: 'POST',
@@ -700,7 +769,6 @@ class ProDashBoardScreen extends Component {
                 })
                 .then((response) => response.json())
                 .then((response) => {
-                    console.log("Response" + JSON.stringify(response));
                     if (response.result) {
                         this.setState({
                             isLoading: false,
@@ -710,7 +778,7 @@ class ProDashBoardScreen extends Component {
                         //ToastAndroid.show("Request submitted successfully", ToastAndroid.show);
                         this.showToast("Request submitted successfully")
 
-                        this.getAllWorkRequest();
+                        fetchJobRequestHistory(ProviderDetails.Provider.providerId);
                     }
                     else {
                         this.setState({
@@ -737,65 +805,74 @@ class ProDashBoardScreen extends Component {
             this.setState({
                 isErrorToast: true
             })
-           // ToastAndroid.show("You have already asked, Please wait for customer feedback", ToastAndroid.show);
+            // ToastAndroid.show("You have already asked, Please wait for customer feedback", ToastAndroid.show);
             this.showToast("You have already asked, Please wait for customer feedback");
         }
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     onRefresh() {
         this.state.refreshing = true;
-
         this.setState({
             dataSource: [],
-            dataWorkSource: [],
             dataUserSource: [],
             isRecentMessage: false,
-            isWorkRequest: false,
+            //isWorkRequest: false,
             isJobRequest: false,
             isRecentUser: false
         })
         this.getAllRecentChat();
-        this.getAllWorkRequest();
         this.getAllRecentUser();
-
         this.state.refreshing = false;
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
     }
 
+    /*getLocation = () => {
+        Geolocation.getCurrentPosition(info => {
+            const { coords: { longitude, latitude} } = info;
+            
+        });
+    }*/
+
     render() {
+        const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
+        console.log('job requests', jobRequestsProviders);
         return (
             <View style={styles.container}>
 
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
 
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}
-                        style={styles.touchaleHighlight}>
-                        <Image style={{ width: 25, height: 25 }}
-                            source={require('../icons/humberger.png')} />
+                    <Hamburger
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Harfa'
+                    />
+                    <TouchableOpacity style={{ width: '100%', justifyContent: 'center', alignContent: 'center' }}
+                        onPress={() => this.props.navigation.navigate("ProAddAddress")}>
+                        <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
+                            source={require('../icons/maps_location.png')} />
                     </TouchableOpacity>
-                    <Text style={styles.textHeader}>Harfa</Text>
                 </View>
-
                 <View style={styles.onlineOfflineHeader}>
                     <Text style={{
                         flex: 1, textAlignVertical: 'center', alignItems: 'flex-start',
-                        alignContent: 'flex-start', justifyContent: 'flex-start', marginLeft: 15, fontWeight: 'bold'}}>
+                        alignContent: 'flex-start', justifyContent: 'flex-start', marginLeft: 15, fontWeight: 'bold'
+                    }}>
                         Availability
                     </Text>
-            
+
                     <TouchableOpacity style={styles.onlineOfflineView}
                         onPress={this.changeAvailabilityStaus}>
-                        <View style={[styles.onlineOfflineText, { backgroundColor: this.state.availBackground  }]}>
+                        <View style={[styles.onlineOfflineText, { backgroundColor: this.state.availBackground }]}>
                             <Text style={{ color: 'white', fontWeight: 'bold', alignSelf: 'center' }}>
                                 {this.state.status}
                             </Text>
@@ -803,7 +880,7 @@ class ProDashBoardScreen extends Component {
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView style={{ marginBottom: ProPendingJobRequest.Request.order_id == '' ? 0 : 80 }}
+                <ScrollView style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80 }}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
@@ -821,10 +898,10 @@ class ProDashBoardScreen extends Component {
                                         Recent Message
                                     </Text>
                                     {false &&
-                                    <TouchableOpacity style={styles.viewAll}
-                                        onPress={() => this.props.navigation.navigate("ProAllMessage")}>
-                                        <Text style={styles.textViewAll}>View All</Text>
-                                    </TouchableOpacity>
+                                        <TouchableOpacity style={styles.viewAll}
+                                            onPress={() => this.props.navigation.navigate("ProAllMessage")}>
+                                            <Text style={styles.textViewAll}>View All</Text>
+                                        </TouchableOpacity>
                                     }
                                 </View>
 
@@ -849,9 +926,9 @@ class ProDashBoardScreen extends Component {
                                         Work
                                     </Text>
                                     {false &&
-                                    <TouchableOpacity style={styles.viewAll}>
-                                        <Text style={styles.textViewAll}>View All</Text>
-                                    </TouchableOpacity>
+                                        <TouchableOpacity style={styles.viewAll}>
+                                            <Text style={styles.textViewAll}>View All</Text>
+                                        </TouchableOpacity>
                                     }
                                 </View>
                                 <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
@@ -865,7 +942,7 @@ class ProDashBoardScreen extends Component {
                                 <View style={styles.listView}>
                                     <FlatList
                                         numColumns={1}
-                                        data={this.state.dataWorkSource}
+                                        data={dataWorkSource}
                                         renderItem={this.renderWorkItem}
                                         keyExtractor={(item, index) => index.toString()}
                                         showsVerticalScrollIndicator={false}
@@ -874,7 +951,7 @@ class ProDashBoardScreen extends Component {
                                 </View>
                             </View>
                         }
-                        {this.state.isRecentUser &&
+                        {/*this.state.isRecentUser &&
                             <View style={styles.mainContainer}>
                                 <View style={styles.recentMessageHeader}>
                                     <Text style={{
@@ -897,15 +974,16 @@ class ProDashBoardScreen extends Component {
                                         showsVerticalScrollIndicator={false}
                                         extraData={this.state} />
                                 </View>
-                            </View>
+                            </View>*/
                         }
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false, "", "", "", "", "")}>
                             <ReviewDialog style={{
                                 shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                                shadowOpacity: 0.75, shadowRadius: 5, elevation: 5}}
+                                shadowOpacity: 0.75, shadowRadius: 5, elevation: 5
+                            }}
                                 changeDialogVisibility={this.changeDialogVisibility}
-                                data={JSON.stringify(this.state.reviewData)+"//////"+"0"} />
+                                data={JSON.stringify(this.state.reviewData) + "//////" + "0"} />
                         </Modal>
                     </View>
 
@@ -920,61 +998,19 @@ class ProDashBoardScreen extends Component {
                     }
                 </ScrollView>
 
-                {ProPendingJobRequest.Request.order_id != '' &&
-                    <TouchableOpacity style={styles.pendingJobStyle}
-                        onPress={this.goToProMapDirection}>
-                        <LinearGradient style={styles.pendingJobStyle}
-                            colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
-                            <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                                source={{ uri: ProPendingJobRequest.Request.image }} />
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
-                                    {ProPendingJobRequest.Request.name}
-                                </Text>
-                                <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
-                                    {"Request for " + ProPendingJobRequest.Request.service_name}
-                                </Text>
-                                <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
-                                    {ProPendingJobRequest.Request.chat_status == "0" ? "New Job Request" : ProPendingJobRequest.Request.status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
-                                </Text>
-                            </View>
-                            {ProPendingJobRequest.Request.chat_status == '1' &&
-                                <View style={styles.arrowView}>
-                                    <Image style={styles.arrow}
-                                        source={require('../icons/arrow_right_animated.gif')} />
-                                </View>
-                            }
-                            {ProPendingJobRequest.Request.chat_status == '0' &&
-                                <TouchableOpacity style={styles.arrowView}
-                                    onPress={this.acceptChatRequest}>
-                                    <View style={styles.viewAccept}> 
-                                    <Text style={styles.textAccept}>Accept</Text>
-                                    </View>   
-                                </TouchableOpacity>
-                            }
-                        </LinearGradient>
-                    </TouchableOpacity>
-                }
-
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1500}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
-
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
-
+                {requestsProvidersFetched && jobRequestsProviders.length > 0 ?
+                    <View style={styles.pendingJobsContainer}>
+                        <FlatList
+                            keyboardShouldPersistTaps={'handled'}
+                            numColumns={1}
+                            data={jobRequestsProviders}
+                            renderItem={this.renderPendingJobs}
+                            keyExtractor={(item, index) => index}
+                            showsVerticalScrollIndicator={false}
+                        // ItemSeparatorComponent={this.renderSeparator}
+                        />
+                    </View> : null}
+                    
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -993,9 +1029,52 @@ class ProDashBoardScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobProvider());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobProviderInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchProviderJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        },
+        dispatchAllFetchedProJobRequests: jobs => {
+            dispatch(fetchedAllJobRequestsPro(jobs));
+        },
+        fetchAllProJobRequestsError: () => {
+            dispatch(fetchAllJobRequestsProError());
+        },
+        fetchJobRequestHistory: providerId => {
+            dispatch(getAllWorkRequestPro(providerId));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     ProDashBoard: {
-        screen: ProDashBoardScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(ProDashBoardScreen),
         navigationOptions: {
             header: null
         }
@@ -1036,7 +1115,7 @@ const AppStackNavigator = createStackNavigator({
         screen: ProBookingScreen,
         navigationOptions: {
             header: null
-        }  
+        }
     },
     ProBookingDetails: {
         screen: ProBookingDetailsScreen,
@@ -1113,6 +1192,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 10
     },
+    noticationsCount: {
+        position: 'absolute',
+        textAlignVertical: 'center',
+        textAlign: 'center',
+        borderRadius: 10,
+        color: 'white',
+        right: 15,
+        height: 20,
+        width: 20,
+        backgroundColor: 'red',
+        top: 5
+    },
     recentMessageHeader: {
         width: screenWidth,
         height: 50,
@@ -1120,7 +1211,7 @@ const styles = StyleSheet.create({
         backgroundColor: colorBg,
         alignItems: 'center'
     },
-    viewAll : {
+    viewAll: {
         paddingLeft: 10,
         paddingRight: 10,
         paddingTop: 5,
@@ -1252,6 +1343,25 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
+    },
+    pendingJobsContainer: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        width: screenWidth,
+        position: 'absolute',
+        bottom: 0,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    pendingJobRow: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'row',
+        height: 75,
     },
     linearGradient: {
         flex: 1,

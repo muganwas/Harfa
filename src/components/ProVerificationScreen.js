@@ -1,11 +1,12 @@
 
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View,StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity, 
     ScrollView,Dimensions, ActivityIndicator} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { getPendingJobRequestProvider } from '../Redux/Actions/jobsActions';
 import AsyncStorage from '@react-native-community/async-storage';
 import ShakingText from 'react-native-shaking-text';
-import firebaeMessaging from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import ProPendingRequest from './ProPendingJobRequest';
@@ -17,10 +18,10 @@ const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
-const MOBILE_EXISTS_URL = Config.BASEURL+'employee/check/mobile'
-const PENDING_JOB_PROVIDER = Config.BASEURL+"jobrequest/customer_status_check/";
+const MOBILE_EXISTS_URL = Config.baseURL+'employee/check/mobile'
+const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
 
-export default class ProVerificationScreen extends Component {
+class ProVerificationScreen extends Component {
 
     constructor(props) {
         super(props)
@@ -70,6 +71,7 @@ export default class ProVerificationScreen extends Component {
     }
 
     checkValidation = () => {
+        const { fetchProvidersJobRequests } = this.props;
         if (this.state.otp == '') {
             this.setState({ error: 'Please enter valid OTP' })
         }
@@ -83,7 +85,7 @@ export default class ProVerificationScreen extends Component {
                 isLoading: true
             })
 
-            firebaeMessaging.messaging().getToken().then((fcmToken) => {
+            firebase.messaging().getToken().then((fcmToken) => {
 
                 console.log("ProVerificationFCM ID " + fcmToken);
 
@@ -134,7 +136,7 @@ export default class ProVerificationScreen extends Component {
 
                                 console.log("ProVerificationScreen checkValidation : " + JSON.stringify(ProviderDetails.Provider))
 
-                                this.getPendingJobRequestProvider(id);
+                                fetchProvidersJobRequests({}, id)
                             }
                             else {
                                 this.props.navigation.navigate("ProRegister", {
@@ -154,64 +156,6 @@ export default class ProVerificationScreen extends Component {
                 }
             });
         }
-    }
-
-    async getPendingJobRequestProvider(providerId)
-    {
-        await fetch(PENDING_JOB_PROVIDER+providerId , {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            
-            console.log("Response getPendingJobRequestProvider: "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                const id = responseJson.data.id;
-
-                var jobData = {
-                    id: responseJson.data._id,
-                    order_id: responseJson.data.order_id,
-                    user_id: responseJson.data.customer_details._id,
-                    image: responseJson.data.customer_details.image,
-                    fcm_id: responseJson.data.customer_details.fcm_id,
-                    name: responseJson.data.customer_details.username,
-                    mobile: responseJson.data.customer_details.mobile,
-                    dob: responseJson.data.customer_details.dob,
-                    address: responseJson.data.customer_details.address,
-                    lat: responseJson.data.customer_details.lat,
-                    lang: responseJson.data.customer_details.lang,
-                    service_name: responseJson.data.service_details.service_name,
-                    chat_status: responseJson.data.chat_status,
-                    status: responseJson.data.status,
-                    delivery_address: responseJson.data.delivery_address,
-                    delivery_lat: responseJson.data.delivery_lat,
-                    delivery_lang: responseJson.data.delivery_lang,
-                }
-                ProPendingRequest.Request = jobData;
-                console.log("PendingJob getPendingJobRequestProvider : "+JSON.stringify( ProPendingRequest.Request))
-
-                this.props.navigation.navigate("ProHome");
-            }
-            else
-            {
-                this.props.navigation.navigate("ProHome");
-            }
-         })
-        .catch((error) => {
-            this.setState({
-                isLoading: false
-            })
-            alert("Error "+error);
-            console.log(JSON.stringify(responseJson));
-        });
     }
 
     render() {
@@ -305,6 +249,22 @@ export default class ProVerificationScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        jobsInfo: state.jobsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchProvidersJobRequests: (props, providerId, navTo) => {
+            dispatch(getPendingJobRequestProvider(props, providerId, navTo));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProVerificationScreen);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -371,5 +331,3 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
-
-

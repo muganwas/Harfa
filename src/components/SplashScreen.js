@@ -1,21 +1,17 @@
 import React, { Component } from 'react';
-import {View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler} from 'react-native';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { connect } from 'react-redux';
+import { View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler } from 'react-native';
+import { createAppContainer, } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 import AsyncStorage from '@react-native-community/async-storage';
 import RNExitApp from 'react-native-exit-app';
-import firebase from 'firebase';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import HomeScreen from './HomeScreen';
 import DashboardScreen from './DashboardScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
-import VerificationScreen from './VerificationScreen';
 import RegisterScreen from './RegisterScreen';
-import ProVerificationScreen from './ProVerificationScreen';
-import ProLoginPhoneScreen from './ProLoginPhoneScreen';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
 import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
 import ProForgotPasswordScreen from './ProForgotPasswordScreen';
@@ -23,100 +19,80 @@ import ProRegisterFBScreen from './ProRegisterFBScreen';
 import ProRegisterScreen from './ProRegisterScreen';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
 import ProHomeScreen from './ProHomeScreen';
-import ProAccountTypeScreen from  './ProAccountTypeScreen';
+import ProAccountTypeScreen from './ProAccountTypeScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
-import PendingJobRequest from './PendingJobRequest';
-import ProPendingRequest from './ProPendingJobRequest';
- 
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#000000';
+import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
 
-const PRO_GET_PROFILE = Config.BASEURL+"employee/";
-const USER_GET_PROFILE = Config.BASEURL+"users/";
-const PENDING_JOB_CUSTOMER = Config.BASEURL+"jobrequest/user_status_check/";
-const PENDING_JOB_PROVIDER = Config.BASEURL+"jobrequest/customer_status_check/";
+const PRO_GET_PROFILE = Config.baseURL + "employee/";
+const USER_GET_PROFILE = Config.baseURL + "users/";
+const database = firebase.database();
 
 class SplashScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
-      this.state = {
-        id: null,
-        isLoading: false,
-      };
+        super(props);
+
+        this.state = {
+            id: null,
+            isLoading: false,
+        };
     };
 
-    componentDidMount()
-    {
+    componentDidMount() {
         setTimeout(this.splashTimeOut, 3000);
+    }
 
-         // // Your web app's Firebase configuration
-         var config = {
-            apiKey: "AIzaSyD09zpn6kbC99gHv5FLdrhJgdbWCctWCHQ",
-            authDomain: "harfa-47425.firebaseapp.com",
-            databaseURL: "https://harfa-47425.firebaseio.com",
-            projectId: "harfa-47425",
-            storageBucket: "harfa-47425.appspot.com",
-            messagingSenderId: "28855864302",
-            appId: "1:28855864302:web:ec0c0de5d989bf1e"
-        };
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(config);
-        }
-        
-        firebaseMessaging.notifications().onNotification((notification) => {       
-            const { title, body } = notification;
-        });
+    componentDidUpdate() {
+        const { jobsInfo: { requestsProvidersFetched, requestsFetched } } = this.props;
+        if (requestsProvidersFetched && requestsFetched && this.state.isLoading === true) this.setState({ isLoading: false });
     }
 
     splashTimeOut = () => {
         AsyncStorage.getItem('userId')
-        .then((userId) => this.getUserType(userId));
+            .then((userId) => this.getUserType(userId));
     }
 
-    async getUserType(userId){
+    getUserType = async userId => {
 
-     firebaseMessaging.messaging().hasPermission()
-            .then(async enabled => {
+        firebase.messaging().hasPermission().
+            then(async enabled => {
                 if (enabled) {
                     this.getFCMToken(userId);
                 }
                 else {
-                    await firebaseMessaging.messaging().requestPermission()
+                    await firebase.messaging().requestPermission()
                         .then(() => {
                             this.getFCMToken(userId);
                         })
                         .catch(error => {
-                            Alert.alert(  
-                                "Permission Request",  
-                                "You don't have permission for notification. Please enable notification then try again " ,  
-                                [  
-                                  {  
-                                    text: 'Back',  
-                                    onPress: () => {
-                                        if (Platform.OS == 'android')
-                                            BackHandler.exitApp();
-                                        else
-                                            RNExitApp.exitApp();
-                                    },  
-                                    style: 'cancel',  
-                                  },  
-                                  {
-                                    text: 'OK', 
-                                    onPress: () => {
-                                        if (Platform.OS == 'android')
-                                            BackHandler.exitApp();
-                                        else
-                                            RNExitApp.exitApp();
+                            Alert.alert(
+                                "Permission Request",
+                                "You don't have permission for notification. Please enable notification then try again ",
+                                [
+                                    {
+                                        text: 'Back',
+                                        onPress: () => {
+                                            if (Platform.OS == 'android')
+                                                BackHandler.exitApp();
+                                            else
+                                                RNExitApp.exitApp();
+                                        },
+                                        style: 'cancel',
                                     },
-                                  },  
-                                ]  
-                              );  
+                                    {
+                                        text: 'OK',
+                                        onPress: () => {
+                                            if (Platform.OS == 'android')
+                                                BackHandler.exitApp();
+                                            else
+                                                RNExitApp.exitApp();
+                                        },
+                                    },
+                                ]
+                            );
 
                             //User has rejected permissions
                         });
@@ -124,9 +100,9 @@ class SplashScreen extends Component {
             });
     }
 
-    async getFCMToken(userId){
+    getFCMToken = async userId => {
 
-        const fcmToken = await firebaseMessaging.messaging().getToken();
+        const fcmToken = await firebase.messaging().getToken();
         if (fcmToken) {
             console.log("Splash FCMID >> " + fcmToken);
 
@@ -138,288 +114,168 @@ class SplashScreen extends Component {
             console.log("User don't have Token")
         }
     }
-    
-    autoLogin(userId, userType, fcmToken)
-    {
-        if (userId !== null){
+
+    autoLogin = (userId, userType, fcmToken) => {
+        const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest } = this.props;
+        if (userId !== null) {
             this.setState({
                 isLoading: true,
             });
-            if(userType == 'Provider')
-            {
-                fetch(PRO_GET_PROFILE+userId+'?fcm_id='+fcmToken, {
+            if (userType == 'Provider') {
+                fetch(PRO_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
                     method: "GET",
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     },
-                 })
-                 .then((response) => response.json())
-                 .then((responseJson) => {
-                    
-                    console.log("Response autoLogin Provider >> "+JSON.stringify(responseJson));
-                   
-                    if(responseJson.result)
-                    {
-                        const id = responseJson.data.id;
-                        var providerData = {
-                            providerId: responseJson.data.id,
-                            name: responseJson.data.username,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            imageSource: responseJson.data.image,
-                            surname: responseJson.data.surname,
-                            mobile: responseJson.data.mobile,
-                            services: responseJson.data.services,
-                            description: responseJson.data.description,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            invoice: responseJson.data.invoice,
-                            status: responseJson.data.status,
-                            fcmId: responseJson.data.fcm_id,
-                            accountType: responseJson.data.account_type
-                        }
-                        ProviderDetails.Provider = providerData;
-
-                        console.log("AutoLogin ProviderData: "+JSON.stringify(ProviderDetails.Provider));
-                        this.getPendingJobRequestProvider(userId)
-                    }
-                    else
-                    {
-                        this.setState({
-                            isLoading: false
-                        })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                },
-                            ]
-                        );
-                    }
-                 })
-                .catch((error) => {
-                    this.setState({
-                        isLoading: false
-                    })
-                    alert("Error "+error);
-                    console.log(JSON.stringify(responseJson));
-                });
-            }
-            else if(userType == 'User')
-            {
-                console.log(USER_GET_PROFILE+userId)
-
-                fetch(USER_GET_PROFILE+userId+'?fcm_id='+fcmToken , {
-                    method: "GET",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                 })
-                 .then((response) => response.json())
-                 .then((responseJson) => {
-                    
-                    console.log("Response autoLogin: "+JSON.stringify(responseJson));
-                    
-                    if(responseJson.result)
-                    {
-                        const id = responseJson.data.id;
-
-                        var userData = {
-                            userId: responseJson.data.id,
-                            accountType: responseJson.data.acc_type,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            username: responseJson.data.username,
-                            image: responseJson.data.image,
-                            mobile: responseJson.data.mobile,
-                            dob: responseJson.data.dob,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            fcmId: responseJson.data.fcm_id,
-                        }
-                        UserDetails.User = userData;
-
-                        console.log("AutoLogin UserData: "+JSON.stringify(UserDetails.User))
-
-                        //Check if any Ongoing Request 
-                        this.getPendingJobRequest(userId)
-                    }
-                    else
-                    {
-                        this.setState({
-                            isLoading: false
-                        })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                },
-                            ]
-                        );
-                    }
                 })
-                .catch((error) => {
-                    this.setState({
-                        isLoading: false
+                    .then((response) => response.json())
+                    .then(async responseJson => {
+                        var status;
+                        if (responseJson.result) {
+
+                            const id = responseJson.data.id;
+                            const usersRef = database.ref(`users/${id}`);
+                            await usersRef.once('value', snapshot => {
+                                const value = snapshot.val();
+                                if (value)
+                                    status = value.status;
+                                else {
+                                    usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                        console.log('status set');
+                                    }).
+                                        catch(e => {
+                                            console.log(e.message);
+                                        });
+                                }
+                            });
+                            var providerData = {
+                                providerId: responseJson.data.id,
+                                name: responseJson.data.username,
+                                email: responseJson.data.email,
+                                password: responseJson.data.password,
+                                imageSource: responseJson.data.image,
+                                surname: responseJson.data.surname,
+                                mobile: responseJson.data.mobile,
+                                services: responseJson.data.services,
+                                description: responseJson.data.description,
+                                address: responseJson.data.address,
+                                lat: responseJson.data.lat,
+                                lang: responseJson.data.lang,
+                                invoice: responseJson.data.invoice,
+                                status: status != undefined ? status : responseJson.data.status,
+                                fcmId: responseJson.data.fcm_id,
+                                accountType: responseJson.data.account_type
+                            }
+                            ProviderDetails.Provider = providerData;
+                            fetchJobRequestHistoryPro(userId);
+                            fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
+                        }
+                        else {
+                            this.setState({
+                                isLoading: false
+                            })
+                            Alert.alert(
+                                "OOPS !",
+                                responseJson.message,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                    },
+                                    {
+                                        text: 'Retry',
+                                        onPress: () => this.autoLogin(userId, userType, fcmToken),
+                                    },
+                                ]
+                            );
+                        }
                     })
-                    alert("Error "+error);
-                    console.log(JSON.stringify(responseJson));
-                });
+                    .catch(error => {
+                        this.setState({
+                            isLoading: false
+                        })
+                        alert(error);
+                        console.log('error in autologin')
+                        console.log(JSON.stringify(responseJson));
+                    });
+            }
+            else if (userType == 'User') {
+
+                fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
+                    method: "GET",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .then(response => response.json())
+                    .then(responseJson => {
+                        if (responseJson.result) {
+                            var userData = {
+                                userId: responseJson.data.id,
+                                accountType: responseJson.data.acc_type,
+                                email: responseJson.data.email,
+                                password: responseJson.data.password,
+                                username: responseJson.data.username,
+                                image: responseJson.data.image,
+                                mobile: responseJson.data.mobile,
+                                dob: responseJson.data.dob,
+                                address: responseJson.data.address,
+                                lat: responseJson.data.lat,
+                                lang: responseJson.data.lang,
+                                fcmId: responseJson.data.fcm_id,
+                            }
+                            UserDetails.User = userData;
+                            //Check if any Ongoing Request 
+                            fetchJobRequestHistoryClient(userId);
+                            fetchPendingJobRequest(this.props, userId, 'Home');
+                        }
+                        else {
+                            this.setState({
+                                isLoading: false
+                            })
+                            Alert.alert(
+                                "OOPS !",
+                                responseJson.message,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                    },
+                                    {
+                                        text: 'Retry',
+                                        onPress: () => this.autoLogin(userId, userType, fcmToken),
+                                    },
+                                ]
+                            );
+                        }
+                    }).
+                    catch((error) => {
+                        this.setState({
+                            isLoading: false
+                        })
+                        alert(error);
+                        console.log(JSON.stringify(responseJson));
+                    });
             }
         }
-        else
-        {
+        else {
             console.log("No Logged User");
-            this.props.navigation.navigate("AfterSplash") ;
-        } 
-    }
-
-    async getPendingJobRequest(userId)
-    {
-        await fetch(PENDING_JOB_CUSTOMER+userId , {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            
-            console.log("Response getPendingJobRequest: "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                const id = responseJson.data.id;
-
-                var jobData = {
-                    id: responseJson.data._id,
-                    order_id: responseJson.data.order_id,
-                    employee_id: responseJson.data.employee_details._id,
-                    image: responseJson.data.employee_details.image,
-                    fcm_id: responseJson.data.employee_details.fcm_id,
-                    name: responseJson.data.employee_details.username,
-                    surName: responseJson.data.employee_details.surname,
-                    mobile: responseJson.data.employee_details.mobile,
-                    description: responseJson.data.employee_details.description,
-                    address: responseJson.data.employee_details.address,
-                    lat: responseJson.data.employee_details.lat,
-                    lang: responseJson.data.employee_details.lang,
-                    service_name: responseJson.data.service_details.service_name,
-                    chat_status: responseJson.data.chat_status,
-                    status: responseJson.data.status,
-                    delivery_address: responseJson.data.delivery_address,
-                    delivery_lat: responseJson.data.delivery_lat,
-                    delivery_lang: responseJson.data.delivery_lang,
-                }
-                PendingJobRequest.Request = jobData;
-
-                console.log("PendingJob getPendingJobRequest : "+JSON.stringify( PendingJobRequest.Request))
-
-                this.props.navigation.navigate("Home");
-            }
-            else
-            {
-                this.props.navigation.navigate("Home");
-            }
-         })
-        .catch((error) => {
-            this.setState({
-                isLoading: false
-            })
-            alert("Error "+error);
-            console.log(JSON.stringify(responseJson));
-        });
-    }
-
-    async getPendingJobRequestProvider(providerId)
-    {
-        await fetch(PENDING_JOB_PROVIDER+providerId , {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            
-            console.log("Response getPendingJobRequestProvider: "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                const id = responseJson.data.id;
-
-                var jobData = {
-                    id: responseJson.data._id,
-                    order_id: responseJson.data.order_id,
-                    user_id: responseJson.data.customer_details._id,
-                    image: responseJson.data.customer_details.image,
-                    fcm_id: responseJson.data.customer_details.fcm_id,
-                    name: responseJson.data.customer_details.username,
-                    mobile: responseJson.data.customer_details.mobile,
-                    dob: responseJson.data.customer_details.dob,
-                    address: responseJson.data.customer_details.address,
-                    lat: responseJson.data.customer_details.lat,
-                    lang: responseJson.data.customer_details.lang,
-                    service_name: responseJson.data.service_details.service_name,
-                    chat_status: responseJson.data.chat_status,
-                    status: responseJson.data.status,
-                    delivery_address: responseJson.data.delivery_address,
-                    delivery_lat: responseJson.data.delivery_lat,
-                    delivery_lang: responseJson.data.delivery_lang,
-                }
-                ProPendingRequest.Request = jobData;
-                console.log("PendingJob getPendingJobRequestProvider : "+JSON.stringify( ProPendingRequest.Request))
-
-                this.props.navigation.navigate("ProHome");
-            }
-            else
-            {
-                this.props.navigation.navigate("ProHome");
-            }
-         })
-        .catch((error) => {
-            this.setState({
-                isLoading: false
-            })
-            alert("Error "+error);
-            console.log(JSON.stringify(responseJson));
-        });
+            this.props.navigation.navigate("AfterSplash");
+        }
     }
 
     render() {
 
         return (
-            <View style = {styles.container}>
-               
+            <View style={styles.container}>
+
                 <StatusBar barStyle='light-content' backgroundColor='#000000' />
-                
-                <Image 
-                    style ={{width: 250, height: 250}} 
-                    source= {require('../images/harfa_logo.png')}/>
+
+                <Image
+                    style={{ width: 250, height: 250 }}
+                    source={require('../images/harfa_logo.png')} />
 
                 {this.state.isLoading && (
                     <View style={styles.loaderStyle}>
@@ -434,27 +290,42 @@ class SplashScreen extends Component {
     }
 }
 
-class App extends Component{
-    render(){
-        return(
-            <AppStackNavigator/>
-        );
+const mapStateToProps = state => {
+    return {
+        jobsInfo: state.jobsInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchPendingJobRequest: (props, uid, navigateTo) => {
+            dispatch(getPendingJobRequest(props, uid, navigateTo));
+        },
+        fetchPendingJobProviderInfo: (props, proId, navigateTo) => {
+            dispatch(getPendingJobRequestProvider(props, proId, navigateTo));
+        },
+        fetchJobRequestHistoryPro: providerId => {
+            dispatch(getAllWorkRequestPro(providerId));
+        },
+        fetchJobRequestHistoryClient: clientId => {
+            dispatch(getAllWorkRequestClient(clientId));
+        }
     }
 }
 
 const AppStackNavigator = createStackNavigator({
-    Splash : 
+    Splash:
     {
-      screen : SplashScreen,
-      navigationOptions:{
-        header : null
-      }
+        screen: connect(mapStateToProps, mapDispatchToProps)(SplashScreen),
+        navigationOptions: {
+            header: null
+        }
     },
-    AfterSplash : {
-        screen : AfterSplashScreen,
-        navigationOptions:{
-        header : null
-       }
+    AfterSplash: {
+        screen: AfterSplashScreen,
+        navigationOptions: {
+            header: null
+        }
     },
     // LoginPhone : {
     //     screen: LoginPhoneScreen,
@@ -462,7 +333,7 @@ const AppStackNavigator = createStackNavigator({
     //         header: null
     //     }
     // },
-    FacebookGoogle:{
+    FacebookGoogle: {
         screen: FacebookGoogleScreen,
         navigationOptions: {
             header: null
@@ -487,13 +358,13 @@ const AppStackNavigator = createStackNavigator({
         }
     },
     Dashboard: {
-        screen: DashboardScreen, 
+        screen: DashboardScreen,
         navigationOptions: {
             header: null
         }
     },
     Home: {
-        screen: HomeScreen, 
+        screen: HomeScreen,
         navigationOptions: {
             header: null
         }
@@ -517,7 +388,7 @@ const AppStackNavigator = createStackNavigator({
         }
     },
     ProAccountType: {
-        screen: ProAccountTypeScreen, 
+        screen: ProAccountTypeScreen,
         navigationOptions: {
             header: null
         }
@@ -539,9 +410,9 @@ const AppStackNavigator = createStackNavigator({
         navigationOptions: {
             header: null
         }
-    }, 
+    },
     SelectAddress: {
-        screen: SelectAddressScreen, 
+        screen: SelectAddressScreen,
         navigationOptions: {
             header: null
         }
@@ -554,15 +425,15 @@ const AppStackNavigator = createStackNavigator({
     },
 });
 
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+const App = createAppContainer(AppStackNavigator);
+export default App;
 
 const styles = {
-    container : {
-        flex : 1,
-        backgroundColor : '#000000',
-        justifyContent : 'center',
-        alignItems : 'center'
+    container: {
+        flex: 1,
+        backgroundColor: '#000000',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     loaderStyle: {
         position: 'absolute',

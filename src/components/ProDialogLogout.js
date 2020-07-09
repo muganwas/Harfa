@@ -15,7 +15,7 @@ const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const PRO_INFO_UPDATE = Config.BASEURL + "employee/";
+const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 
 export default class ProDialogLogout extends Component {
 
@@ -63,12 +63,12 @@ export default class ProDialogLogout extends Component {
                     await AsyncStorage.removeItem('userType');
 
                     console.log("Logout");
-                    if (Platform.OS == 'android')
-                        BackHandler.exitApp();
-                    else
+                    if (Platform.OS == 'android') BackHandler.exitApp();
+                    else {
+                        Config.socket.close();
                         RNExitApp.exitApp();
-
                         this.props.changeDialogVisibility(false);
+                    }
                 }
                 else {
                     this.setState({

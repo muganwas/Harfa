@@ -4,20 +4,21 @@ import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, ScrollView,
      ActivityIndicator,ToastAndroid, Alert, StatusBar, Platform, BackHandler, Modal} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import AsyncStorage from '@react-native-community/async-storage';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import ProviderDetails from './ProviderDetails';
+import Axios from 'axios';
 
-const colorPrimary = '#FFBF0F';
+//const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+//const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
-const REGISTER_URL = Config.BASEURL+'employee/register'
+const REGISTER_URL = Config.baseURL+'employee/register'
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -109,7 +110,7 @@ export default class ProRegisterFBScreen extends Component {
 
     registerTask()
     {
-        firebaseMessaging.messaging().getToken().then((fcmToken) => {
+        firebase.messaging().getToken().then((fcmToken) => {
             console.log("ProRegister FCM ID " + fcmToken);
 
             if (fcmToken) {
@@ -137,22 +138,13 @@ export default class ProRegisterFBScreen extends Component {
                      isLoading: true
                  })
                  
-                 fetch(REGISTER_URL , {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body:  JSON.stringify(userData)
-                 })
-                 .then((response) => response.json())
+                 Axios.post(REGISTER_URL , {data:JSON.stringify(userData)})
                  .then((responseJson) => {
-                    
-                    console.log("Response Register >> "+JSON.stringify(responseJson));
+                    console.log(responseJson);
                     this.setState({
                         isLoading: false
                     })
-                    if(responseJson.result)
+                    if(responseJson.status === 200 && responseJson.data.createdDate)
                     {
                         const id = responseJson.data.id;
         
@@ -188,7 +180,7 @@ export default class ProRegisterFBScreen extends Component {
                     {
                         Alert.alert(
                             "OOPS !",
-                            responseJson.message,
+                            responseJson.data.message,
                             [
                                 {
                                     text: 'Cancel',

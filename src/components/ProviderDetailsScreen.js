@@ -1,14 +1,19 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import {View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityIndicator, Modal,
    Linking, Alert, BackHandler, StatusBar, Platform } from 'react-native';
 import { Rating, AirbnbRating } from 'react-native-ratings';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
-import Toast, {DURATION} from 'react-native-easy-toast';
+import firebase from 'react-native-firebase';
+import Toast from 'react-native-simple-toast';
 import UserDetails from './UserDetails';
 import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
+import OnlineUsers from './OnlineUsers';
+import { imageExists } from '../misc/helpers';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -21,10 +26,11 @@ const colorRed = 'red';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const BOOKING_REQUEST = Config.BASEURL+"jobrequest/addjobrequest";
-const PRO_GET_PROFILE = Config.BASEURL+"employee/";
+const BOOKING_REQUEST = Config.baseURL+"jobrequest/addjobrequest";
+const PRO_GET_PROFILE = Config.baseURL+"employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const database = firebase.database();
 
 function StatusBarPlaceHolder() {
   return (
@@ -41,7 +47,7 @@ function StatusBarPlaceHolder() {
   );
 }
 
-export default class ProviderDetailsScreen extends Component {
+class ProviderDetailsScreen extends Component {
 
     constructor(props) {
       super(props)
@@ -51,7 +57,9 @@ export default class ProviderDetailsScreen extends Component {
         name: this.props.navigation.state.params.name,
         surname: this.props.navigation.state.params.surname,
         image: this.props.navigation.state.params.image,
+        imageAvailable: false,
         mobile: this.props.navigation.state.params.mobile,
+        avgRating: this.props.navigation.state.params.avgRating,
         distance: this.props.navigation.state.params.distance,
         address: this.props.navigation.state.params.address,
         description: this.props.navigation.state.params.description,
@@ -102,24 +110,6 @@ export default class ProviderDetailsScreen extends Component {
         //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
         this.showToast('Service provider is Offline');
       }
-      else if(PendingJobRequest.Request.order_id != "")
-      {
-        Alert.alert(  
-          "JOB REQUEST ALERT",  
-          "Can't book another request, untill any ONGOING Request will not complete",  
-          [  
-            {  
-              // text: 'Cancel',  
-              // onPress: () => console.log('Cancel Pressed'),  
-              // style: 'cancel',  
-            },  
-            {
-              text: 'OK', 
-              onPress: () => this.props.navigation.goBack(),
-            },  
-          ]  
-        );  
-      }
       else
       {
         this.setState({
@@ -147,7 +137,6 @@ export default class ProviderDetailsScreen extends Component {
             },
           } 
         }
-        console.log("SEND REQUEST : "+JSON.stringify(data));
   
         fetch(BOOKING_REQUEST, {
           method: "POST",
@@ -159,7 +148,6 @@ export default class ProviderDetailsScreen extends Component {
         })
           .then((response) => response.json())
           .then((responseJson) => {
-            console.log("Response : " + JSON.stringify(responseJson))
             if (responseJson.result) {
               this.interval = setInterval(() => {
 
@@ -176,7 +164,7 @@ export default class ProviderDetailsScreen extends Component {
                   seconds_Counter: num.length == 1 ? '0' + num : num
                 });
               }, 1000);
-
+              this.props.updateActiveRequest(true);
               this.setState({
                 requestStatus: "Waiting for acceptance...",
                 isLoading: false,
@@ -187,7 +175,7 @@ export default class ProviderDetailsScreen extends Component {
               {
                 Alert.alert(  
                   "JOB REQUEST ALERT",  
-                  "Can't book another request, untill any ONGOING Request will not complete",  
+                  "You already have a running job with this provider",  
                   [  
                     {  
                       // text: 'Cancel',  
@@ -283,9 +271,8 @@ export default class ProviderDetailsScreen extends Component {
   } 
 
   componentDidUpdate(){
-
-      console.log(this.state.minutes_Counter+" : "+this.state.seconds_Counter);
-    
+    const { jobsInfo: { activeRequest } } = this.props;
+    const { requestStatus } = this.state;
       if(this.state.minutes_Counter == '00'){ 
         if(this.state.seconds_Counter == '00')
         {
@@ -297,191 +284,42 @@ export default class ProviderDetailsScreen extends Component {
         });
         }
       }
+    if (!activeRequest && requestStatus == 'Waiting for acceptance...') 
+      this.setState({requestStatus: ''});
   }
 
-  componentWillMount(){
+  componentDidMount(){
+    const { image } = this.props.navigation.state.params;
+    imageExists(image).then(imageAvailable => {
+      this.setState({imageAvailable});
+    })
+    const onlineUsers = OnlineUsers.Users;
 
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    const { providerId } = this.state;
+    const userRef = database.ref(`users/${providerId}`);
 
-    firebaseMessaging.notifications().onNotification((notification) => {
-
-      const { title, body, data } = notification;
-
-      console.log('Notification >>> ', notification);
-      console.log("Title, body  data >>> " + title + " >>>" + body+ " >>> "+JSON.stringify(data));
-
-      if (title == "Chat Request Accepted") {
-        this.setState({
-          requestStatus: title,
-          title: title, 
-          body: body,
-          data: data,
-        })
-
-        var providerData = JSON.parse(data.ProviderData);
-
-        var pendingJobData = {
-          id: data.mainId,
-          order_id: data.orderId,
-          employee_id: providerData.ProviderId,
-          image: providerData.imageSource,
-          fcm_id: providerData.fcmId,
-          name: providerData.name,
-          surName: providerData.surname,
-          mobile: providerData.mobile,
-          description: providerData.description,
-          address: providerData.address,
-          lat: providerData.lat,
-          lang: providerData.lang,
-          service_name: data.serviceName,
-          chat_status: data.chat_status,
-          status: data.status,
-          delivery_address: data.delivery_address,
-          delivery_lat: data.delivery_lat,
-          delivery_lang: data.delivery_lang,
-        }
-        PendingJobRequest.Request = pendingJobData;
-        //ToastAndroid.show("Chat Request Accepted", ToastAndroid.SHORT);
-        //this.showToast('Chat Request Accepted');
-        Alert.alert(  
-          "Accepted !",  
-          "Chat Request Accepted",  
-          [  
-            {  
-              // text: 'Cancel',  
-              // onPress: () => console.log('Cancel Pressed'),  
-              // style: 'cancel',  
-            },  
-            {
-              text: 'OK', 
-              onPress: () => console.log("OK"),
-            },  
-          ]  
-        );  
-      }
-      else if(title == "Chat Request Rejected")
-      {
-        this.setState({
-          requestStatus: title,
-          title: title, 
-          body: body,
-          data: data,
-          isJobAccepted: false,
-        })
-        this.showRejectionAlert("CHAT REQUEST REJECTED", "Service provider is rejected your request.")
-      }
-      else if(title == "No Response")
-      {
-        this.setState({
-          requestStatus: title,
-          title: title, 
-          body: body,
-          data: data,
-        })
-        var pendingJobData = {
-          id: '',
-          order_id: '',
-          employee_id: '',
-          image: '',
-          fcm_id: '',
-          name: '',
-          surName: '',
-          mobile: '',
-          description: '',
-          address: '',
-          lat: '',
-          lang: '',
-          service_name: '',
-          chat_status: '',
-          status: '',
-          delivery_address: '',
-          delivery_lat: '',
-          delivery_lang: '',
-        }
-        PendingJobRequest.Request = pendingJobData;
-        this.showRejectionAlert("No RESPONSE", "Service provider not responded to your request. Please try again later")
-      }
-      else if(title == "Job Accepted")
-      {
-        this.setState({
-          isJobAccepted: true
-        })       
-        var pendingJobData = {
-          id: data.mainId,
-          order_id: data.orderId,
-          employee_id: data.ProviderId,
-          image: data.image,
-          fcm_id: data.fcmId,
-          name: data.name,
-          surName: data.surname,
-          mobile: data.mobile,
-          description: data.description,
-          address: data.address,
-          lat: data.lat,
-          lang: data.lang,
-          service_name: data.serviceName,
-          chat_status: data.chat_status,
-          status: data.status,
-          delivery_address: data.delivery_address,
-          delivery_lat: data.delivery_lat,
-          delivery_lang: data.delivery_lang,
-        }
-        PendingJobRequest.Request = pendingJobData;
-      }
-      else if(title == "Job Rejected")
-      {
-        this.setState({
-          isJobAccepted: false
-        })
-        var pendingJobData = {
-          id: '',
-          order_id: '',
-          employee_id: '',
-          image: '',
-          fcm_id: '',
-          name: '',
-          surName: '',
-          mobile: '',
-          description: '',
-          address: '',
-          lat: '',
-          lang: '',
-          service_name: '',
-          chat_status: '',
-          status: '',
-          delivery_address: '',
-          delivery_lat: '',
-          delivery_lang: '',
-        }
-        PendingJobRequest.Request = pendingJobData;
-        this.showRejectionAlert("JOB REJECTED", "Your job has been rejected. Please try again later")
-      }
-      else if(title == "Job Completed")
-      {
-        var jobData = {
-          id: '',
-          order_id: '',
-          employee_id: '',
-          image: '',
-          fcm_id: '',
-          name: '',
-          surName: '',
-          mobile: '',
-          description: '',
-          address: '',
-          lat: '',
-          lang: '',
-          service_name: '',
-          chat_status: '',
-          status: '',
-          delivery_address:'',
-          delivery_lat: '',
-          delivery_lang: '',
-      }
-      PendingJobRequest.Request = jobData;
-      this.showRejectionAlert("JOB COMPLETED", "Your job has been completed.")
-      }
+    userRef.on('child_changed', result => {
+        if (result && result.key === "status" && providerId) 
+            if (onlineUsers[providerId] && result.val() === '1') this.setState({status: onlineUsers[providerId].status});
+            else this.setState({status: result.val()});
+        else console.log('provider id unavailable')
     });
+
+    userRef.once('value', data => {
+        if (data) {
+            const { status } = data.val();
+            if (providerId) {
+                if (onlineUsers[providerId]) {
+                    if (status === onlineUsers[providerId].status) this.setState({status: onlineUsers[providerId].status});
+                    else {
+                        this.setState({status: status });
+                    }
+                }
+            }
+        }
+    });
+
   }
 
   componentWillUnmount() {
@@ -499,9 +337,6 @@ export default class ProviderDetailsScreen extends Component {
     data = this.state.data;
 
     const providerData = JSON.parse(data.ProviderData);
-
-    console.log("Data : "+JSON.stringify(data));
-    console.log("ProviderData : "+JSON.stringify(providerData));
 
     var pendingJobData = {
       id: data.mainId,
@@ -564,7 +399,7 @@ export default class ProviderDetailsScreen extends Component {
   }
 
   showToast = (message) => {
-    this.refs.toast.show(message);
+    Toast.show(message);
   }
 
   changeWaitingDialogVisibility = (bool) => {
@@ -574,6 +409,7 @@ export default class ProviderDetailsScreen extends Component {
   }
 
   render() {
+    const { imageAvailable } = this.state;
     return (
       <View style={styles.container}>
 
@@ -603,9 +439,9 @@ export default class ProviderDetailsScreen extends Component {
           </View>
 
           <View style={styles.onlineOfflineView}>
-            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status == '1' ? colorGreen : colorRed }]}>
+            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status === '1' ? colorGreen : colorRed }]}>
               <Text style={{color: 'white', fontWeight: 'bold',}}>
-                {this.state.status == 1 ? "ONLINE" : "OFFLINE"}</Text>
+                {this.state.status === '1' ? "ONLINE" : "OFFLINE"}</Text>
             </View>
           </View>
         </View>
@@ -616,12 +452,13 @@ export default class ProviderDetailsScreen extends Component {
 
           <View style={{ flexDirection: 'column', marginLeft: 10 }}>
             <Image style={{ width: 60, height: 60, borderRadius: 100, alignSelf: 'center' }}
-              source={{ uri: this.state.image }} />
+              source={imageAvailable ? { uri: this.state.image } : require('../images/generic_avatar.png')} />
 
             <View style={{ backgroundColor: 'white', marginTop: 5 }}>
               <AirbnbRating
                 type='custom'
                 ratingCount={5}
+                defaultRating={this.state.avgRating}
                 size={10}
                 ratingBackgroundColor={colorBg}
                 showRating={false}
@@ -711,16 +548,6 @@ export default class ProviderDetailsScreen extends Component {
             </View>
           </View>
         }
-        <Toast
-          ref="toast"
-          style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-          position='bottom'
-          positionValue={200}
-          fadeInDuration={750}
-          fadeOutDuration={1000}
-          opacity={0.8}
-          textStyle={{ color: 'white' }}/>
-
         <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
           onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
           <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -729,6 +556,45 @@ export default class ProviderDetailsScreen extends Component {
     );
   }
 }
+
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobCustomer());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobCustomerInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchCustomerJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        },
+        updateActiveRequest: val => {
+          dispatch(updateActiveRequest(val));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProviderDetailsScreen);
 
 const styles = StyleSheet.create({ 
     container: {

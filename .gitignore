@@ -29,6 +29,10 @@ build/
 local.properties
 *.iml
 
+# env 
+.env
+.env.development
+.env.production
 # node.js
 #
 node_modules/
@@ -57,6 +61,6 @@ buck-out/
 
 # CocoaPods
 /ios/Pods/
+# heavy android files
 android/java_pid828.hprof
-*.apk
-.env
+android/app/debug/app-debug.apk

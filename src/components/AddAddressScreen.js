@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions, Permission
     ActivityIndicator, BackHandler, Platform, StatusBar, Modal} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Geolocation from 'react-native-geolocation-service';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import UserDetails from './UserDetails';
 import Config from './Config';
@@ -17,7 +17,7 @@ const colorGray = '#C0C0C0';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const USER_INFO_UPDATE = Config.BASEURL + "users/";
+const USER_INFO_UPDATE = Config.baseURL + "users/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -395,7 +395,7 @@ export default class AddAddressScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -461,16 +461,6 @@ export default class AddAddressScreen extends Component {
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1000}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
-
             </View>
         );
     }

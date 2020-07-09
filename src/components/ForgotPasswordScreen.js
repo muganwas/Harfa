@@ -14,7 +14,7 @@ const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const FORGOT_PASSWORD = Config.BASEURL+"users/forgot_password/email";
+const FORGOT_PASSWORD = Config.baseURL+"users/forgot_password/email";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

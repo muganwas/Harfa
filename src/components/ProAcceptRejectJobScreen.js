@@ -1,14 +1,18 @@
 import React, { Component } from 'react';
-import {View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, 
-    ActivityIndicator, ToastAndroid, BackHandler, ImageBackground, StatusBar, Platform, Modal} from 'react-native';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import { connect } from 'react-redux';
+import {
+    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions,
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Modal
+} from 'react-native';
+import firebase from 'react-native-firebase';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import WaitingDialog from './WaitingDialog';
 import ImagePicker from 'react-native-image-picker';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
 import ProviderDetails from './ProviderDetails';
-import firebase from 'firebase';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import ProPendingJobRequest from './ProPendingJobRequest';
 
@@ -16,13 +20,13 @@ const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
+const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const REJECT_ACCEPT_REQUEST = Config.BASEURL+"jobrequest/updatejobrequest";
-const GET_IMAGE_URL = Config.BASEURL+"thirdpartyapi/chatupload"
+const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
+const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -37,93 +41,80 @@ const options = {
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
-export default class ProAcceptRejectJobScreen extends Component {
+class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
-      this.state = {
-        senderId: ProviderDetails.Provider.providerId,
-        senderImage: ProviderDetails.Provider.imageSource,
-        senderName: ProviderDetails.Provider.name,
-        senderSurname: ProviderDetails.Provider.surname,
-        inputMessage: '',
-        showButton: false,
-        isAcceptJob: ProPendingJobRequest.Request.status == "Accepted" ? true : false,
-        isRejectJob: false,
-        dataChatSource: [],
-        isLoading: true,
-        isErrorToast: false,
+        super(props)
+        const { jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        var currRequestPos;
+        jobRequestsProviders.map((obj, key) => {
+            if (obj) {
+                const currEmpId = obj.user_id;
+                if (currEmpId === user_id) currRequestPos = key;
+            }
+        });
 
-        receiverId: ProPendingJobRequest.Request.user_id,
-        receiverName: ProPendingJobRequest.Request.name,
-        receiverImage: ProPendingJobRequest.Request.image,
-        receiverMobile: ProPendingJobRequest.Request.mobile,
-        receiverDob: ProPendingJobRequest.Request.dob,
-        receiverAddress: ProPendingJobRequest.Request.address,
-        receiverLat: ProPendingJobRequest.Request.lat,
-        receiverLang: ProPendingJobRequest.Request.lang,
-        receiverFcmId: ProPendingJobRequest.Request.fcm_id,
-        orderId: ProPendingJobRequest.Request.order_id,
-        serviceName: ProPendingJobRequest.Request.service_name,
-        mainId: ProPendingJobRequest.Request.id,
-        delivertAddress: ProPendingJobRequest.Request.delivery_address,
-        deliveryLat: ProPendingJobRequest.Request.delivery_lat,
-        deliveryLang: ProPendingJobRequest.Request.delivery_lang,
-        chatStatus: ProPendingJobRequest.Request.chat_status,
-        status: ProPendingJobRequest.Request.status
+        this.state = {
+            senderId: ProviderDetails.Provider.providerId,
+            senderImage: ProviderDetails.Provider.imageSource,
+            senderName: ProviderDetails.Provider.name,
+            senderSurname: ProviderDetails.Provider.surname,
+            inputMessage: '',
+            showButton: false,
+            isAcceptJob: jobRequestsProviders[currRequestPos].status === "Accepted",
+            isRejectJob: false,
+            dataChatSource: [],
+            isLoading: true,
+            isErrorToast: false,
+            receiverId: jobRequestsProviders[currRequestPos].user_id,
+            receiverName: jobRequestsProviders[currRequestPos].name,
+            receiverImage: jobRequestsProviders[currRequestPos].image,
+            receiverMobile: jobRequestsProviders[currRequestPos].mobile,
+            receiverDob: jobRequestsProviders[currRequestPos].dob,
+            receiverAddress: jobRequestsProviders[currRequestPos].address,
+            receiverLat: jobRequestsProviders[currRequestPos].lat,
+            receiverLang: jobRequestsProviders[currRequestPos].lang,
+            receiverFcmId: jobRequestsProviders[currRequestPos].fcm_id,
+            orderId: jobRequestsProviders[currRequestPos].order_id,
+            serviceName: jobRequestsProviders[currRequestPos].service_name,
+            mainId: jobRequestsProviders[currRequestPos].id,
+            delivertAddress: jobRequestsProviders[currRequestPos].delivery_address,
+            deliveryLat: jobRequestsProviders[currRequestPos].delivery_lat,
+            deliveryLang: jobRequestsProviders[currRequestPos].delivery_lang,
+            chatStatus: jobRequestsProviders[currRequestPos].chat_status,
+            status: jobRequestsProviders[currRequestPos].status,
+            userImageExists: jobRequestsProviders[currRequestPos].imageAvailable,
+            currRequestPos
+        };
 
-      };
-
-      this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentDidMount()
-    {
+    componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
-        this.setState({
-
-            receiverId: ProPendingJobRequest.Request.user_id,
-            receiverName: ProPendingJobRequest.Request.name,
-            receiverImage: ProPendingJobRequest.Request.image,
-            receiverMobile: ProPendingJobRequest.Request.mobile,
-            receiverDob: ProPendingJobRequest.Request.dob,
-            receiverAddress: ProPendingJobRequest.Request.address,
-            receiverLat: ProPendingJobRequest.Request.lat,
-            receiverLang: ProPendingJobRequest.Request.lang,
-            receiverFcmId: ProPendingJobRequest.Request.fcm_id,
-            orderId: ProPendingJobRequest.Request.order_id,
-            serviceName: ProPendingJobRequest.Request.service_name,
-            mainId: ProPendingJobRequest.Request.id,
-            delivertAddress: ProPendingJobRequest.Request.delivery_address,
-            deliveryLat: ProPendingJobRequest.Request.delivery_lat,
-            deliveryLang: ProPendingJobRequest.Request.delivery_lang,
-            chatStatus: ProPendingJobRequest.Request.chat_status,
-            status: ProPendingJobRequest.Request.status
-        });
-
         firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
-        .on('child_added', (value)=>{
-            this.setState((prevState)=>{
-                return {
-                    dataChatSource: [...prevState.dataChatSource, value.val()],
-                    isLoading: false,
-                }
-            })
-        });
+            .on('child_added', value => {
+                this.setState(prevState => {
+                    return {
+                        dataChatSource: [...prevState.dataChatSource, value.val()],
+                        isLoading: false,
+                    }
+                })
+            });
 
         this.setState({
             isLoading: false,
@@ -153,11 +144,11 @@ export default class ProAcceptRejectJobScreen extends Component {
                 console.log('ImagePicker Error: ', response.error);
             }
             else {
-              
-                let source 
-                
+
+                let source
+
                 source = { uri: response.uri };
-               
+
                 this.setState({
                     imageURI: source,
                     imageDataObject: response,
@@ -169,7 +160,7 @@ export default class ProAcceptRejectJobScreen extends Component {
     }
 
     getImageURL = async (imageObject) => {
-       
+
         let message = {
             textMessage: 'uploading',
             imageMessage: imageObject,
@@ -192,33 +183,48 @@ export default class ProAcceptRejectJobScreen extends Component {
         this.setState({
             isUploading: true
         })
-        
+
         let imageData = new FormData();
         imageData.append('file', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-           
-        fetch(GET_IMAGE_URL , {
+
+        fetch(GET_IMAGE_URL, {
             method: 'POST',
             headers: {
                 "Content-Type": "multipart/form-data",
                 "otherHeader": "foo",
             },
             body: imageData
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            console.log("Response getImageURL >> "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
+        })
+            .then((response) => response.json())
+            .then((responseJson) => {
+                //console.log("Response getImageURL >> " + JSON.stringify(responseJson));
+                this.setState({
+                    isLoading: false
+                })
+                if (responseJson.result) {
+                    this.sendImageTask(responseJson.file);
+                }
+                else {
+                    Alert.alert(
+                        "OUPS !",
+                        responseJson.message,
+                        [
+                            {
+                                text: 'Annuler',
+                                onPress: () => console.log('Cancel Pressed'),
+                            },
+                            {
+                                text: 'Retenter',
+                                onPress: () => this.getImageURL(imageObject),
+                            },
+                        ]
+                    );
+                }
             })
-            if(responseJson.result)
-            {
-                this.sendImageTask(responseJson.file);
-            }
-            else
-            {
+            .catch((error) => {
                 Alert.alert(
                     "OUPS !",
-                    responseJson.message,
+                    error,
                     [
                         {
                             text: 'Annuler',
@@ -230,24 +236,7 @@ export default class ProAcceptRejectJobScreen extends Component {
                         },
                     ]
                 );
-            }
-         })
-        .catch((error) => {
-            Alert.alert(
-                "OUPS !",
-                error,
-                [
-                    {
-                        text: 'Annuler',
-                        onPress: () => console.log('Cancel Pressed'),
-                    },
-                    {
-                        text: 'Retenter',
-                        onPress: () => this.getImageURL(imageObject),
-                    },
-                ]
-            );
-        });
+            });
     }
 
     renderMessageItem = ({ item }) => {
@@ -260,7 +249,7 @@ export default class ProAcceptRejectJobScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={this.state.userImageExists ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -274,13 +263,17 @@ export default class ProAcceptRejectJobScreen extends Component {
                     </View>
                     :
                     <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={{width: 125, height: 135, backgroundColor: 'white',
-                              borderRadius: 3, marginRight: 10}}>
-                            <Image style={{ width: 110, height: 110, marginHorizontal: 7.5, marginTop: 7.5}}
+                        <View style={{
+                            width: 125, height: 135, backgroundColor: 'white',
+                            borderRadius: 3, marginRight: 10
+                        }}>
+                            <Image style={{ width: 110, height: 110, marginHorizontal: 7.5, marginTop: 7.5 }}
                                 source={{ uri: item.imageMessage }}>
                             </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 7.5, marginTop: 2 }}>
+                            <Text style={{
+                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
+                                color: 'black', marginRight: 7.5, marginTop: 2
+                            }}>
                                 {this.convertTime(item.time)}
                             </Text>
                         </View>
@@ -302,24 +295,28 @@ export default class ProAcceptRejectJobScreen extends Component {
                     </View>
                     :
                     <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={{width: 125, height: 135, backgroundColor: 'white',borderRadius: 3, 
-                            marginRight: 10}}>
-                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5}}
-                                source={item.textMessage == "uploading" ? item.imageMessage : {uri: item.imageMessage}}
+                        <View style={{
+                            width: 125, height: 135, backgroundColor: 'white', borderRadius: 3,
+                            marginRight: 10
+                        }}>
+                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5 }}
+                                source={item.textMessage == "uploading" ? item.imageMessage : { uri: item.imageMessage }}
                                 resizeMode='cover'>
                             </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 7.5, marginTop: 2 }}>
+                            <Text style={{
+                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
+                                color: 'black', marginRight: 7.5, marginTop: 2
+                            }}>
                                 {this.convertTime(item.time)}
                             </Text>
-                            {this.state.isUploading && item.textMessage == "uploading" &&(
-                            <View style={styles.loaderStyle}>
-                                <ActivityIndicator
-                                    style={{ height: 40 }}
-                                    color="#C00"
-                                    size="large" />
-                            </View>
-                        )}
+                            {this.state.isUploading && item.textMessage == "uploading" && (
+                                <View style={styles.loaderStyle}>
+                                    <ActivityIndicator
+                                        style={{ height: 40 }}
+                                        color="#C00"
+                                        size="large" />
+                                </View>
+                            )}
                         </View>
                     </View>
         )
@@ -328,7 +325,7 @@ export default class ProAcceptRejectJobScreen extends Component {
     renderSeparator = () => {
         return (
             <View
-                style={{ height: 5, width: '100%',}}>
+                style={{ height: 5, width: '100%', }}>
             </View>
         );
     }
@@ -338,8 +335,8 @@ export default class ProAcceptRejectJobScreen extends Component {
         let c = new Date();
         let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
         result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-        if(c.getDay() !== d.getDay()){
-            result = d.getDay() + '/' + d.getMonth()+"/"+d.getFullYear() + ', ' + result; 
+        if (c.getDay() !== d.getDay()) {
+            result = d.getDay() + '/' + d.getMonth() + "/" + d.getFullYear() + ', ' + result;
         }
         return result;
     }
@@ -347,16 +344,14 @@ export default class ProAcceptRejectJobScreen extends Component {
     showHideButton = (input) => {
 
         this.setState({
-            inputMessage : input,
+            inputMessage: input,
         })
-        if(input == '')
-        {
+        if (input == '') {
             this.setState({
                 showButton: false,
             })
         }
-        else
-        {
+        else {
             this.setState({
                 showButton: true,
             })
@@ -364,59 +359,54 @@ export default class ProAcceptRejectJobScreen extends Component {
     }
 
     sendMessageTask = () => {
-
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
-        console.log("Sender Id : "+this.state.orderId);
-        if(this.state.inputMessage.length > 0)
-        {
+        if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage : this.state.inputMessage,
+                textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time : firebase.database.ServerValue.TIMESTAMP,
-                senderId : this.state.senderId,
+                time: firebase.database.ServerValue.TIMESTAMP,
+                senderId: this.state.senderId,
                 senderImage: this.state.senderImage,
-                senderName: this.state.senderName+" "+this.state.senderSurname,
-                receiverId : this.state.receiverId,
+                senderName: this.state.senderName + " " + this.state.senderSurname,
+                receiverId: this.state.receiverId,
                 receiverName: this.state.receiverName,
-                receiverImage : this.state.receiverImage,
+                receiverImage: this.state.receiverImage,
                 serviceName: this.state.serviceName,
                 orderId: this.state.orderId,
                 type: "text",
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
-                
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
+
             }
 
-            console.log("MessageData : "+JSON.stringify(message));
+            console.log("MessageData : " + JSON.stringify(message));
 
-            let recentMessageReceiver= {
-                textMessage : this.state.inputMessage,
+            let recentMessageReceiver = {
+                textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(), 
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.senderId,
-                name: this.state.senderName+" "+this.state.senderSurname,
+                name: this.state.senderName + " " + this.state.senderSurname,
                 image: this.state.senderImage,
                 serviceName: this.state.serviceName,
                 orderId: this.state.orderId,
                 type: "text",
-                
+
             }
             let recentMessageSender = {
-                textMessage : this.state.inputMessage,
+                textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.receiverId,
                 name: this.state.receiverName,
                 image: this.state.receiverImage,
                 serviceName: this.state.serviceName,
                 orderId: this.state.orderId,
                 type: "text",
-                
+
             }
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
             updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
@@ -434,35 +424,32 @@ export default class ProAcceptRejectJobScreen extends Component {
     }
 
     sendImageTask = async (imageURL) => {
-       
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
 
-        if(imageURL != '' && imageURL != null)
-        {
+
+        if (imageURL != '' && imageURL != null) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage : '',
+                textMessage: '',
                 imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                senderId : this.state.senderId,
+                time: firebase.database.ServerValue.TIMESTAMP,
+                senderId: this.state.senderId,
                 senderImage: this.state.senderImage,
                 senderName: this.state.senderName,
-                receiverId : this.state.receiverId,
+                receiverId: this.state.receiverId,
                 receiverName: this.state.receiverName,
-                receiverImage : this.state.receiverImage,
+                receiverImage: this.state.receiverImage,
                 serviceName: this.state.serviceName,
                 orderId: this.state.orderId,
                 type: "image",
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
             }
-            let recentMessageReceiver= {
-                textMessage : '',
+            let recentMessageReceiver = {
+                textMessage: '',
                 imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(), 
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.senderId,
                 name: this.state.senderName,
                 image: this.state.senderImage,
@@ -471,22 +458,22 @@ export default class ProAcceptRejectJobScreen extends Component {
                 type: "image",
             }
             let recentMessageSender = {
-                textMessage : '',
+                textMessage: '',
                 imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.receiverId,
                 name: this.state.receiverName,
                 image: this.state.receiverImage,
                 serviceName: this.state.serviceName,
-                orderId: this.state.orderId,  
-                type: "image",   
+                orderId: this.state.orderId,
+                type: "image",
             }
 
             //Remove Last item from Array
             var array = [...this.state.dataChatSource]; // make a separate copy of the array
             if (array.length > 0) {
-                array.splice(array.length-1, 1);
+                array.splice(array.length - 1, 1);
                 this.setState({ dataChatSource: array });
             }
 
@@ -509,16 +496,16 @@ export default class ProAcceptRejectJobScreen extends Component {
 
         this.setState({
             isLoading: true
-        })
+        });
 
         const data = {
-            main_id: ProPendingJobRequest.Request.id,
+            main_id: this.state.mainId,
             chat_status: '1',
             status: 'Accepted',
             'notification': {
-                "fcm_id": ProPendingJobRequest.Request.fcm_id,
+                "fcm_id": this.state.receiverFcmId,
                 "title": "Job Accepted",
-                "body": 'Your request has been accepted by ' + ProviderDetails.Provider.name+ " "+ ProviderDetails.Provider.surname+ ' Request Id : ' + ProPendingJobRequest.Request.order_id,
+                "body": 'Your request has been accepted by ' + ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
                 "data": {
                     ProviderId: ProviderDetails.Provider.providerId,
                     image: ProviderDetails.Provider.imageSource,
@@ -531,18 +518,16 @@ export default class ProAcceptRejectJobScreen extends Component {
                     lat: ProviderDetails.Provider.lat,
                     lang: ProviderDetails.Provider.lang,
                     serviceName: this.state.serviceName,
-                    orderId: ProPendingJobRequest.Request.order_id,
-                    mainId: ProPendingJobRequest.Request.id,
-                    chat_status: ProPendingJobRequest.Request.chat_status,
+                    orderId: this.state.orderId,
+                    mainId: this.state.mainId,
+                    chat_status: "1",
                     status: "Accepted",
-                    delivery_address: ProPendingJobRequest.Request.delivery_address,
-                    delivery_lat: ProPendingJobRequest.Request.delivery_lat,
-                    delivery_lang: ProPendingJobRequest.Request.delivery_lang,
+                    delivery_address: this.state.delivertAddress,
+                    delivery_lat: this.state.deliveryLat,
+                    delivery_lang: this.state.deliveryLang,
                 },
             }
         }
-
-        console.log("ACCEPT JOB Data >> " + JSON.stringify(data));
 
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
@@ -554,38 +539,43 @@ export default class ProAcceptRejectJobScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
-                if (responseJson.result) {
+                //console.log("Response : " + JSON.stringify(responseJson));
+                const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+                const { currRequestPos } = this.state;
+                var newjobRequestsProviders = [...jobRequestsProviders];
+                console.log(responseJson)
+                if (responseJson.data) {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
                     })
 
                     var jobData = {
-                        id: ProPendingJobRequest.Request.id,
-                        order_id: ProPendingJobRequest.Request.order_id,
-                        user_id: ProPendingJobRequest.Request.user_id,
-                        image: ProPendingJobRequest.Request.image,
-                        fcm_id: ProPendingJobRequest.Request.fcm_id,
-                        name: ProPendingJobRequest.Request.name,
-                        mobile: ProPendingJobRequest.Request.mobile,
-                        dob: ProPendingJobRequest.Request.dob,
-                        address: ProPendingJobRequest.Request.address,
-                        lat: ProPendingJobRequest.Request.lat,
-                        lang: ProPendingJobRequest.Request.lang,
-                        service_name: ProPendingJobRequest.Request.service_name,
-                        chat_status: "1",
-                        status: "Accepted",
-                        delivery_address: ProPendingJobRequest.Request.delivery_address,
-                        delivery_lat: ProPendingJobRequest.Request.delivery_lat,
-                        delivery_lang: ProPendingJobRequest.Request.delivery_lang,
+                        id: rresponseJson.data.id,
+                        order_id: responseJson.data.order_id,
+                        user_id: responseJson.data.user_id,
+                        image: responseJson.data.image,
+                        fcm_id: responseJson.data.fcm_id,
+                        name: responseJson.data.name,
+                        mobile: responseJson.data.mobile,
+                        dob: responseJson.data.dob,
+                        address: responseJson.data.address,
+                        lat: responseJson.data.lat,
+                        lang: responseJson.data.lang,
+                        service_name: responseJson.data.service_name,
+                        chat_status: responseJson.data.chat_status,
+                        status: responseJson.data.status,
+                        delivery_address: responseJson.data.delivery_address,
+                        delivery_lat: responseJson.data.delivery_lat,
+                        delivery_lang: responseJson.data.delivery_lang,
                     }
-                    ProPendingJobRequest.Request = jobData;
+                    newjobRequestsProviders[currRequestPos] = jobData;
+                    fetchedPendingJobInfo(newjobRequestsProviders);
 
                     //Send Location to Firebase for tracking
                     Geolocation.getCurrentPosition(
                         (position) => {
-                            console.log("Position : " + JSON.stringify(position));
+                            //console.log("Position : " + JSON.stringify(position));
                             let locationData = {
                                 latitude: position.coords.latitude,
                                 longitude: position.coords.longitude,
@@ -620,11 +610,11 @@ export default class ProAcceptRejectJobScreen extends Component {
         })
 
         const data = {
-            main_id: ProPendingJobRequest.Request.id,
+            main_id: this.state.mainId,
             chat_status: '1',
             status: 'Rejected',
             'notification': {
-                "fcm_id": ProPendingJobRequest.Request.fcm_id,
+                "fcm_id": this.state.receiverFcmId,
                 "title": "Job Rejected",
                 "body": 'Your request has been rejected by ' + ProviderDetails.Provider.name + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
                 "data": {
@@ -639,18 +629,16 @@ export default class ProAcceptRejectJobScreen extends Component {
                     lat: ProviderDetails.Provider.lat,
                     lang: ProviderDetails.Provider.lang,
                     serviceName: this.state.serviceName,
-                    orderId: ProPendingJobRequest.Request.order_id,
-                    mainId: ProPendingJobRequest.Request.id,
-                    chat_status: ProPendingJobRequest.Request.chat_status,
+                    orderId: this.state.orderId,
+                    mainId: this.state.mainId,
+                    chat_status: "0",
                     status: "Rejected",
-                    delivery_address: ProPendingJobRequest.Request.delivery_address,
-                    delivery_lat: ProPendingJobRequest.Request.delivery_lat,
-                    delivery_lang: ProPendingJobRequest.Request.delivery_lang,
+                    delivery_address: this.state.delivertAddress,
+                    delivery_lat: this.state.deliveryLat,
+                    delivery_lang: this.state.deliveryLang,
                 },
             }
         }
-
-        console.log("REJECT JOB Data >> " + JSON.stringify(data));
 
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
@@ -662,34 +650,16 @@ export default class ProAcceptRejectJobScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
+                const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+                const { currRequestPos } = this.state;
+                var newjobRequestsProviders = [...jobRequestsProviders];
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false,
                         isRejectJob: true
                     });
-
-                    var jobData = {
-                        id: '',
-                        order_id: '',
-                        user_id: '',
-                        image: '',
-                        fcm_id: '',
-                        name: '',
-                        mobile: '',
-                        dob: '',
-                        address: '',
-                        lat: '',
-                        lang: '',
-                        service_name: '',
-                        chat_status: '',
-                        status: '',
-                        delivery_address: '',
-                        delivery_lat: '',
-                        delivery_lang: '',
-                      }
-                      ProPendingJobRequest.Request = jobData;
-
+                    newjobRequestsProviders.splice(currRequestPos, 1);
+                    fetchedPendingJobInfo(newjobRequestsProviders);
                     this.props.navigation.navigate("ProDashBoard");
                 }
                 else {
@@ -701,7 +671,7 @@ export default class ProAcceptRejectJobScreen extends Component {
                     this.showToast("Something went wrong")
                 }
             })
-            .catch((error) => {
+            .catch(error => {
                 console.log("Error >>> " + error);
                 this.setState({
                     isLoading: false,
@@ -710,37 +680,41 @@ export default class ProAcceptRejectJobScreen extends Component {
     };
 
     goToMapDirection = () => {
-
+        const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { currRequestPos } = this.state;
+        var newjobRequestsProviders = [...jobRequestsProviders];
         var jobData = {
-            id: ProPendingJobRequest.Request.id,
-            order_id: ProPendingJobRequest.Request.order_id,
-            user_id: ProPendingJobRequest.Request.user_id,
-            image: ProPendingJobRequest.Request.image,
-            fcm_id: ProPendingJobRequest.Request.fcm_id,
-            name: ProPendingJobRequest.Request.name,
-            mobile: ProPendingJobRequest.Request.mobile,
-            dob: ProPendingJobRequest.Request.dob,
-            address: ProPendingJobRequest.Request.address,
-            lat: ProPendingJobRequest.Request.lat,
-            lang: ProPendingJobRequest.Request.lang,
-            service_name: ProPendingJobRequest.Request.service_name,
+            ProviderId: ProviderDetails.Provider.providerId,
+            image: ProviderDetails.Provider.imageSource,
+            fcmId: ProviderDetails.Provider.fcmId,
+            name: ProviderDetails.Provider.name,
+            surname: ProviderDetails.Provider.surname,
+            mobile: ProviderDetails.Provider.mobile,
+            description: ProviderDetails.Provider.description,
+            address: ProviderDetails.Provider.address,
+            lat: ProviderDetails.Provider.lat,
+            lang: ProviderDetails.Provider.lang,
+            serviceName: this.state.serviceName,
+            orderId: this.state.orderId,
+            mainId: this.state.mainId,
             chat_status: "1",
             status: "Accepted",
-            delivery_address: ProPendingJobRequest.Request.delivery_address,
-            delivery_lat: ProPendingJobRequest.Request.delivery_lat,
-            delivery_lang: ProPendingJobRequest.Request.delivery_lang,
-          }
-          ProPendingJobRequest.Request = jobData;
+            delivery_address: this.state.delivertAddress,
+            delivery_lat: this.state.deliveryLat,
+            delivery_lang: this.state.deliveryLang,
+        }
+        newjobRequestsProviders[currRequestPos] = jobData;
+        fetchedPendingJobInfo(newjobRequestsProviders);
 
-          console.log("goToMapDirection :>>> "+JSON.stringify(ProPendingJobRequest.Request))
+        //console.log("goToMapDirection :>>> " + JSON.stringify(ProPendingJobRequest.Request))
 
-        this.props.navigation.navigate("ProMapDirection",{
+        this.props.navigation.navigate("ProMapDirection", {
             'pageTitle': "ProAcceptRejectJob",
         });
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -749,48 +723,64 @@ export default class ProAcceptRejectJobScreen extends Component {
         })
     }
 
-  render() {
-    return (
-        <View style={styles.container}>
+    render() {
+        return (
+            <View style={styles.container}>
 
-            <StatusBarPlaceHolder />
+                <StatusBarPlaceHolder />
 
-            <View style={{
-                flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
-            }}>
-                <View style={{ flex: 1, flexDirection: 'row' }}>
-                    <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'center' }}
-                        onPress={() => this.props.navigation.navigate("ProDashBoard")}>
-                        <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                            source={require('../icons/arrow_back.png')} />
-                    </TouchableOpacity>
+                <View style={{
+                    flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
+                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
+                }}>
+                    <View style={{ flex: 1, flexDirection: 'row' }}>
+                        <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'center' }}
+                            onPress={() => this.props.navigation.navigate("ProDashBoard")}>
+                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                source={require('../icons/arrow_back.png')} />
+                        </TouchableOpacity>
 
-                    <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                        source={{ uri: this.state.receiverImage }} />
-                    <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-                        {this.state.receiverName}
-                    </Text>
+                        <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
+                            source={this.state.userImageExists ? { uri: this.state.receiverImage } : require('../images/generic_avatar.png')} />
+                        <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
+                            {this.state.receiverName}
+                        </Text>
+                    </View>
                 </View>
-            </View>
 
-            <ScrollView>
-                <View style={{ flexDirection: 'column', marginBottom: 45 }}>
-                    <ImageBackground style={styles.listView}
-                        source={require('../icons/bg_chat.png')}>
-                        <FlatList
-                            numColumns={1}
-                            data={this.state.dataChatSource}
-                            renderItem={this.renderMessageItem}
-                            keyExtractor={(item, index) => index.toString()}
-                            showsVerticalScrollIndicator={false}
-                            extraData={this.state}
-                            ItemSeparatorComponent={this.renderSeparator}
-                            ref={(ref) => { this.myFlatListRef = ref }}
-                            onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                            onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
-                    </ImageBackground>
+                <ScrollView style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'column', marginBottom: 110 }}>
+                        <ImageBackground style={styles.listView}
+                            source={require('../icons/bg_chat.png')}>
+                            <FlatList
+                                numColumns={1}
+                                data={this.state.dataChatSource}
+                                renderItem={this.renderMessageItem}
+                                keyExtractor={(item, index) => index.toString()}
+                                showsVerticalScrollIndicator={false}
+                                extraData={this.state}
+                                ItemSeparatorComponent={this.renderSeparator}
+                                ref={(ref) => { this.myFlatListRef = ref }}
+                                onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
+                                onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                        </ImageBackground>
 
+                        {this.state.isAcceptJob && (
+                            <TouchableOpacity style={styles.textViewDirection}
+                                onPress={this.goToMapDirection}>
+                                <Image style={{ width: 20, height: 20, marginLeft: 20 }}
+                                    source={require('../icons/mobile_gps.png')} />
+                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
+                                    Direction
+                            </Text>
+                                <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
+                                    source={require('../icons/right_arrow.png')} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </ScrollView>
+
+                <View style={styles.footer}>
                     {(!this.state.isAcceptJob && !this.state.isRejectJob) &&
                         <View style={{
                             flex: 1, width: screenWidth, justifyContent: 'center',
@@ -808,60 +798,33 @@ export default class ProAcceptRejectJobScreen extends Component {
                             </View>
                         </View>
                     }
+                    <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                    <View style={{ flex: 1, flexDirection: 'row' }}>
+                        <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
+                            placeholder='Tapez un message'
+                            value={this.state.inputMessage}
+                            multiline={true}
+                            onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                        </TextInput>
 
-                    {this.state.isAcceptJob && (
-                        <TouchableOpacity style={styles.textViewDirection}
-                            onPress={this.goToMapDirection}>
-                            <Image style={{ width: 20, height: 20, marginLeft: 20 }}
-                                source={require('../icons/mobile_gps.png')} />
-                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                Direction
-                            </Text>
-                            <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
-                                source={require('../icons/right_arrow.png')} />
+                        <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', marginRight: 25 }}
+                            onPress={this.selectPhoto.bind(this)}>
+                            <Image style={{ width: 20, height: 20 }}
+                                source={require('../icons/camera.png')} />
                         </TouchableOpacity>
-                    )}
-                </View>
-            </ScrollView>
 
-            <View style={styles.footer}>
-                <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                <View style={{ flex: 1, flexDirection: 'row' }}>
-                    <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                        placeholder='Tapez un message'
-                        value={this.state.inputMessage}
-                        multiline={true}
-                        onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                    </TextInput>
-
-                    <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', marginRight: 25}}
-                        onPress={this.selectPhoto.bind(this)}>
-                        <Image style={{width:20, height:20}}
-                            source={require('../icons/camera.png')}/>
-                   </TouchableOpacity>
-
-                    {this.state.showButton &&
-                        <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                            onPress={this.sendMessageTask}>
-                            <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                ENVOYER
+                        {this.state.showButton &&
+                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
+                                onPress={this.sendMessageTask}>
+                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                    ENVOYER
                             </Text>
-                        </TouchableOpacity>
-                    }
+                            </TouchableOpacity>
+                        }
+                    </View>
                 </View>
-            </View>
 
-            <Toast
-                ref="toast"
-                style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                position='bottom'
-                positionValue={200}
-                fadeInDuration={750}
-                fadeOutDuration={1500}
-                opacity={0.8}
-                textStyle={{ color: 'white' }} />
-
-            {/* {this.state.isLoading && (
+                {/* {this.state.isLoading && (
                 <View style={styles.loaderStyle}>
                     <ActivityIndicator
                         style={{ height: 80 }}
@@ -869,13 +832,13 @@ export default class ProAcceptRejectJobScreen extends Component {
                         size="large" />
                 </View>
             )} */}
-            <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
-                onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
-                <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
-            </Modal>
-        </View>
-    );
-  }
+                <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+                    onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
+                    <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
+                </Modal>
+            </View>
+        );
+    }
 }
 
 const styles = StyleSheet.create({
@@ -884,11 +847,11 @@ const styles = StyleSheet.create({
         backgroundColor: colorBg,
     },
     listView: {
-        height: screenHeight/2,
+        height: screenHeight,
         padding: 5,
-      },
-      itemLeftChatContainer: {
-        maxWidth: (screenWidth/2)+30,
+    },
+    itemLeftChatContainer: {
+        maxWidth: (screenWidth / 2) + 30,
         flexDirection: 'row',
         backgroundColor: colorGray,
         padding: 10,
@@ -903,7 +866,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     itemRightChatContainer: {
-        maxWidth: screenWidth/2,
+        maxWidth: screenWidth / 2,
         flexDirection: 'row',
         backgroundColor: '#1E90FF',
         padding: 10,
@@ -912,7 +875,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 10,
     },
-    buttonContainer : {
+    buttonContainer: {
         flex: 1,
         paddingTop: 10,
         backgroundColor: '#000000',
@@ -926,14 +889,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginLeft: 10,
         marginRight: 10,
-      },
-      text: {
+    },
+    text: {
         fontSize: 14,
         color: 'white',
         textAlign: 'center',
         justifyContent: 'center',
-      },
-      footer: {
+    },
+    footer: {
         width: screenWidth,
         minHeight: 50,
         flexDirection: 'column',
@@ -941,8 +904,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'absolute', //Footer
         bottom: 0, //Footer
-     }, 
-     textViewDirection: {
+    },
+    textViewDirection: {
         flexDirection: 'row',
         width: screenWidth,
         height: 50,
@@ -965,5 +928,41 @@ const styles = StyleSheet.create({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'center'
-      },
+    },
 });
+
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobProvider());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobProviderInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchProviderJobInfoError(error))
+        },
+        dispatchSelectedJobRequest: job => {
+            dispatch(setSelectedJobRequest(job));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProAcceptRejectJobScreen);

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import {View, Text, TouchableOpacity, Image, StyleSheet, Dimensions, BackHandler, 
-    ScrollView, Modal, StatusBar, Platform, ToastAndroid} from 'react-native';
-import Toast, {DURATION} from 'react-native-easy-toast';
-import { Rating, AirbnbRating } from 'react-native-ratings';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+    ScrollView, Modal, StatusBar, Platform} from 'react-native';
+import Toast from 'react-native-simple-toast';
+import { AirbnbRating } from 'react-native-ratings';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import UserDetails from './UserDetails';
 import ReviewDialogCustomer from './ReviewDialogCustomer';
 import WaitingDialog from './WaitingDialog';
@@ -11,13 +11,13 @@ import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
-const REVIEW_RATING = Config.BASEURL + 'jobrequest/ratingreview';
+const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -176,7 +176,7 @@ export default class BookingDetailsScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+       Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -368,16 +368,6 @@ export default class BookingDetailsScreen extends Component {
                             changeDialogVisibility={this.changeDialogVisibility}
                             data={JSON.stringify(this.state.bookingDetails)+"//////"+this.state.customer_rating} />
                     </Modal>
-                    
-                    <Toast
-                        ref="toast"
-                        style={{ backgroundColor: this.state.isErrorToast == true ? 'red' :'green' }}
-                        position='bottom'
-                        positionValue={200}
-                        fadeInDuration={750}
-                        fadeOutDuration={1000}
-                        opacity={0.8}
-                        textStyle={{ color: 'white' }} />
                 </View>
             </ScrollView>
             <Modal transparent={true} visible={this.state.isLoading} animationType='fade'

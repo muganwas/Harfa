@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
-import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
+import { connect } from 'react-redux';
+import {View, StyleSheet, TouchableOpacity, Image, Text,
+    FlatList, TextInput, Dimensions, ActivityIndicator, 
+    BackHandler, ImageBackground, StatusBar, Platform, Alert
 } from 'react-native';
-import firebase from 'firebase';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import ImagePicker from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
+import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
+import {imageExists} from '../misc/helpers';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -16,7 +19,7 @@ const colorBg = '#E8EEE9';
 const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -42,23 +45,26 @@ const options = {
     quality: 1
 };
 
-const GET_IMAGE_URL = Config.BASEURL+"thirdpartyapi/chatupload"
+const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
 
-export default class ChatAfterBookingDetailsScreen extends Component {
+class ChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
         super(props)
-
+        const { jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        Object.keys(jobRequests).map(key => {
+            const currEmpId = jobRequests[key].employee_id;
+            if (currEmpId === employee_id) currRequestPos = key;
+        });
         this.state = {
             senderId: UserDetails.User.userId,
             senderImage: UserDetails.User.image,
             senderName: UserDetails.User.username,
             inputMessage: '',
             showButton: false,
-            dataChatSource: [],
-            isLoading: true,
+            dataChatSource: this.props.messagesInfo.dataChatSource[employee_id],
+            isLoading: !this.props.messagesInfo.fetched,
             isUpLoading: false,
-
             receiverId: this.props.navigation.state.params.providerId,
             receiverName: this.props.navigation.state.params.providerName + " " + this.props.navigation.state.params.providerSurname,
             receiverImage: this.props.navigation.state.params.providerImage,
@@ -66,31 +72,28 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             orderId: this.props.navigation.state.params.orderId,
             titlePage: this.props.navigation.state.params.pageTitle,
             isJobAccepted: this.props.navigation.state.params.isJobAccepted,
+            proImageAvailable: null
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount() {
-
-        console.log("Sender Id >> "+UserDetails.User.userId);
-        console.log("Receiver ID >> "+this.state.receiverId);
-
+    componentDidMount() {
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({type: 'messages', value: 0});
+        imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
+            this.setState({proImageAvailable});
+        });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    }
 
-        //Get Chat Message
-        firebase.database().ref('chatting').child(UserDetails.User.userId).child(this.state.receiverId)
-            .on('child_added', (value) => {
-                this.setState((prevState) => {
-                    return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
-                        isLoading: false
-                    }
-                })
-            });
-
-        this.setState({
-            isLoading: false,
-        })
+    componentDidUpdate(){
+        const { messagesInfo : { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+        const { isLoading } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading) 
+            this.setState({isLoading:false});
+        if ( JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource)) 
+            this.setState({dataChatSource: dataChatSource[employee_id]});
     }
 
     componentWillUnmount() {
@@ -131,7 +134,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    convertTime = (time) => {
+    convertTime = time => {
         let d = new Date(time);
         let c = new Date();
         let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
@@ -223,8 +226,10 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
-       
+    getImageURL = async imageObject => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+
         let message = {
             textMessage: 'uploading',
             imageMessage: imageObject,
@@ -239,10 +244,12 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             orderId: this.state.orderId,
             type: "image",
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
+        };
+
+        const newDataChatSource = Object.assign({}, dataChatSource);
+        let newArray = [...newDataChatSource[employee_id], message];
+        newDataChatSource[employee_id] = newArray;
+        fetchedMessages(newDataChatSource);
 
         this.setState({
             isUploading: true
@@ -261,7 +268,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
          })
          .then((response) => response.json())
          .then((responseJson) => {
-            console.log("Response getImageURL >> "+JSON.stringify(responseJson));
+
             this.setState({
                 isLoading: false
             })
@@ -305,10 +312,9 @@ export default class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    sendImageTask = async (imageURL) => {
-       
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
+    sendImageTask = async imageURL => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource}, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
 
         if(imageURL != '' && imageURL != null)
         {
@@ -356,10 +362,12 @@ export default class ChatAfterBookingDetailsScreen extends Component {
             }
 
             //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
+            let newDataChatSource = [...dataChatSource];
+            var array = [...newDataChatSource[employee_id]]; // make a separate copy of the array
             if (array.length > 0) {
                 array.splice(array.length-1, 1);
-                this.setState({ dataChatSource: array });
+                newDataChatSource[employee_id] = array;
+                fetchedMessages(newDataChatSource);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -378,6 +386,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
@@ -387,7 +396,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={this.state.proImageAvailable ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -463,6 +472,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
+        const { navigation: {state : {params: { providerImage } } } } = this.props
         return (
 
             <View style={styles.container}>
@@ -483,7 +493,7 @@ export default class ChatAfterBookingDetailsScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={{ uri: this.props.navigation.state.params.providerImage }} />
+                                source={this.state.proImageAvailable ? { uri: providerImage } : require('../images/generic_avatar.png')} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                                 {this.state.receiverName + " "}{this.state.surname}
                             </Text>
@@ -637,3 +647,27 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen);

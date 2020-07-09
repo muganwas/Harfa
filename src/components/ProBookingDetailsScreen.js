@@ -7,7 +7,7 @@ import WaitingDialog from './WaitingDialog';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import { Rating, AirbnbRating } from 'react-native-ratings';
 import ProviderDetails from './ProviderDetails';
-import Toast, { DURATION } from 'react-native-easy-toast';
+import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
 import Config from './Config';
 
@@ -19,7 +19,7 @@ const colorBg = '#E8EEE9';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const REVIEW_RATING = Config.BASEURL + 'jobrequest/ratingreview';
+const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -181,7 +181,7 @@ export default class ProBookingDetailsScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -350,16 +350,6 @@ export default class ProBookingDetailsScreen extends Component {
                 onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                 <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
             </Modal>
-
-            <Toast
-                ref="toast"
-                style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                position='bottom'
-                positionValue={200}
-                fadeInDuration={750}
-                fadeOutDuration={1500}
-                opacity={0.8}
-                textStyle={{ color: 'white' }} />
         </View>
     );
   }

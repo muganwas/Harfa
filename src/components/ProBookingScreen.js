@@ -3,26 +3,28 @@ import { View, StyleSheet, ScrollView,Dimensions, TouchableOpacity, Image, Text,
      ActivityIndicator, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
 import {createAppContainer,} from 'react-navigation';     
 import {createStackNavigator} from 'react-navigation-stack';
-import { DrawerActions } from 'react-navigation-drawer';
+//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import WaitingDialog from './WaitingDialog';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import Toast, { DURATION } from 'react-native-easy-toast';
+//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import Toast from 'react-native-simple-toast';
 import ViewPager from "@react-native-community/viewpager";
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
+import Notifications from './Notifications';
+import Hamburger from './ProHamburger';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+//const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const BOOKING_HISTORY = Config.BASEURL + 'jobrequest/employee_request/'
+const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/'
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -188,6 +190,7 @@ class ProBookingScreen extends Component {
     };
 
     renderBookingHistoryItem = ({ item }) => {
+        const userImage = item.user_details.image;
         return (
             <TouchableOpacity style={{flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
                 shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,}}
@@ -197,7 +200,7 @@ class ProBookingScreen extends Component {
                 <View style={styles.itemContainer}>
                     <Image
                         style={{ height: 45, width: 45, alignSelf: 'flex-start', alignContent: 'flex-start', borderRadius: 100 }}
-                        source={{uri: item.user_details.image}}/>
+                        source={userImage ? {uri: item.user_details.image} : require('../images/generic_avatar.png')}/>
                     <View style={{ flexDirection: 'column' }}>
                         <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                             {item.user_details.username}
@@ -233,7 +236,7 @@ class ProBookingScreen extends Component {
     }
 
     showToast = (message) => {
-        this.refs.toast.show(message);
+        Toast.show(message);
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -243,24 +246,17 @@ class ProBookingScreen extends Component {
     }
 
     render() {
+        console.log('pro booking screen')
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder/>
-               
                 <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5  }}>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center'}}
-                            onPress={() => this.props.navigation.dispatch(DrawerActions.openDrawer())}>
-                            <Image style={{ width: 25, height: 25, alignSelf: 'center' }}
-                                source={require('../icons/humberger.png')} />
-                        </TouchableOpacity>
-
-                        <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                            Réservations   
-                        </Text>
-                    </View>
+                    <Hamburger
+                        navigation={this.props.navigation}
+                        text='Réservations'
+                    />
                 </View>
 
                 <View style={{
@@ -334,17 +330,6 @@ class ProBookingScreen extends Component {
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-
-                <Toast
-                    ref="toast"
-                    style={{ backgroundColor: this.state.isErrorToast == true ? 'red' : 'green' }}
-                    position='bottom'
-                    positionValue={200}
-                    fadeInDuration={750}
-                    fadeOutDuration={1500}
-                    opacity={0.8}
-                    textStyle={{ color: 'white' }} />
-
             </View>
         );
     }

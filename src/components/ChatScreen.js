@@ -1,40 +1,44 @@
 import React, { Component } from 'react';
-import {View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions, 
-    ToastAndroid, ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert}  from 'react-native';
-import firebase from 'firebase';
+import { connect } from 'react-redux';
+import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError } from '../Redux/Actions/jobsActions';
+import {
+    View, StyleSheet, TouchableOpacity, Image, Text, FlatList, TextInput, Dimensions,
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
+} from 'react-native';
 import ImagePicker from 'react-native-image-picker';
-import firebaseMessaging, { Notification, RemoteMessage } from 'react-native-firebase';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import firebase from 'react-native-firebase';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import UserDetails from './UserDetails';
-import PendingJobRequest from './PendingJobRequest';
-
 import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
+//const colorBg = '#E8EEE9';
+const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-const GET_IMAGE_URL = Config.BASEURL+"thirdpartyapi/chatupload"
+const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload";
+const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -45,54 +49,46 @@ const options = {
     quality: 1
 };
 
-export default class ChatScreen extends Component {
+class ChatScreen extends Component {
 
     constructor(props) {
-      super(props)
-
-        this.state ={
-        senderId: UserDetails.User.userId,
-        senderImage: UserDetails.User.image,
-        senderName: UserDetails.User.username,
-        inputMessage: '',
-        showButton: false,
-        dataChatSource: [],
-        isLoading: true,
-        isUploading: false,
-        isJobAccepted: this.props.navigation.state.params.isJobAccepted,
-
-        receiverId: PendingJobRequest.Request.employee_id,
-        receiverName: PendingJobRequest.Request.name + " " +PendingJobRequest.Request.surName,
-        receiverImage: PendingJobRequest.Request.image,
-        serviceName: PendingJobRequest.Request.service_name,
-        orderId: PendingJobRequest.Request.order_id,
-        titlePage: this.props.navigation.state.params.titlePage,
-      }
-      this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+        super(props)
+        const { jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched } } = this.props;
+        var currRequestPos;
+        Object.keys(allJobRequestsClient).map(key => {
+            const currEmpId = allJobRequestsClient[key].employee_id;
+            if (currEmpId === employee_id) currRequestPos = key;
+        });
+        this.state = {
+            senderId: UserDetails.User.userId,
+            senderImage: UserDetails.User.image,
+            senderName: UserDetails.User.username,
+            inputMessage: '',
+            showButton: false,
+            dataChatSource: dataChatSource[employee_id] || [],
+            isLoading: !fetched,
+            isUploading: false,
+            isJobAccepted: allJobRequestsClient[currRequestPos].status === 'Accepted',
+            requestStatus: allJobRequestsClient[currRequestPos].status,
+            receiverId: allJobRequestsClient[currRequestPos].employee_id,
+            receiverName: allJobRequestsClient[currRequestPos].employee_details.username,
+            receiverImage: allJobRequestsClient[currRequestPos].employee_details.image,
+            serviceName: allJobRequestsClient[currRequestPos].service_details.service_name,
+            orderId: allJobRequestsClient[currRequestPos].order_id,
+            titlePage: this.props.navigation.state.params.titlePage,
+            dataChatSourceSynced: false
+        }
+        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentWillMount(){
-
+    componentDidMount() {
+        const { fetchedNotifications } = this.props;
+        fetchedNotifications({ type: 'messages', value: 0 });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
-        //Get Chat Message
-        firebase.database().ref('chatting').child(UserDetails.User.userId).child(PendingJobRequest.Request.employee_id)
-        .on('child_added', (value)=>{
-            this.setState((prevState)=>{
-                return {
-                    dataChatSource: [...prevState.dataChatSource, value.val()],
-                    isLoading: false
-                }
-            })
-        });
-
         //Get Job accept reject status
-        firebaseMessaging.notifications().onNotification((notification) => {
-
+        firebase.notifications().onNotification((notification) => {
             const { title, body, data } = notification;
-            console.log('Notification >>> ', notification);
-            console.log("Title, body  data >>> " + title + " " + body + " " + data);
-
             if (title == "Job Accepted") {
                 this.setState({
                     isJobAccepted: true,
@@ -107,10 +103,16 @@ export default class ChatScreen extends Component {
                 this.props.navigation.navigate("ListOfProvider");
             }
         });
+    }
 
-        this.setState({
-            isLoading: false,
-        })
+    componentDidUpdate() {
+        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+        const { isLoading, dataChatSourceSynced } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading)
+            this.setState({ isLoading: false });
+        if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced) 
+            this.setState({ dataChatSource: dataChatSource[employee_id], dataChatSourceSynced: true});     
     }
 
     componentWillUnmount() {
@@ -119,9 +121,9 @@ export default class ChatScreen extends Component {
 
     handleBackButtonClick() {
         if (this.state.titlePage == 'MapDirection')
-            this.props.navigation.navigate("MapDirection",{
+            this.props.navigation.navigate("MapDirection", {
                 titlePage: "Chat"
-              });
+            });
         else if (this.state.titlePage == 'ProviderDetails')
             this.props.navigation.navigate("ProviderDetails");
         return true;
@@ -141,11 +143,11 @@ export default class ChatScreen extends Component {
                 console.log('ImagePicker Error: ', response.error);
             }
             else {
-              
-                let source 
-                
+
+                let source
+
                 source = { uri: response.uri };
-               
+
                 this.setState({
                     imageURI: source,
                     imageDataObject: response,
@@ -156,13 +158,13 @@ export default class ChatScreen extends Component {
         });
     }
 
-    convertTime = (time) => {
+    convertTime = time => {
         let d = new Date(time);
         let c = new Date();
         let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
         result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-        if(c.getDay() !== d.getDay()){
-            result = d.getDay() + '/' + d.getMonth()+"/"+d.getFullYear() + ', ' + result; 
+        if (c.getDay() !== d.getDay()) {
+            result = d.getDay() + '/' + d.getMonth() + "/" + d.getFullYear() + ', ' + result;
         }
         return result;
     }
@@ -170,16 +172,14 @@ export default class ChatScreen extends Component {
     showHideButton = (input) => {
 
         this.setState({
-            inputMessage : input,
+            inputMessage: input,
         })
-        if(input == '')
-        {
+        if (input == '') {
             this.setState({
                 showButton: false,
             })
         }
-        else
-        {
+        else {
             this.setState({
                 showButton: true,
             })
@@ -188,34 +188,30 @@ export default class ChatScreen extends Component {
 
     sendMessageTask = async () => {
 
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
-
-        if(this.state.inputMessage.length > 0)
-        {
+        if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage : this.state.inputMessage,
+                textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time : firebase.database.ServerValue.TIMESTAMP,
-                senderId : this.state.senderId,
+                time: firebase.database.ServerValue.TIMESTAMP,
+                senderId: this.state.senderId,
                 senderImage: this.state.senderImage,
                 senderName: this.state.senderName,
-                receiverId : this.state.receiverId,
+                receiverId: this.state.receiverId,
                 receiverName: this.state.receiverName,
-                receiverImage : this.state.receiverImage,
+                receiverImage: this.state.receiverImage,
                 serviceName: this.state.serviceName,
                 orderId: this.state.orderId,
                 type: "text",
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
             }
             let recentMessageReceiver = {
-                textMessage : this.state.inputMessage,
+                textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(), 
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.senderId,
                 name: this.state.senderName,
                 image: this.state.senderImage,
@@ -224,16 +220,16 @@ export default class ChatScreen extends Component {
                 type: "text",
             }
             let recentMessageSender = {
-                textMessage : this.state.inputMessage,
+                textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.receiverId,
                 name: this.state.receiverName,
                 image: this.state.receiverImage,
                 serviceName: this.state.serviceName,
-                orderId: this.state.orderId,  
-                type: "text",   
+                orderId: this.state.orderId,
+                type: "text",
             }
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
             updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
@@ -243,7 +239,7 @@ export default class ChatScreen extends Component {
             recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
             firebase.database().ref().update(recentUpdates)
 
-            this.setState({inputMesage: ''});
+            this.setState({ inputMesage: '' });
         }
 
         this.setState({
@@ -252,8 +248,10 @@ export default class ChatScreen extends Component {
         });
     }
 
-    getImageURL = async (imageObject) => {
-       
+    getImageURL = async imageObject => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+
         let message = {
             textMessage: 'uploading',
             imageMessage: imageObject,
@@ -268,41 +266,58 @@ export default class ChatScreen extends Component {
             orderId: this.state.orderId,
             type: "image",
             date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
+        };
+
+        const newDataChatSource = Object.assign({}, dataChatSource);
+        let newArray = [...newDataChatSource[employee_id], message];
+        newDataChatSource[employee_id] = newArray;
+        fetchedMessages(newDataChatSource);
 
         this.setState({
             isUploading: true
         })
-        
+
         let imageData = new FormData();
         imageData.append('file', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-           
-        fetch(GET_IMAGE_URL , {
+
+        fetch(GET_IMAGE_URL, {
             method: 'POST',
             headers: {
                 "Content-Type": "multipart/form-data",
                 "otherHeader": "foo",
             },
             body: imageData
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            console.log("Response getImageURL >> "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
+        })
+            .then((response) => response.json())
+            .then((responseJson) => {
+                console.log("Response getImageURL >> " + JSON.stringify(responseJson));
+                this.setState({
+                    isLoading: false
+                })
+                if (responseJson.result) {
+                    this.sendImageTask(responseJson.file);
+                }
+                else {
+                    Alert.alert(
+                        "OOPS !",
+                        responseJson.message,
+                        [
+                            {
+                                text: 'Cancel',
+                                onPress: () => console.log('Cancel Pressed'),
+                            },
+                            {
+                                text: 'Retry',
+                                onPress: () => this.getImageURL(imageObject),
+                            },
+                        ]
+                    );
+                }
             })
-            if(responseJson.result)
-            {
-                this.sendImageTask(responseJson.file);
-            }
-            else
-            {
+            .catch((error) => {
                 Alert.alert(
                     "OOPS !",
-                    responseJson.message,
+                    error,
                     [
                         {
                             text: 'Cancel',
@@ -314,56 +329,137 @@ export default class ChatScreen extends Component {
                         },
                     ]
                 );
-            }
-         })
-        .catch((error) => {
-            Alert.alert(
-                "OOPS !",
-                error,
-                [
-                    {
-                        text: 'Cancel',
-                        onPress: () => console.log('Cancel Pressed'),
-                    },
-                    {
-                        text: 'Retry',
-                        onPress: () => this.getImageURL(imageObject),
-                    },
-                ]
-            );
-        });
+            });
     }
 
-    sendImageTask = async (imageURL) => {
-       
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
+    jobCancelTask = () => {
 
-        if(imageURL != '' && imageURL != null)
-        {
+        const { fetchedPendingJobInfo, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        var currRequestPos;
+        jobRequests.map((obj, key) => {
+            const currEmpId = obj.employee_id;
+            if (currEmpId === employee_id) currRequestPos = key;
+        });
+        var newJobRequests = [...jobRequests];
+        this.setState({
+            isLoading: true
+        });
+
+        const data = {
+            main_id: jobRequests[currRequestPos].id,
+            chat_status: '1',
+            status: 'Canceled',
+            'notification': {
+                "fcm_id": jobRequests[currRequestPos].fcm_id,
+                "title": "Job Canceled",
+                "body": 'Your job request has been canceled by ' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
+                "data": {
+                    ProviderId: jobRequests[currRequestPos].employee_id,
+                    image: jobRequests[currRequestPos].image,
+                    fcmId: jobRequests[currRequestPos].fcm_id,
+                    name: jobRequests[currRequestPos].name,
+                    surname: jobRequests[currRequestPos].surname,
+                    mobile: jobRequests[currRequestPos].mobile,
+                    description: jobRequests[currRequestPos].description,
+                    address: jobRequests[currRequestPos].address,
+                    lat: jobRequests[currRequestPos].lat,
+                    lang: jobRequests[currRequestPos].lang,
+                    serviceName: jobRequests[currRequestPos].service_name,
+                    orderId: jobRequests[currRequestPos].order_id,
+                    mainId: jobRequests[currRequestPos].id,
+                    chat_status: jobRequests[currRequestPos].chat_status,
+                    status: 'Canceled',
+                    delivery_address: jobRequests[currRequestPos].delivery_address,
+                    delivery_lat: jobRequests[currRequestPos].delivery_lat,
+                    delivery_lang: jobRequests[currRequestPos].delivery_lang,
+                },
+            }
+        }
+
+        fetch(REJECT_ACCEPT_REQUEST, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+            .then((response) => response.json())
+            .then((responseJson) => {
+                if (responseJson.result) {
+                    this.setState({
+                        isLoading: false,
+                        isAcceptJob: true,
+                    })
+
+                    var jobData = {
+                        id: '',
+                        order_id: '',
+                        employee_id: '',
+                        image: '',
+                        fcm_id: '',
+                        name: '',
+                        surName: '',
+                        mobile: '',
+                        description: '',
+                        address: '',
+                        lat: 0,
+                        lang: 0,
+                        service_name: '',
+                        chat_status: '',
+                        status: '',
+                        delivery_address: '',
+                        delivery_lat: 0,
+                        delivery_lang: 0
+                    }
+
+                    newJobRequests.splice(currRequestPos, 1);
+                    fetchedPendingJobInfo(newJobRequests);
+                    this.props.navigation.navigate("DashBoard");
+                }
+                else {
+                    Alert.alert("OOPS!", "Something went wrong, try again later");
+                    this.setState({
+                        isLoading: false,
+                    });
+                }
+            })
+            .catch((error) => {
+                this.setState({
+                    isLoading: false,
+                });
+            });
+    }
+
+
+    sendImageTask = async imageURL => {
+
+        const { fetchedMessages, messagesInfo: { dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+
+        if (imageURL != '' && imageURL != null) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage : '',
+                textMessage: '',
                 imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                senderId : this.state.senderId,
+                time: firebase.database.ServerValue.TIMESTAMP,
+                senderId: this.state.senderId,
                 senderImage: this.state.senderImage,
                 senderName: this.state.senderName,
-                receiverId : this.state.receiverId,
+                receiverId: this.state.receiverId,
                 receiverName: this.state.receiverName,
-                receiverImage : this.state.receiverImage,
+                receiverImage: this.state.receiverImage,
                 serviceName: this.state.serviceName,
                 orderId: this.state.orderId,
                 type: "image",
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
             }
-            let recentMessageReceiver= {
-                textMessage : '',
+            let recentMessageReceiver = {
+                textMessage: '',
                 imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(), 
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.senderId,
                 name: this.state.senderName,
                 image: this.state.senderImage,
@@ -372,23 +468,25 @@ export default class ChatScreen extends Component {
                 type: "image",
             }
             let recentMessageSender = {
-                textMessage : '',
+                textMessage: '',
                 imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
+                time: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.receiverId,
                 name: this.state.receiverName,
                 image: this.state.receiverImage,
                 serviceName: this.state.serviceName,
-                orderId: this.state.orderId,  
-                type: "image",   
+                orderId: this.state.orderId,
+                type: "image",
             }
 
             //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
+            let newDataChatSource = [...dataChatSource];
+            var array = [...newDataChatSource[employee_id]]; // make a separate copy of the array
             if (array.length > 0) {
                 array.splice(array.length-1, 1);
-                this.setState({ dataChatSource: array });
+                newDataChatSource[employee_id] = array;
+                fetchedMessages(newDataChatSource);
             }
 
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
@@ -407,6 +505,7 @@ export default class ChatScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
+        const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
@@ -416,7 +515,7 @@ export default class ChatScreen extends Component {
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={{ uri: item.senderImage }} />
+                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -430,13 +529,17 @@ export default class ChatScreen extends Component {
                     </View>
                     :
                     <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={{width: 125, height: 140, backgroundColor: 'white',
-                            borderRadius: 3, borderWidth: 0, marginRight: 10}}>
+                        <View style={{
+                            width: 125, height: 140, backgroundColor: 'white',
+                            borderRadius: 3, borderWidth: 0, marginRight: 10
+                        }}>
                             <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5 }}
                                 source={{ uri: item.imageMessage }}>
                             </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 5, marginTop: 2 }}>
+                            <Text style={{
+                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
+                                color: 'black', marginRight: 5, marginTop: 2
+                            }}>
                                 {this.convertTime(item.time)}
                             </Text>
                         </View>
@@ -450,8 +553,10 @@ export default class ChatScreen extends Component {
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
                                     {item.textMessage}
                                 </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', 
-                                color: 'white', marginRight: 5, marginTop: 4}}>
+                                <Text style={{
+                                    fontSize: 8, color: 'black', textAlignVertical: 'center',
+                                    color: 'white', marginRight: 5, marginTop: 4
+                                }}>
                                     {this.convertTime(item.time)}
                                 </Text>
                             </View>
@@ -459,25 +564,29 @@ export default class ChatScreen extends Component {
                     </View>
                     :
                     <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={{width: 125, height: 140, backgroundColor: 'white',borderRadius: 3, 
-                            marginRight: 10,}}>
-                            <Image style={{ width: 115, height: 115,marginHorizontal: 5, marginTop: 5 }}
-                                source={item.textMessage == "uploading" ? item.imageMessage : {uri: item.imageMessage}}
+                        <View style={{
+                            width: 125, height: 140, backgroundColor: 'white', borderRadius: 3,
+                            marginRight: 10,
+                        }}>
+                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5 }}
+                                source={item.textMessage == "uploading" ? item.imageMessage : { uri: item.imageMessage }}
                                 resizeMode='cover'>
                             </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 5, marginTop: 4 }}>
+                            <Text style={{
+                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
+                                color: 'black', marginRight: 5, marginTop: 4
+                            }}>
                                 {this.convertTime(item.time)}
                             </Text>
 
-                            {this.state.isUploading && item.textMessage == "uploading" &&(
-                            <View style={styles.loaderStyle}>
-                                <ActivityIndicator
-                                    style={{ height: 40 }}
-                                    color="#C00"
-                                    size="large" />
-                            </View>
-                        )}
+                            {this.state.isUploading && item.textMessage == "uploading" && (
+                                <View style={styles.loaderStyle}>
+                                    <ActivityIndicator
+                                        style={{ height: 40 }}
+                                        color="#C00"
+                                        size="large" />
+                                </View>
+                            )}
                         </View>
                     </View>
         )
@@ -491,114 +600,137 @@ export default class ChatScreen extends Component {
         );
     }
 
-  render() {
-    return (
+    render() {
+        const { requestStatus } = this.state;
 
-        <View style={styles.container}>
+        return (
+            <View style={styles.container}>
 
-            <StatusBarPlaceHolder />
+                <StatusBarPlaceHolder />
 
-            <ImageBackground style={styles.container}
-                source={require('../icons/bg_chat.png')}>
+                <ImageBackground style={styles.container}
+                    source={require('../icons/bg_chat.png')}>
 
-                <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                    paddingLeft: 10, paddingRight: 20, paddingBottom: 5}}>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center' }}
-                            onPress={() => this.props.navigation.goBack()}>
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                source={require('../icons/arrow_back.png')} />
-                        </TouchableOpacity>
+                    <View style={{
+                        flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
+                        paddingLeft: 10, paddingRight: 20, paddingBottom: 5
+                    }}>
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center' }}
+                                onPress={() => this.props.navigation.goBack()}>
+                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                    source={require('../icons/arrow_back.png')} />
+                            </TouchableOpacity>
 
-                        <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                            source={{ uri: this.state.receiverImage }} />
-                        <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-                            {this.state.receiverName + " "}{this.state.surname}
-                        </Text>
+                            <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
+                                source={{ uri: this.state.receiverImage }} />
+                            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
+                                {this.state.receiverName + " "}{this.state.surname}
+                            </Text>
+                        </View>
                     </View>
-                </View>
 
-                <KeyboardAwareScrollView ref={ref => this.scrollView = ref}
-                    contentContainerStyle={{ justifyContent: 'center', alignItems: 'center',
-                        alwaysBounceVertical: true}}
+                    <KeyboardAwareScrollView ref={ref => this.scrollView = ref}
+                        contentContainerStyle={{
+                            justifyContent: 'center', alignItems: 'center',
+                            alwaysBounceVertical: true
+                        }}
                         keyboardShouldPersistTaps='handled'
                         keyboardDismissMode='on-drag'>
 
-                    <View style={{ flexDirection: 'column', marginBottom: 45 }}>
-                        <View style={styles.listView}>
-                            <FlatList
-                                numColumns={1}
-                                data={this.state.dataChatSource}
-                                renderItem={this.renderMessageItem}
-                                keyExtractor={(item, index) => index.toString()}
-                                showsVerticalScrollIndicator={false}
-                                extraData={this.state}
-                                ItemSeparatorComponent={this.renderSeparator}
-                                ref={(ref) => { this.myFlatListRef = ref }}
-                                onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                        <View style={{ flexDirection: 'column', marginBottom: 45 }}>
+                            <View style={styles.listView}>
+                                <FlatList
+                                    numColumns={1}
+                                    data={this.state.dataChatSource}
+                                    renderItem={this.renderMessageItem}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    showsVerticalScrollIndicator={false}
+                                    extraData={this.state}
+                                    ItemSeparatorComponent={this.renderSeparator}
+                                    ref={(ref) => { this.myFlatListRef = ref }}
+                                    onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
+                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} 
+                                />
+                            </View>
                         </View>
-                    </View>
-                </KeyboardAwareScrollView>
+                    </KeyboardAwareScrollView>
 
-                <View style={styles.footer}>
-                    <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                    <View style={{ flex: 1, flexDirection: 'row', }}>
-                        <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                            placeholder='Tapez un message'
-                            value={this.state.inputMessage}
-                            multiline={true}
-                            onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                        </TextInput>
+                    <View style={styles.footer}>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        {requestStatus === 'Pending' ? <View style={{
+                            flex: 1, width: screenWidth, justifyContent: 'center',
+                            backgroundColor: 'white', alignItems: 'center'
+                        }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
+                                <TouchableOpacity style={styles.buttonContainer}
+                                    onPress={this.jobCancelTask}>
+                                    <Text style={styles.text}>Cancel Request</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View> :
+                            null}
+                        <View style={{ flex: 1, flexDirection: 'row', }}>
+                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
+                                placeholder='Tapez un message'
+                                value={this.state.inputMessage}
+                                multiline={true}
+                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                            </TextInput>
 
-                        <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
-                         alignContent: 'center', marginRight: 25}}
-                         onPress={this.selectPhoto.bind(this)}>
-                            <Image style={{width:20, height:20}}
-                                source={require('../icons/camera.png')}/>
-                        </TouchableOpacity>
-
-                        {this.state.showButton &&
-                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                onPress={this.sendMessageTask}>
-                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    ENVOYER
-                                </Text>
+                            <TouchableOpacity style={{
+                                height: 50, justifyContent: 'center', alignItems: 'center',
+                                alignContent: 'center', marginRight: 25
+                            }}
+                                onPress={this.selectPhoto.bind(this)}>
+                                <Image style={{ width: 20, height: 20 }}
+                                    source={require('../icons/camera.png')} />
                             </TouchableOpacity>
-                        }
-                    </View>
-                    {this.state.isJobAccepted && (
-                        <View style={{flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
-                            borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',}}>
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                            <TouchableOpacity style={styles.textViewDirection}
-                                onPress={() => this.props.navigation.navigate("MapDirection",{
-                                    "titlePage": "ProviderDetails"})}>
-                                <Image style={{ width: 20, height: 20, marginLeft: 20 }}
-                                    source={require('../icons/mobile_gps.png')} />
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                    Fournisseur de services de suivi
+
+                            {this.state.showButton &&
+                                <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
+                                    onPress={this.sendMessageTask}>
+                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                        ENVOYER
                                 </Text>
-                                <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
-                                    source={require('../icons/right_arrow.png')} />
-                            </TouchableOpacity>
+                                </TouchableOpacity>
+                            }
+                        </View>
+                        {this.state.isJobAccepted && (
+                            <View style={{
+                                flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
+                                borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
+                            }}>
+                                <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                                <TouchableOpacity style={styles.textViewDirection}
+                                    onPress={() => this.props.navigation.navigate("MapDirection", {
+                                        "titlePage": "ProviderDetails"
+                                    })}>
+                                    <Image style={{ width: 20, height: 20, marginLeft: 20 }}
+                                        source={require('../icons/mobile_gps.png')} />
+                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
+                                        Fournisseur de services de suivi
+                                </Text>
+                                    <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
+                                        source={require('../icons/right_arrow.png')} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+
+                    {this.state.isLoading && (
+                        <View style={styles.loaderStyle}>
+                            <ActivityIndicator
+                                style={{ height: 80 }}
+                                color="#C00"
+                                size="large" />
                         </View>
                     )}
-                </View>
+                </ImageBackground>
 
-                {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )}
-            </ImageBackground>
-
-        </View>
-    );
-  }
+            </View>
+        );
+    }
 }
 
 
@@ -609,8 +741,8 @@ const styles = StyleSheet.create({
     listView: {
         flex: 1,
         padding: 5,
-      },
-      footer: {
+    },
+    footer: {
         width: screenWidth,
         minHeight: 50,
         flexDirection: 'column',
@@ -618,9 +750,30 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'absolute', //Footer
         bottom: 0, //Footer
-     }, 
-     itemLeftChatContainer: {
-        maxWidth: (screenWidth/2)+30,
+    },
+    buttonContainer: {
+        flex: 1,
+        paddingTop: 10,
+        backgroundColor: '#000000',
+        paddingBottom: 10,
+        paddingLeft: 20,
+        paddingRight: 20,
+        borderRadius: 5,
+        borderColor: colorYellow,
+        borderWidth: 2,
+        textAlign: 'center',
+        justifyContent: 'center',
+        marginLeft: 10,
+        marginRight: 10,
+    },
+    text: {
+        fontSize: 14,
+        color: 'white',
+        textAlign: 'center',
+        justifyContent: 'center',
+    },
+    itemLeftChatContainer: {
+        maxWidth: (screenWidth / 2) + 30,
         flexDirection: 'row',
         backgroundColor: colorGray,
         padding: 10,
@@ -635,7 +788,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     itemRightChatContainer: {
-        maxWidth: screenWidth/2,
+        maxWidth: screenWidth / 2,
         flexDirection: 'row',
         backgroundColor: '#1E90FF',
         padding: 10,
@@ -653,7 +806,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-start',
         marginBottom: 15,
-    }, 
+    },
     loaderStyle: {
         position: 'absolute',
         left: 0,
@@ -664,3 +817,36 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
+
+const mapStateToProps = state => {
+    return {
+        messagesInfo: state.messagesInfo,
+        jobsInfo: state.jobsInfo,
+        generalInfo: state.generalInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingPendingJobInfo: () => {
+            dispatch(startFetchingJobCustomer());
+        },
+        fetchedPendingJobInfo: info => {
+            dispatch(fetchedJobCustomerInfo(info));
+        },
+        fetchingPendingJobInfoError: error => {
+            dispatch(fetchCustomerJobInfoError(error))
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);
