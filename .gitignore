@@ -64,3 +64,6 @@ buck-out/
 # heavy android files
 android/java_pid828.hprof
 android/app/debug/app-debug.apk
+android/app/release/app-release.apk
+android/app/release/app-release.aab
+android/app/release/app-release.aab

@@ -1,6 +1,4 @@
-/**
- * @format
- */
+import 'react-native-gesture-handler';
 import React from 'react';
 import {AppRegistry, YellowBox} from 'react-native';
 import App from './src/components/SplashScreen';
