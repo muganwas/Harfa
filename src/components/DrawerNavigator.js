@@ -3,7 +3,7 @@ import React , { Component } from 'react';
 import {createAppContainer} from 'react-navigation';
 import {createDrawerNavigator } from 'react-navigation-drawer';
 import CustomMenuLayout from './CustomMenuLayout';
-
+import ChatWithAdminScreen from './ChatWithAdminScreen';
 import DashBoardScreen from './DashboardScreen';
 import AboutUsScreen from './AboutUsScreen';
 import ContactUsScreen from './ContactUsScreen'; 
@@ -18,6 +18,7 @@ const MyDrawerNavigator = createDrawerNavigator({
     MyProfile: {screen: MyProfileScreen},
     Booking: {screen: BookingScreen},
     AboutUs: {screen: AboutUsScreen},
+    ChatWithAdmin: {screen: ChatWithAdminScreen},
     ContactUs: {screen: ContactUsScreen},
     AllMessage: {screen: AllMessageScreen},
     Notifications: {screen: NotificationsScreen},

@@ -47,9 +47,8 @@ function StatusBarPlaceHolder() {
 
 export default class ChatWithAdminScreen extends Component {
 
-    constructor(props) {
-        super(props)
-
+    constructor() {
+        super()
         this.state = {
             senderId: ProviderDetails.Provider.providerId,
             senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
@@ -59,10 +58,9 @@ export default class ChatWithAdminScreen extends Component {
             dataChatSource: [],
             isLoading: true,
             isUploading: false,
-
             receiverId: "1",
             receiverName: "Admin",
-            receiverImage: 'http://laabhaa.co.in/projects/Rupesh/user-profile.png',
+            receiverImage: require('../images/generic_avatar.png'),
         };
 
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -129,7 +127,6 @@ export default class ChatWithAdminScreen extends Component {
     }
 
     getImageURL = async (imageObject) => {
-       
         let message = {
             textMessage: 'uploading',
             imageMessage: imageObject,
@@ -453,7 +450,7 @@ export default class ChatWithAdminScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10, }}
-                                source={{ uri: this.state.receiverImage }} />
+                                source={this.state.receiverImage} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
                                 {this.state.receiverName}
                             </Text>
