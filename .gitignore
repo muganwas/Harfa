@@ -67,3 +67,4 @@ android/app/debug/app-debug.apk
 android/app/release/app-release.apk
 android/app/release/app-release.aab
 android/app/release/app-release.aab
+*.gradle
