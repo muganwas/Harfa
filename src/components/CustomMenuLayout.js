@@ -104,9 +104,9 @@ class CustomMenuLayout extends Component {
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
                                 fetchedNotifications({type: 'adminMessages', value: 0});
-                                /**Nedd to confirm how this works */
-                                //this.props.navigation.navigate("ChatWithAdmin")
-                                //this.props.navigation.dispatch(DrawerActions.closeDrawer())
+                                console.log('going to admin')
+                                this.props.navigation.navigate("ChatWithAdmin")
+                                this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
