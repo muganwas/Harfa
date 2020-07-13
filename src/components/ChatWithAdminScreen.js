@@ -1,19 +1,15 @@
 import React, { Component } from 'react';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator
+    BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView
 } from 'react-native';
 //import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ProviderDetails from './ProviderDetails';
 import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
+import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import UserDetails from './UserDetails';
 
 const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
@@ -25,13 +21,15 @@ const options = {
     quality: 1
 };
 
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const ios = Platform.OS === 'ios';
 
-const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload";
+const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
+
+const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload";
 
 function StatusBarPlaceHolder() {
     return (
-        Platform.OS === 'ios' ?
+        ios ?
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
@@ -48,11 +46,14 @@ function StatusBarPlaceHolder() {
 export default class ChatWithAdminScreen extends Component {
 
     constructor() {
-        super()
+        super();
+        const senderId = ProviderDetails.Provider.providerId || UserDetails.User.userId;
+        const senderName = ProviderDetails.Provider.name || UserDetails.User.username;
+        const senderImage = ProviderDetails.Provider.imageSource || UserDetails.User.image;
         this.state = {
-            senderId: ProviderDetails.Provider.providerId,
-            senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
-            senderImage: ProviderDetails.Provider.imageSource,
+            senderId: senderId,
+            senderName: senderName,
+            senderImage: senderImage,
             inputMessage: '',
             showButton: false,
             dataChatSource: [],
@@ -67,17 +68,20 @@ export default class ChatWithAdminScreen extends Component {
     };
 
     componentWillMount() {
-
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-        console.log("Sender Id: "+this.state.senderId);
-        console.log("Receiver Id: "+this.state.receiverId);
-
         firebase.database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId)
-            .on('child_added', (value) => {
-                this.setState((prevState) => {
+            .on('child_added', value => {
+                this.setState(prevState => {
+                    //filter out only unique messages
+                    let newData = [...prevState.dataChatSource];
+                    if (value.val()) 
+                        newData.push(value.val());
+                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                    .map(time => {
+                        return newData.find(a => a.time === time)
+                    });
                     return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
+                        dataChatSource: [...uniqueData],
                         isLoading: false,
                     }
                 })
@@ -126,10 +130,6 @@ export default class ChatWithAdminScreen extends Component {
     }
 
     sendMessageTask = async () => {
-
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
-
         if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
@@ -157,7 +157,7 @@ export default class ChatWithAdminScreen extends Component {
                 image: this.state.senderImage,
                 type: "text",
             }
-            
+
             updates['adminChatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
             updates['adminChatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
             firebase.database().ref().update(updates);
@@ -226,11 +226,11 @@ export default class ChatWithAdminScreen extends Component {
     }
 
     render() {
+        const { showButton } = this.state;
         return (
 
-            <View style={styles.container}>
-
-                <StatusBarPlaceHolder/>
+            <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
+                <StatusBarPlaceHolder />
 
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
@@ -240,7 +240,7 @@ export default class ChatWithAdminScreen extends Component {
                         paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                     }}>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center',}}
+                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
                                 onPress={() => this.props.navigation.goBack()}>
                                 <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                                     source={require('../icons/arrow_back.png')} />
@@ -286,26 +286,16 @@ export default class ChatWithAdminScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-
-                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
-                             alignContent: 'center', marginRight: 25 }}
-                             onPress={this.selectPhoto.bind(this)}>
-                                <Image style={{ width: 20, height: 20 }}
-                                    source={require('../icons/camera.png')} />
+                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                                onPress={this.sendMessageTask}>
+                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                    ENVOYER
+                                </Text>
                             </TouchableOpacity>
-
-                            {this.state.showButton &&
-                                <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                    onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        SEND
-                                    </Text>
-                                </TouchableOpacity>
-                            }
                         </View>
                     </View>
                 </ImageBackground>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }
@@ -362,6 +352,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'center'
-      },
+    },
 
 });
