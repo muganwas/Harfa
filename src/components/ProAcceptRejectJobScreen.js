@@ -5,7 +5,6 @@ import {
     ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Modal
 } from 'react-native';
 import firebase from 'react-native-firebase';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import WaitingDialog from './WaitingDialog';
 import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
@@ -15,12 +14,7 @@ import { startFetchingNotification, notificationsFetched, notificationError } fr
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import ProPendingJobRequest from './ProPendingJobRequest';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -130,115 +124,6 @@ class ProAcceptRejectJobScreen extends Component {
         return true;
     }
 
-    selectPhoto = () => {
-
-        console.log('SELECT PHOTO ');
-
-        ImagePicker.showImagePicker(options, (response) => {
-            console.log('Response = ', response);
-
-            if (response.didCancel) {
-                console.log('User cancelled image picker');
-            }
-            else if (response.error) {
-                console.log('ImagePicker Error: ', response.error);
-            }
-            else {
-
-                let source
-
-                source = { uri: response.uri };
-
-                this.setState({
-                    imageURI: source,
-                    imageDataObject: response,
-                });
-
-                this.getImageURL(response)
-            }
-        });
-    }
-
-    getImageURL = async (imageObject) => {
-
-        let message = {
-            textMessage: 'uploading',
-            imageMessage: imageObject,
-            time: firebase.database.ServerValue.TIMESTAMP,
-            senderId: this.state.senderId,
-            senderImage: this.state.senderImage,
-            senderName: this.state.senderName,
-            receiverId: this.state.receiverId,
-            receiverName: this.state.receiverName,
-            receiverImage: this.state.receiverImage,
-            serviceName: this.state.serviceName,
-            orderId: this.state.orderId,
-            type: "image",
-            date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
-
-        this.setState({
-            isUploading: true
-        })
-
-        let imageData = new FormData();
-        imageData.append('file', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-
-        fetch(GET_IMAGE_URL, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "multipart/form-data",
-                "otherHeader": "foo",
-            },
-            body: imageData
-        })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                //console.log("Response getImageURL >> " + JSON.stringify(responseJson));
-                this.setState({
-                    isLoading: false
-                })
-                if (responseJson.result) {
-                    this.sendImageTask(responseJson.file);
-                }
-                else {
-                    Alert.alert(
-                        "OUPS !",
-                        responseJson.message,
-                        [
-                            {
-                                text: 'Annuler',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retenter',
-                                onPress: () => this.getImageURL(imageObject),
-                            },
-                        ]
-                    );
-                }
-            })
-            .catch((error) => {
-                Alert.alert(
-                    "OUPS !",
-                    error,
-                    [
-                        {
-                            text: 'Annuler',
-                            onPress: () => console.log('Cancel Pressed'),
-                        },
-                        {
-                            text: 'Retenter',
-                            onPress: () => this.getImageURL(imageObject),
-                        },
-                    ]
-                );
-            });
-    }
-
     renderMessageItem = ({ item }) => {
         return (
             this.state.senderId != item.senderId
@@ -261,23 +146,7 @@ class ProAcceptRejectJobScreen extends Component {
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={{
-                            width: 125, height: 135, backgroundColor: 'white',
-                            borderRadius: 3, marginRight: 10
-                        }}>
-                            <Image style={{ width: 110, height: 110, marginHorizontal: 7.5, marginTop: 7.5 }}
-                                source={{ uri: item.imageMessage }}>
-                            </Image>
-                            <Text style={{
-                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
-                                color: 'black', marginRight: 7.5, marginTop: 2
-                            }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                        </View>
-                    </View>
+                    : null
                 :
                 item.type == 'text'
                     ?
@@ -293,32 +162,7 @@ class ProAcceptRejectJobScreen extends Component {
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={{
-                            width: 125, height: 135, backgroundColor: 'white', borderRadius: 3,
-                            marginRight: 10
-                        }}>
-                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5 }}
-                                source={item.textMessage == "uploading" ? item.imageMessage : { uri: item.imageMessage }}
-                                resizeMode='cover'>
-                            </Image>
-                            <Text style={{
-                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
-                                color: 'black', marginRight: 7.5, marginTop: 2
-                            }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                            {this.state.isUploading && item.textMessage == "uploading" && (
-                                <View style={styles.loaderStyle}>
-                                    <ActivityIndicator
-                                        style={{ height: 40 }}
-                                        color="#C00"
-                                        size="large" />
-                                </View>
-                            )}
-                        </View>
-                    </View>
+                    : null
         )
     }
 
@@ -420,75 +264,6 @@ class ProAcceptRejectJobScreen extends Component {
                 inputMessage: '',
                 showButton: false,
             });
-        }
-    }
-
-    sendImageTask = async (imageURL) => {
-
-
-        if (imageURL != '' && imageURL != null) {
-            let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                senderId: this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId: this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-            }
-            let recentMessageReceiver = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-            }
-            let recentMessageSender = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-            }
-
-            //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
-            if (array.length > 0) {
-                array.splice(array.length - 1, 1);
-                this.setState({ dataChatSource: array });
-            }
-
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
-            firebase.database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
-
-            firebase.database().ref().update(recentUpdates)
-
-            this.setState({
-                isUploading: false,
-            })
         }
     }
 
@@ -724,6 +499,7 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     render() {
+        const { showButton } = this.state;
         return (
             <View style={styles.container}>
 
@@ -807,20 +583,17 @@ class ProAcceptRejectJobScreen extends Component {
                             onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                         </TextInput>
 
-                        <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', marginRight: 25 }}
+                        {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', marginRight: 25 }}
                             onPress={this.selectPhoto.bind(this)}>
                             <Image style={{ width: 20, height: 20 }}
                                 source={require('../icons/camera.png')} />
-                        </TouchableOpacity>
-
-                        {this.state.showButton &&
-                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                onPress={this.sendMessageTask}>
-                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    ENVOYER
-                            </Text>
+                        </TouchableOpacity>*/}
+                        <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                                    onPress={this.sendMessageTask}>
+                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                        ENVOYER
+                                    </Text>
                             </TouchableOpacity>
-                        }
                     </View>
                 </View>
 

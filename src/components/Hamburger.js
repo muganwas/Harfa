@@ -210,8 +210,14 @@ class Hamburger extends React.Component {
                     const { messagesInfo: { dataChatSource } } = this.props;
                     let newDataChatSource = Object.assign({}, dataChatSource);
                     let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val())
-                    newDataChatSource[employee_id] = newArr;
+                    newArr.push(data.val());
+                    const newData = [...newArr];
+                    //filter out only unique messages
+                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                        .map(time => {
+                            return newData.find(a => a.time === time)
+                        });
+                    newDataChatSource[employee_id] = uniqueData;
                     fetchedMessages(newDataChatSource);
                 });
             firebase.database().ref('chatting').
@@ -222,7 +228,13 @@ class Hamburger extends React.Component {
                     let newDataChatSource = Object.assign({}, dataChatSource);
                     let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
                     newArr.push(data.val())
-                    newDataChatSource[employee_id] = newArr;
+                    const newData = [...newArr];
+                    //filter out only unique messages
+                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                        .map(time => {
+                            return newData.find(a => a.time === time)
+                        });
+                    newDataChatSource[employee_id] = uniqueData;
                     fetchedMessages(newDataChatSource);
                 });
         });

@@ -68,18 +68,30 @@ class Hamburger extends React.Component {
                     const { messagesInfo: { dataChatSource } } = this.props;
                     let newDataChatSource = Object.assign({}, dataChatSource);
                     let newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
-                    newArr.push(data.val())
-                    newDataChatSource[user_id] = newArr;
+                    newArr.push(data.val());
+                    const newData = [...newArr];
+                    //filter out only unique messages
+                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                        .map(time => {
+                            return newData.find(a => a.time === time)
+                        });
+                    newDataChatSource[user_id] = uniqueData;
                     fetchedMessages(newDataChatSource);
-                })
+                });
 
             firebase.database().ref("chatting").child(receiverId).child(user_id)
                 .once('value', data => {
                     const { messagesInfo: { dataChatSource } } = this.props;
                     let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
+                    const newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
                     newArr.push(data.val())
-                    newDataChatSource[user_id] = newArr;
+                    const newData = [...newArr];
+                    //filter out only unique messages
+                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                        .map(time => {
+                            return newData.find(a => a.time === time)
+                        });
+                    newDataChatSource[user_id] = uniqueData;
                     fetchedMessages(newDataChatSource);
                 });
         });
@@ -234,7 +246,7 @@ class Hamburger extends React.Component {
                     fetchOthersCoordinatesError(e.message);
                 });
         });
-        this.setState({fetchedOthersLocations: true})
+        this.setState({ fetchedOthersLocations: true })
     }
 
     render() {

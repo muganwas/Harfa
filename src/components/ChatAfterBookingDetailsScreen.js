@@ -2,11 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {View, StyleSheet, TouchableOpacity, Image, Text,
     FlatList, TextInput, Dimensions, ActivityIndicator, 
-    BackHandler, ImageBackground, StatusBar, Platform, Alert
+    BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import ImagePicker from 'react-native-image-picker';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
@@ -105,35 +104,6 @@ class ChatAfterBookingDetailsScreen extends Component {
         return true;
     }
 
-    selectPhoto = () => {
-
-        console.log('CHOISIR UNE PHOTO');
-
-        ImagePicker.showImagePicker(options, (response) => {
-            console.log('Response = ', response);
-
-            if (response.didCancel) {
-                console.log('User cancelled image picker');
-            }
-            else if (response.error) {
-                console.log('ImagePicker Error: ', response.error);
-            }
-            else {
-              
-                let source 
-                
-                source = { uri: response.uri };
-               
-                this.setState({
-                    imageURI: source,
-                    imageDataObject: response,
-                });
-
-                this.getImageURL(response)
-            }
-        });
-    }
-
     convertTime = time => {
         let d = new Date(time);
         let c = new Date();
@@ -226,165 +196,6 @@ class ChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    getImageURL = async imageObject => {
-
-        const { fetchedMessages, messagesInfo: { dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
-
-        let message = {
-            textMessage: 'uploading',
-            imageMessage: imageObject,
-            time: firebase.database.ServerValue.TIMESTAMP,
-            senderId: this.state.senderId,
-            senderImage: this.state.senderImage,
-            senderName: this.state.senderName,
-            receiverId: this.state.receiverId,
-            receiverName: this.state.receiverName,
-            receiverImage: this.state.receiverImage,
-            serviceName: this.state.serviceName,
-            orderId: this.state.orderId,
-            type: "image",
-            date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        };
-
-        const newDataChatSource = Object.assign({}, dataChatSource);
-        let newArray = [...newDataChatSource[employee_id], message];
-        newDataChatSource[employee_id] = newArray;
-        fetchedMessages(newDataChatSource);
-
-        this.setState({
-            isUploading: true
-        })
-        
-        let imageData = new FormData();
-        imageData.append('file', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-           
-        fetch(GET_IMAGE_URL , {
-            method: 'POST',
-            headers: {
-                "Content-Type": "multipart/form-data",
-                "otherHeader": "foo",
-            },
-            body: imageData
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                this.sendImageTask(responseJson.file);
-            }
-            else
-            {
-                Alert.alert(
-                    "OOPS !",
-                    responseJson.message,
-                    [
-                        {
-                            text: 'Cancel',
-                            onPress: () => console.log('Cancel Pressed'),
-                        },
-                        {
-                            text: 'Retry',
-                            onPress: () => this.getImageURL(imageObject),
-                        },
-                    ]
-                );
-            }
-         })
-        .catch((error) => {
-            Alert.alert(
-                "OOPS !",
-                error,
-                [
-                    {
-                        text: 'Cancel',
-                        onPress: () => console.log('Cancel Pressed'),
-                    },
-                    {
-                        text: 'Retry',
-                        onPress: () => this.getImageURL(imageObject),
-                    },
-                ]
-            );
-        });
-    }
-
-    sendImageTask = async imageURL => {
-
-        const { fetchedMessages, messagesInfo: { dataChatSource}, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
-
-        if(imageURL != '' && imageURL != null)
-        {
-            let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage : '',
-                imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                senderId : this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId : this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage : this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
-            }
-            let recentMessageReceiver= {
-                textMessage : '',
-                imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(), 
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-            }
-            let recentMessageSender = {
-                textMessage : '',
-                imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,  
-                type: "image",   
-            }
-
-            //Remove Last item from Array
-            let newDataChatSource = [...dataChatSource];
-            var array = [...newDataChatSource[employee_id]]; // make a separate copy of the array
-            if (array.length > 0) {
-                array.splice(array.length-1, 1);
-                newDataChatSource[employee_id] = array;
-                fetchedMessages(newDataChatSource);
-            }
-
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
-            firebase.database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
-
-            firebase.database().ref().update(recentUpdates)
-
-            this.setState({
-                isUploading: false,
-            })
-        }
-    }
-
     renderMessageItem = ({ item }) => {
         const senderImage = item.senderImage;
         return (
@@ -408,19 +219,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={{width: 125, height: 140, backgroundColor: 'white',
-                            borderRadius: 3, borderWidth: 0, marginRight: 10}}>
-                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5 }}
-                                source={{ uri: item.imageMessage }}>
-                            </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 5, marginTop: 2 }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                        </View>
-                    </View>
+                    : null
                 :
                 item.type == 'text'
                     ?
@@ -437,29 +236,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={{width: 125, height: 140, backgroundColor: 'white',borderRadius: 3, 
-                            marginRight: 10,}}>
-                            <Image style={{ width: 115, height: 115,marginHorizontal: 5, marginTop: 5 }}
-                                source={item.textMessage == "uploading" ? item.imageMessage : {uri: item.imageMessage}}
-                                resizeMode='cover'>
-                            </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 5, marginTop: 4 }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-
-                            {this.state.isUploading && item.textMessage == "uploading" &&(
-                            <View style={styles.loaderStyle}>
-                                <ActivityIndicator
-                                    style={{ height: 40 }}
-                                    color="#C00"
-                                    size="large" />
-                            </View>
-                        )}
-                        </View>
-                    </View>
+                    : null
         )
     }
 
@@ -473,9 +250,10 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     render() {
         const { navigation: {state : {params: { providerImage } } } } = this.props
+        const { showButton } = this.state;
         return (
 
-            <View style={styles.container}>
+            <KeyboardAvoidingView style={styles.container} behavior='padding'>
 
                 <StatusBarPlaceHolder/>
 
@@ -500,7 +278,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                         </View>
                     </View>
 
-                    <KeyboardAwareScrollView ref={ref => this.scrollView = ref}
+                    <ScrollView ref={ref => this.scrollView = ref}
                         contentContainerStyle={{ justifyContent: 'center', alignItems: 'center',
                         alwaysBounceVertical: true }}
                         keyboardShouldPersistTaps='handled'
@@ -521,7 +299,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                                     onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
                             </View>
                         </View>
-                    </KeyboardAwareScrollView>
+                    </ScrollView>
 
                     <View style={styles.footer}>
                         <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
@@ -533,21 +311,19 @@ class ChatAfterBookingDetailsScreen extends Component {
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
 
-                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
+                            {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
                                 alignContent: 'center', marginRight: 25 }}
                                 onPress={this.selectPhoto.bind(this)}>
                                 <Image style={{ width: 20, height: 20 }}
                                     source={require('../icons/camera.png')} />
-                            </TouchableOpacity>
+                            </TouchableOpacity>*/}
 
-                            {this.state.showButton &&
-                                <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
+                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
                                     onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    ENVOYER
-                                </Text>
-                                </TouchableOpacity>
-                            }
+                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                        ENVOYER
+                                    </Text>
+                            </TouchableOpacity>
                         </View>
                         {this.state.isJobAccepted && (
                             <View style={{
@@ -578,7 +354,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                         </View>
                     )}
                 </ImageBackground>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }

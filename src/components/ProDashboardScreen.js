@@ -31,6 +31,7 @@ import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { imageExists } from '../misc/helpers';
 import { startFetchingJobProvider, fetchAllJobRequestsProError, fetchedAllJobRequestsPro, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 
 const socket = Config.socket;
@@ -47,7 +48,6 @@ const screenHeight = Dimensions.get('window').height;
 const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
-import { imageExists } from '../misc/helpers';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
 const database = firebase.database();
@@ -171,14 +171,20 @@ class ProDashBoardScreen extends Component {
             if (message != null) {
                 dbRef.on('child_added', val => {
                     const { dataSource } = this.state;
+
                     let message = val.val();
                     let present = false;
                     dataSource.map(obj => {
                         if (JSON.stringify(obj) === JSON.stringify(message))
                             present = true;
                     })
-                    if (!present)
+                    if (!present) {
+                        let exists;
+                        imageExists(message.image).then(res => { exists = res });
+                        message.exists = exists;
                         this.setState(prevState => ({ dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true }));
+                    }
+                        
                 })
             }
             else {
@@ -233,7 +239,6 @@ class ProDashBoardScreen extends Component {
                     currentPos = key;
                 }
             });
-            const customerImage = item.image;
             return (
                 <TouchableOpacity style={styles.itemMainContainer}
                     onPress={() => {
@@ -253,7 +258,7 @@ class ProDashBoardScreen extends Component {
                     }}>
                     <View style={styles.itemImageView}>
                         <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                            source={customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                            source={item.exists ? { uri: item.image } : require('../images/generic_avatar.png')} />
                     </View>
                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                         <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -844,7 +849,6 @@ class ProDashBoardScreen extends Component {
 
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
-        console.log('job requests', jobRequestsProviders);
         return (
             <View style={styles.container}>
 
