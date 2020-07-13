@@ -22,9 +22,11 @@ const options = {
     quality: 1
 };
 
+const ios = Platform.OS === 'ios';
+
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload";
+const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload";
 
 function StatusBarPlaceHolder() {
     return (
@@ -45,7 +47,8 @@ function StatusBarPlaceHolder() {
 class ProChatAfterBookingDetailsScreen extends Component {
 
     constructor() {
-        super()
+        super();
+        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
         this.state = {
             showButton: false,
             senderId: ProviderDetails.Provider.providerId,
@@ -53,8 +56,8 @@ class ProChatAfterBookingDetailsScreen extends Component {
             senderImage: ProviderDetails.Provider.imageSource,
             inputMessage: '',
             showButton: false,
-            dataChatSource: [],
-            isLoading: true,
+            dataChatSource: dataChatSource[user_id] || [],
+            isLoading: !fetched,
             isUploading: false,
 
             receiverId: this.props.navigation.state.params.receiverId,
@@ -70,27 +73,23 @@ class ProChatAfterBookingDetailsScreen extends Component {
 
     componentDidMount() {
         const { fetchedNotifications } = this.props;
-        fetchedNotifications({type: 'messages', value: 0});
+        fetchedNotifications({ type: 'messages', value: 0 });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-        firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
-            .on('child_added',value => {
-                /*this.setState((prevState) => {
-                    return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
-                        isLoading: false,
-                    }
-                })*/
-            })
-
         this.setState({
             isLoading: false
         })
     }
 
-    componentDidUpdate(){
-        const { messagesInfo } = this.props;
-        console.log('messages info --', messagesInfo)
+    componentDidUpdate() {
+        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
+        const { isLoading } = this.state;
+        const localDataChatSource = this.state.dataChatSource;
+        if (fetched && isLoading)
+            this.setState({ isLoading: false });
+        console.log('local', localDataChatSource)
+        console.log('up state', dataChatSource)
+        if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
+            this.setState({ dataChatSource: dataChatSource[user_id] });
     }
 
     componentWillUnmount() {
@@ -250,8 +249,8 @@ class ProChatAfterBookingDetailsScreen extends Component {
         const receiverImage = this.props.navigation.state.params.receiverImage;
         let { showButton } = this.state;
         return (
-            <KeyboardAvoidingView style={styles.container} behavior='padding'>
-                <StatusBarPlaceHolder/>
+            <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
+                <StatusBarPlaceHolder />
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
 
@@ -260,7 +259,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
                         paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                     }}>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center',}}
+                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
                                 onPress={() => this.props.navigation.goBack()}>
                                 <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                                     source={require('../icons/arrow_back.png')} />
@@ -296,32 +295,31 @@ class ProChatAfterBookingDetailsScreen extends Component {
                             </View>
                         </View>
                     </ScrollView>
+                </ImageBackground>
+                <View style={styles.footer}>
+                    <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                    <View style={{ flex: 1, flexDirection: 'row' }}>
+                        <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
+                            placeholder='Type a message'
+                            value={this.state.inputMessage}
+                            multiline={true}
+                            onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                        </TextInput>
 
-                    <View style={styles.footer}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                                placeholder='Type a message'
-                                value={this.state.inputMessage}
-                                multiline={true}
-                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                            </TextInput>
-
-                            {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
+                        {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
                              alignContent: 'center', marginRight: 25 }}
                              onPress={this.selectPhoto.bind(this)}>
                                 <Image style={{ width: 20, height: 20 }}
                                     source={require('../icons/camera.png')} />
                             </TouchableOpacity>*/}
-                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
-                                    onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        ENVOYER
+                        <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                            onPress={this.sendMessageTask}>
+                            <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                ENVOYER
                                     </Text>
-                            </TouchableOpacity>
-                        </View>
+                        </TouchableOpacity>
                     </View>
-                </ImageBackground>
+                </View>
             </KeyboardAvoidingView>
         );
     }
@@ -379,7 +377,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'center'
-      },
+    },
 
 });
 

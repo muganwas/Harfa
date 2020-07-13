@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {View, StyleSheet, TouchableOpacity, Image, Text,
-    FlatList, TextInput, Dimensions, ActivityIndicator, 
+import {
+    View, StyleSheet, TouchableOpacity, Image, Text,
+    FlatList, TextInput, Dimensions, ActivityIndicator,
     BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
@@ -9,7 +10,7 @@ import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
 import UserDetails from './UserDetails';
 import Config from './Config';
-import {imageExists} from '../misc/helpers';
+import { imageExists } from '../misc/helpers';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -19,21 +20,22 @@ const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
-
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const ios = Platform.OS === 'ios';
+const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {
     return (
-        Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+        ios ?
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -44,7 +46,7 @@ const options = {
     quality: 1
 };
 
-const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload"
+const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 
 class ChatAfterBookingDetailsScreen extends Component {
 
@@ -78,21 +80,21 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     componentDidMount() {
         const { fetchedNotifications } = this.props;
-        fetchedNotifications({type: 'messages', value: 0});
+        fetchedNotifications({ type: 'messages', value: 0 });
         imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
-            this.setState({proImageAvailable});
+            this.setState({ proImageAvailable });
         });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    componentDidUpdate(){
-        const { messagesInfo : { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+    componentDidUpdate() {
+        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
         const { isLoading } = this.state;
         const localDataChatSource = this.state.dataChatSource;
-        if (fetched && isLoading) 
-            this.setState({isLoading:false});
-        if ( JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource)) 
-            this.setState({dataChatSource: dataChatSource[employee_id]});
+        if (fetched && isLoading)
+            this.setState({ isLoading: false });
+        if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource))
+            this.setState({ dataChatSource: dataChatSource[employee_id] });
     }
 
     componentWillUnmount() {
@@ -229,8 +231,10 @@ class ChatAfterBookingDetailsScreen extends Component {
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
                                     {item.textMessage}
                                 </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', 
-                                color: 'white', marginRight: 5, marginTop: 4}}>
+                                <Text style={{
+                                    fontSize: 8, color: 'black', textAlignVertical: 'center',
+                                    color: 'white', marginRight: 5, marginTop: 4
+                                }}>
                                     {this.convertTime(item.time)}
                                 </Text>
                             </View>
@@ -249,20 +253,18 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
-        const { navigation: {state : {params: { providerImage } } } } = this.props
+        const { navigation: { state: { params: { providerImage } } } } = this.props
         const { showButton } = this.state;
         return (
-
-            <KeyboardAvoidingView style={styles.container} behavior='padding'>
-
-                <StatusBarPlaceHolder/>
-
+            <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
+                <StatusBarPlaceHolder />
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
 
                     <View style={{
                         flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                        paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5}}>
+                        paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
+                    }}>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
                                 onPress={() => this.props.navigation.goBack()}>
@@ -279,8 +281,10 @@ class ChatAfterBookingDetailsScreen extends Component {
                     </View>
 
                     <ScrollView ref={ref => this.scrollView = ref}
-                        contentContainerStyle={{ justifyContent: 'center', alignItems: 'center',
-                        alwaysBounceVertical: true }}
+                        contentContainerStyle={{
+                            justifyContent: 'center', alignItems: 'center',
+                            alwaysBounceVertical: true
+                        }}
                         keyboardShouldPersistTaps='handled'
                         keyboardDismissMode='on-drag'>
 
@@ -301,49 +305,6 @@ class ChatAfterBookingDetailsScreen extends Component {
                         </View>
                     </ScrollView>
 
-                    <View style={styles.footer}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                                placeholder='Tapez un message'
-                                value={this.state.inputMessage}
-                                multiline={true}
-                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                            </TextInput>
-
-                            {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
-                                alignContent: 'center', marginRight: 25 }}
-                                onPress={this.selectPhoto.bind(this)}>
-                                <Image style={{ width: 20, height: 20 }}
-                                    source={require('../icons/camera.png')} />
-                            </TouchableOpacity>*/}
-
-                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
-                                    onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        ENVOYER
-                                    </Text>
-                            </TouchableOpacity>
-                        </View>
-                        {this.state.isJobAccepted && (
-                            <View style={{
-                                flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
-                                borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
-                            }}>
-                                <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                                <TouchableOpacity style={styles.textViewDirection}
-                                    onPress={() => this.props.navigation.navigate("MapDirection")}>
-                                    <Image style={{ width: 20, height: 20, marginLeft: 20 }}
-                                        source={require('../icons/mobile_gps.png')} />
-                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                        Fournisseur de services de suivi
-                                    </Text>
-                                    <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
-                                        source={require('../icons/right_arrow.png')} />
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
 
                     {this.state.isLoading && (
                         <View style={styles.loaderStyle}>
@@ -354,6 +315,49 @@ class ChatAfterBookingDetailsScreen extends Component {
                         </View>
                     )}
                 </ImageBackground>
+                <View style={styles.footer}>
+                    <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                    <View style={{ flex: 1, flexDirection: 'row' }}>
+                        <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
+                            placeholder='Tapez un message'
+                            value={this.state.inputMessage}
+                            multiline={true}
+                            onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                        </TextInput>
+
+                        {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
+                                alignContent: 'center', marginRight: 25 }}
+                                onPress={this.selectPhoto.bind(this)}>
+                                <Image style={{ width: 20, height: 20 }}
+                                    source={require('../icons/camera.png')} />
+                            </TouchableOpacity>*/}
+
+                        <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                            onPress={this.sendMessageTask}>
+                            <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                ENVOYER
+                                    </Text>
+                        </TouchableOpacity>
+                    </View>
+                    {this.state.isJobAccepted && (
+                        <View style={{
+                            flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
+                            borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
+                        }}>
+                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                            <TouchableOpacity style={styles.textViewDirection}
+                                onPress={() => this.props.navigation.navigate("MapDirection")}>
+                                <Image style={{ width: 20, height: 20, marginLeft: 20 }}
+                                    source={require('../icons/mobile_gps.png')} />
+                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
+                                    Fournisseur de services de suivi
+                                    </Text>
+                                <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
+                                    source={require('../icons/right_arrow.png')} />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
             </KeyboardAvoidingView>
         );
     }

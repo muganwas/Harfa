@@ -48,8 +48,6 @@ class ProChatScreen extends Component {
     constructor(props) {
         super(props)
         const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
-        console.log('data chat source', dataChatSource)
-        console.log('selected job req', user_id)
         this.state = {
             showButton: false,
             senderId: ProviderDetails.Provider.providerId,
