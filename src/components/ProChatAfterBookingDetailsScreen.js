@@ -3,19 +3,15 @@ import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator
+    BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator,
+    KeyboardAvoidingView
 } from 'react-native';
 //import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ProviderDetails from './ProviderDetails';
 import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
@@ -476,12 +472,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
 
     render() {
         const receiverImage = this.props.navigation.state.params.receiverImage;
+        let { showButton } = this.state;
         return (
-
-            <View style={styles.container}>
-
+            <KeyboardAvoidingView style={styles.container} behavior='padding'>
                 <StatusBarPlaceHolder/>
-
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
 
@@ -543,19 +537,16 @@ class ProChatAfterBookingDetailsScreen extends Component {
                                 <Image style={{ width: 20, height: 20 }}
                                     source={require('../icons/camera.png')} />
                             </TouchableOpacity>
-
-                            {this.state.showButton &&
-                                <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
+                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
                                     onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        SEND
+                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                        ENVOYER
                                     </Text>
-                                </TouchableOpacity>
-                            }
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </ImageBackground>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }

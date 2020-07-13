@@ -4,19 +4,14 @@ import { startFetchingNotification, notificationsFetched, notificationError } fr
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError } from '../Redux/Actions/jobsActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, FlatList, TextInput, Dimensions,
-    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert,
+    KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import UserDetails from './UserDetails';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-//const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
@@ -111,8 +106,8 @@ class ChatScreen extends Component {
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
-        if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced) 
-            this.setState({ dataChatSource: dataChatSource[employee_id], dataChatSourceSynced: true});     
+        if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced)
+            this.setState({ dataChatSource: dataChatSource[employee_id], dataChatSourceSynced: true });
     }
 
     componentWillUnmount() {
@@ -392,27 +387,6 @@ class ChatScreen extends Component {
                         isAcceptJob: true,
                     })
 
-                    var jobData = {
-                        id: '',
-                        order_id: '',
-                        employee_id: '',
-                        image: '',
-                        fcm_id: '',
-                        name: '',
-                        surName: '',
-                        mobile: '',
-                        description: '',
-                        address: '',
-                        lat: 0,
-                        lang: 0,
-                        service_name: '',
-                        chat_status: '',
-                        status: '',
-                        delivery_address: '',
-                        delivery_lat: 0,
-                        delivery_lang: 0
-                    }
-
                     newJobRequests.splice(currRequestPos, 1);
                     fetchedPendingJobInfo(newJobRequests);
                     this.props.navigation.navigate("DashBoard");
@@ -484,7 +458,7 @@ class ChatScreen extends Component {
             let newDataChatSource = [...dataChatSource];
             var array = [...newDataChatSource[employee_id]]; // make a separate copy of the array
             if (array.length > 0) {
-                array.splice(array.length-1, 1);
+                array.splice(array.length - 1, 1);
                 newDataChatSource[employee_id] = array;
                 fetchedMessages(newDataChatSource);
             }
@@ -601,13 +575,10 @@ class ChatScreen extends Component {
     }
 
     render() {
-        const { requestStatus } = this.state;
-
+        const { requestStatus, showButton } = this.state;
         return (
-            <View style={styles.container}>
-
+            <KeyboardAvoidingView style={styles.container} behavior="padding">
                 <StatusBarPlaceHolder />
-
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
 
@@ -630,10 +601,13 @@ class ChatScreen extends Component {
                         </View>
                     </View>
 
-                    <KeyboardAwareScrollView ref={ref => this.scrollView = ref}
+                    <ScrollView ref={ref => this.scrollView = ref}
                         contentContainerStyle={{
                             justifyContent: 'center', alignItems: 'center',
                             alwaysBounceVertical: true
+                        }}
+                        onContentSizeChange={(contentWidth, contentHeight) => {
+                            this.scrollView.scrollToEnd({ animated: true })
                         }}
                         keyboardShouldPersistTaps='handled'
                         keyboardDismissMode='on-drag'>
@@ -650,11 +624,11 @@ class ChatScreen extends Component {
                                     ItemSeparatorComponent={this.renderSeparator}
                                     ref={(ref) => { this.myFlatListRef = ref }}
                                     onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} 
+                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
                                 />
                             </View>
                         </View>
-                    </KeyboardAwareScrollView>
+                    </ScrollView>
 
                     <View style={styles.footer}>
                         <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
@@ -678,23 +652,20 @@ class ChatScreen extends Component {
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
 
-                            <TouchableOpacity style={{
+                            {/*<TouchableOpacity style={{
                                 height: 50, justifyContent: 'center', alignItems: 'center',
                                 alignContent: 'center', marginRight: 25
                             }}
                                 onPress={this.selectPhoto.bind(this)}>
                                 <Image style={{ width: 20, height: 20 }}
                                     source={require('../icons/camera.png')} />
-                            </TouchableOpacity>
-
-                            {this.state.showButton &&
-                                <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                    onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        ENVOYER
+                            </TouchableOpacity>*/}
+                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary,  height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0}}
+                                onPress={this.sendMessageTask}>
+                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                    ENVOYER
                                 </Text>
-                                </TouchableOpacity>
-                            }
+                            </TouchableOpacity>
                         </View>
                         {this.state.isJobAccepted && (
                             <View style={{
@@ -727,8 +698,7 @@ class ChatScreen extends Component {
                         </View>
                     )}
                 </ImageBackground>
-
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }

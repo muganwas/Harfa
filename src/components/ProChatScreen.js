@@ -4,18 +4,14 @@ import { startFetchingNotification, notificationsFetched, notificationError } fr
 import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform
+    BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
+    KeyboardAvoidingView
 } from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import ProviderDetails from './ProviderDetails';
 import firebase from 'react-native-firebase';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -79,7 +75,7 @@ class ProChatScreen extends Component {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    componentDidUpdate(){
+    componentDidUpdate() {
         const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
         const { isLoading } = this.state;
         const localDataChatSource = this.state.dataChatSource;
@@ -88,7 +84,7 @@ class ProChatScreen extends Component {
         console.log('local', localDataChatSource)
         console.log('up state', dataChatSource)
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
-            this.setState({ dataChatSource: dataChatSource[user_id]});
+            this.setState({ dataChatSource: dataChatSource[user_id] });
     }
 
     componentWillUnmount() {
@@ -475,16 +471,12 @@ class ProChatScreen extends Component {
     }
 
     render() {
-
+        let { showButton } = this.state;
         return (
-
-            <View style={styles.container}>
-
+            <KeyboardAvoidingView style={styles.container} behavior='padding'>
                 <StatusBarPlaceHolder />
-
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
-
                     <View style={{
                         flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                         paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
@@ -535,23 +527,20 @@ class ProChatScreen extends Component {
                                     onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                                 </TextInput>
 
-                                <TouchableOpacity style={{
+                                {/*<TouchableOpacity style={{
                                     height: 50, justifyContent: 'center', alignItems: 'center',
                                     alignContent: 'center', marginRight: 25
                                 }}
                                     onPress={this.selectPhoto.bind(this)}>
                                     <Image style={{ width: 20, height: 20 }}
                                         source={require('../icons/camera.png')} />
-                                </TouchableOpacity>
-
-                                {this.state.showButton &&
-                                    <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                        onPress={this.sendMessageTask}>
-                                        <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                            SEND
+                                </TouchableOpacity>*/}
+                                <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                                    onPress={this.sendMessageTask}>
+                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                        ENVOYER
                                     </Text>
-                                    </TouchableOpacity>
-                                }
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </ScrollView>
@@ -565,7 +554,7 @@ class ProChatScreen extends Component {
                         </View>
                     )}
                 </ImageBackground>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }
