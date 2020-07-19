@@ -42,7 +42,9 @@ const notificationReducer = (state=initialState, action) => {
                 [`${action.payload.type}Fetching`]: false
             })
         default: 
-            return state;
+            return {
+                ...state
+            }
     }
 }
 

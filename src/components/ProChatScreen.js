@@ -44,10 +44,9 @@ function StatusBarPlaceHolder() {
 const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 
 class ProChatScreen extends Component {
-
     constructor(props) {
-        super(props)
-        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        super()
+        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } }, navigation } = props;
         this.state = {
             showButton: false,
             senderId: ProviderDetails.Provider.providerId,
@@ -58,7 +57,7 @@ class ProChatScreen extends Component {
             dataChatSource: dataChatSource[user_id] || [],
             isLoading: !fetched,
             //From ProDashboardScreen && ProMapDirection
-            pageTitle: this.props.navigation.state.params.pageTitle,
+            pageTitle: navigation.state.params.pageTitle,
 
             receiverId: allJobRequestsProviders[currentPos].user_id,
             receiverName: allJobRequestsProviders[currentPos].user_details.username,
@@ -79,8 +78,6 @@ class ProChatScreen extends Component {
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
-        console.log('local', localDataChatSource)
-        console.log('up state', dataChatSource)
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[user_id] });
     }

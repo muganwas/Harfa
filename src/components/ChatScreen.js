@@ -45,9 +45,9 @@ const options = {
 
 class ChatScreen extends Component {
 
-    constructor() {
-        super()
-        const { jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched } } = this.props;
+    constructor(props) {
+        super();
+        const { jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = props;
         var currRequestPos;
         Object.keys(allJobRequestsClient).map(key => {
             const currEmpId = allJobRequestsClient[key].employee_id;
@@ -69,7 +69,7 @@ class ChatScreen extends Component {
             receiverImage: allJobRequestsClient[currRequestPos].employee_details.image,
             serviceName: allJobRequestsClient[currRequestPos].service_details.service_name,
             orderId: allJobRequestsClient[currRequestPos].order_id,
-            titlePage: this.props.navigation.state.params.titlePage,
+            titlePage: navigation.state.params.titlePage,
             dataChatSourceSynced: false
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -152,7 +152,6 @@ class ChatScreen extends Component {
     }
 
     sendMessageTask = async () => {
-
         if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
@@ -292,49 +291,52 @@ class ChatScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
-        const senderImage = item.senderImage;
-        return (
-            this.state.senderId != item.senderId
-                ?
-                item.type == 'text'
+        if (item) {
+            const senderImage = item.senderImage;
+            return (
+                this.state.senderId != item.senderId
                     ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={styles.itemLeftChatContainer}>
-                            <View style={styles.itemChatImageView}>
-                                <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
-                            </View>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
-                                </Text>
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                            <View style={styles.itemLeftChatContainer}>
+                                <View style={styles.itemChatImageView}>
+                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
+                                        source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
+                                </View>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {this.convertTime(item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-                :
-                item.type == 'text'
-                    ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={styles.itemRightChatContainer}>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{
-                                    fontSize: 8, color: 'black', textAlignVertical: 'center',
-                                    color: 'white', marginRight: 5, marginTop: 4
-                                }}>
-                                    {this.convertTime(item.time)}
-                                </Text>
+                        : null
+                    :
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                            <View style={styles.itemRightChatContainer}>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 8, color: 'black', textAlignVertical: 'center',
+                                        color: 'white', marginRight: 5, marginTop: 4
+                                    }}>
+                                        {this.convertTime(item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-        )
+                        : null
+            )
+        }
+        return;
     }
 
     renderSeparator = () => {

@@ -56,7 +56,7 @@ function StatusBarPlaceHolder() {
 class ProMyProfileScreen extends Component {
 
     constructor(props) {
-      super(props)
+      super()
 
       this.state = {
         providerId: ProviderDetails.Provider.providerId,

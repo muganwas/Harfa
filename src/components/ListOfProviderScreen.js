@@ -55,13 +55,12 @@ function StatusBarPlaceHolder() {
 
 class ListOfProviderScreen extends Component {
   constructor(props) {
-    super(props);
-
+    super();
+    const { navigation } = props;
     this.state = {
       //From DashboardScreen
-      serviceName: this.props.navigation.state.params.serviceName,
-      serviceId: this.props.navigation.state.params.serviceId,
-
+      serviceName: navigation.state.params.serviceName,
+      serviceId: navigation.state.params.serviceId,
       dataSource: [],
       distInfo: {},
       distCalculated: false,

@@ -36,7 +36,9 @@ const messagesReducer = (state=initialState, action) => {
                 fetching: false
             }
         default: 
-            return state;
+            return {
+                ...state
+            }
     }
 }
 

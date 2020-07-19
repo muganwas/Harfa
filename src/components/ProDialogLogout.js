@@ -20,7 +20,7 @@ const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 export default class ProDialogLogout extends Component {
 
     constructor(props) {
-      super(props)
+      super()
 
       this.state = {
           isLoading: false,

@@ -45,7 +45,7 @@ function StatusBarPlaceHolder() {
 
 export default class ChatWithAdminScreen extends Component {
 
-    constructor() {
+    constructor(props) {
         super();
         const senderId = ProviderDetails.Provider.providerId || UserDetails.User.userId;
         const senderName = ProviderDetails.Provider.name || UserDetails.User.username;

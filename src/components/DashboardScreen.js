@@ -62,10 +62,8 @@ function StatusBarPlaceHolder() {
 }
 
 class DashBoardScreen extends Component {
-
-    constructor() {
-        super()
-
+    constructor(props) {
+        super();
         this.state = {
             dataSource: [],
             isLoading: true,
@@ -124,7 +122,7 @@ class DashBoardScreen extends Component {
             .off('child_changed');
     }
 
-    showRejectionAlert(title, message) {
+    showRejectionAlert = (title, message) => {
         Alert.alert(
             title,
             message,
@@ -145,7 +143,7 @@ class DashBoardScreen extends Component {
         );
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -221,7 +219,7 @@ class DashBoardScreen extends Component {
         );
     }
 
-    onRefresh() {
+    onRefresh = () => {
         fetch(SERVICES_URL).
             then((response) => response.json()).
             then(responseJson => {

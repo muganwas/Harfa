@@ -46,7 +46,7 @@ function StatusBarPlaceHolder() {
 
 class ProAllMessageScreen extends Component {
 
-    constructor() {
+    constructor(props) {
         super()
         this.state = {
             isLoading: false,
@@ -66,7 +66,6 @@ class ProAllMessageScreen extends Component {
         dbRef.once('value', snapshot => {
             //const key = snapshot.key;
             const message = snapshot.val();
-
             if (message != null) {
                 dbRef.on('child_added', async val => {
                     let message = val.val();

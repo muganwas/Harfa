@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     titleText: { fontSize: 20, fontWeight: 'bold', color: 'black', textAlignVertical: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }
 })
 class Hamburger extends React.Component {
-    constructor() {
+    constructor(props) {
         super();
         this.state = {
             employeesLocationsFetched: false
@@ -81,13 +81,13 @@ class Hamburger extends React.Component {
         } = this.props;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
-
+        this.checkNoficationsAvailability();
         firebase.notifications().onNotification( async notification => {
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
             let newJobRequests = [...jobRequests];
-
+            console.log('notification --', notification)
             fetchedNotifications({ type: 'generic', value: newGenericCount });
             const { title, body, data } = notification;
 
@@ -137,7 +137,7 @@ class Hamburger extends React.Component {
                 fetchedPendingJobInfo(newJobRequests);
                 this.showToast("Demande de chat acceptée");
                 updateActiveRequest(false);
-                navigation.goBack();
+                navigation.navigate('DashBoard');
             }
             else if (title == "Chat Request Rejected") {
                 this.setState({
@@ -213,9 +213,14 @@ class Hamburger extends React.Component {
                     newArr.push(data.val());
                     const newData = [...newArr];
                     //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                    const uniqueData = Array.from(new Set(newData.map(a => {
+                        if (a)
+                            return a.time
+                        })))
                         .map(time => {
-                            return newData.find(a => a.time === time)
+                            return newData.find(a => {
+                                if (a) return a.time === time
+                            })
                         });
                     newDataChatSource[employee_id] = uniqueData;
                     fetchedMessages(newDataChatSource);
@@ -230,9 +235,15 @@ class Hamburger extends React.Component {
                     newArr.push(data.val())
                     const newData = [...newArr];
                     //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                    const uniqueData = Array.from(new Set(newData.map(a => {
+                        if (a)
+                            return a.time
+                    })))
                         .map(time => {
-                            return newData.find(a => a.time === time)
+                            return newData.find(a => {
+                                if (a)
+                                    a.time === time
+                            })
                         });
                     newDataChatSource[employee_id] = uniqueData;
                     fetchedMessages(newDataChatSource);
@@ -328,6 +339,48 @@ class Hamburger extends React.Component {
         firebase.database().ref('chatting').child(senderId).off('child_changed');
     }
 
+    checkNoficationsAvailability = async () => {
+        if (Platform.OS === 'android') {
+            try {
+              await firebase.messaging().requestPermission();
+              const fcmToken = await firebase.messaging().getToken();
+              if (fcmToken) {
+                const enabled = await firebase.messaging().hasPermission();
+                if (enabled) 
+                {
+                    console.log('FCM messaging has permission:' + enabled)
+                    firebase.notifications().onNotificationDisplayed((notification) => {
+                        // Process your notification as required
+                        // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification.
+                        const { title, body } = notification;
+                        console.log('NotificationDisplayed : ', notification);
+                    });
+                    firebase.notifications().onNotification((notification) => {
+                        const { title, body } = notification;
+                    });
+                }
+                else 
+                {
+                  try 
+                  {
+                    await firebase.messaging().requestPermission();
+                    console.log('FCM permission granted')
+                  } 
+                  catch (error)
+                   {
+                    console.log('FCM Permission Error', error);
+                   }
+                }
+              } 
+              else {
+                console.log('FCM Token not available');
+              }
+            } catch (e) {
+                console.log('Error initializing FCM', e);
+            }
+        }
+    }
+
     fetchEmployeeLocations = () => {
         const {
             fetchingOthersCoordinates,
@@ -367,7 +420,7 @@ class Hamburger extends React.Component {
     }
 
     showToast = message => {
-        Toast.show(message);
+        Toast.show(message, Toast.SHORT);
     }
 
     render() {

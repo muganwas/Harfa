@@ -46,8 +46,8 @@ function StatusBarPlaceHolder() {
 class MapDirectionScreen extends Component {
 
     constructor(props) {
-        super(props)
-        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        super()
+        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, navigation } = props;
         var currRequestPos;
         jobRequests.map((obj, key) => {
             const currEmpId = obj.employee_id;
@@ -85,7 +85,7 @@ class MapDirectionScreen extends Component {
             providerLang: jobRequests[currRequestPos].lang,
             serviceName: jobRequests[currRequestPos].service_name,
             isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
-            titlePage: this.props.navigation.state.params.titlePage,
+            titlePage: navigation.state.params.titlePage,
             mapKey: Math.random(2),
             employeeLocationFetched: othersCoordinates[employee_id] ? true : false
         };

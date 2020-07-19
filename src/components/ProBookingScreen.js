@@ -46,8 +46,7 @@ function StatusBarPlaceHolder() {
 class ProBookingScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super();
         this.state = {
             bookingCompleteData: [],
             bookingRejectData: [],
@@ -123,8 +122,6 @@ class ProBookingScreen extends Component {
         fetch(BOOKING_HISTORY + ProviderDetails.Provider.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response Booking : " + JSON.stringify(responseJson))
-
                 if(responseJson.result)
                 {
                     for(let i=0; i<responseJson.data.length; i++)
@@ -246,7 +243,6 @@ class ProBookingScreen extends Component {
     }
 
     render() {
-        console.log('pro booking screen')
         return (
             <View style={styles.container}>
 

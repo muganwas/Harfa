@@ -50,8 +50,8 @@ function StatusBarPlaceHolder() {
 class ProMapDirectionScreen extends Component {
 
     constructor(props) {
-        super(props)
-        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        super()
+        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } }, navigation } = props;
         var currentPos;
         //console.log('users Coordinates', usersCoordinates)
         jobRequestsProviders.map((obj, pos) => {
@@ -67,7 +67,7 @@ class ProMapDirectionScreen extends Component {
             destinationLng: parseFloat(othersCoordinates[user_id].longitude),
             routeCoordinates: [],
             isLoading: othersCoordinates[user_id],
-            pageTitle: this.props.navigation.state.params.pageTitle,
+            pageTitle: navigation.state.params.pageTitle,
             currentPos,
             //From ProAcceptRejectJobScreen & ProDashboardScreen
             userId: currentRequest.user_id,

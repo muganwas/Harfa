@@ -12,7 +12,7 @@ const colorPrimary = '#FFBF0F';
 
 class CustomMenuLayout extends Component {
 
-    constructor() {
+    constructor(props) {
       super()
       this.state = {
           isDialogLogoutVisible: false
@@ -29,8 +29,6 @@ class CustomMenuLayout extends Component {
     render() {
         const imageSource = ProviderDetails.Provider.imageSource; 
         const { notificationsInfo, fetchedNotifications } = this.props;
-        console.log('custom menu')
-        console.log(imageSource)
         return (
             <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
                 <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>

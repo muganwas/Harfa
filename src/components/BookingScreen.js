@@ -45,7 +45,7 @@ function StatusBarPlaceHolder() {
 class BookingScreen extends Component {
 
     constructor(props) {
-        super(props)
+        super()
 
         this.state = {
             bookingCompleteData: [],
@@ -64,7 +64,6 @@ class BookingScreen extends Component {
 
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             this.getAllBookings();

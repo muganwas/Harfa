@@ -39,7 +39,7 @@ function StatusBarPlaceHolder() {
 export default class BookingDetailsScreen extends Component {
 
   constructor(props) {
-    super(props)
+    super()
   
     this.state = {
         isLoading: false,

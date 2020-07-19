@@ -88,7 +88,9 @@ const generalReducer = (state=initialState, action) => {
             }
         }
         default: 
-            return state;
+            return {
+                ...state
+            }
     }
 }
 

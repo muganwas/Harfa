@@ -50,24 +50,24 @@ function StatusBarPlaceHolder() {
 class ProviderDetailsScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
+      super();
+      const { navigation } = props;
       this.state = {
-        providerId: this.props.navigation.state.params.providerId,
-        name: this.props.navigation.state.params.name,
-        surname: this.props.navigation.state.params.surname,
-        image: this.props.navigation.state.params.image,
+        providerId: navigation.state.params.providerId,
+        name: navigation.state.params.name,
+        surname: navigation.state.params.surname,
+        image: navigation.state.params.image,
         imageAvailable: false,
-        mobile: this.props.navigation.state.params.mobile,
-        avgRating: this.props.navigation.state.params.avgRating,
-        distance: this.props.navigation.state.params.distance,
-        address: this.props.navigation.state.params.address,
-        description: this.props.navigation.state.params.description,
-        status: this.props.navigation.state.params.status,
-        fcmId: this.props.navigation.state.params.fcmId,
-        accountType: this.props.navigation.state.params.accountType,
-        serviceName: this.props.navigation.state.params.serviceName,
-        serviceId: this.props.navigation.state.params.serviceId,
+        mobile: navigation.state.params.mobile,
+        avgRating: navigation.state.params.avgRating,
+        distance: navigation.state.params.distance,
+        address: navigation.state.params.address,
+        description: navigation.state.params.description,
+        status: navigation.state.params.status,
+        fcmId: navigation.state.params.fcmId,
+        accountType: navigation.state.params.accountType,
+        serviceName: navigation.state.params.serviceName,
+        serviceId: navigation.state.params.serviceId,
         requestStatus: '',
         isJobAccepted: false,
         isErrorToast: false,
@@ -300,10 +300,10 @@ class ProviderDetailsScreen extends Component {
     const userRef = database.ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {
-        if (result && result.key === "status" && providerId) 
+        if (result && result.key === "status" && providerId) {
             if (onlineUsers[providerId] && result.val() === '1') this.setState({status: onlineUsers[providerId].status});
             else this.setState({status: result.val()});
-        else console.log('provider id unavailable')
+        } else console.log('provider id unavailable')
     });
 
     userRef.once('value', data => {
@@ -319,7 +319,6 @@ class ProviderDetailsScreen extends Component {
             }
         }
     });
-
   }
 
   componentWillUnmount() {

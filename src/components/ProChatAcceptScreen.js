@@ -51,7 +51,8 @@ function StatusBarPlaceHolder() {
 class ProChatAcceptScreen extends Component {
 
     constructor(props) {
-        super(props)
+        super()
+        const { navigation } = props;
         /*const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
         
@@ -76,12 +77,12 @@ class ProChatAcceptScreen extends Component {
             isLoading: true,
             isErrorToast: false,
             timer: null,
-            serviceName: this.props.navigation.state.params.serviceName,
-            orderId: this.props.navigation.state.params.orderId,
-            mainId: this.props.navigation.state.params.mainId,
-            delivery_address: this.props.navigation.state.params.delivery_address,
-            delivery_lat: this.props.navigation.state.params.delivery_lat,
-            delivery_lang: this.props.navigation.state.params.delivery_lang,
+            serviceName: navigation.state.params.serviceName,
+            orderId: navigation.state.params.orderId,
+            mainId: navigation.state.params.mainId,
+            delivery_address: navigation.state.params.delivery_address,
+            delivery_lat: navigation.state.params.delivery_lat,
+            delivery_lang: navigation.state.params.delivery_lang,
             minutes_Counter: '04',
             seconds_Counter: '59',
             secondTimeLoader: ''
@@ -92,9 +93,7 @@ class ProChatAcceptScreen extends Component {
     //get UserData
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.backButtonClick);
-
         const userId = this.props.navigation.state.params.userId;
-        console.log(this.props.navigation)
         fetch(USER_GET_PROFILE + userId, {
             method: "GET",
             headers: {

@@ -45,10 +45,9 @@ function StatusBarPlaceHolder() {
 }
 
 class ProChatAfterBookingDetailsScreen extends Component {
-
-    constructor() {
+    constructor(props) {
         super();
-        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } }, navigation } = props;
         this.state = {
             showButton: false,
             senderId: ProviderDetails.Provider.providerId,
@@ -60,12 +59,12 @@ class ProChatAfterBookingDetailsScreen extends Component {
             isLoading: !fetched,
             isUploading: false,
 
-            receiverId: this.props.navigation.state.params.receiverId,
-            receiverName: this.props.navigation.state.params.receiverName,
-            receiverImage: this.props.navigation.state.params.receiverImage,
-            orderId: this.props.navigation.state.params.orderId,
-            serviceName: this.props.navigation.state.params.serviceName,
-            pageTitle: this.props.navigation.state.params.pageTitle,
+            receiverId: navigation.state.params.receiverId,
+            receiverName: navigation.state.params.receiverName,
+            receiverImage: navigation.state.params.receiverImage,
+            orderId: navigation.state.params.orderId,
+            serviceName: navigation.state.params.serviceName,
+            pageTitle: navigation.state.params.pageTitle,
         };
 
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);

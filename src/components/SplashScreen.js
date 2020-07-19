@@ -132,7 +132,7 @@ class SplashScreen extends Component {
                     .then((response) => response.json())
                     .then(async responseJson => {
                         var status;
-                        if (responseJson.result) {
+                        if (responseJson && responseJson.result) {
 
                             const id = responseJson.data.id;
                             const usersRef = database.ref(`users/${id}`);
@@ -211,7 +211,7 @@ class SplashScreen extends Component {
                 })
                     .then(response => response.json())
                     .then(responseJson => {
-                        if (responseJson.result) {
+                        if (responseJson && responseJson.result) {
                             var userData = {
                                 userId: responseJson.data.id,
                                 accountType: responseJson.data.acc_type,
