@@ -12,15 +12,10 @@ import { createAppContainer, } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
-import firebase from 'react-native-firebase';
+import Config from './Config';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
-
-import Config from './Config';
-import UserDetails from './UserDetails';
-import OnlineUsers from './OnlineUsers';
-import NetInfo from "@react-native-community/netinfo";
 import ListOfProviderScreen from './ListOfProviderScreen';
 import ProviderDetailsScreen from './ProviderDetailsScreen';
 import ChatScreen from './ChatScreen';
@@ -30,10 +25,6 @@ import SelectAddressScreen from './SelectAddressScreen';
 import PendingJobRequest from './PendingJobRequest';
 import Hamburger from './Hamburger';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { imageExists } from '../misc/helpers';
-//import {Notifications} from 'react-native-notifications';
-
-const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -69,8 +60,6 @@ class DashBoardScreen extends Component {
             isLoading: true,
             backClickCount: 0,
             isToastShow: false,
-            online: false,
-            connectivityAvailable: false,
             availabilityChecked: false,
             availabilityObj: {}
         }
@@ -83,43 +72,12 @@ class DashBoardScreen extends Component {
 
     //Get All Services
     componentDidMount() {
-        NetInfo.addEventListener(status => {
-            if (!status.isConnected) this.setState({ connectivityAvailable: false });
-            else this.setState({ connectivityAvailable: true });
-        });
-        NetInfo.fetch().then(status => {
-            if (!status.isConnected) this.setState({ connectivityAvailable: false });
-            else this.setState({ connectivityAvailable: true });
-        });
-        socket.on('connect', () => {
-            const userId = UserDetails.User.userId;
-            if (userId) {
-                socket.emit('connected', userId);
-                this.setState({ online: true });
-            }
-        });
-        socket.on('user-disconnected', users => {
-            OnlineUsers.Users = users;
-        })
-        socket.on('user-joined', users => {
-            OnlineUsers.Users = users;
-        })
-        socket.on('disconnect', info => {
-            this.setState({ online: false });
-            if (!this.state.online && this.state.connectivityAvailable) socket.open();
-        });
-        socket.open();
         this.onRefresh();
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
     }
 
     componentWillUnmount() {
-        Config.socket.close();
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-        firebase.database().ref('chatting').child(senderId).child(receiverId)
-            .off('child_changed');
-        firebase.database().ref('adminChatting').child(senderId).child(receiverId)
-            .off('child_changed');
     }
 
     showRejectionAlert = (title, message) => {

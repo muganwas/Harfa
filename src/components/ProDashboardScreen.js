@@ -24,8 +24,6 @@ import Config from './Config';
 import ProBookingScreen from './ProBookingScreen';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
-import OnlineUsers from './OnlineUsers';
-import NetInfo from "@react-native-community/netinfo";
 //import Geocoding from 'react-native-geocoding'
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
@@ -33,8 +31,6 @@ import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { imageExists } from '../misc/helpers';
 import { startFetchingJobProvider, fetchAllJobRequestsProError, fetchedAllJobRequestsPro, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
-
-const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -71,18 +67,17 @@ function StatusBarPlaceHolder() {
 }
 
 class ProDashBoardScreen extends Component {
-
     constructor(props) {
-        super(props)
-        const { jobsInfo: { dataWorkSource } } = this.props;
+        super()
+        const { jobsInfo: { dataWorkSource }, generalInfo: { online, connectivityAvailable } } = props;
         this.state = {
             isLoading: true,
             isErrorToast: false,
             mainId: '',
             reviewData: '',
             width: Dimensions.get('window').width,
-            status: ProviderDetails.Provider.status == '1' ? "ONLINE" : "OFFLINE",
-            availBackground: ProviderDetails.Provider.status == '1' ? 'green' : 'red',
+            status: online && ProviderDetails.Provider.status === "1" && connectivityAvailable ? "ONLINE" : "OFFLINE",
+            availBackground: online && ProviderDetails.Provider.status === "1"  && connectivityAvailable ? 'green' : 'red',
             dataSource: [],
             dataUserSource: [],
             dataWorkSource: dataWorkSource || [],
@@ -96,8 +91,6 @@ class ProDashBoardScreen extends Component {
             refreshing: false,
             pause: false,
             backClickCount: 0,
-            online: false,
-            connectivityAvailable: false,
             proImageAvailable: null,
         }
         this.springValue = new Animated.Value(100);
@@ -106,39 +99,9 @@ class ProDashBoardScreen extends Component {
 
     //Get All Bookings
     async componentDidMount() {
-        const { navigation, jobsInfo: { dataWorkSource, jobRequestsProviders } } = this.props;
+        const { navigation, jobsInfo: { dataWorkSource, jobRequestsProviders }, updateOnlineStatus } = this.props;
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-        NetInfo.addEventListener(state => {
-            if (!state.isConnected) this.setState({ connectivityAvailable: false });
-            else this.setState({ connectivityAvailable: true });
-        });
-        NetInfo.fetch().then(state => {
-            if (!state.isConnected) this.setState({ connectivityAvailable: false });
-            else this.setState({ connectivityAvailable: true });
-        });
-        socket.on('connect', () => {
-            const userId = ProviderDetails.Provider.providerId;
-            if (userId) {
-                socket.emit('connected', userId);
-                this.setState({ online: true });
-            }
-            console.log('connected');
-        });
-        socket.on('user-disconnected', users => {
-            console.log('someone disconnected')
-            OnlineUsers.Users = users;
-        })
-        socket.on('user-joined', users => {
-            console.log('someone connected')
-            OnlineUsers.Users = users;
-        })
-        socket.on('disconnect', info => {
-            console.log('you disconnected')
-            // console.log(info);
-            this.setState({ online: false });
-            if (!this.state.online && this.state.connectivityAvailable) socket.open();
-        })
-        socket.open();
+
         navigation.addListener('willFocus', async () => {
             this.onRefresh();
         });
@@ -147,9 +110,21 @@ class ProDashBoardScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { jobsInfo: { dataWorkSource }, fetchJobRequestHistory } = this.props;
+        const { jobsInfo: { dataWorkSource }, fetchJobRequestHistory, generalInfo: { connectivityAvailable } } = this.props;
+        const { status } = this.state;
         if (!dataWorkSource.length)
             fetchJobRequestHistory(ProviderDetails.Provider.providerId);
+        if (!connectivityAvailable && status === "ONLINE") 
+            this.setState({
+                status: "OFFLINE",
+                availBackground: "red",
+            });
+        else if (connectivityAvailable && ProviderDetails.Provider.status === "1" && status === "OFFLINE") {
+            this.setState({
+                status: "ONLINE",
+                availBackground: "green",
+            });
+        }
     }
 
     componentWillUnmount() {
@@ -184,7 +159,7 @@ class ProDashBoardScreen extends Component {
                         message.exists = exists;
                         this.setState(prevState => ({ dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true }));
                     }
-                        
+
                 })
             }
             else {
@@ -351,9 +326,8 @@ class ProDashBoardScreen extends Component {
         }
     }
 
-    updateAvailabilityInMongoDB = userData => {
-
-        fetch(PRO_INFO_UPDATE + ProviderDetails.Provider.providerId,
+    updateAvailabilityInMongoDB = async userData => {
+        await fetch(PRO_INFO_UPDATE + ProviderDetails.Provider.providerId,
             {
                 method: 'POST',
                 headers: {
@@ -362,45 +336,36 @@ class ProDashBoardScreen extends Component {
                 },
                 body: JSON.stringify(userData)
             })
-            .then((response) => response.json())
             .then((response) => {
-                //console.log("Response" + JSON.stringify(response));
-                if (response.result) {
-                    if (this.state.status == 'ONLINE') {
-                        this.setState({
-                            status: "OFFLINE",
-                            availBackground: 'red',
-                            isLoading: false,
-                            isErrorToast: false
-                        })
-                    }
-                    else if (this.state.status == 'OFFLINE') {
-                        this.setState({
-                            status: "ONLINE",
-                            availBackground: 'green',
-                            isLoading: false,
-                            isErrorToast: false
-                        })
-                    }
-                    //ToastAndroid.show(response.message, ToastAndroid.show);
-                    this.showToast(response.message)
+                return response.json()
+            })
+            .then((response) => {
+                const { result, data } = response;
+                const { generalInfo: { online } } = this.props;
+                if (result && data) {
+                    ProviderDetails.Provider.status = data.status;
+                    this.setState({
+                        status: data.status === "1" && online ? "ONLINE" : "OFFLINE",
+                        availBackground: data.status === "1" && online ? 'green' : 'red',
+                        isLoading: false,
+                        isErrorToast: false
+                    });
+                    this.showToast(response.message);
                 }
                 else {
                     this.setState({
                         isLoading: false,
                     })
                     //ToastAndroid.show(response.message, ToastAndroid.show);
-                    this.showToast(response.message)
+                    this.showToast(response.message);
                 }
             })
             .catch((error) => {
                 console.log("Error :" + error);
                 this.setState({
                     isLoading: false,
-                })
-            })
-            .done()
-
+                });
+            });
     }
 
     changeAvailabilityStaus = () => {
@@ -424,20 +389,17 @@ class ProDashBoardScreen extends Component {
         usersRef.once('value', data => {
             if (data) {
                 usersRef.update(userData).then(() => {
-                    console.log("updated");
                     this.updateAvailabilityInMongoDB(userData);
-                }).
-                    catch(e => {
-                        console.log(e.message)
-                    });
+                }).catch(e => {
+                    console.log(e.message)
+                });
             }
             else {
                 usersRef.set(userData).then(() => {
                     this.updateAvailabilityInMongoDB(userData);
-                }).
-                    catch(e => {
-                        console.log(e.message);
-                    });
+                }).catch(e => {
+                    console.log(e.message);
+                });
             }
         })
 
@@ -1014,7 +976,7 @@ class ProDashBoardScreen extends Component {
                         // ItemSeparatorComponent={this.renderSeparator}
                         />
                     </View> : null}
-                    
+
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />

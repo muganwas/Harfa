@@ -72,11 +72,9 @@ class ProviderDetailsScreen extends Component {
         isJobAccepted: false,
         isErrorToast: false,
         isLoading: false,
-       
         timer: null,
         minutes_Counter: '04',
         seconds_Counter: '59',
-
         title: '',
         body: '',
         data: '',
