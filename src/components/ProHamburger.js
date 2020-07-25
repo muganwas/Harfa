@@ -11,7 +11,8 @@ import {
     updatingOthersCoordinates,
     updateOthersCoordinatesError,
     updateConnectivityStatus,
-    updateOnlineStatus
+    updateOnlineStatus,
+    updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import geolocation from '@react-native-community/geolocation';
@@ -66,7 +67,7 @@ class Hamburger extends React.Component {
     }
 
     componentDidMount() {
-        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, fetchingOthersCoordinates, fetchedOthersCoordinates, fetchOthersCoordinatesError } = this.props;
+        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, updateLiveChatUsers } = this.props;
         const receiverId = ProviderDetails.Provider.providerId;
         this.fetchOthersLocations();
         allJobRequestsProviders.map(obj => {
@@ -212,7 +213,6 @@ class Hamburger extends React.Component {
         const { updateConnectivityStatus, updateOnlineStatus } = this.props;
 
         NetInfo.addEventListener(state => {
-            console.log('connctivity change', state.isConnected)
             updateConnectivityStatus(state.isConnected);
         });
         NetInfo.fetch().then(state => {
@@ -229,16 +229,19 @@ class Hamburger extends React.Component {
         });
         socket.on('user-disconnected', users => {
             console.log('someone disconnected')
+            updateLiveChatUsers(users);
             OnlineUsers.Users = users;
         })
         socket.on('user-joined', users => {
-            console.log('someone connected')
+            console.log('someone connected');
+            updateLiveChatUsers(users);
             OnlineUsers.Users = users;
         })
         socket.on('disconnect', info => {
             const { generalInfo: { online, connectivityAvailable } } = this.props;
             console.log('you disconnected')
             // console.log(info);
+            updateLiveChatUsers({});
             updateOnlineStatus(false)
             if (!online && connectivityAvailable) socket.open();
         })
@@ -371,6 +374,9 @@ const mapDispatchToProps = dispatch => {
         },
         updateConnectivityStatus: status => {
             dispatch(updateConnectivityStatus(status));
+        },
+        updateLiveChatUsers: val => {
+            dispatch(updateLiveChatUsers(val));
         }
     }
 }

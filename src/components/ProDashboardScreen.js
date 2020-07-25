@@ -768,7 +768,6 @@ class ProDashBoardScreen extends Component {
                 .done()
         }
         else if (item.customer_review == "Requested") {
-            console.log("You have already asked, Please wait for customer feedback");
             this.setState({
                 isErrorToast: true
             })
