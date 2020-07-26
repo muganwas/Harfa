@@ -11,7 +11,9 @@ import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
 import { imageExists } from '../misc/helpers';
+import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { cloneDeep } from 'lodash';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
 
 const colorPrimary = '#FFBF0F';
@@ -85,7 +87,9 @@ class ProviderDetailsScreen extends Component {
 
   requestForBooking = () => {
 
-      if(UserDetails.User.lang == "")
+    const { userInfo: { userDetails } } = this.props;
+
+      if(userDetails.lang == "")
       {
         this.setState({
           isErrorToast: true,
@@ -93,7 +97,7 @@ class ProviderDetailsScreen extends Component {
         this.showToast('Please update address first')
         //ToastAndroid.show("Please update address", ToastAndroid.SHORT);
       }
-      else if(UserDetails.User.mobile == '')
+      else if(userDetails.mobile == '')
       {
         this.setState({
           isErrorToast: true,
@@ -117,22 +121,22 @@ class ProviderDetailsScreen extends Component {
         })
   
         const data = {
-          'user_id': UserDetails.User.userId,
+          'user_id': userDetails.userId,
           'employee_id': this.state.providerId,
           'service_id': this.state.serviceId,
-          'delivery_address': UserDetails.User.address,
-          'delivery_lat' : UserDetails.User.lat,
-          'delivery_lang': UserDetails.User.lang,
+          'delivery_address': userDetails.address,
+          'delivery_lat' : userDetails.lat,
+          'delivery_lang': userDetails.lang,
           'notification': {
             "fcm_id": this.props.navigation.state.params.fcmId,
             "title": "Booking Request",
-            "body": 'A booking request from ' + UserDetails.User.username,
+            "body": 'A booking request from ' + userDetails.username,
             "data": {
-              userId: UserDetails.User.userId,
+              userId: userDetails.userId,
               serviceName: this.state.serviceName,
-              delivery_address: UserDetails.User.address,
-              delivery_lat : UserDetails.User.lat,
-              delivery_lang: UserDetails.User.lang,
+              delivery_address: userDetails.address,
+              delivery_lat : userDetails.lat,
+              delivery_lang: userDetails.lang,
             },
           } 
         }
@@ -338,9 +342,9 @@ class ProviderDetailsScreen extends Component {
   }
 
   goToChatScreen = () => {
-
-    data = this.state.data;
-
+    const { userInfo: { userDetails }, jobsInfo: { jobRequests }, fetchedPendingJobInfo } = this.props;
+    let newJobRequests = cloneDeep(jobRequests);
+    let data = this.state.data;
     const providerData = JSON.parse(data.ProviderData);
 
     var pendingJobData = {
@@ -359,12 +363,12 @@ class ProviderDetailsScreen extends Component {
       service_name: this.state.serviceName,
       chat_status : data.chat_status,
       status : data.status,
-      delivery_address: UserDetails.User.address,
-      delivery_lat: UserDetails.User.lat,
-      delivery_lang: UserDetails.User.lang,
+      delivery_address: userDetails.address,
+      delivery_lat: userDetails.lat,
+      delivery_lang: userDetails.lang,
     }
-    PendingJobRequest.Request = pendingJobData;
-
+    newJobRequests.push(pendingJobData);
+    fetchedPendingJobInfo(newJobRequests);
     this.props.navigation.navigate("Chat", {
       'titlePage': "ProviderDetails",
       'isJobAccepted': this.state.isJobAccepted,
@@ -564,7 +568,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -593,6 +598,12 @@ const mapDispatchToProps = dispatch => {
         },
         updateActiveRequest: val => {
           dispatch(updateActiveRequest(val));
+        },
+        updateUserDetails: details => {
+            dispatch(updateUserDetails(details));
+        },
+        updateProviderDetails: details => {
+            dispatch(updateProviderDetails(details));
         }
     }
 }

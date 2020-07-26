@@ -12,6 +12,7 @@ import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails'
 //import PendingJobRequest from './PendingJobRequest';
+import { updateUserDetails } from '../Redux/Actions/userActions';
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 
 //const colorPrimary = '#262425';
@@ -166,8 +167,7 @@ class VerificationScreen extends Component {
                         fcmId: responseJson.data.fcm_id
                     }
                     UserDetails.User = userData;
-                    console.log("UserData1: " + JSON.stringify(UserDetails.User));
-
+                    updateUserDetails(userData);
                     //Check if any Ongoing Request 
                     fetchPendingJobRequest(this.props, userId, 'Home');
                 }
@@ -186,67 +186,6 @@ class VerificationScreen extends Component {
                 //console.log(JSON.stringify(responseJson));
             });
     }
-
-    /*async getPendingJobRequest(userId)
-    {
-        const { startJobFetch, dispatchFetchedJobRequests, jobRequestFetchError } = this.props;
-        startJobFetch();
-        await fetch(PENDING_JOB+userId , {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-         })
-         .then((response) => response.json())
-         .then(responseJson => {
-            const { jobsInfo: { jobRequests } } = this.props;
-            let newJobRequest = [...jobRequests];
-            console.log("Response getPendingJobRequest: " + JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                //const id = responseJson.data.id;
-
-                var jobData = {
-                    id: responseJson.data._id,
-                    order_id: responseJson.data.order_id,
-                    employee_id: responseJson.data.employee_details._id,
-                    image: responseJson.data.employee_details.image,
-                    fcm_id: responseJson.data.employee_details.fcm_id,
-                    name: responseJson.data.employee_details.username,
-                    surName: responseJson.data.employee_details.surname,
-                    mobile: responseJson.data.employee_details.mobile,
-                    description: responseJson.data.employee_details.description,
-                    address: responseJson.data.employee_details.address,
-                    lat: responseJson.data.employee_details.lat,
-                    lang: responseJson.data.employee_details.lang,
-                    service_name: responseJson.data.service_details.service_name,
-                }
-                PendingJobRequest.Request = jobData;
-                newJobRequest.push(jobData);
-                dispatchFetchedJobRequests(newJobRequest);
-                console.log("PendingJob getPendingJobRequest : " + JSON.stringify( PendingJobRequest.Request))
-
-                this.props.navigation.navigate("Home");
-            }
-            else
-            {
-                jobRequestFetchError('no jobs were found');
-                this.props.navigation.navigate("Home");
-            }
-         })
-        .catch(error => {
-            this.setState({
-                isLoading: false
-            })
-            alert("Error "+error);
-            jobRequestFetchError(error.message)
-            console.log(JSON.stringify(responseJson));
-        });
-    }*/
 
     render() {
         return (
@@ -413,7 +352,8 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
-        jobsInfo: state.jobsInfo
+        jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -421,6 +361,9 @@ const mapDispatchToProps = dispatch => {
     return {
         fetchPendingJobRequest: (props, uid, navigateTo) => {
             dispatch(getPendingJobRequest(props, uid, navigateTo));
+        },
+        updateUserDetails: details => {
+            dispatch(updateUserDetails(details));
         }
     }
 }

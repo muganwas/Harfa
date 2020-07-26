@@ -24,6 +24,7 @@ import SelectAddressScreen from './SelectAddressScreen';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
+import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
 
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
@@ -116,7 +117,7 @@ class SplashScreen extends Component {
     }
 
     autoLogin = (userId, userType, fcmToken) => {
-        const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest } = this.props;
+        const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest, updateProviderDetails, updateUserDetails } = this.props;
         if (userId !== null) {
             this.setState({
                 isLoading: true,
@@ -168,6 +169,7 @@ class SplashScreen extends Component {
                                 accountType: responseJson.data.account_type
                             }
                             ProviderDetails.Provider = providerData;
+                            updateProviderDetails(providerData);
                             fetchJobRequestHistoryPro(userId);
                             fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
                         }
@@ -227,6 +229,7 @@ class SplashScreen extends Component {
                                 fcmId: responseJson.data.fcm_id,
                             }
                             UserDetails.User = userData;
+                            updateUserDetails(userData);
                             //Check if any Ongoing Request 
                             fetchJobRequestHistoryClient(userId);
                             fetchPendingJobRequest(this.props, userId, 'Home');
@@ -292,7 +295,8 @@ class SplashScreen extends Component {
 
 const mapStateToProps = state => {
     return {
-        jobsInfo: state.jobsInfo
+        jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -309,6 +313,12 @@ const mapDispatchToProps = dispatch => {
         },
         fetchJobRequestHistoryClient: clientId => {
             dispatch(getAllWorkRequestClient(clientId));
+        },
+        updateUserDetails: details => {
+            dispatch(updateUserDetails(details));
+        },
+        updateProviderDetails: details => {
+            dispatch(updateProviderDetails(details));
         }
     }
 }
