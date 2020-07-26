@@ -10,15 +10,23 @@ import {
     updateCoordinatesError,
     updateOthersCoordinates,
     updatingOthersCoordinates,
-    updateOthersCoordinatesError
+    updateOthersCoordinatesError,
+    updateOnlineStatus,
+    updateConnectivityStatus,
+    updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import firebase from 'react-native-firebase';
 import Toast from 'react-native-simple-toast';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
+import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
 import UserDetails from './UserDetails';
 import { imageExists } from '../misc/helpers';
 import { Notifications } from 'react-native-notifications';
+
+const socket = Config.socket;
 
 const Android = Platform.OS === 'android';
 
@@ -56,7 +64,10 @@ class Hamburger extends React.Component {
     constructor(props) {
         super();
         this.state = {
-            employeesLocationsFetched: false
+            employeesLocationsFetched: false,
+            connectivityAvailable: false,
+            availabilityChecked: false,
+            availabilityObj: {}
         }
         Notifications.events().registerRemoteNotificationsRegistered(event => {
             // TODO: Send the token to my server so it could send back push notifications...
@@ -70,28 +81,23 @@ class Hamburger extends React.Component {
     }
     componentDidMount() {
         const {
-            navigation,
-            fetchNotifications,
             fetchedNotifications,
             fetchedMessages,
-            fetchingOthersCoordinates,
-            fetchedOthersCoordinates,
-            fetchOthersCoordinatesError,
-            jobsInfo: { allJobRequestsClient }
+            jobsInfo: { allJobRequestsClient },
+            updateLiveChatUsers
         } = this.props;
         const senderId = UserDetails.User.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
+
         this.checkNoficationsAvailability();
-        firebase.notifications().onNotification( async notification => {
+
+        firebase.notifications().onNotification(async notification => {
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
             let newJobRequests = [...jobRequests];
-            console.log('notification --', notification)
             fetchedNotifications({ type: 'generic', value: newGenericCount });
             const { title, body, data } = notification;
-
-            console.log('notification', notification);
             const orderId = data.orderId;
             let pos = 0;
 
@@ -216,7 +222,7 @@ class Hamburger extends React.Component {
                     const uniqueData = Array.from(new Set(newData.map(a => {
                         if (a)
                             return a.time
-                        })))
+                    })))
                         .map(time => {
                             return newData.find(a => {
                                 if (a) return a.time === time
@@ -322,6 +328,40 @@ class Hamburger extends React.Component {
                 });
             fetchedNotifications({ type: 'adminMessages', value: adminMessageCount });
         });
+
+        const { updateOnlineStatus, updateConnectivityStatus } = this.props
+
+        NetInfo.addEventListener(status => {
+            updateConnectivityStatus(status.isConnected);
+        });
+        NetInfo.fetch().then(status => {
+            updateConnectivityStatus(status.isConnected);
+        });
+        socket.on('connect', () => {
+            const userId = UserDetails.User.userId;
+            if (userId) {
+                socket.emit('connected', userId);
+                updateOnlineStatus(true)
+            }
+        });
+        socket.on('user-disconnected', users => {
+            console.log('user disconnected');
+            updateLiveChatUsers(users);
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('user joined')
+            updateLiveChatUsers(users);
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            console.log('disconnection info --', info)
+            updateLiveChatUsers({});
+            const { generalInfo: { online, connectivityAvailable } } = this.props
+            updateOnlineStatus(false)
+            if (!online && connectivityAvailable) socket.open();
+        });
+        socket.open();
     }
 
     componentDidUpdate() {
@@ -342,39 +382,35 @@ class Hamburger extends React.Component {
     checkNoficationsAvailability = async () => {
         if (Platform.OS === 'android') {
             try {
-              await firebase.messaging().requestPermission();
-              const fcmToken = await firebase.messaging().getToken();
-              if (fcmToken) {
-                const enabled = await firebase.messaging().hasPermission();
-                if (enabled) 
-                {
-                    console.log('FCM messaging has permission:' + enabled)
-                    firebase.notifications().onNotificationDisplayed((notification) => {
-                        // Process your notification as required
-                        // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification.
-                        const { title, body } = notification;
-                        console.log('NotificationDisplayed : ', notification);
-                    });
-                    firebase.notifications().onNotification((notification) => {
-                        const { title, body } = notification;
-                    });
+                await firebase.messaging().requestPermission();
+                const fcmToken = await firebase.messaging().getToken();
+                if (fcmToken) {
+                    const enabled = await firebase.messaging().hasPermission();
+                    if (enabled) {
+                        console.log('FCM messaging has permission:' + enabled)
+                        firebase.notifications().onNotificationDisplayed((notification) => {
+                            // Process your notification as required
+                            // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification.
+                            const { title, body } = notification;
+                            console.log('NotificationDisplayed : ', notification);
+                        });
+                        firebase.notifications().onNotification((notification) => {
+                            const { title, body } = notification;
+                        });
+                    }
+                    else {
+                        try {
+                            await firebase.messaging().requestPermission();
+                            console.log('FCM permission granted')
+                        }
+                        catch (error) {
+                            console.log('FCM Permission Error', error);
+                        }
+                    }
                 }
-                else 
-                {
-                  try 
-                  {
-                    await firebase.messaging().requestPermission();
-                    console.log('FCM permission granted')
-                  } 
-                  catch (error)
-                   {
-                    console.log('FCM Permission Error', error);
-                   }
+                else {
+                    console.log('FCM Token not available');
                 }
-              } 
-              else {
-                console.log('FCM Token not available');
-              }
             } catch (e) {
                 console.log('Error initializing FCM', e);
             }
@@ -510,6 +546,15 @@ const mapDispatchToProps = dispatch => {
         },
         updateActiveRequest: val => {
             dispatch(updateActiveRequest(val));
+        },
+        updateOnlineStatus: val => {
+            dispatch(updateOnlineStatus(val));
+        },
+        updateConnectivityStatus: val => {
+            dispatch(updateConnectivityStatus(val));
+        },
+        updateLiveChatUsers: val => {
+            dispatch(updateLiveChatUsers(val));
         }
     }
 }

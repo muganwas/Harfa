@@ -10,7 +10,6 @@ import UserDetails from './UserDetails';
 import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
-import OnlineUsers from './OnlineUsers';
 import { imageExists } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
@@ -48,10 +47,10 @@ function StatusBarPlaceHolder() {
 }
 
 class ProviderDetailsScreen extends Component {
-
     constructor(props) {
       super();
-      const { navigation } = props;
+      const { navigation, generalInfo: { OnlineUsers } } = props;
+      const liveChatStatus = OnlineUsers[navigation.state.params.providerId] ? OnlineUsers[navigation.state.params.providerId].status : "0";
       this.state = {
         providerId: navigation.state.params.providerId,
         name: navigation.state.params.name,
@@ -64,6 +63,8 @@ class ProviderDetailsScreen extends Component {
         address: navigation.state.params.address,
         description: navigation.state.params.description,
         status: navigation.state.params.status,
+        online: navigation.state.params.status === "1" && liveChatStatus === "1",
+        liveChatStatus,
         fcmId: navigation.state.params.fcmId,
         accountType: navigation.state.params.accountType,
         serviceName: navigation.state.params.serviceName,
@@ -72,11 +73,9 @@ class ProviderDetailsScreen extends Component {
         isJobAccepted: false,
         isErrorToast: false,
         isLoading: false,
-       
         timer: null,
         minutes_Counter: '04',
         seconds_Counter: '59',
-
         title: '',
         body: '',
         data: '',
@@ -102,7 +101,7 @@ class ProviderDetailsScreen extends Component {
         this.showToast('Please update mobile first')
         //ToastAndroid.show("Please update your mobile number", ToastAndroid.SHORT);
       }
-      else if(this.state.status == '0')
+      else if(!this.state.online)
       {
         this.setState({
           isErrorToast: true,
@@ -271,8 +270,8 @@ class ProviderDetailsScreen extends Component {
   } 
 
   componentDidUpdate(){
-    const { jobsInfo: { activeRequest } } = this.props;
-    const { requestStatus } = this.state;
+    const { jobsInfo: { activeRequest }, generalInfo: { OnlineUsers } } = this.props;
+    const { requestStatus, liveChatStatus } = this.state;
       if(this.state.minutes_Counter == '00'){ 
         if(this.state.seconds_Counter == '00')
         {
@@ -286,15 +285,22 @@ class ProviderDetailsScreen extends Component {
       }
     if (!activeRequest && requestStatus == 'Waiting for acceptance...') 
       this.setState({requestStatus: ''});
+    const currentliveChatStatus = OnlineUsers[this.state.providerId] ? OnlineUsers[this.state.providerId].status : "0";
+    if (liveChatStatus !== currentliveChatStatus) {
+      this.setState({
+        online: this.state.status === "1" && currentliveChatStatus === "1",
+        liveChatStatus: currentliveChatStatus,
+      });
+    }
   }
 
   componentDidMount(){
     const { image } = this.props.navigation.state.params;
+    const { generalInfo: { OnlineUsers } } = this.props;
     imageExists(image).then(imageAvailable => {
       this.setState({imageAvailable});
     })
-    const onlineUsers = OnlineUsers.Users;
-
+    const onlineUsers = OnlineUsers;
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     const { providerId } = this.state;
     const userRef = database.ref(`users/${providerId}`);
@@ -358,8 +364,6 @@ class ProviderDetailsScreen extends Component {
       delivery_lang: UserDetails.User.lang,
     }
     PendingJobRequest.Request = pendingJobData;
-
-    console.log("goToChatScreen ProviderInfo : " + JSON.stringify(PendingJobRequest.Request));
 
     this.props.navigation.navigate("Chat", {
       'titlePage': "ProviderDetails",
@@ -438,9 +442,9 @@ class ProviderDetailsScreen extends Component {
           </View>
 
           <View style={styles.onlineOfflineView}>
-            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status === '1' ? colorGreen : colorRed }]}>
+            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.online ? colorGreen : colorRed }]}>
               <Text style={{color: 'white', fontWeight: 'bold',}}>
-                {this.state.status === '1' ? "ONLINE" : "OFFLINE"}</Text>
+                {this.state.online ? "ONLINE" : "OFFLINE"}</Text>
             </View>
           </View>
         </View>

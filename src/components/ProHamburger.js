@@ -9,7 +9,10 @@ import {
     updateCoordinatesError,
     updateOthersCoordinates,
     updatingOthersCoordinates,
-    updateOthersCoordinatesError
+    updateOthersCoordinatesError,
+    updateConnectivityStatus,
+    updateOnlineStatus,
+    updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import geolocation from '@react-native-community/geolocation';
@@ -18,6 +21,12 @@ import ProviderDetails from './ProviderDetails';
 import Toast from 'react-native-simple-toast';
 import { Notifications } from 'react-native-notifications';
 import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
+import Config from './Config';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
+
+const socket = Config.socket;
+
 
 const Android = Platform.OS === 'android';
 
@@ -58,7 +67,7 @@ class Hamburger extends React.Component {
     }
 
     componentDidMount() {
-        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, fetchingOthersCoordinates, fetchedOthersCoordinates, fetchOthersCoordinatesError } = this.props;
+        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, updateLiveChatUsers } = this.props;
         const receiverId = ProviderDetails.Provider.providerId;
         this.fetchOthersLocations();
         allJobRequestsProviders.map(obj => {
@@ -201,7 +210,42 @@ class Hamburger extends React.Component {
                 });
             fetchedNotifications({ type: 'adminMessages', value: adminMessageCount + 1 });
         });
+        const { updateConnectivityStatus, updateOnlineStatus } = this.props;
 
+        NetInfo.addEventListener(state => {
+            updateConnectivityStatus(state.isConnected);
+        });
+        NetInfo.fetch().then(state => {
+            updateConnectivityStatus(state.isConnected);
+        });
+
+        socket.on('connect', () => {
+            const userId = ProviderDetails.Provider.providerId;
+            if (userId) {
+                socket.emit('connected', userId);
+                updateOnlineStatus(true)
+            }
+            console.log('connected');
+        });
+        socket.on('user-disconnected', users => {
+            console.log('someone disconnected')
+            updateLiveChatUsers(users);
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('someone connected');
+            updateLiveChatUsers(users);
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            const { generalInfo: { online, connectivityAvailable } } = this.props;
+            console.log('you disconnected')
+            // console.log(info);
+            updateLiveChatUsers({});
+            updateOnlineStatus(false)
+            if (!online && connectivityAvailable) socket.open();
+        })
+        socket.open();
     }
 
     componentDidUpdate() {
@@ -325,6 +369,15 @@ const mapDispatchToProps = dispatch => {
         dispatchFetchedProJobRequests: jobs => {
             dispatch(fetchedJobProviderInfo(jobs));
         },
+        updateOnlineStatus: status => {
+            dispatch(updateOnlineStatus(status));
+        },
+        updateConnectivityStatus: status => {
+            dispatch(updateConnectivityStatus(status));
+        },
+        updateLiveChatUsers: val => {
+            dispatch(updateLiveChatUsers(val));
+        }
     }
 }
 
