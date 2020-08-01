@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions, PermissionsAndroid,
-    ActivityIndicator, BackHandler, Platform, StatusBar, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions, PermissionsAndroid, BackHandler, Platform, StatusBar, Modal} from 'react-native';
+import {connect} from 'react-redux';
 import Geolocation from 'react-native-geolocation-service';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import UserDetails from './UserDetails';
+import { updateUserDetails } from '../Redux/Actions/userActions';
 import Config from './Config';
 
 const colorPrimary = '#FFBF0F';
@@ -36,16 +36,16 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class AddAddressScreen extends Component {
+class AddAddressScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super()
+        const { userInfo: { userDetails } } = props;
         this.state = {
-            latitude: UserDetails.User.lat,
-            longitude: UserDetails.User.lang,
+            latitude: userDetails.lat,
+            longitude: userDetails.lang,
             error: null,
-            address: UserDetails.User.address,
+            address: userDetails.address,
             isLoading: true,
             isErrorToast: false,
         };
@@ -55,16 +55,13 @@ export default class AddAddressScreen extends Component {
     watchID = null;
 
     componentDidMount() {
-
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-        console.log("Address : " + UserDetails.User.address)
-
+        const { userInfo: { userDetails } } = this.props;
         if (this.state.address != '') {
             this.setState({
-                address: UserDetails.User.address,
-                latitude: UserDetails.User.lat,
-                longitude: UserDetails.User.lang,
+                address: userDetails.address,
+                latitude: userDetails.lat,
+                longitude: userDetails.lang,
                 isLoading: false
             })
         }
@@ -89,8 +86,7 @@ export default class AddAddressScreen extends Component {
     }
 
     async getCurrentLocation() {
-
-        console.log("Platform : " + Platform.OS)
+        const { updateUserDetails, userInfo: { userDetails } } = this.props
 
         if (Platform.OS == 'ios') {
             await Geolocation.requestAuthorization();
@@ -122,7 +118,7 @@ export default class AddAddressScreen extends Component {
                                 "lang": this.state.longitude,
                             }
 
-                            fetch(USER_INFO_UPDATE + UserDetails.User.userId,
+                            fetch(USER_INFO_UPDATE + userDetails.userId,
                                 {
                                     method: 'POST',
                                     headers: {
@@ -153,6 +149,7 @@ export default class AddAddressScreen extends Component {
                                             fcmId: response.data.fcm_id,
                                         }
                                         UserDetails.User = userData;
+                                        updateUserDetails(userData)
                                         //this.showToast(response.message);
                                     }
                                     else {
@@ -185,9 +182,6 @@ export default class AddAddressScreen extends Component {
         }
         else {
             const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-
-            console.log("Permission Granted : " + JSON.stringify(granted));
-
             if (granted) {
                 Geolocation.getCurrentPosition(
                     (position) => {
@@ -201,9 +195,7 @@ export default class AddAddressScreen extends Component {
                         fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + 'AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030')
                             .then((response) => response.json())
                             .then((responseJson) => {
-
-                                console.log('ADDRESS GEOCODE is BACK!! => ' + JSON.stringify(responseJson.results[0].formatted_address));
-
+                                const { userInfo: { userDetails }, updateUserDetails } = this.props;
                                 this.setState({
                                     address: responseJson.results[0].formatted_address,
                                     isLoading: false,
@@ -215,7 +207,7 @@ export default class AddAddressScreen extends Component {
                                     "lang": this.state.longitude,
                                 }
 
-                                fetch(USER_INFO_UPDATE + UserDetails.User.userId,
+                                fetch(USER_INFO_UPDATE + userDetails.userId,
                                     {
                                         method: 'POST',
                                         headers: {
@@ -226,7 +218,6 @@ export default class AddAddressScreen extends Component {
                                     })
                                     .then((response) => response.json())
                                     .then((response) => {
-                                        console.log("Response ::" + JSON.stringify(response));
                                         if (response.result) {
                                             this.setState({
                                                 isLoading: false,
@@ -246,6 +237,7 @@ export default class AddAddressScreen extends Component {
                                                 fcmId: response.data.fcm_id,
                                             }
                                             UserDetails.User = userData;
+                                            updateUserDetails(userData);
                                             //this.showToast(response.message);
                                         }
                                         else {
@@ -334,15 +326,14 @@ export default class AddAddressScreen extends Component {
 
     //Update Address to Database
     updateAddressToDatabase(latitude, longitude, address) {
-
-        console.log("UpdateAddressToDatabase");
         const userData = {
             "address": address,
             "lat": latitude,
             "lang": longitude,
-        }
+        };
+        const { userInfo: { userDetails }, updateUserDetails } = this.props;
 
-        fetch(USER_INFO_UPDATE + UserDetails.User.userId,
+        fetch(USER_INFO_UPDATE + userDetails.userId,
          {
                 method: 'POST',
                 headers: {
@@ -375,7 +366,7 @@ export default class AddAddressScreen extends Component {
                         fcmId: response.data.fcm_id,
                     }
                     UserDetails.User = userData;
-    
+                    updateUserDetails(userData)
                     this.showToast(response.message);
                 }
                 else {
@@ -466,6 +457,26 @@ export default class AddAddressScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        updateUserDetails: details => {
+            dispatch(updateUserDetails(details));
+        },
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AddAddressScreen);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -522,6 +533,4 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center'
     },
-})
-
-
+});

@@ -113,9 +113,11 @@ class BookingScreen extends Component {
             isLoading: true,
             bookingCompleteData: [],
             bookingRejectData: [],
-        })
+        });
 
-        fetch(BOOKING_HISTORY + UserDetails.User.userId)
+        const { userInfo: { userDetails } } = this.props;
+
+        fetch(BOOKING_HISTORY + userDetails.userId)
             .then((response) => response.json())
             .then((responseJson) => {
                 console.log("Response : " + JSON.stringify(responseJson))
@@ -333,21 +335,36 @@ class BookingScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        }
+    }
+}
+
 const AppStackNavigator = createStackNavigator({
     Booking: {
-        screen: connect()(BookingScreen),
+        screen: connect(mapStateToProps, mapDispatchToProps)(BookingScreen),
         navigationOptions: {
             header: null
         }
     },
     BookingDetails: {
-        screen: connect()(BookingDetailsScreen),
+        screen: connect(mapStateToProps, mapDispatchToProps)(BookingDetailsScreen),
         navigationOptions: {
             header: null,
         }
     },
     ChatAfterBookingDetails : {
-        screen: ChatAfterBookingDetailsScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen),
         navigationOptions: {
             header: null
         }

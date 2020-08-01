@@ -65,8 +65,8 @@ class AllMessageScreen extends Component {
     };
 
     componentDidMount(){
-        let dbRef = firebase.database().ref('recentMessage').child(UserDetails.User.userId);
-
+        const { userInfo: { userDetails } } = this.props;
+        let dbRef = firebase.database().ref('recentMessage').child(userDetails.userId);
         dbRef.once('value', snapshot => {
             const key = snapshot.key;
             const message = snapshot.val();
@@ -286,7 +286,8 @@ class AllMessageScreen extends Component {
 
 const mapStateToProps = state => {
     return {
-        notificationsInfo: state.notificationsInfo
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -315,7 +316,7 @@ const AppStackNavigator = createStackNavigator({
         }
     },
     ChatAfterBookingDetails: {
-        screen: ChatAfterBookingDetailsScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen),
         navigationOptions: {
             header: null
         }

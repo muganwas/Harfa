@@ -14,7 +14,7 @@ import {
   Animated,
 } from 'react-native';
 //import {NavigationActions} from 'react-navigation';
-import {DrawerActions} from 'react-navigation-drawer';
+import {connect} from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
 import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
@@ -63,20 +63,20 @@ function StatusBarPlaceHolder() {
   );
 }
 
-export default class MyProfileScreen extends Component {
+class MyProfileScreen extends Component {
   constructor(props) {
-    super(props);
-
+    super();
+    const { userInfo: { userDetails } } = props;
     this.state = {
-      userId: UserDetails.User.userId,
-      imageSource: UserDetails.User.image,
-      email: UserDetails.User.email,
-      name: UserDetails.User.username,
-      mobile: UserDetails.User.mobile,
-      dob: UserDetails.User.dob == '' ? 'Date of Birth' : UserDetails.User.dob,
-      address: UserDetails.User.address,
-      lat: UserDetails.User.lat,
-      lang: UserDetails.User.lang,
+      userId: userDetails.userId,
+      imageSource: userDetails.image,
+      email: userDetails.email,
+      name: userDetails.username,
+      mobile: userDetails.mobile,
+      dob: userDetails.dob == '' ? 'Date of Birth' : userDetails.dob,
+      address: userDetails.address,
+      lat: userDetails.lat,
+      lang: userDetails.lang,
       error: '',
       isLoading: false,
       galleryCameraImage: '',
@@ -323,10 +323,10 @@ export default class MyProfileScreen extends Component {
   };
 
   render() {
+    const { userInfo: { userDetails } } = props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
-
         <View
           style={{
             flexDirection: 'row',
@@ -438,7 +438,7 @@ export default class MyProfileScreen extends Component {
                   </View>
                   <View style={styles.buttonGreen}>
                     <Text style={styles.text}>
-                      {UserDetails.User.accountType}
+                      {userDetails.accountType}
                     </Text>
                   </View>
                 </View>
@@ -547,6 +547,29 @@ export default class MyProfileScreen extends Component {
     );
   }
 }
+
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        },
+        fetchedNotifications: data => {
+            dispatch(notificationsFetched(data));
+        },
+        fetchingNotificationsError: error => {
+            dispatch(notificationError(error));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(MyProfileScreen);
 
 const styles = StyleSheet.create({
   container: {

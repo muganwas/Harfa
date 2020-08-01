@@ -51,16 +51,16 @@ const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 class ChatAfterBookingDetailsScreen extends Component {
 
     constructor(props) {
-        super(props)
-        const { jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        super()
+        const { userInfo: { userDetails }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         Object.keys(jobRequests).map(key => {
             const currEmpId = jobRequests[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
         this.state = {
-            senderId: UserDetails.User.userId,
-            senderImage: UserDetails.User.image,
-            senderName: UserDetails.User.username,
+            senderId: userDetails.userId,
+            senderImage: userDetails.image,
+            senderName: userDetails.username,
             inputMessage: '',
             showButton: false,
             dataChatSource: this.props.messagesInfo.dataChatSource[employee_id],
@@ -430,7 +430,8 @@ const mapStateToProps = state => {
     return {
         messagesInfo: state.messagesInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

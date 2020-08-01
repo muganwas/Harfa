@@ -44,19 +44,18 @@ const options = {
 };
 
 class ChatScreen extends Component {
-
     constructor(props) {
         super();
-        const { jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = props;
+        const { userInfo: { userDetails }, jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = props;
         var currRequestPos;
         Object.keys(allJobRequestsClient).map(key => {
             const currEmpId = allJobRequestsClient[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
         });
         this.state = {
-            senderId: UserDetails.User.userId,
-            senderImage: UserDetails.User.image,
-            senderName: UserDetails.User.username,
+            senderId: userDetails.userId,
+            senderImage: userDetails.image,
+            senderName: userDetails.username,
             inputMessage: '',
             showButton: false,
             dataChatSource: dataChatSource[employee_id] || [],
@@ -72,7 +71,6 @@ class ChatScreen extends Component {
             titlePage: navigation.state.params.titlePage,
             dataChatSourceSynced: false
         }
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
@@ -113,7 +111,7 @@ class ChatScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (this.state.titlePage == 'MapDirection')
             this.props.navigation.navigate("MapDirection", {
                 titlePage: "Chat"
@@ -563,6 +561,7 @@ const mapStateToProps = state => {
     return {
         messagesInfo: state.messagesInfo,
         jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo,
         generalInfo: state.generalInfo
     }
 }

@@ -110,11 +110,11 @@ class NotificationsScreen extends Component {
 
         this.setState({
             isLoading: true
-        })
+        });
 
-        console.log("Get Notification >> ");
+        const { userInfo: { userDetails } } = this.props;
       
-        fetch(NOTIFICATION_URL + UserDetails.User.userId)
+        fetch(NOTIFICATION_URL + userDetails.userId)
             .then((response) => response.json())
             .then((responseJson) => {
 
@@ -300,7 +300,8 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
-        notificationsInfo: state.notificationsInfo
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
     }
 }
 

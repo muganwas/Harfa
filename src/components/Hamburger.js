@@ -84,9 +84,10 @@ class Hamburger extends React.Component {
             fetchedNotifications,
             fetchedMessages,
             jobsInfo: { allJobRequestsClient },
-            updateLiveChatUsers
+            updateLiveChatUsers,
+            userInfo: { userDetails },
         } = this.props;
-        const senderId = UserDetails.User.userId;
+        const senderId = userDetails.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
 
         this.checkNoficationsAvailability();
@@ -338,7 +339,7 @@ class Hamburger extends React.Component {
             updateConnectivityStatus(status.isConnected);
         });
         socket.on('connect', () => {
-            const userId = UserDetails.User.userId;
+            const userId = userDetails.userId;
             if (userId) {
                 socket.emit('connected', userId);
                 updateOnlineStatus(true)
@@ -373,7 +374,8 @@ class Hamburger extends React.Component {
     }
 
     componentWillUnmount() {
-        const senderId = UserDetails.User.userId;
+        const { userInfo: { userDetails } } = this.props;
+        const senderId = userDetails.userId;
         //const receiverId = ProviderDetails.Provider.providerId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
         firebase.database().ref('chatting').child(senderId).off('child_changed');
@@ -491,6 +493,7 @@ const mapStateToProps = state => {
         messagesInfo: state.messagesInfo,
         generalInfo: state.generalInfo,
         jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 

@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView
+    BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView
 } from 'react-native';
-//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
+import {connect} from 'react-redux';
 import ProviderDetails from './ProviderDetails';
-import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
 import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import Config from './Config';
@@ -43,13 +42,14 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ChatWithAdminScreen extends Component {
+class ChatWithAdminScreen extends Component {
 
     constructor(props) {
         super();
-        const senderId = ProviderDetails.Provider.providerId || UserDetails.User.userId;
-        const senderName = ProviderDetails.Provider.name || UserDetails.User.username;
-        const senderImage = ProviderDetails.Provider.imageSource || UserDetails.User.image;
+        const { userInfo: { userDetails, providerDetails } } = props;
+        const senderId = providerDetails.providerId || userDetails.userId;
+        const senderName = providerDetails.name || userDetails.username;
+        const senderImage = providerDetails.imageSource || userDetails.image;
         this.state = {
             senderId: senderId,
             senderName: senderName,
@@ -63,8 +63,6 @@ export default class ChatWithAdminScreen extends Component {
             receiverName: "Admin",
             receiverImage: require('../images/generic_avatar.png'),
         };
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentWillMount() {
@@ -96,7 +94,7 @@ export default class ChatWithAdminScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
@@ -300,6 +298,22 @@ export default class ChatWithAdminScreen extends Component {
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatWithAdminScreen);
 
 const styles = StyleSheet.create({
     container: {

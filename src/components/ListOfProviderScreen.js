@@ -79,9 +79,10 @@ class ListOfProviderScreen extends Component {
       'hardwareBackPress',
       this.handleBackButtonClick,
     );
+    const { userInfo: { userDetails} } = this.props;
     const data = {
-      lat: UserDetails.User.lat,
-      lang: UserDetails.User.lang,
+      lat: userDetails.lat,
+      lang: userDetails.lang,
     };
     fetch(GET_ALL_PROVIDER_URL + this.props.navigation.state.params.serviceId, {
       method: 'POST',
@@ -188,7 +189,8 @@ class ListOfProviderScreen extends Component {
   };
 
   renderItem = ({ item }) => {
-    const { accountType } = UserDetails.User;
+    const { userInfo: { userDetails } } = this.props;
+    const { accountType } = userDetails;
     const { showClasses } = this.state;
     if (accountType === 'Individual' || item.invoice === 1)/** only return providers with invoices for enterprise clients */
       return (
@@ -535,8 +537,13 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
   return {
-    generalInfo: state.generalInfo
+    generalInfo: state.generalInfo,
+    userInfo: state.userInfo
   }
 }
 
-export default connect(mapStateToProps)(ListOfProviderScreen);
+const mapDispatchToProps = dispatch => {
+  return {}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ListOfProviderScreen);
