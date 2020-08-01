@@ -80,9 +80,9 @@ class Hamburger extends React.Component {
                     newArr.push(data.val());
                     const newData = [...newArr];
                     //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                    const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
                         .map(time => {
-                            return newData.find(a => a.time === time)
+                            return newData.find(a => a ? a.time === time : null)
                         });
                     newDataChatSource[user_id] = uniqueData;
                     fetchedMessages(newDataChatSource);
@@ -96,9 +96,9 @@ class Hamburger extends React.Component {
                     newArr.push(data.val())
                     const newData = [...newArr];
                     //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                    const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
                         .map(time => {
-                            return newData.find(a => a.time === time)
+                            return newData.find(a => a ? a.time === time : null)
                         });
                     newDataChatSource[user_id] = uniqueData;
                     fetchedMessages(newDataChatSource);

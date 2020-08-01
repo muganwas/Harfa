@@ -217,7 +217,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>
@@ -233,7 +233,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>

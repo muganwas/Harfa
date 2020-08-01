@@ -34,8 +34,7 @@ const database = firebase.database();
 class SplashScreen extends Component {
 
     constructor(props) {
-        super(props);
-
+        super();
         this.state = {
             id: null,
             isLoading: false,

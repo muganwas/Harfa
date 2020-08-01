@@ -74,9 +74,9 @@ class ChatWithAdminScreen extends Component {
                     let newData = [...prevState.dataChatSource];
                     if (value.val()) 
                         newData.push(value.val());
-                    const uniqueData = Array.from(new Set(newData.map(a => a.time)))
+                    const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
                     .map(time => {
-                        return newData.find(a => a.time === time)
+                        return newData.find(a => a ? a.time === time : null)
                     });
                     return {
                         dataChatSource: [...uniqueData],
@@ -190,7 +190,7 @@ class ChatWithAdminScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>
@@ -206,7 +206,7 @@ class ChatWithAdminScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>
