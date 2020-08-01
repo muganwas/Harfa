@@ -1,19 +1,15 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions,
-    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Modal
+    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
 } from 'react-native';
 import firebase from 'react-native-firebase';
 import WaitingDialog from './WaitingDialog';
-import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
-import ProviderDetails from './ProviderDetails';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
-import ProPendingJobRequest from './ProPendingJobRequest';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -51,8 +47,8 @@ function StatusBarPlaceHolder() {
 class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
-        super(props)
-        const { jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        super()
+        const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
         var currRequestPos;
         jobRequestsProviders.map((obj, key) => {
             if (obj) {
@@ -62,10 +58,10 @@ class ProAcceptRejectJobScreen extends Component {
         });
 
         this.state = {
-            senderId: ProviderDetails.Provider.providerId,
-            senderImage: ProviderDetails.Provider.imageSource,
-            senderName: ProviderDetails.Provider.name,
-            senderSurname: ProviderDetails.Provider.surname,
+            senderId: providerDetails.providerId,
+            senderImage: providerDetails.imageSource,
+            senderName: providerDetails.name,
+            senderSurname: providerDetails.surname,
             inputMessage: '',
             showButton: false,
             isAcceptJob: jobRequestsProviders[currRequestPos].status === "Accepted",
@@ -268,11 +264,10 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     acceptJobTask = () => {
-
         this.setState({
             isLoading: true
         });
-
+        const { userInfo: { providerDetails } } = this.props;
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -280,18 +275,18 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Accepted",
-                "body": 'Your request has been accepted by ' + ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
+                "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
-                    image: ProviderDetails.Provider.imageSource,
-                    fcmId: ProviderDetails.Provider.fcmId,
-                    name: ProviderDetails.Provider.name,
-                    surname: ProviderDetails.Provider.surname,
-                    mobile: ProviderDetails.Provider.mobile,
-                    description: ProviderDetails.Provider.description,
-                    address: ProviderDetails.Provider.address,
-                    lat: ProviderDetails.Provider.lat,
-                    lang: ProviderDetails.Provider.lang,
+                    ProviderId: providerDetails.providerId,
+                    image: providerDetails.imageSource,
+                    fcmId: providerDetails.fcmId,
+                    name: providerDetails.name,
+                    surname: providerDetails.surname,
+                    mobile: providerDetails.mobile,
+                    description: providerDetails.description,
+                    address: providerDetails.address,
+                    lat: providerDetails.lat,
+                    lang: providerDetails.lang,
                     serviceName: this.state.serviceName,
                     orderId: this.state.orderId,
                     mainId: this.state.mainId,
@@ -357,7 +352,7 @@ class ProAcceptRejectJobScreen extends Component {
                             }
 
                             let updates = {};
-                            updates['tracking/' + ProPendingJobRequest.Request.order_id] = locationData;
+                            updates['tracking/' + this.props.navigation.state.params.orderId] = locationData;
                             firebase.database().ref().update(updates);
                         });
                 }
@@ -379,11 +374,10 @@ class ProAcceptRejectJobScreen extends Component {
     };
 
     rejectJobTask = () => {
-
         this.setState({
             isLoading: true
-        })
-
+        });
+        const { userInfo: { providerDetails } } = this.props;
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -391,18 +385,18 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Rejected",
-                "body": 'Your request has been rejected by ' + ProviderDetails.Provider.name + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
+                "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
-                    image: ProviderDetails.Provider.imageSource,
-                    fcmId: ProviderDetails.Provider.fcmId,
-                    name: ProviderDetails.Provider.name,
-                    surname: ProviderDetails.Provider.surname,
-                    mobile: ProviderDetails.Provider.mobile,
-                    description: ProviderDetails.Provider.description,
-                    address: ProviderDetails.Provider.address,
-                    lat: ProviderDetails.Provider.lat,
-                    lang: ProviderDetails.Provider.lang,
+                    ProviderId: providerDetails.providerId,
+                    image: providerDetails.imageSource,
+                    fcmId: providerDetails.fcmId,
+                    name: providerDetails.name,
+                    surname: providerDetails.surname,
+                    mobile: providerDetails.mobile,
+                    description: providerDetails.description,
+                    address: providerDetails.address,
+                    lat: providerDetails.lat,
+                    lang: providerDetails.lang,
                     serviceName: this.state.serviceName,
                     orderId: this.state.orderId,
                     mainId: this.state.mainId,
@@ -455,20 +449,20 @@ class ProAcceptRejectJobScreen extends Component {
     };
 
     goToMapDirection = () => {
-        const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { userInfo: { providerDetails }, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
         const { currRequestPos } = this.state;
         var newjobRequestsProviders = [...jobRequestsProviders];
         var jobData = {
-            ProviderId: ProviderDetails.Provider.providerId,
-            image: ProviderDetails.Provider.imageSource,
-            fcmId: ProviderDetails.Provider.fcmId,
-            name: ProviderDetails.Provider.name,
-            surname: ProviderDetails.Provider.surname,
-            mobile: ProviderDetails.Provider.mobile,
-            description: ProviderDetails.Provider.description,
-            address: ProviderDetails.Provider.address,
-            lat: ProviderDetails.Provider.lat,
-            lang: ProviderDetails.Provider.lang,
+            ProviderId: providerDetails.providerId,
+            image: providerDetails.imageSource,
+            fcmId: providerDetails.fcmId,
+            name: providerDetails.name,
+            surname: providerDetails.surname,
+            mobile: providerDetails.mobile,
+            description: providerDetails.description,
+            address: providerDetails.address,
+            lat: providerDetails.lat,
+            lang: providerDetails.lang,
             serviceName: this.state.serviceName,
             orderId: this.state.orderId,
             mainId: this.state.mainId,
@@ -480,9 +474,6 @@ class ProAcceptRejectJobScreen extends Component {
         }
         newjobRequestsProviders[currRequestPos] = jobData;
         fetchedPendingJobInfo(newjobRequestsProviders);
-
-        //console.log("goToMapDirection :>>> " + JSON.stringify(ProPendingJobRequest.Request))
-
         this.props.navigation.navigate("ProMapDirection", {
             'pageTitle': "ProAcceptRejectJob",
         });
@@ -708,7 +699,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

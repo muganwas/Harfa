@@ -268,7 +268,7 @@ class ProMapDirectionScreen extends Component {
 
         this.setState({isLoading: true});
 
-        const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
         const data = {
             main_id: this.state.mainId,
@@ -277,18 +277,18 @@ class ProMapDirectionScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Job Completed",
-                "body": 'Your job request has been completed by the service provder : ' + ProviderDetails.Provider.providerId,
+                "body": 'Your job request has been completed by the service provder : ' + providerDetails.providerId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
-                    image: ProviderDetails.Provider.imageSource,
-                    fcmId: ProviderDetails.Provider.fcmId,
-                    name: ProviderDetails.Provider.name,
-                    surname: ProviderDetails.Provider.surname,
-                    mobile: ProviderDetails.Provider.mobile,
-                    description: ProviderDetails.Provider.description,
-                    address: ProviderDetails.Provider.address,
-                    lat: ProviderDetails.Provider.lat,
-                    lang: ProviderDetails.Provider.lang,
+                    ProviderId: providerDetails.providerId,
+                    image: providerDetails.imageSource,
+                    fcmId: providerDetails.fcmId,
+                    name: providerDetails.name,
+                    surname: providerDetails.surname,
+                    mobile: providerDetails.mobile,
+                    description: providerDetails.description,
+                    address: providerDetails.address,
+                    lat: providerDetails.lat,
+                    lang: providerDetails.lang,
                     serviceName: this.state.serviceName,
                     orderId: this.state.orderId,
                     mainId: this.state.mainId,
@@ -336,10 +336,8 @@ class ProMapDirectionScreen extends Component {
     }
 
     jobCancelTask = () => {
-
         this.setState({isLoading: true});
-
-        const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
 
         const data = {
@@ -349,18 +347,18 @@ class ProMapDirectionScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Job Canceled",
-                "body": 'Your job request has been canceled by the service provder : ' + ProviderDetails.Provider.providerId,
+                "body": 'Your job request has been canceled by the service provder : ' + providerDetails.providerId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
-                    image: ProviderDetails.Provider.imageSource,
-                    fcmId: ProviderDetails.Provider.fcmId,
-                    name: ProviderDetails.Provider.name,
-                    surname: ProviderDetails.Provider.surname,
-                    mobile: ProviderDetails.Provider.mobile,
-                    description: ProviderDetails.Provider.description,
-                    address: ProviderDetails.Provider.address,
-                    lat: ProviderDetails.Provider.lat,
-                    lang: ProviderDetails.Provider.lang,
+                    ProviderId: providerDetails.providerId,
+                    image: providerDetails.imageSource,
+                    fcmId: providerDetails.fcmId,
+                    name: providerDetails.name,
+                    surname: providerDetails.surname,
+                    mobile: providerDetails.mobile,
+                    description: providerDetails.description,
+                    address: providerDetails.address,
+                    lat: providerDetails.lat,
+                    lang: providerDetails.lang,
                     serviceName: this.state.serviceName,
                     orderId: this.state.orderId,
                     mainId: this.state.mainId,
@@ -719,7 +717,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

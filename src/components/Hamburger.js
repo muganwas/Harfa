@@ -376,7 +376,6 @@ class Hamburger extends React.Component {
     componentWillUnmount() {
         const { userInfo: { userDetails } } = this.props;
         const senderId = userDetails.userId;
-        //const receiverId = ProviderDetails.Provider.providerId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
         firebase.database().ref('chatting').child(senderId).off('child_changed');
     }

@@ -46,12 +46,18 @@ const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 class ProChatScreen extends Component {
     constructor(props) {
         super()
-        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } }, navigation } = props;
+        const {
+            messagesInfo: { dataChatSource, fetched },
+            navigation: { state: { params: { currentPos } } },
+            jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } },
+            navigation,
+            userInfo: { providerDetails }
+        } = props;
         this.state = {
             showButton: false,
-            senderId: ProviderDetails.Provider.providerId,
-            senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
-            senderImage: ProviderDetails.Provider.imageSource,
+            senderId: providerDetails.providerId,
+            senderName: providerDetails.name + " " + providerDetails.surname,
+            senderImage: providerDetails.imageSource,
             inputMessage: '',
             showButton: false,
             dataChatSource: dataChatSource[user_id] || [],
@@ -293,16 +299,16 @@ class ProChatScreen extends Component {
                         </View>
                     )}
                     <View style={styles.footer}>
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                            <View style={{ flex: 1, flexDirection: 'row' }}>
-                                <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                                    placeholder='Type a message'
-                                    value={this.state.inputMessage}
-                                    multiline={true}
-                                    onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                                </TextInput>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
+                                placeholder='Type a message'
+                                value={this.state.inputMessage}
+                                multiline={true}
+                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                            </TextInput>
 
-                                {/*<TouchableOpacity style={{
+                            {/*<TouchableOpacity style={{
                                     height: 50, justifyContent: 'center', alignItems: 'center',
                                     alignContent: 'center', marginRight: 25
                                 }}
@@ -310,14 +316,14 @@ class ProChatScreen extends Component {
                                     <Image style={{ width: 20, height: 20 }}
                                         source={require('../icons/camera.png')} />
                                 </TouchableOpacity>*/}
-                                <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
-                                    onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        ENVOYER
+                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                                onPress={this.sendMessageTask}>
+                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                    ENVOYER
                                     </Text>
-                                </TouchableOpacity>
-                            </View>
+                            </TouchableOpacity>
                         </View>
+                    </View>
                 </ImageBackground>
             </KeyboardAvoidingView>
         );
@@ -388,7 +394,8 @@ const mapStateToProps = state => {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
         messagesInfo: state.messagesInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

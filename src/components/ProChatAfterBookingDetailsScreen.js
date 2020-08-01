@@ -47,12 +47,18 @@ function StatusBarPlaceHolder() {
 class ProChatAfterBookingDetailsScreen extends Component {
     constructor(props) {
         super();
-        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } }, navigation } = props;
+        const { 
+            messagesInfo: { dataChatSource, fetched }, 
+            navigation: { state: { params: { currentPos } } }, 
+            jobsInfo: { selectedJobRequest: { user_id } }, 
+            navigation,
+            userInfo: { providerDetails }
+        } = props;
         this.state = {
             showButton: false,
-            senderId: ProviderDetails.Provider.providerId,
-            senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
-            senderImage: ProviderDetails.Provider.imageSource,
+            senderId: providerDetails.providerId,
+            senderName: providerDetails.name + " " + providerDetails.surname,
+            senderImage: providerDetails.imageSource,
             inputMessage: '',
             showButton: false,
             dataChatSource: dataChatSource[user_id] || [],
@@ -382,7 +388,8 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
-        messagesInfo: state.messagesInfo
+        messagesInfo: state.messagesInfo,
+        userInfo: state.userInfo
     }
 }
 

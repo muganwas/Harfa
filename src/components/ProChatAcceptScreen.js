@@ -1,16 +1,12 @@
 import React, { Component } from 'react';
 import {
-    View, StyleSheet, Text, TouchableOpacity, Image, ToastAndroid, Dimensions,
+    View, StyleSheet, Text, TouchableOpacity, Image, Dimensions,
     BackHandler, StatusBar, Platform, Modal
 } from 'react-native';
-//import SlidingPanel from 'react-native-sliding-up-down-panels';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import firebase from 'react-native-firebase';
-import ProviderDetails from './ProviderDetails';
 import WaitingDialog from './WaitingDialog';
 import Toast from 'react-native-simple-toast';
-import ProPendingJobRequest from './ProPendingJobRequest';
 import Config from './Config';
 import { getDistance } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
@@ -103,14 +99,8 @@ class ProChatAcceptScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-
-                console.log("ProChatAccept autoLogin: " + JSON.stringify(responseJson));
-
                 if (responseJson.result) {
                     const id = responseJson.data.id;
-
-                    console.log("Response : " + JSON.stringify(responseJson.data));
-
                     this.setState({
                         userId: responseJson.data.id,
                         userName: responseJson.data.username,
@@ -134,12 +124,9 @@ class ProChatAcceptScreen extends Component {
                         catch(e => {
                             console.log(e.message);
                         });
-                    console.log(responseJson.data)
                     this.interval = setInterval(() => {
-
                         var num = (Number(this.state.seconds_Counter) - 1).toString(),
                             count = this.state.minutes_Counter;
-
                         if (Number(this.state.seconds_Counter) == 0) {
                             count = (Number(this.state.minutes_Counter) - 1).toString();
                             num = '59';
@@ -210,7 +197,6 @@ class ProChatAcceptScreen extends Component {
                     seconds_Counter: '59',
                     requestStatus: 'No Response',
                 });
-
                 this.rejectedAfterNoResponse();
             }
         }
@@ -222,11 +208,10 @@ class ProChatAcceptScreen extends Component {
         return true;
     }
 
-    //Accept Chat Request
     acceptJob = () => {
         clearInterval(this.interval);
         song.stop(() => { });
-
+        const { userInfo: { providerDetails } } = this.props;
         this.setState({
             isLoading: true,
         });
@@ -238,9 +223,9 @@ class ProChatAcceptScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Chat Request Accepted",
-                "body": 'Chat request has been accepted by ' + ProviderDetails.Provider.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
+                "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
-                    ProviderData: ProviderDetails.Provider,
+                    ProviderData: providerDetails,
                     serviceName: this.state.serviceName,
                     orderId: this.props.navigation.state.params.orderId,
                     mainId: this.props.navigation.state.params.mainId,
@@ -316,6 +301,7 @@ class ProChatAcceptScreen extends Component {
     }
 
     rejectJob = () => {
+        const { userInfo: { providerDetails } } = this.props;
         const data = {
             main_id: this.props.navigation.state.params.mainId,
             chat_status: '0',
@@ -323,9 +309,9 @@ class ProChatAcceptScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Chat Request Rejected",
-                "body": 'Your request has been rejected by ' + ProviderDetails.Provider.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
+                "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
+                    ProviderId: providerDetails.providerId,
                     serviceName: this.state.serviceName,
                     orderId: this.props.navigation.state.params.orderId,
                     mainId: this.props.navigation.state.params.mainId,
@@ -335,7 +321,7 @@ class ProChatAcceptScreen extends Component {
 
         this.setState({
             isLoading: true,
-        })
+        });
 
         fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
@@ -374,6 +360,7 @@ class ProChatAcceptScreen extends Component {
     }
 
     rejectedAfterNoResponse() {
+        const { userInfo: { providerDetails } } = this.props;
         const data = {
             main_id: this.props.navigation.state.params.mainId,
             chat_status: '0',
@@ -381,9 +368,9 @@ class ProChatAcceptScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "No Response",
-                "body": ProviderDetails.Provider.name + " is not responding to your request" + ' Request Id : ' + this.props.navigation.state.params.orderId,
+                "body": providerDetails.name + " is not responding to your request" + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
+                    ProviderId: providerDetails.providerId,
                     serviceName: this.state.serviceName,
                     orderId: this.props.navigation.state.params.orderId,
                     mainId: this.props.navigation.state.params.mainId,
@@ -442,6 +429,7 @@ class ProChatAcceptScreen extends Component {
     }
 
     render() {
+        const { userInfo: { providerDetails } } = this.props;
         return (
             <View style={styles.container}>
 
@@ -473,7 +461,7 @@ class ProChatAcceptScreen extends Component {
 
                             <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, }}>
                                 <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>salut,</Text>
-                                <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname}</Text>
+                                <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
                             </View>
 
                             <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginLeft: 20, marginRight: 20 }}>
@@ -539,7 +527,7 @@ class ProChatAcceptScreen extends Component {
 
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
                         <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hi,</Text>
-                        <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname}</Text>
+                        <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
                     </View>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
@@ -686,7 +674,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

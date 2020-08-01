@@ -11,7 +11,6 @@ import Polyline from '@mapbox/polyline';
 import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import UserDetails from './UserDetails';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import Config from './Config';
 

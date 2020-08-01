@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
-import { View, StyleSheet, ScrollView,Dimensions, TouchableOpacity, Image, Text, FlatList,
-     ActivityIndicator, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
-import {createAppContainer,} from 'react-navigation';     
+import { View, StyleSheet,Dimensions, TouchableOpacity, Image, Text, FlatList, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
+import {createAppContainer} from 'react-navigation';     
 import {createStackNavigator} from 'react-navigation-stack';
-//import { DrawerActions } from 'react-navigation-drawer';
+import {connect} from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
 import WaitingDialog from './WaitingDialog';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
@@ -13,7 +12,6 @@ import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
-import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 
 const colorPrimary = '#FFBF0F';
@@ -117,9 +115,9 @@ class ProBookingScreen extends Component {
             isLoading: true,
             bookingCompleteData: [],
             bookingRejectData: [],
-        })
-
-        fetch(BOOKING_HISTORY + ProviderDetails.Provider.providerId)
+        });
+        const { userInfo: { providerDetails } } = this.props;
+        fetch(BOOKING_HISTORY + providerDetails.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
                 if(responseJson.result)
@@ -331,9 +329,16 @@ class ProBookingScreen extends Component {
     }
 }
 
+const mapStateToProps = state => ({
+    userInfo: state.userInfo
+});
+
+const mapDispatchToProps = dispatch => ({
+});
+
 const AppStackNavigator = createStackNavigator({
     ProBooking: {
-        screen: ProBookingScreen,
+        screen: connect(mapStateToProps, mapStateToProps)(ProBookingScreen),
         navigationOptions: {
             header: null
         }

@@ -62,7 +62,8 @@ class ProAllMessageScreen extends Component {
 
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
-        let dbRef = firebase.database().ref('recentMessage').child(ProviderDetails.Provider.providerId);
+        const { userInfo: { providerDetails } } = this.props;
+        let dbRef = firebase.database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', snapshot => {
             //const key = snapshot.key;
             const message = snapshot.val();
@@ -290,7 +291,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

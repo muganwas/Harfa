@@ -14,6 +14,7 @@ import { GoogleSignin, statusCodes } from '@react-native-community/google-signin
 import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
+import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
@@ -152,9 +153,8 @@ class FacebookGoogleScreen extends Component {
         })
 
         firebase.messaging().getToken().then((fcmToken) => {
-            console.log("RegisterTask FCM ID " + fcmToken);
+            const { updateProviderDetails } = this.props;
             const { fetchProvidersJobRequests, fetchJobRequestHistory } = this.props;
-
             if (fcmToken) {
 
                 const userData = {
@@ -220,7 +220,7 @@ class FacebookGoogleScreen extends Component {
                                 accountType: responseJson.data.account_type
                             }
                             ProviderDetails.Provider = providerData;
-
+                            updateProviderDetails(providerData);
                             //Store data like sharedPreference
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'Provider');
@@ -308,15 +308,13 @@ class FacebookGoogleScreen extends Component {
         })
 
         firebase.messaging().getToken().then((fcmToken) => {
-
+            const { updateProviderDetails } = this.props;
             if (fcmToken) {
-
                 const data = {
                     "email": this.state.email,
                     "password": this.state.password,
                     "fcm_id": fcmToken
                 }
-                console.log("Data: " + JSON.stringify(data));
 
                 fetch(AUTHENTICATE_URL,
                     {
@@ -329,7 +327,6 @@ class FacebookGoogleScreen extends Component {
                     })
                     .then((response) => response.json())
                     .then((responseJson) => {
-                        console.log("Response Register" + JSON.stringify(responseJson));
                         if (responseJson.result) {
                             this.setState({
                                 isLoading: false,
@@ -356,11 +353,10 @@ class FacebookGoogleScreen extends Component {
                                 accountType: responseJson.data.account_type
                             }
                             ProviderDetails.Provider = providerData;
-
+                            updateProviderDetails(providerData);
                             //Store data like sharedPreference
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'Provider');
-
                             fetchJobRequestHistory(id);
                             fetchProvidersJobRequests(this.props, id, "ProHome");
                         }
@@ -540,7 +536,8 @@ class FacebookGoogleScreen extends Component {
 
 const mapStateToProps = state => {
     return {
-        jobsInfo: state.jobsInfo
+        jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -551,6 +548,9 @@ const mapDispatchToProps = dispatch => {
         },
         fetchJobRequestHistory: providerId => {
             dispatch(getAllWorkRequestPro(providerId));
+        },
+        updateProviderDetails: details => {
+            dispatch(updateProviderDetails(details));
         }
     }
 }

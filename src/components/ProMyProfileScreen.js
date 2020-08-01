@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
-import {View, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, TextInput, Animated,
-    Text, ActivityIndicator, ToastAndroid, BackHandler, StatusBar, Platform, Modal,} from 'react-native';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import {
+    View, StyleSheet, TouchableOpacity, Image, Dimensions, TextInput, Animated,
+    Text, ToastAndroid, BackHandler, StatusBar, Platform, Modal,
+} from 'react-native';
+import { createAppContainer, } from 'react-navigation';
+import { connect } from 'react-redux';
+import { createStackNavigator } from 'react-navigation-stack';
 import RNExitApp from 'react-native-exit-app';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
-import { DrawerActions } from 'react-navigation-drawer';
 import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
@@ -17,6 +19,7 @@ import SelectAddressScreen from './SelectAddressScreen';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 //const bgColor = '#E8EEE9';
 //const colorPrimary = '#262425';
@@ -32,52 +35,53 @@ const options = {
     quality: 1
 };
 
-const PRO_GET_PROFILE = Config.baseURL+"employee/";
-const PRO_IMAGE_UPDATE = Config.baseURL+"employee/upload/";
-const PRO_INFO_UPDATE = Config.baseURL+"employee/";
+const PRO_GET_PROFILE = Config.baseURL + "employee/";
+const PRO_IMAGE_UPDATE = Config.baseURL + "employee/upload/";
+const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
 class ProMyProfileScreen extends Component {
 
     constructor(props) {
-      super()
-
-      this.state = {
-        providerId: ProviderDetails.Provider.providerId,
-        imageSource: ProviderDetails.Provider.imageSource,
-        email: ProviderDetails.Provider.email,
-        name: ProviderDetails.Provider.name,
-        surname: ProviderDetails.Provider.surname,
-        mobile: ProviderDetails.Provider.mobile,
-        services: '',
-        description: ProviderDetails.Provider.description,
-        address: ProviderDetails.Provider.address,
-        error: '',
-        invoice: ProviderDetails.Provider.invoice,
-        isLoading: true,
-        isErrorToast: false,
-        galleryCameraImage: '',
-        accountType: ProviderDetails.Provider.accountType,
-        backClickCount: 0
-    }
-      this.springValue = new Animated.Value(100);
-      this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+        super()
+        const { userInfo: { providerDetails } } = this.props;
+        this.state = {
+            providerId: providerDetails.providerId,
+            imageSource: providerDetails.imageSource,
+            email: providerDetails.email,
+            name: providerDetails.name,
+            surname: providerDetails.surname,
+            mobile: providerDetails.mobile,
+            services: '',
+            description: providerDetails.description,
+            address: providerDetails.address,
+            error: '',
+            invoice: providerDetails.invoice,
+            isLoading: true,
+            isErrorToast: false,
+            galleryCameraImage: '',
+            accountType: providerDetails.accountType,
+            backClickCount: 0
+        }
+        this.springValue = new Animated.Value(100);
+        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     selectPhoto = () => {
@@ -97,38 +101,31 @@ class ProMyProfileScreen extends Component {
                     imageSource: source,
                     error: '',
                     galleryCameraImage: 'galleryCamera',
-                    isLoading : true
+                    isLoading: true
                 });
                 AsyncStorage.getItem('userId')
-                .then((providerId) => this.updateImageTask(providerId, response));
+                    .then((providerId) => this.updateImageTask(providerId, response));
             }
         });
     }
-    
-    componentDidMount = () => {
-    
-    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-       
-    // AsyncStorage.getItem('userId')
-    // .then((providerId) => this.getProfile(providerId));
 
+    componentDidMount = () => {
+
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        const { userInfo: { providerDetails } } = this.props;
         this.setState({
             isLoading: false
-        })
-
-        var services = JSON.parse(ProviderDetails.Provider.services);
+        });
+        var services = JSON.parse(providerDetails.services);
         var serviceName = '';
 
-        for(i=0; i<services.length; i++){
-            serviceName = serviceName+services[i].service_name+", ";
+        for (i = 0; i < services.length; i++) {
+            serviceName = serviceName + services[i].service_name + ", ";
         }
 
         this.setState({
             services: serviceName
         })
-
-        console.log("ProviderData : "+JSON.stringify(ProviderDetails.Provider));
-        console.log("ServicesName : "+serviceName);
     }
 
     componentWillUnmount() {
@@ -170,71 +167,69 @@ class ProMyProfileScreen extends Component {
     }
 
     //getProfile no need
-    getProfile(providerId){
+    getProfile(providerId) {
 
-        if (providerId !== null){
+        if (providerId !== null) {
             this.setState({
                 isLoading: true
             })
-            fetch(PRO_GET_PROFILE+providerId , {
+            fetch(PRO_GET_PROFILE + providerId, {
                 method: "GET",
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                })
+            })
                 .then((response) => response.json())
                 .then((responseJson) => {
-                
-                console.log(JSON.stringify(responseJson));
-            
-                if(responseJson.result)
-                {
-                    this.setState({
-                        providerId: responseJson.data.id,
-                        imageSource: responseJson.data.image,
-                        name: responseJson.data.username,
-                        surname: responseJson.data.surname,
-                        mobile: responseJson.data.mobile,
-                        services: responseJson.data.services,
-                        description: responseJson.data.description,
-                        address: responseJson.data.address,
-                        lat: responseJson.data.lat,
-                        lang: responseJson.data.lang,
-                        invoice: responseJson.data.invoice,
-                        isLoading: false
-                    })
-                }
-                else
-                {
-                    ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
-                    this.setState({
-                        isLoading: false
-                    })
-                }
-            })
-            .catch((error) => {
-                alert("Error "+error);
-                this.setState({
-                    isLoading: false
+
+                    console.log(JSON.stringify(responseJson));
+
+                    if (responseJson.result) {
+                        this.setState({
+                            providerId: responseJson.data.id,
+                            imageSource: responseJson.data.image,
+                            name: responseJson.data.username,
+                            surname: responseJson.data.surname,
+                            mobile: responseJson.data.mobile,
+                            services: responseJson.data.services,
+                            description: responseJson.data.description,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            invoice: responseJson.data.invoice,
+                            isLoading: false
+                        })
+                    }
+                    else {
+                        ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+                        this.setState({
+                            isLoading: false
+                        })
+                    }
                 })
-            });
+                .catch((error) => {
+                    alert("Error " + error);
+                    this.setState({
+                        isLoading: false
+                    })
+                });
         }
     }
 
-    getDataFromServiceScreen=(data)=> {
-        console.log("Data : "+data);
+    getDataFromServiceScreen = (data) => {
+        console.log("Data : " + data);
 
         var data = data.split("/")
         this.setState({
             serviceId: data[0],
             services: data[1],
         })
-    } 
+    }
 
-    getDataFromAddAddressScreen=(data)=> {
-       
-        console.log("Data : "+data);
+    getDataFromAddAddressScreen = (data) => {
+
+        console.log("Data : " + data);
 
         var data = data.split("/")
         this.setState({
@@ -251,7 +246,7 @@ class ProMyProfileScreen extends Component {
         })
 
         AsyncStorage.getItem('userId')
-       .then((providerId) => this.updateInformation(providerId))
+            .then((providerId) => this.updateInformation(providerId))
     }
 
     //Information Update
@@ -259,7 +254,7 @@ class ProMyProfileScreen extends Component {
 
         const userData = {
             "username": this.state.name,
-            "surname": '', 
+            "surname": '',
             "mobile": this.state.mobile,
             "services": this.state.serviceId,
             "description": this.state.description,
@@ -267,22 +262,21 @@ class ProMyProfileScreen extends Component {
             "lat": this.state.lat,
             "lang": this.state.lang,
             "invoice": this.state.invoice,
-         }
-    
-        fetch(PRO_INFO_UPDATE+providerId,
-            { 
+        }
+
+        fetch(PRO_INFO_UPDATE + providerId,
+            {
                 method: 'POST',
                 headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body : JSON.stringify(userData)
-        })
-            .then((response) => response.json())       
-            .then((response) => { 
-                console.log("Response" +JSON.stringify(response)); 
-                if(response.result)
-                {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then((response) => response.json())
+            .then((response) => {
+                console.log("Response" + JSON.stringify(response));
+                if (response.result) {
                     this.setState({
                         isLoading: false,
                         isErrorToast: false,
@@ -290,8 +284,7 @@ class ProMyProfileScreen extends Component {
                     //ToastAndroid.show(response.message, ToastAndroid.show);
                     this.showToast(response.message);
                 }
-                else
-                {
+                else {
                     this.setState({
                         isLoading: false,
                         isErrorToast: true
@@ -301,7 +294,7 @@ class ProMyProfileScreen extends Component {
                 }
             })
             .catch((error) => {
-                console.log("Error :"+ error);
+                console.log("Error :" + error);
                 this.setState({
                     isLoading: false,
                     isErrorToast: true
@@ -313,53 +306,52 @@ class ProMyProfileScreen extends Component {
 
     //Image Update
     updateImageTask(providerId, imageObject) {
-        
-        console.log("ImageObjectURI : "+imageObject.uri);
+
+        console.log("ImageObjectURI : " + imageObject.uri);
 
         let imageData = new FormData();
-        imageData.append('image', {type:imageObject.type, uri: imageObject.uri, name: imageObject.fileName});
+        imageData.append('image', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
 
-        console.log("ImageData : "+JSON.stringify(imageData));
+        console.log("ImageData : " + JSON.stringify(imageData));
 
-        fetch(PRO_IMAGE_UPDATE+providerId,
-        { 
-            method: 'POST',
-            headers:{  
-                "Content-Type": "multipart/form-data",
-                "otherHeader": "foo",
-        },
-        body : imageData} )
-        .then((response) => response.json())       
-        .then((response) => { 
-            console.log("Response" +JSON.stringify(response)); 
-            if(response.result)
+        fetch(PRO_IMAGE_UPDATE + providerId,
             {
-                this.setState({
-                    isLoading: false,
-                    isErrorToast: false
-                })
-                //ToastAndroid.show("Image Updated Successfully", ToastAndroid.show);
-                this.showToast(response.message);
-            }
-            else
-            {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "otherHeader": "foo",
+                },
+                body: imageData
+            })
+            .then((response) => response.json())
+            .then((response) => {
+                console.log("Response" + JSON.stringify(response));
+                if (response.result) {
+                    this.setState({
+                        isLoading: false,
+                        isErrorToast: false
+                    })
+                    //ToastAndroid.show("Image Updated Successfully", ToastAndroid.show);
+                    this.showToast(response.message);
+                }
+                else {
+                    this.setState({
+                        isLoading: false,
+                        isErrorToast: true
+                    })
+                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
+                    this.showToast(response.message);
+                }
+            })
+            .catch((error) => {
+                console.log("Error :" + error);
                 this.setState({
                     isLoading: false,
                     isErrorToast: true
                 })
-                //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-                this.showToast(response.message);
-            }
-        })
-        .catch((error) => {
-            console.log("Error :"+ error);
-            this.setState({
-                isLoading: false,
-                isErrorToast: true
+                this.showToast("Something went wrong");
             })
-            this.showToast("Something went wrong");
-        })
-        .done()
+            .done()
     }
 
     showToast = (message) => {
@@ -372,139 +364,146 @@ class ProMyProfileScreen extends Component {
         })
     }
 
-  render() {
-    return (
-        <View style={styles.container}>
+    render() {
+        return (
+            <View style={styles.container}>
 
-            <StatusBarPlaceHolder/>
-            
-            <View style={styles.header} >
-                <Hamburger 
-                    Notifications={Notifications}
-                    navigation={this.props.navigation}
-                    text='Mon Profil'
-                />
-            </View>
+                <StatusBarPlaceHolder />
 
-            <KeyboardAwareScrollView contentContainerStyle={{
-                flexGrow: 1, justifyContent: 'center',
-                alignItems: 'center', alwaysBounceVertical: true
-            }}
-                keyboardShouldPersistTaps='handled'
-                keyboardDismissMode='on-drag'>
+                <View style={styles.header} >
+                    <Hamburger
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Mon Profil'
+                    />
+                </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <KeyboardAwareScrollView contentContainerStyle={{
+                    flexGrow: 1, justifyContent: 'center',
+                    alignItems: 'center', alwaysBounceVertical: true
+                }}
+                    keyboardShouldPersistTaps='handled'
+                    keyboardDismissMode='on-drag'>
 
-                    <View style={{ flex: 0.35, width: screenWidth, backgroundColor: colorYellow, 
-                        justifyContent: 'center', alignItems: 'center', }}>
-                        <Image
-                            style={{ width: 100, height: 100, borderRadius: 100, marginTop: 20 }}
-                            source={
-                                this.state.galleryCameraImage == '' ? 
-                                this.state.imageSource ? 
-                                {uri: this.state.imageSource} : 
-                                require('../images/generic_avatar.png') :
-                                this.state.imageSource
-                            }/>
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 
-                        <TouchableOpacity style={{
-                            width: 40, height: 40, alignSelf: 'flex-end', alignContent: 'center', justifyContent: 'center', borderRadius: 50, backgroundColor: '#fff',
-                            margin: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                            shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,}}
-                            onPress={this.selectPhoto.bind(this)}>
+                        <View style={{
+                            flex: 0.35, width: screenWidth, backgroundColor: colorYellow,
+                            justifyContent: 'center', alignItems: 'center',
+                        }}>
+                            <Image
+                                style={{ width: 100, height: 100, borderRadius: 100, marginTop: 20 }}
+                                source={
+                                    this.state.galleryCameraImage == '' ?
+                                        this.state.imageSource ?
+                                            { uri: this.state.imageSource } :
+                                            require('../images/generic_avatar.png') :
+                                        this.state.imageSource
+                                } />
 
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                source={require('../icons/camera.png')} />
-                        </TouchableOpacity>
-                    </View>
+                            <TouchableOpacity style={{
+                                width: 40, height: 40, alignSelf: 'flex-end', alignContent: 'center', justifyContent: 'center', borderRadius: 50, backgroundColor: '#fff',
+                                margin: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                                shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
+                            }}
+                                onPress={this.selectPhoto.bind(this)}>
 
-                    <View style={styles.logincontainer}>
+                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                    source={require('../icons/camera.png')} />
+                            </TouchableOpacity>
+                        </View>
 
-                        <ShakingText style={{ color: 'red', fontWeight: 'bold', marginBottom: 10 }}>
-                            {this.state.error}
-                        </ShakingText>
+                        <View style={styles.logincontainer}>
 
-                        <View style={{width: screenWidth - 50, height: 50, justifyContent: 'center',
-                            marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'}}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
-                                <View style={styles.buttonPrimaryDark}>
-                                    <Text style={styles.text}>Account Type</Text>
-                                </View>
-                                <View style={styles.buttonGreen}>
-                                    <Text style={styles.text}>{this.state.accountType}</Text>
+                            <ShakingText style={{ color: 'red', fontWeight: 'bold', marginBottom: 10 }}>
+                                {this.state.error}
+                            </ShakingText>
+
+                            <View style={{
+                                width: screenWidth - 50, height: 50, justifyContent: 'center',
+                                marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'
+                            }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
+                                    <View style={styles.buttonPrimaryDark}>
+                                        <Text style={styles.text}>Account Type</Text>
+                                    </View>
+                                    <View style={styles.buttonGreen}>
+                                        <Text style={styles.text}>{this.state.accountType}</Text>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
 
-                        <View style={styles.textInputView}>
-                            <Image style={{ width: 15, height: 15, marginLeft: 5 }}
-                                source={require('../icons/ic_user_64dp.png')}></Image>
-                            <TextInput style={{width: screenWidth-85, height: 50,  marginLeft: 10 }}
-                                placeholder='Name'
-                                value={this.state.name}
-                                onChangeText={(nameInput) => this.setState({ error: '', name: nameInput })}>
-                            </TextInput>
-                        </View>
+                            <View style={styles.textInputView}>
+                                <Image style={{ width: 15, height: 15, marginLeft: 5 }}
+                                    source={require('../icons/ic_user_64dp.png')}></Image>
+                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
+                                    placeholder='Name'
+                                    value={this.state.name}
+                                    onChangeText={(nameInput) => this.setState({ error: '', name: nameInput })}>
+                                </TextInput>
+                            </View>
 
-                        <View style={styles.textInputView}>
-                            <Image style={{ width: 15, height: 15, marginLeft: 5 }}
-                                source={require('../icons/email.png')}/>
-                            <Text style={{ width: screenWidth-85,  marginLeft: 10, textAlignVertical: 'center', alignSelf: 'center'}}>
-                                {this.state.email}
+                            <View style={styles.textInputView}>
+                                <Image style={{ width: 15, height: 15, marginLeft: 5 }}
+                                    source={require('../icons/email.png')} />
+                                <Text style={{ width: screenWidth - 85, marginLeft: 10, textAlignVertical: 'center', alignSelf: 'center' }}>
+                                    {this.state.email}
+                                </Text>
+                            </View>
+
+                            <View style={styles.textInputView}>
+                                <Image style={{ width: 15, height: 15, marginLeft: 5 }}
+                                    source={require('../icons/ic_user_64dp.png')}></Image>
+                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
+                                    placeholder='Mobile'
+                                    value={this.state.mobile}
+                                    onChangeText={(mobileInput) => this.setState({ error: '', mobile: mobileInput })}>
+                                </TextInput>
+                            </View>
+
+                            <View style={styles.textView1}>
+                                <Image style={{ width: 15, height: 15, marginLeft: 5 }}
+                                    source={require('../icons/ic_settings_64dp.png')} />
+                                <Text style={{ width: screenWidth - 85, color: 'black', fontSize: 16, textAlignVertical: 'center', marginLeft: 10 }}
+                                    multiline={true}
+                                    onPress={() => this.props.navigation.navigate('ProServiceSelect', {
+                                        onGoBack: this.getDataFromServiceScreen,
+                                    })}>
+                                    {this.state.services}
+                                </Text>
+                            </View>
+
+                            <View style={styles.textView1}>
+                                <Image style={{ width: 15, height: 15, marginLeft: 5 }}
+                                    source={require('../icons/description.png')} />
+                                <TextInput
+                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, marginLeft: 10 }}
+                                    placeholder='Description'
+                                    value={this.state.description}
+                                    multiline={true}
+                                    onChangeText={(descriptionInput) => this.setState({ error: '', description: descriptionInput })}>
+                                </TextInput>
+                            </View>
+
+                            <View style={styles.textView1}>
+                                <Image style={{ width: 15, height: 15, marginLeft: 5 }}
+                                    source={require('../icons/maps_location.png')} />
+                                <Text
+                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, marginLeft: 10 }}
+                                    value={this.state.address}
+                                    multiline={true}
+                                    onPress={() => this.props.navigation.navigate('SelectAddress', {
+                                        onGoBack: this.getDataFromAddAddressScreen
+                                    })}>
+                                    {this.state.address}
+                                </Text>
+                            </View>
+
+                            <View style={styles.textView}>
+                                <Text style={{ color: 'black', fontSize: 16, textAlign: 'center', textAlignVertical: 'center', marginTop: 5 }}>
+                                    Can you provide invoice
                             </Text>
-                        </View>
-
-                        <View style={styles.textInputView}>
-                            <Image style={{ width: 15, height: 15, marginLeft: 5 }}
-                                source={require('../icons/ic_user_64dp.png')}></Image>
-                            <TextInput style={{width: screenWidth-85, height: 50,  marginLeft: 10 }}
-                                placeholder='Mobile'
-                                value={this.state.mobile}
-                                onChangeText={(mobileInput) => this.setState({ error: '', mobile: mobileInput })}>
-                            </TextInput>
-                        </View>
-
-                        <View style={styles.textView1}>
-                            <Image style={{ width: 15, height: 15, marginLeft: 5 }}
-                                source={require('../icons/ic_settings_64dp.png')}/>
-                                <Text style={{ width: screenWidth-85, color: 'black', fontSize: 16, textAlignVertical:'center', marginLeft: 10 }}
-                                multiline={true}
-                                onPress={() => this.props.navigation.navigate('ProServiceSelect', {
-                                    onGoBack: this.getDataFromServiceScreen, })}>
-                                {this.state.services}
-                            </Text>
-                        </View>
-
-                        <View style={styles.textView1}>
-                            <Image style={{ width: 15, height: 15, marginLeft: 5 }}
-                                source={require('../icons/description.png')}/>
-                            <TextInput
-                                style={{ width: screenWidth-85, color: 'black', fontSize: 16, marginLeft: 10 }}
-                                placeholder='Description'
-                                value={this.state.description}
-                                multiline={true}
-                                onChangeText={(descriptionInput) => this.setState({ error: '', description: descriptionInput })}>
-                            </TextInput>
-                        </View>
-
-                        <View style={styles.textView1}>
-                            <Image style={{ width: 15, height: 15, marginLeft: 5 }}
-                                source={require('../icons/maps_location.png')}/>
-                            <Text
-                                style={{ width: screenWidth-85, color: 'black', fontSize: 16, marginLeft: 10 }}
-                                value={this.state.address}
-                                multiline={true}
-                                onPress={() => this.props.navigation.navigate('SelectAddress', {
-                                    onGoBack: this.getDataFromAddAddressScreen })}>
-                                {this.state.address}
-                            </Text>
-                        </View>
-
-                        <View style={styles.textView}>
-                            <Text style={{  color: 'black', fontSize: 16, textAlign: 'center', textAlignVertical:'center', marginTop: 5 }}>
-                                Can you provide invoice
-                            </Text>
-                            {/* <View style={{flex: 1, flexDirection: 'row', marginTop: 10}}>
+                                {/* <View style={{flex: 1, flexDirection: 'row', marginTop: 10}}>
                                 <Text style={[styles.invoice, {backgroundColor: 'grey',  
                                     borderColor: this.state.invoice == '1'  ? colorYellow : 'grey'}]}
                                     onPress={() => this.setState({invoice: '1'})}>Yes</Text>
@@ -512,65 +511,75 @@ class ProMyProfileScreen extends Component {
                                     borderColor: this.state.invoice == '0' ? colorYellow : 'grey'}]}
                                     onPress={() => this.setState({invoice: '0'})}>No</Text>
                             </View> */}
-                            <View style={{ flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center" }}>
-                                <TouchableOpacity style={this.state.invoice == '1' ? styles.invoiceBorder : styles.invoice}
-                                    onPress={() => this.setState({ invoice: '1' })}>
-                                    <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>Yes</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[this.state.invoice == '0' ? styles.invoiceBorder : styles.invoice, { marginLeft: 20, }]}
-                                    onPress={() => this.setState({ invoice: '0' })}>
-                                    <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
-                                </TouchableOpacity>
+                                <View style={{ flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center" }}>
+                                    <TouchableOpacity style={this.state.invoice == '1' ? styles.invoiceBorder : styles.invoice}
+                                        onPress={() => this.setState({ invoice: '1' })}>
+                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>Yes</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={[this.state.invoice == '0' ? styles.invoiceBorder : styles.invoice, { marginLeft: 20, }]}
+                                        onPress={() => this.setState({ invoice: '0' })}>
+                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                        </View>    
 
-                        <TouchableOpacity style={styles.buttonContainer}
-                            onPress={this.checkValidation}>
-                            <Text style={styles.text}>
-                                Update
+                            <TouchableOpacity style={styles.buttonContainer}
+                                onPress={this.checkValidation}>
+                                <Text style={styles.text}>
+                                    Update
                             </Text>
-                        </TouchableOpacity>
+                            </TouchableOpacity>
 
+                        </View>
                     </View>
-                </View>
-            </KeyboardAwareScrollView>
-            <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
-                onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
-                <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
-            </Modal>
+                </KeyboardAwareScrollView>
+                <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+                    onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
+                    <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
+                </Modal>
 
-            <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
-                <TouchableOpacity
-                    activeOpacity={0.9}
-                    onPress={() => BackHandler.exitApp()}>
-                    <Text style={styles.exitText}>Exit</Text>
-                </TouchableOpacity>
-            </Animated.View>
-        </View>
-    );
-  }
+                <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
+                    <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
+                    <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => BackHandler.exitApp()}>
+                        <Text style={styles.exitText}>Exit</Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            </View>
+        );
+    }
 }
+
+const mapStateToProps = state => ({
+    userInfo: state.userInfo
+});
+
+const mapDispatchToProps = dispatch => ({
+    updateProviderDetails: details => {
+        dispatch(updateProviderDetails(details));
+    }
+});
 
 const AppStackNavigator = createStackNavigator({
     ProMyProfile: {
-        screen: ProMyProfileScreen,
-        navigationOptions:{
-            header : null
+        screen: connect(mapStateToProps, mapDispatchToProps)(ProMyProfileScreen),
+        navigationOptions: {
+            header: null
         }
     },
     ProServiceSelect: {
-        screen: ProServiceSelectScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(ProServiceSelectScreen),
         navigationOptions: {
-            header : null
+            header: null
         }
     },
-    SelectAddress:{
-        screen: SelectAddressScreen,
+    SelectAddress: {
+        screen: connect(mapStateToProps, mapDispatchToProps)(SelectAddressScreen),
         navigationOptions: {
-            header : null
+            header: null
         }
-    },  
+    },
 });
 
 const XYZ = createAppContainer(AppStackNavigator);
@@ -580,9 +589,9 @@ const styles = StyleSheet.create({
 
     container: {
         flex: 1,
-        justifyContent : 'center',
-        alignItems: 'center',  
-        backgroundColor: "#E8EEE9" 
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: "#E8EEE9"
     },
     header: {
         width: '100%',
@@ -636,24 +645,24 @@ const styles = StyleSheet.create({
         paddingBottom: 25
     },
     textInputView: {
-        flexDirection: 'row', 
-        width: screenWidth-40, 
-        height: 45, 
+        flexDirection: 'row',
+        width: screenWidth - 40,
+        height: 45,
         justifyContent: 'center',
-        alignItems: 'center', 
-        borderRadius: 5, 
-        backgroundColor: 'white', 
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 }, 
-        shadowOpacity: 0.75, 
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
         marginBottom: 10
     },
-    textView1:{
+    textView1: {
         flex: 1,
         flexDirection: 'row',
-        width: screenWidth-40,
+        width: screenWidth - 40,
         height: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
@@ -666,11 +675,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 15,
         paddingTop: 10,
-        paddingBottom: 10, 
-        paddingLeft: 5, 
+        paddingBottom: 10,
+        paddingLeft: 5,
         paddingRight: 5
     },
-    buttonContainer : {
+    buttonContainer: {
         width: 200,
         paddingTop: 10,
         backgroundColor: '#000000',
@@ -693,7 +702,7 @@ const styles = StyleSheet.create({
     },
     textView: {
         flex: 1,
-        width: screenWidth-40,
+        width: screenWidth - 40,
         height: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
@@ -706,21 +715,21 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 15,
         paddingTop: 15,
-        paddingBottom: 15, 
-        paddingLeft: 5, 
+        paddingBottom: 15,
+        paddingLeft: 5,
         paddingRight: 5
     },
     textInputViewDes: {
-        flexDirection: 'row', 
-        width: screenWidth - 40, 
-        height: 120, 
+        flexDirection: 'row',
+        width: screenWidth - 40,
+        height: 120,
         justifyContent: 'center',
-        alignItems: 'center', 
-        borderRadius: 5, 
-        backgroundColor: 'white', 
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 }, 
-        shadowOpacity: 0.75, 
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
         marginBottom: 10

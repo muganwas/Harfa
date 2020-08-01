@@ -67,8 +67,8 @@ class Hamburger extends React.Component {
     }
 
     componentDidMount() {
-        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, updateLiveChatUsers } = this.props;
-        const receiverId = ProviderDetails.Provider.providerId;
+        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, updateLiveChatUsers, userInfo: { providerDetails } } = this.props;
+        const receiverId = providerDetails.providerId;
         this.fetchOthersLocations();
         allJobRequestsProviders.map(obj => {
             const { user_id } = obj;
@@ -220,7 +220,7 @@ class Hamburger extends React.Component {
         });
 
         socket.on('connect', () => {
-            const userId = ProviderDetails.Provider.providerId;
+            const userId = providerDetails.providerId;
             if (userId) {
                 socket.emit('connected', userId);
                 updateOnlineStatus(true)
@@ -255,8 +255,8 @@ class Hamburger extends React.Component {
     }
 
     componentWillUnmount() {
-        const senderId = ProviderDetails.Provider.providerId;
-        //const receiverId = ProviderDetails.Provider.providerId;
+        const { userInfo: { providerDetails } } = this.props;
+        const senderId = providerDetails.providerId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
         firebase.database().ref('chatting').child(senderId).off('child_changed');
     }
@@ -325,6 +325,7 @@ const mapStateToProps = state => {
         generalInfo: state.generalInfo,
         messagesInfo: state.messagesInfo,
         jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 
