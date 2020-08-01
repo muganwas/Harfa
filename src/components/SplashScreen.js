@@ -102,7 +102,6 @@ class SplashScreen extends Component {
     }
 
     getFCMToken = async userId => {
-
         const fcmToken = await firebase.messaging().getToken();
         if (fcmToken) {
             console.log("Splash FCMID >> " + fcmToken);
@@ -134,7 +133,6 @@ class SplashScreen extends Component {
                     .then(async responseJson => {
                         var status;
                         if (responseJson && responseJson.result) {
-
                             const id = responseJson.data.id;
                             const usersRef = database.ref(`users/${id}`);
                             await usersRef.once('value', snapshot => {
@@ -168,7 +166,6 @@ class SplashScreen extends Component {
                                 fcmId: responseJson.data.fcm_id,
                                 accountType: responseJson.data.account_type
                             }
-                            ProviderDetails.Provider = providerData;
                             updateProviderDetails(providerData);
                             fetchJobRequestHistoryPro(userId);
                             fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
@@ -228,7 +225,6 @@ class SplashScreen extends Component {
                                 lang: responseJson.data.lang,
                                 fcmId: responseJson.data.fcm_id,
                             }
-                            UserDetails.User = userData;
                             updateUserDetails(userData);
                             //Check if any Ongoing Request 
                             fetchJobRequestHistoryClient(userId);

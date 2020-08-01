@@ -193,7 +193,6 @@ class FacebookGoogleScreen extends Component {
                                 lang: responseJson.data.lang,
                                 fcmId: responseJson.data.fcm_id,
                             }
-                            UserDetails.User = userData;
                             updateUserDetails(userData);
                             //Store data like sharedPreference
                             AsyncStorage.setItem('userId', id);
@@ -314,7 +313,6 @@ class FacebookGoogleScreen extends Component {
                                 lang: responseJson.data.lang,
                                 fcmId: responseJson.data.fcm_id,
                             }
-                            UserDetails.User = userData;
                             updateUserDetails(userData);
                             //Store data like sharedPreference
                             AsyncStorage.setItem('userId', id);

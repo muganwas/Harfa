@@ -130,7 +130,6 @@ class ProVerificationScreen extends Component {
                                     invoice: responseJson.data.invoice,
                                     status: responseJson.data.status,
                                 }
-                                ProviderDetails.Provider = providerData;
                                 updateProviderDetails(providerData);
                                 fetchProvidersJobRequests({},id)
                             }

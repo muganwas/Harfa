@@ -148,9 +148,7 @@ class AddAddressScreen extends Component {
                                             lang: response.data.lang,
                                             fcmId: response.data.fcm_id,
                                         }
-                                        UserDetails.User = userData;
                                         updateUserDetails(userData)
-                                        //this.showToast(response.message);
                                     }
                                     else {
                                         this.setState({
@@ -236,9 +234,7 @@ class AddAddressScreen extends Component {
                                                 lang: response.data.lang,
                                                 fcmId: response.data.fcm_id,
                                             }
-                                            UserDetails.User = userData;
                                             updateUserDetails(userData);
-                                            //this.showToast(response.message);
                                         }
                                         else {
                                             this.setState({
@@ -365,7 +361,6 @@ class AddAddressScreen extends Component {
                         lang: response.data.lang,
                         fcmId: response.data.fcm_id,
                     }
-                    UserDetails.User = userData;
                     updateUserDetails(userData)
                     this.showToast(response.message);
                 }

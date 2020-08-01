@@ -166,7 +166,6 @@ class VerificationScreen extends Component {
                         lang: responseJson.data.lang,
                         fcmId: responseJson.data.fcm_id
                     }
-                    UserDetails.User = userData;
                     updateUserDetails(userData);
                     //Check if any Ongoing Request 
                     fetchPendingJobRequest(this.props, userId, 'Home');

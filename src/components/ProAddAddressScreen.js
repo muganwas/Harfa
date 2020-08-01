@@ -142,9 +142,7 @@ class ProAddAddressScreen extends Component {
                                             lang: response.data.lang,
                                             fcmId: response.data.fcm_id,
                                         }
-                                        ProviderDetails.Provider = userData;
                                         updateProviderDetails(userData);
-                                        //this.showToast(response.message);
                                     }
                                     else {
                                         this.setState({
@@ -229,9 +227,7 @@ class ProAddAddressScreen extends Component {
                                                 lang: response.data.lang,
                                                 fcmId: response.data.fcm_id,
                                             }
-                                            ProviderDetails.Provider = userData;
                                             updateProviderDetails(userData);
-                                            //this.showToast(response.message);
                                         }
                                         else {
                                             this.setState({
@@ -357,7 +353,6 @@ class ProAddAddressScreen extends Component {
                         lang: response.data.lang,
                         fcmId: response.data.fcm_id,
                     }
-                    ProviderDetails.Provider = userData;
                     updateProviderDetails(userData);
                     this.showToast(response.message);
                 }

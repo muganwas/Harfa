@@ -159,8 +159,6 @@ class ProRegisterFBScreen extends Component {
                             fcmId: responseJson.data.fcm_id,
                             accountType: responseJson.data.account_type
                         }
-        
-                        ProviderDetails.Provider = providerData;
                         updateProviderDetails(providerData);
                         //Store data like sharedPreference
                         AsyncStorage.setItem('userId', id);
