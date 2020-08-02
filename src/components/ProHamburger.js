@@ -140,10 +140,14 @@ class Hamburger extends React.Component {
         firebase.notifications().onNotification(notification => {
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body, data } = notification;
-
+            const currentGenericCount = notificationsInfo.generic;
+            const newGenericCount = currentGenericCount + 1;
+            fetchedNotifications({ type: 'generic', value: newGenericCount });
+            console.log('current count --', currentGenericCount);
+            console.log('actual notification --', notification);
+            
             const orderId = data.orderId;
             let pos = 0;
-
             jobRequestsProviders.map((obj, key) => {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
@@ -160,9 +164,6 @@ class Hamburger extends React.Component {
                     'delivery_lat': data.delivery_lat,
                     'delivery_lang': data.delivery_lang,
                 });
-                const currentGenericCount = notificationsInfo.generic;
-                const newGenericCount = currentGenericCount + 1;
-                fetchedNotifications({ type: 'generic', value: newGenericCount });
             }
             else if (title.toLowerCase() == "job canceled") {
                 Toast.show(title + ' has been canceled by client');

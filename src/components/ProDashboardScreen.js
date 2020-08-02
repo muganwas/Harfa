@@ -493,7 +493,7 @@ class ProDashBoardScreen extends Component {
             const { dispatchSelectedJobRequest } = this.props;
             if (status == 'Pending') {
                 dispatchSelectedJobRequest(jobInfo);
-                this.props.navigation.navigate("ProAcceptRejectJob");
+                this.props.navigation.navigate("ProAcceptRejectJob", { orderId: jobInfo.orderId });
             }
             else if (status == 'Accepted') {
                 dispatchSelectedJobRequest(jobInfo);
@@ -613,10 +613,10 @@ class ProDashBoardScreen extends Component {
 
     renderPendingJobs = ({ item, index }) => {
         if (item) {
-            const { image, name, imageAvailable, user_id, service_name, chat_status, status } = item;
+            const { image, name, imageAvailable, user_id, service_name, chat_status, status, order_id } = item;
             return (
                 <TouchableOpacity style={styles.pendingJobRow}
-                    onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id })}>
+                    onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id, orderId: order_id })}>
                     <LinearGradient style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}

@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
 } from 'react-native';
+import {withNavigation} from 'react-navigation';
 import firebase from 'react-native-firebase';
 import WaitingDialog from './WaitingDialog';
 import Toast from 'react-native-simple-toast';
@@ -95,7 +96,6 @@ class ProAcceptRejectJobScreen extends Component {
 
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
         firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
             .on('child_added', value => {
                 this.setState(prevState => {
@@ -220,8 +220,6 @@ class ProAcceptRejectJobScreen extends Component {
 
             }
 
-            console.log("MessageData : " + JSON.stringify(message));
-
             let recentMessageReceiver = {
                 textMessage: this.state.inputMessage,
                 imageMessage: '',
@@ -321,7 +319,7 @@ class ProAcceptRejectJobScreen extends Component {
                     })
 
                     var jobData = {
-                        id: rresponseJson.data.id,
+                        id: responseJson.data.id,
                         order_id: responseJson.data.order_id,
                         user_id: responseJson.data.user_id,
                         image: responseJson.data.image,
@@ -730,4 +728,4 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProAcceptRejectJobScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(withNavigation(ProAcceptRejectJobScreen));

@@ -1,7 +1,9 @@
 
 import React, { Component } from 'react';
-import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, 
-    ActivityIndicator, BackHandler, StatusBar, Platform, Modal, Animated} from 'react-native';
+import {
+    View, StyleSheet, TouchableOpacity, Image, Text, Dimensions, FlatList,
+    ActivityIndicator, BackHandler, StatusBar, Platform, Modal, Animated
+} from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
@@ -18,52 +20,52 @@ import Hamburger from './Hamburger';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
+const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 
-const NOTIFICATION_URL = Config.baseURL+"notification/get-customer-notification/";
+const NOTIFICATION_URL = Config.baseURL + "notification/get-customer-notification/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
 class NotificationsScreen extends Component {
 
     constructor(props) {
-      super();
-      this.state = {
-         isLoading: true,
-         isNoData: false,
-         dataSource: [],
-         backClickCount: 0,
+        super();
+        this.state = {
+            isLoading: true,
+            isNoData: false,
+            dataSource: [],
+            backClickCount: 0,
         };
-
         this.springValue = new Animated.Value(100);
-         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
         const { fetchedNotifications } = this.props;
-        fetchedNotifications({type: 'generic', value: 0});
+        fetchedNotifications({ type: 'generic', value: 0 });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
-        const {navigation} = this.props;
-        navigation.addListener ('willFocus', async () =>{
-         this.getAllNotifications();
-        }); 
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
+            this.getAllNotifications();
+        });
     }
 
     componentWillUnmount() {
@@ -71,15 +73,15 @@ class NotificationsScreen extends Component {
     }
 
     handleBackButtonClick() {
-        if(Platform.OS == 'ios')
-            this.state.backClickCount == 1 ?  RNExitApp.exitApp() : this._spring();
+        if (Platform.OS == 'ios')
+            this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
 
     }
 
     _spring() {
-        this.setState({backClickCount: 1}, () => {
+        this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
                     this.springValue,
@@ -100,7 +102,7 @@ class NotificationsScreen extends Component {
                 ),
 
             ]).start(() => {
-                this.setState({backClickCount: 0});
+                this.setState({ backClickCount: 0 });
             });
         });
     }
@@ -112,23 +114,21 @@ class NotificationsScreen extends Component {
         });
 
         const { userInfo: { userDetails } } = this.props;
-      
+
         fetch(NOTIFICATION_URL + userDetails.userId)
             .then((response) => response.json())
             .then((responseJson) => {
 
-                console.log("Response GetNotification >> "+JSON.stringify(responseJson))
+                console.log("Response GetNotification >> " + JSON.stringify(responseJson))
 
-                if(responseJson.result)
-                {
+                if (responseJson.result) {
                     this.setState({
                         dataSource: responseJson.data,
                         isLoading: false,
                         isNoData: false
                     })
                 }
-                else
-                {
+                else {
                     this.setState({
                         isLoading: false,
                         isNoData: true
@@ -154,14 +154,15 @@ class NotificationsScreen extends Component {
 
         return (
             <View style={{
-                flex: 1, flexDirection: 'row', margin: 5, padding: 10,shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.75, shadowRadius: 2, elevation: 2, backgroundColor: 'white', borderRadius: 2, justifyContent: 'center' }}>
-               
-                <View style={{justifyContent: 'center', alignContent: 'center'}}>
+                flex: 1, flexDirection: 'row', margin: 5, padding: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.75, shadowRadius: 2, elevation: 2, backgroundColor: 'white', borderRadius: 2, justifyContent: 'center'
+            }}>
+
+                <View style={{ justifyContent: 'center', alignContent: 'center' }}>
                     <Image style={{ width: 45, height: 45, borderRadius: 100, alignItems: 'center', }}
                         source={{ uri: item.employee_details.image }} />
                 </View>
-                
+
                 <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
                     <Text style={{ color: 'black', fontSize: 15, marginTop: 5, fontWeight: 'bold' }}>
                         {item.title}
@@ -172,31 +173,31 @@ class NotificationsScreen extends Component {
                     <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
                         {item.createdDate}
                     </Text>
-                </View>  
+                </View>
             </View>
         )
     }
 
-    changeWaitingDialogVisibility = (bool) =>{
+    changeWaitingDialogVisibility = (bool) => {
         this.setState({
             isLoading: bool
         })
     }
-    
-  render() {
-    return (
 
-      <View style={styles.container}>
+    render() {
+        return (
 
-        <StatusBarPlaceHolder/>
+            <View style={styles.container}>
 
-        <View style={styles.header} >
-            <Hamburger 
-                Notifications={Notifications}
-                navigation={this.props.navigation}
-                text='Notifications'
-            />
-            </View>
+                <StatusBarPlaceHolder />
+
+                <View style={styles.header} >
+                    <Hamburger
+                        Notifications={Notifications}
+                        navigation={this.props.navigation}
+                        text='Notifications'
+                    />
+                </View>
                 {!this.state.isLoading && !this.state.isNoData &&
                     <View style={styles.listView}>
                         <FlatList
@@ -208,16 +209,16 @@ class NotificationsScreen extends Component {
                             extraData={this.state} />
                     </View>
                 }
-                {this.state.isNoData &&  (
-                    <View style={{flex: 1, flexDirection: 'column', backgroundColor: colorBg, justifyContent: 'center', alignItems: 'center'}}>
-                        <View style={{width: 100, height: 100, borderRadius: 100, backgroundColor: colorYellow,     justifyContent: 'center', alignItems: 'center'}}>
-                            <Image style={{width: 50, height: 50}}
-                                source={require('../icons/ic_notification.png')}/>
+                {this.state.isNoData && (
+                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: colorBg, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
+                            <Image style={{ width: 50, height: 50 }}
+                                source={require('../icons/ic_notification.png')} />
                         </View>
-                        <Text style={{fontSize: 18, marginTop: 10}}>Notifications non trouvées</Text>     
+                        <Text style={{ fontSize: 18, marginTop: 10 }}>Notifications non trouvées</Text>
                     </View>
                 )}
-            {/* {this.state.isLoading && (
+                {/* {this.state.isLoading && (
                 <View style={styles.loaderStyle}>
                     <ActivityIndicator
                         style={{ height: 80 }}
@@ -225,22 +226,22 @@ class NotificationsScreen extends Component {
                         size="large" />
                 </View>
             )} */}
-              <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
-                <TouchableOpacity
-                    activeOpacity={0.9}
-                    onPress={() => BackHandler.exitApp()}>
-                    <Text style={styles.exitText}>Sortie</Text>
-                </TouchableOpacity>
-            </Animated.View>
+                <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
+                    <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
+                    <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => BackHandler.exitApp()}>
+                        <Text style={styles.exitText}>Sortie</Text>
+                    </TouchableOpacity>
+                </Animated.View>
 
-            <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
-                onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
-                <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
-            </Modal>
-        </View>
-    );
-  }
+                <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+                    onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
+                    <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
+                </Modal>
+            </View>
+        );
+    }
 }
 
 const styles = StyleSheet.create({

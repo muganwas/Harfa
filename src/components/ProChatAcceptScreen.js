@@ -114,7 +114,6 @@ class ProChatAcceptScreen extends Component {
                         isLoading: false,
                         secondTimeLoader: "1"
                     });
-                    console.log(responseJson.data.id)
                     firebase.database().ref(`liveLocation/${responseJson.data.id}`).once('value', result => {
                         const { latitude, longitude } = result.val();
                         const fullDist = getDistance(latitude, longitude, responseJson.data.lat, responseJson.data.lang, 'K');

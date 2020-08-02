@@ -95,6 +95,8 @@ class Hamburger extends React.Component {
         firebase.notifications().onNotification(async notification => {
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
+            console.log('current count --', currentGenericCount);
+            console.log('actual notification --', notification);
             const newGenericCount = currentGenericCount + 1;
             let newJobRequests = [...jobRequests];
             fetchedNotifications({ type: 'generic', value: newGenericCount });
@@ -394,9 +396,6 @@ class Hamburger extends React.Component {
                             // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification.
                             const { title, body } = notification;
                             console.log('NotificationDisplayed : ', notification);
-                        });
-                        firebase.notifications().onNotification((notification) => {
-                            const { title, body } = notification;
                         });
                     }
                     else {
