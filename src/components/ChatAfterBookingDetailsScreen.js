@@ -49,10 +49,9 @@ const options = {
 const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 
 class ChatAfterBookingDetailsScreen extends Component {
-
     constructor(props) {
         super()
-        const { userInfo: { userDetails }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        const { userInfo: { userDetails }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = props;
         Object.keys(jobRequests).map(key => {
             const currEmpId = jobRequests[key].employee_id;
             if (currEmpId === employee_id) currRequestPos = key;
@@ -63,16 +62,16 @@ class ChatAfterBookingDetailsScreen extends Component {
             senderName: userDetails.username,
             inputMessage: '',
             showButton: false,
-            dataChatSource: this.props.messagesInfo.dataChatSource[employee_id],
-            isLoading: !this.props.messagesInfo.fetched,
+            dataChatSource: props.messagesInfo.dataChatSource[employee_id],
+            isLoading: !props.messagesInfo.fetched,
             isUpLoading: false,
-            receiverId: this.props.navigation.state.params.providerId,
-            receiverName: this.props.navigation.state.params.providerName + " " + this.props.navigation.state.params.providerSurname,
-            receiverImage: this.props.navigation.state.params.providerImage,
-            serviceName: this.props.navigation.state.params.serviceName,
-            orderId: this.props.navigation.state.params.orderId,
-            titlePage: this.props.navigation.state.params.pageTitle,
-            isJobAccepted: this.props.navigation.state.params.isJobAccepted,
+            receiverId: props.navigation.state.params.providerId,
+            receiverName: props.navigation.state.params.providerName + " " + props.navigation.state.params.providerSurname,
+            receiverImage: props.navigation.state.params.providerImage,
+            serviceName: props.navigation.state.params.serviceName,
+            orderId: props.navigation.state.params.orderId,
+            titlePage: props.navigation.state.params.pageTitle,
+            isJobAccepted: props.navigation.state.params.isJobAccepted,
             proImageAvailable: null
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);

@@ -48,7 +48,7 @@ class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
         super()
-        const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = props;
         var currRequestPos;
         jobRequestsProviders.map((obj, key) => {
             if (obj) {

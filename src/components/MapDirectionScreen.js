@@ -45,7 +45,7 @@ function StatusBarPlaceHolder() {
 class MapDirectionScreen extends Component {
 
     constructor(props) {
-        super()
+        super();
         const { userInfo: { userDetails }, generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, navigation } = props;
         var currRequestPos;
         jobRequests.map((obj, key) => {

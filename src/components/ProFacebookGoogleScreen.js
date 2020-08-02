@@ -60,10 +60,9 @@ function StatusBarPlaceHolder() {
 class FacebookGoogleScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super();
         this.state = {
-            accountType: this.props.navigation.state.params.accountType,
+            accountType: props.navigation.state.params.accountType,
             email: '',
             password: '',
             opacity: 1,

@@ -35,8 +35,6 @@ const colorYellow = '#FFBF0F';
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
 
-console.log(`Register URL Next: ${REGISTER_URL}`);
-
 const options = {
   title: 'Select a photo',
   takePhotoButtonTitle: 'Take a photo',
@@ -63,10 +61,9 @@ function StatusBarPlaceHolder() {
 
 export default class RegisterScreen extends Component {
   constructor(props) {
-    super(props);
-
+    super();
     this.state = {
-      accountType: this.props.navigation.state.params.accountType, //From AccountTypeScreen
+      accountType: props.navigation.state.params.accountType, //From AccountTypeScreen
       username: '',
       email: '',
       password: '',

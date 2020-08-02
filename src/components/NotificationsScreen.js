@@ -43,8 +43,7 @@ function StatusBarPlaceHolder() {
 class NotificationsScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
+      super();
       this.state = {
          isLoading: true,
          isNoData: false,

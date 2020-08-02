@@ -2,10 +2,9 @@ import React, { Component } from 'react';
 import {View, Text, TouchableOpacity, Image, StyleSheet, Dimensions, BackHandler, 
     ScrollView, Modal, StatusBar, Platform} from 'react-native';
 import {connect} from 'react-redux';
+import {withNavigation} from 'react-navigation';
 import Toast from 'react-native-simple-toast';
 import { AirbnbRating } from 'react-native-ratings';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import UserDetails from './UserDetails';
 import ReviewDialogCustomer from './ReviewDialogCustomer';
 import WaitingDialog from './WaitingDialog';
 import Config from './Config';
@@ -40,18 +39,17 @@ function StatusBarPlaceHolder() {
 class BookingDetailsScreen extends Component {
 
   constructor(props) {
-    super()
-  
+    super();
     this.state = {
         isLoading: false,
         isErrorToast: false,
-        bookingDetails: this.props.navigation.state.params.bookingDetails,
+        bookingDetails: props.navigation.state.params.bookingDetails,
         isDialogLogoutVisible: false,
         mainId:'',
-        customer_rating: this.props.navigation.state.params.bookingDetails.customer_rating,
-        customer_review: this.props.navigation.state.params.bookingDetails.customer_review,
-        employee_rating: this.props.navigation.state.params.bookingDetails.employee_rating,
-        employee_review: this.props.navigation.state.params.bookingDetails.employee_review
+        customer_rating: props.navigation.state.params.bookingDetails.customer_rating,
+        customer_review: props.navigation.state.params.bookingDetails.customer_review,
+        employee_rating: props.navigation.state.params.bookingDetails.employee_rating,
+        employee_review: props.navigation.state.params.bookingDetails.employee_review
     };
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   };
@@ -71,13 +69,6 @@ class BookingDetailsScreen extends Component {
 
     //Call also from ReviewDialog
     changeDialogVisibility = (bool, text, bookingDetails, rating, review) => {
-
-        console.log("isDialogLogoutVisible : "+bool);
-        console.log("Text >> "+text);
-        console.log("Rating >> "+rating);
-        console.log("Review >> "+review);
-        console.log("MainId >> "+this.state.bookingDetails._id);
-
         if(this.state.bookingDetails.customer_rating == '')
         {
             if(rating != '')
@@ -135,8 +126,6 @@ class BookingDetailsScreen extends Component {
             "rating": rating,
             "review": review,
         }
-
-        console.log("Submitted : "+JSON.stringify(reviewData));
 
         fetch(REVIEW_RATING,
             {
@@ -394,7 +383,7 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(BookingDetailsScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(withNavigation(BookingDetailsScreen));
 
 const styles = StyleSheet.create({
     container: {

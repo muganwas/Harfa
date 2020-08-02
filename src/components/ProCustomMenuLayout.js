@@ -12,7 +12,7 @@ const colorPrimary = '#FFBF0F';
 class CustomMenuLayout extends Component {
 
     constructor(props) {
-      super()
+      super();
       this.state = {
           isDialogLogoutVisible: false
       };

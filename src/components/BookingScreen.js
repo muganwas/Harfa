@@ -22,9 +22,7 @@ const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
-
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/customer_request/';
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {

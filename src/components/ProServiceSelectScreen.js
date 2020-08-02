@@ -32,8 +32,7 @@ function StatusBarPlaceHolder() {
 export default class ProServiceSelectScreen extends Component {
 
   constructor(props) {
-    super()
-
+    super();
     this.state = {
       dataSource: [],
       selectedServiceId: [],

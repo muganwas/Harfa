@@ -40,7 +40,7 @@ function StatusBarPlaceHolder() {
 
 class ProRegisterFBScreen extends Component {
     constructor(props) {
-        super()
+        super();
         this.state = {
             name: props.navigation.state.params.name,
             surname:'',

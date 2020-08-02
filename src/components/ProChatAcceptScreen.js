@@ -47,7 +47,7 @@ function StatusBarPlaceHolder() {
 class ProChatAcceptScreen extends Component {
 
     constructor(props) {
-        super()
+        super();
         const { navigation } = props;
         /*const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;

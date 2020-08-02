@@ -13,7 +13,6 @@ import NotificationsScreen from './NotificationsScreen';
 import BookingScreen from './BookingScreen';
 
 const MyDrawerNavigator = createDrawerNavigator({
-    
     Dashboard: {screen: DashBoardScreen},
     MyProfile: {screen: MyProfileScreen},
     Booking: {screen: BookingScreen},

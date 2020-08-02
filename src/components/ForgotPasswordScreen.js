@@ -36,7 +36,7 @@ function StatusBarPlaceHolder() {
 export default class ForgotPasswordScreen extends Component {
 
     constructor(props) {
-        super(props)
+        super()
 
         this.state = {
             email: '',

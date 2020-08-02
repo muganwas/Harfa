@@ -61,7 +61,7 @@ class ProMyProfileScreen extends Component {
 
     constructor(props) {
         super()
-        const { userInfo: { providerDetails } } = this.props;
+        const { userInfo: { providerDetails } } = props;
         this.state = {
             providerId: providerDetails.providerId,
             imageSource: providerDetails.imageSource,

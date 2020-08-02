@@ -40,8 +40,7 @@ function StatusBarPlaceHolder() {
 class ProRegisterScreen extends Component {
 
     constructor(props) {
-        super(props)
-    
+        super();
         this.state = {
             name: '',
             surname:'',
@@ -58,7 +57,7 @@ class ProRegisterScreen extends Component {
             invoice: 1,
             error: '',
             currentPage: 0,
-            account_type: this.props.navigation.state.params.accountType,
+            account_type: props.navigation.state.params.accountType,
             isLoading: false,
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);

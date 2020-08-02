@@ -6,8 +6,6 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator,
     KeyboardAvoidingView
 } from 'react-native';
-import ProviderDetails from './ProviderDetails';
-import ImagePicker from 'react-native-image-picker';
 import firebase from 'react-native-firebase';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';

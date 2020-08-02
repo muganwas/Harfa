@@ -29,11 +29,10 @@ const USER_GET_PROFILE = Config.baseURL + "users/"
 class VerificationScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super();
         this.state = {
             mobile: '',
-            otpToMatch: this.props.navigation.state.params.otp,
+            otpToMatch: props.navigation.state.params.otp,
             otp: '',
             error: '',
             timer: 30,
@@ -43,7 +42,6 @@ class VerificationScreen extends Component {
     }
 
     componentDidMount() {
-
         //From LoginPhoneScreen
         this.setState({
             mobile: this.props.navigation.state.params.mobile,

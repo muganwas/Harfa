@@ -24,11 +24,10 @@ const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
 class ProVerificationScreen extends Component {
 
     constructor(props) {
-        super(props)
-    
+        super();
         this.state = {
-            mobile: this.props.navigation.state.params.mobile,
-            otpToMatch: this.props.navigation.state.params.otp,
+            mobile: props.navigation.state.params.mobile,
+            otpToMatch: props.navigation.state.params.otp,
             otp: '',
             error: '',
             timer: 30,
@@ -38,7 +37,6 @@ class ProVerificationScreen extends Component {
     }   
 
     componentDidMount(){
-
         //From ProLoginPhoneScreen
         this.setState({
             mobile: this.props.navigation.state.params.mobile,

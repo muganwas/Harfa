@@ -40,7 +40,7 @@ class ProAddAddressScreen extends Component {
 
     constructor(props) {
         super();
-        const { userInfo: { providerDetails } } = this.props;
+        const { userInfo: { providerDetails } } = props;
         this.state = {
             latitude: providerDetails.lat,
             longitude: providerDetails.lang,

@@ -41,18 +41,18 @@ function StatusBarPlaceHolder() {
 export default class ProBookingDetailsScreen extends Component {
 
     constructor(props) {
-        super(props)
+        super();
 
         this.state = {
             isLoading: false,
             isErrorToast: false,
-            bookingDetails: this.props.navigation.state.params.bookingDetails,
+            bookingDetails: props.navigation.state.params.bookingDetails,
             isDialogLogoutVisible: false,
             mainId:'',
-            customer_rating: this.props.navigation.state.params.bookingDetails.customer_rating,
-            customer_review: this.props.navigation.state.params.bookingDetails.customer_review,
-            employee_rating: this.props.navigation.state.params.bookingDetails.employee_rating,
-            employee_review: this.props.navigation.state.params.bookingDetails.employee_review
+            customer_rating: props.navigation.state.params.bookingDetails.customer_rating,
+            customer_review: props.navigation.state.params.bookingDetails.customer_review,
+            employee_rating: props.navigation.state.params.bookingDetails.employee_rating,
+            employee_review: props.navigation.state.params.bookingDetails.employee_review
         };
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };

@@ -48,8 +48,7 @@ function StatusBarPlaceHolder() {
 class AllMessageScreen extends Component {
 
     constructor(props) {
-        super()
-
+        super();
         this.state = {
             isLoading: true,
             dataSource: [],

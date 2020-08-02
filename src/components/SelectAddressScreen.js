@@ -35,8 +35,7 @@ function StatusBarPlaceHolder() {
 export default class SelectAddressScreen extends Component {
 
   constructor(props) {
-    super(props)
-  
+    super();
     this.state = {
       dataSource: [],
       isLoading: false,

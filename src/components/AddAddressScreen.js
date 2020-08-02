@@ -39,7 +39,7 @@ function StatusBarPlaceHolder() {
 class AddAddressScreen extends Component {
 
     constructor(props) {
-        super()
+        super();
         const { userInfo: { userDetails } } = props;
         this.state = {
             latitude: userDetails.lat,

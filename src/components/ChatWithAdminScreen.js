@@ -4,11 +4,9 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView
 } from 'react-native';
 import {connect} from 'react-redux';
-import ProviderDetails from './ProviderDetails';
 import firebase from 'react-native-firebase';
 import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import Config from './Config';
-import UserDetails from './UserDetails';
 
 const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
@@ -21,9 +19,7 @@ const options = {
 };
 
 const ios = Platform.OS === 'ios';
-
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
-
 const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload";
 
 function StatusBarPlaceHolder() {

@@ -50,7 +50,7 @@ function StatusBarPlaceHolder() {
 class ProMapDirectionScreen extends Component {
 
     constructor(props) {
-        super()
+        super();
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } }, navigation } = props;
         var currentPos;
         //console.log('users Coordinates', usersCoordinates)
