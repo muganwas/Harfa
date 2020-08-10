@@ -53,6 +53,7 @@ class ProChatScreen extends Component {
             navigation,
             userInfo: { providerDetails }
         } = props;
+        console.log('prop messages --', dataChatSource)
         this.state = {
             showButton: false,
             senderId: providerDetails.providerId,
@@ -193,45 +194,48 @@ class ProChatScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
-        return (
-            this.state.senderId != item.senderId
-                ?
-                item.type == 'text'
+        if (item) {
+            return (
+                this.state.senderId != item.senderId
                     ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={styles.itemLeftChatContainer}>
-                            <View style={styles.itemChatImageView}>
-                                <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={this.state.userImageAvailable ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
-                            </View>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item && item.time)}
-                                </Text>
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                            <View style={styles.itemLeftChatContainer}>
+                                <View style={styles.itemChatImageView}>
+                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
+                                        source={this.state.userImageAvailable ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
+                                </View>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {this.convertTime(item && item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-                :
-                item.type == 'text'
-                    ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={styles.itemRightChatContainer}>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    { item && this.convertTime(item.time)}
-                                </Text>
+                        : null
+                    :
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                            <View style={styles.itemRightChatContainer}>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
+                                        { item && this.convertTime(item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-        )
+                        : null
+            )
+        }
+        return
     }
 
     renderSeparator = () => {

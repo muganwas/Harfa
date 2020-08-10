@@ -49,6 +49,7 @@ class ProChatAcceptScreen extends Component {
     constructor(props) {
         super();
         const { navigation } = props;
+        console.log('pro accept chat .. ')
         /*const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
         

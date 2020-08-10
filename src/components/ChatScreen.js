@@ -47,6 +47,7 @@ class ChatScreen extends Component {
     constructor(props) {
         super();
         const { userInfo: { userDetails }, jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = props;
+        console.log('chat screen messages--', dataChatSource)
         var currRequestPos;
         Object.keys(allJobRequestsClient).map(key => {
             const currEmpId = allJobRequestsClient[key].employee_id;
@@ -77,7 +78,6 @@ class ChatScreen extends Component {
         const { fetchedNotifications } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
         //Get Job accept reject status
         firebase.notifications().onNotification((notification) => {
             const { title, body, data } = notification;
@@ -101,6 +101,7 @@ class ChatScreen extends Component {
         const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
         const { isLoading, dataChatSourceSynced } = this.state;
         const localDataChatSource = this.state.dataChatSource;
+        console.log('fetched --', fetched)
         if (fetched && isLoading)
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced)
@@ -211,7 +212,6 @@ class ChatScreen extends Component {
     }
 
     jobCancelTask = () => {
-
         const { fetchedPendingJobInfo, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         var currRequestPos;
         jobRequests.map((obj, key) => {
@@ -303,10 +303,10 @@ class ChatScreen extends Component {
                                         source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                                 </View>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                    <Text style={{ fontSize: 12, textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
                                         {item.textMessage}
                                     </Text>
-                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                    <Text style={{ fontSize: 8, textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
                                         {this.convertTime(item && item.time)}
                                     </Text>
                                 </View>
@@ -389,13 +389,19 @@ class ChatScreen extends Component {
                                     numColumns={1}
                                     data={this.state.dataChatSource}
                                     renderItem={this.renderMessageItem}
-                                    keyExtractor={(item, index) => index.toString()}
+                                    keyExtractor={(item, index) => {
+                                        if (item)
+                                            return index.toString();
+                                    }}
                                     showsVerticalScrollIndicator={false}
                                     extraData={this.state}
                                     ItemSeparatorComponent={this.renderSeparator}
                                     ref={(ref) => { this.myFlatListRef = ref }}
                                     onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
+                                    onLayout={ () => { 
+                                        if ( this.state.dataChatSource && this.state.dataChatSource.length > 0)
+                                            this.myFlatListRef.scrollToEnd({ animated: true }) 
+                                    }}
                                 />
                             </View>
                         </View>

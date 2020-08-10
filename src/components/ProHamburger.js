@@ -17,13 +17,13 @@ import {
 import { DrawerActions } from 'react-navigation-drawer';
 import geolocation from '@react-native-community/geolocation';
 import firebase from 'react-native-firebase';
-import ProviderDetails from './ProviderDetails';
 import Toast from 'react-native-simple-toast';
 import { Notifications } from 'react-native-notifications';
 import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
+import { black, white, red } from '../Constants/colors';
 
 const socket = Config.socket;
 
@@ -44,11 +44,11 @@ const styles = StyleSheet.create({
         textAlignVertical: 'center',
         textAlign: 'center',
         borderRadius: 10,
-        color: 'white',
+        color: white,
         right: 15,
         height: 20,
         width: 20,
-        backgroundColor: 'red',
+        backgroundColor: red,
         top: 5
     },
     textView: {
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
         marginTop: !Android ? 13 : 0
     },
     image: { width: 25, height: 25 },
-    titleText: { fontSize: 20, fontWeight: 'bold', color: 'black', textAlignVertical: 'center', flex: 1 }
+    titleText: { fontSize: 20, fontWeight: 'bold', color: black, textAlignVertical: 'center', flex: 1 }
 })
 class Hamburger extends React.Component {
 
@@ -74,34 +74,38 @@ class Hamburger extends React.Component {
             const { user_id } = obj;
             firebase.database().ref('chatting').child(receiverId).child(user_id)
                 .on('child_added', data => {
-                    const { messagesInfo: { dataChatSource } } = this.props;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
-                    newArr.push(data.val());
-                    const newData = [...newArr];
-                    //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                        .map(time => {
-                            return newData.find(a => a ? a.time === time : null)
-                        });
-                    newDataChatSource[user_id] = uniqueData;
-                    fetchedMessages(newDataChatSource);
+                    if (data.val()) {
+                        const { messagesInfo: { dataChatSource } } = this.props;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        let newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
+                        newArr.push(data.val());
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
+                            .map(time => {
+                                return newData.find(a => a ? a.time === time : null)
+                            });
+                        newDataChatSource[user_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
                 });
 
             firebase.database().ref("chatting").child(receiverId).child(user_id)
                 .once('value', data => {
-                    const { messagesInfo: { dataChatSource } } = this.props;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    const newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
-                    newArr.push(data.val())
-                    const newData = [...newArr];
-                    //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                        .map(time => {
-                            return newData.find(a => a ? a.time === time : null)
-                        });
-                    newDataChatSource[user_id] = uniqueData;
-                    fetchedMessages(newDataChatSource);
+                    if (data.val()) {
+                        const { messagesInfo: { dataChatSource } } = this.props;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        const newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
+                            .map(time => {
+                                return newData.find(a => a ? a.time === time : null)
+                            });
+                        newDataChatSource[user_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
+
                 });
         });
         const userRef = firebase.database().ref(`liveLocation/${receiverId}`);
@@ -142,10 +146,8 @@ class Hamburger extends React.Component {
             const { title, body, data } = notification;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
+            console.log('notification --', notification)
             fetchedNotifications({ type: 'generic', value: newGenericCount });
-            console.log('current count --', currentGenericCount);
-            console.log('actual notification --', notification);
-            
             const orderId = data.orderId;
             let pos = 0;
             jobRequestsProviders.map((obj, key) => {
@@ -176,7 +178,9 @@ class Hamburger extends React.Component {
             const { notificationsInfo } = this.props;
             const currentMessagesCount = notificationsInfo.messages;
             const newMessagesCount = currentMessagesCount + 1;
-            //console.log(currentCount)
+
+            console.log('reciever --', receiverId)
+            console.log('chat reslult --', result.val())
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
             Android ? Notifications.postLocalNotification({
                 title: "Harfa Messages",

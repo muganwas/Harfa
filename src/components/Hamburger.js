@@ -211,51 +211,58 @@ class Hamburger extends React.Component {
         });
 
         allJobRequestsClient.map(obj => {
+            console.log(' all request info --', obj)
             const { employee_id } = obj;
             firebase.database().ref('chatting').
                 child(senderId).
                 child(employee_id)
                 .on('child_added', data => {
-                    const { messagesInfo: { dataChatSource } } = this.props;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val());
-                    const newData = [...newArr];
-                    //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => {
-                        if (a)
-                            return a.time
-                    })))
-                        .map(time => {
-                            return newData.find(a => {
-                                if (a) return a.time === time
-                            })
-                        });
-                    newDataChatSource[employee_id] = uniqueData;
-                    fetchedMessages(newDataChatSource);
+                    if (data.val()) {
+                        const { messagesInfo: { dataChatSource } } = this.props;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                        newArr.push(data.val());
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => {
+                            if (a)
+                                return a.time
+                        })))
+                            .map(time => {
+                                return newData.find(a => {
+                                    if (a) return a.time === time
+                                })
+                            });
+                        newDataChatSource[employee_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
+
                 });
             firebase.database().ref('chatting').
                 child(senderId).
                 child(employee_id)
                 .once('value', data => {
-                    const { dataChatSource } = this.props.messagesInfo;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val())
-                    const newData = [...newArr];
-                    //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => {
-                        if (a)
-                            return a.time
-                    })))
-                        .map(time => {
-                            return newData.find(a => {
-                                if (a)
-                                    a.time === time
-                            })
-                        });
-                    newDataChatSource[employee_id] = uniqueData;
-                    fetchedMessages(newDataChatSource);
+                    if (data) {
+                        const { dataChatSource } = this.props.messagesInfo;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                        newArr.push(data.val())
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => {
+                            if (a)
+                                return a.time
+                        })))
+                            .map(time => {
+                                return newData.find(a => {
+                                    if (a)
+                                        a.time === time
+                                })
+                            });
+                        newDataChatSource[employee_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
+
                 });
         });
         /** fetch users current position and upload it to db */

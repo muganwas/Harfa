@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import firebase from 'react-native-firebase';
 import Config from './Config';
-import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
@@ -52,6 +52,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
             navigation,
             userInfo: { providerDetails }
         } = props;
+        console.log('prop messages after booking --', dataChatSource)
         this.state = {
             showButton: false,
             senderId: providerDetails.providerId,
@@ -134,9 +135,6 @@ class ProChatAfterBookingDetailsScreen extends Component {
 
     sendMessageTask = async () => {
 
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
-
         if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
@@ -211,10 +209,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
                                     source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
                             </View>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                <Text style={{ fontSize: 12, color: black, textAlignVertical: 'center', color: black, marginLeft: 5 }}>
                                     {item.textMessage}
                                 </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                <Text style={{ fontSize: 8, color: black, textAlignVertical: 'center', color: black, marginLeft: 5 }}>
                                     {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
@@ -227,10 +225,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
                     <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
                         <View style={styles.itemRightChatContainer}>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
+                                <Text style={{ fontSize: 12, color: black, textAlignVertical: 'center', color: white }}>
                                     {item.textMessage}
                                 </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
+                                <Text style={{ fontSize: 8, color: black, textAlignVertical: 'center', color: white, marginLeft: 5 }}>
                                     {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
