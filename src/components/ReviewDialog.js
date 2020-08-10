@@ -12,10 +12,8 @@ const colorGray = '#C0C0C0';
 export default class DialogReview extends Component {
 
     constructor(props) {
-      super(props)
-
+      super();
       var data1 = props.data.split("//////");
-
       this.state = {
         //   data: props.data,
         //   rating: '3',

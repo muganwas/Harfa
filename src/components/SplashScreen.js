@@ -24,6 +24,7 @@ import SelectAddressScreen from './SelectAddressScreen';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
+import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
 
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
@@ -33,8 +34,7 @@ const database = firebase.database();
 class SplashScreen extends Component {
 
     constructor(props) {
-        super(props);
-
+        super();
         this.state = {
             id: null,
             isLoading: false,
@@ -101,7 +101,6 @@ class SplashScreen extends Component {
     }
 
     getFCMToken = async userId => {
-
         const fcmToken = await firebase.messaging().getToken();
         if (fcmToken) {
             console.log("Splash FCMID >> " + fcmToken);
@@ -116,7 +115,7 @@ class SplashScreen extends Component {
     }
 
     autoLogin = (userId, userType, fcmToken) => {
-        const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest } = this.props;
+        const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest, updateProviderDetails, updateUserDetails } = this.props;
         if (userId !== null) {
             this.setState({
                 isLoading: true,
@@ -132,8 +131,7 @@ class SplashScreen extends Component {
                     .then((response) => response.json())
                     .then(async responseJson => {
                         var status;
-                        if (responseJson.result) {
-
+                        if (responseJson && responseJson.result) {
                             const id = responseJson.data.id;
                             const usersRef = database.ref(`users/${id}`);
                             await usersRef.once('value', snapshot => {
@@ -167,7 +165,7 @@ class SplashScreen extends Component {
                                 fcmId: responseJson.data.fcm_id,
                                 accountType: responseJson.data.account_type
                             }
-                            ProviderDetails.Provider = providerData;
+                            updateProviderDetails(providerData);
                             fetchJobRequestHistoryPro(userId);
                             fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
                         }
@@ -211,7 +209,7 @@ class SplashScreen extends Component {
                 })
                     .then(response => response.json())
                     .then(responseJson => {
-                        if (responseJson.result) {
+                        if (responseJson && responseJson.result) {
                             var userData = {
                                 userId: responseJson.data.id,
                                 accountType: responseJson.data.acc_type,
@@ -226,7 +224,7 @@ class SplashScreen extends Component {
                                 lang: responseJson.data.lang,
                                 fcmId: responseJson.data.fcm_id,
                             }
-                            UserDetails.User = userData;
+                            updateUserDetails(userData);
                             //Check if any Ongoing Request 
                             fetchJobRequestHistoryClient(userId);
                             fetchPendingJobRequest(this.props, userId, 'Home');
@@ -292,7 +290,8 @@ class SplashScreen extends Component {
 
 const mapStateToProps = state => {
     return {
-        jobsInfo: state.jobsInfo
+        jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -309,6 +308,12 @@ const mapDispatchToProps = dispatch => {
         },
         fetchJobRequestHistoryClient: clientId => {
             dispatch(getAllWorkRequestClient(clientId));
+        },
+        updateUserDetails: details => {
+            dispatch(updateUserDetails(details));
+        },
+        updateProviderDetails: details => {
+            dispatch(updateProviderDetails(details));
         }
     }
 }

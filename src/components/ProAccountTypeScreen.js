@@ -9,11 +9,9 @@ const colorYellow = '#FFBF0F'
 export default class ProAccountTypeScreen extends Component {
 
     constructor(props) {
-      super(props)
+      super()
     
-      this.state = {
-         
-      };
+      this.state = {};
       this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 

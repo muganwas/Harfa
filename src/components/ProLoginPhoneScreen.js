@@ -16,8 +16,7 @@ const OTP_VERIFICATION = "https://2factor.in/API/V1/72ba25b6-ee55-11e9-b828-0200
 export default class ProLoginPhoneScreen extends Component{
 
     constructor(props) {
-        super(props)
-    
+        super();
         this.state = {
             phone: '',
             error: '',

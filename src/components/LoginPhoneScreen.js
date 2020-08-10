@@ -41,7 +41,7 @@ const OTP_VERIFICATION =
 
 export default class LoginPhoneScreen extends Component {
   constructor(props) {
-    super(props);
+    super();
 
     this.state = {
       phone: '',

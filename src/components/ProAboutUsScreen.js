@@ -34,8 +34,7 @@ function StatusBarPlaceHolder() {
 export default class ProAboutUsScreen extends Component{
 
     constructor(props) {
-      super(props)
-    
+      super();
       this.state = {
         backClickCount: 0,
     };

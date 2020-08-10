@@ -13,7 +13,7 @@ import { GoogleSignin, statusCodes } from '@react-native-community/google-signin
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import UserDetails from './UserDetails';
-import PendingJobRequest from './PendingJobRequest';
+import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import WaitingDialog from './WaitingDialog';
 import Axios from 'axios';
 
@@ -60,10 +60,10 @@ function StatusBarPlaceHolder() {
 class FacebookGoogleScreen extends Component {
 
     constructor(props) {
-        super(props)
+        super()
 
         this.state = {
-            accountType: this.props.navigation.state.params.accountType,
+            accountType: props.navigation.state.params.accountType,
             email: '',
             password: '',
             opacity: 1,
@@ -146,7 +146,7 @@ class FacebookGoogleScreen extends Component {
     }
 
     fbGoogleLoginCustomerTask = (name, email, image) => {
-        const { fetchJobRequests } = this.props;
+        const { fetchJobRequests, updateUserDetails } = this.props;
         this.setState({
             isLoading: true,
         })
@@ -193,12 +193,10 @@ class FacebookGoogleScreen extends Component {
                                 lang: responseJson.data.lang,
                                 fcmId: responseJson.data.fcm_id,
                             }
-                            UserDetails.User = userData;
-
+                            updateUserDetails(userData);
                             //Store data like sharedPreference
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'User');
-
                             fetchJobRequests(this.props, id, "Home");
                         }
                         else {
@@ -263,7 +261,7 @@ class FacebookGoogleScreen extends Component {
     }
 
     authenticateTask = () => {
-        const { fetchJobRequests } = this.props;
+        const { fetchJobRequests, updateUserDetails } = this.props;
         console.log("authenticateTask")
 
         this.setState({
@@ -315,12 +313,10 @@ class FacebookGoogleScreen extends Component {
                                 lang: responseJson.data.lang,
                                 fcmId: responseJson.data.fcm_id,
                             }
-                            UserDetails.User = userData;
-
+                            updateUserDetails(userData);
                             //Store data like sharedPreference
                             AsyncStorage.setItem('userId', id);
                             AsyncStorage.setItem('userType', 'User');
-
                             fetchJobRequests(this.props, id, "Home");
                         }
                         else {
@@ -499,7 +495,8 @@ class FacebookGoogleScreen extends Component {
 
 const mapStateToProps = state => {
     return {
-        jobsInfo: state.jobsInfo
+        jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -507,6 +504,12 @@ const mapDispatchToProps = dispatch => {
     return {
         fetchJobRequests: (props, providerId, navTo) => {
             dispatch(getPendingJobRequest(props, providerId, navTo));
+        },
+        updateUserDetails: details => {
+            dispatch(updateUserDetails(details));
+        },
+        updateProviderDetails: details => {
+            dispatch(updateProviderDetails(details));
         }
     }
 }

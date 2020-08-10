@@ -1,15 +1,16 @@
 
 import React, { Component } from 'react';
 import { View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity
-    , Dimensions, ActivityIndicator,ToastAndroid, Alert, Platform, BackHandler, Modal} from 'react-native';
+    , Dimensions, Alert, Platform, BackHandler, Modal} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import AsyncStorage from '@react-native-community/async-storage';
+import {connect} from 'react-redux';
 import firebase from 'react-native-firebase';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import WaitingDialog from './WaitingDialog';
 import Axios from 'axios';
+import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -36,11 +37,10 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ProRegisterScreen extends Component {
+class ProRegisterScreen extends Component {
 
     constructor(props) {
-        super(props)
-    
+        super();
         this.state = {
             name: '',
             surname:'',
@@ -57,7 +57,7 @@ export default class ProRegisterScreen extends Component {
             invoice: 1,
             error: '',
             currentPage: 0,
-            account_type: this.props.navigation.state.params.accountType,
+            account_type: props.navigation.state.params.accountType,
             isLoading: false,
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -111,8 +111,7 @@ export default class ProRegisterScreen extends Component {
     registerTask()
     {
         firebase.messaging().getToken().then((fcmToken) => {
-            console.log("ProRegister FCM ID " + fcmToken);
-
+            const { updateProviderDetails } = this.props;
             if (fcmToken) {
 
                 const userData = {
@@ -168,15 +167,7 @@ export default class ProRegisterScreen extends Component {
                             fcmId: responseJson.data.fcm_id,
                             accountType: responseJson.data.account_type
                         }
-        
-                        ProviderDetails.Provider = providerData;
-        
-                        // //Store data like sharedPreference
-                        // AsyncStorage.setItem('userId', id);
-                        // AsyncStorage.setItem('userType', 'Provider');
-        
-                        // ToastAndroid.show('Successfully Registered', ToastAndroid.SHORT);
-                        // this.props.navigation.navigate("ProHome");
+                        updateProviderDetails(providerData);
                         Alert.alert(  
                             "Successfully Registered !",  
                             "We have send you a email verification link to your registered email id and then Login to your account",  
@@ -414,6 +405,18 @@ export default class ProRegisterScreen extends Component {
         );
     }
 }
+
+const mapStateToProps = state => ({
+    userInfo: state.userInfo
+});
+
+const mapDispatchToProps = dispatch => ({
+    updateProviderDetails: details => {
+        dispatch(updateProviderDetails(details));
+    }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProRegisterScreen);
 
 const styles = StyleSheet.create({
     container: {

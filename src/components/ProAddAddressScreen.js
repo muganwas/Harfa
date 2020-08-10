@@ -5,6 +5,8 @@ import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import ProviderDetails from './ProviderDetails';
 import Config from './Config';
+import {connect} from 'react-redux';
+import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -34,16 +36,16 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class AddAddressScreen extends Component {
+class ProAddAddressScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super();
+        const { userInfo: { providerDetails } } = props;
         this.state = {
-            latitude: ProviderDetails.Provider.lat,
-            longitude: ProviderDetails.Provider.lang,
+            latitude: providerDetails.lat,
+            longitude: providerDetails.lang,
             error: null,
-            address: ProviderDetails.Provider.address,
+            address: providerDetails.address,
             isLoading: true,
             isErrorToast: false,
         };
@@ -53,16 +55,13 @@ export default class AddAddressScreen extends Component {
     watchID = null;
 
     componentDidMount() {
-
+        const { userInfo: { providerDetails } } = this.props;
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-        console.log("Address : " + ProviderDetails.Provider.address)
-
         if (this.state.address != '') {
             this.setState({
-                address: ProviderDetails.Provider.address,
-                latitude: ProviderDetails.Provider.lat,
-                longitude: ProviderDetails.Provider.lang,
+                address: providerDetails.address,
+                latitude: providerDetails.lat,
+                longitude: providerDetails.lang,
                 isLoading: false
             })
         }
@@ -87,15 +86,11 @@ export default class AddAddressScreen extends Component {
     }
 
     async getCurrentLocation() {
-
-        console.log("Platform : " + Platform.OS)
-
         if (Platform.OS == 'ios') {
+            const { updateProviderDetails } = this.props;
             await Geolocation.requestAuthorization();
-
             Geolocation.getCurrentPosition(
                 (position) => {
-                    console.log("Position : " + JSON.stringify(position));
 
                     this.setState({
                         latitude: position.coords.latitude,
@@ -106,21 +101,18 @@ export default class AddAddressScreen extends Component {
                     fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + 'AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030')
                         .then((response) => response.json())
                         .then((responseJson) => {
-
-                            console.log('ADDRESS GEOCODE is BACK!! => ' + JSON.stringify(responseJson.results[0].formatted_address));
-
                             this.setState({
                                 address: responseJson.results[0].formatted_address,
                                 isLoading: false,
-                            })
-
+                            });
+                            const { userInfo: { providerDetails } } = this.props;
                             const userData = {
                                 "address": responseJson.results[0].formatted_address,
                                 "lat": this.state.latitude,
                                 "lang": this.state.longitude,
                             }
 
-                            fetch(USER_INFO_UPDATE + ProviderDetails.Provider.providerId,
+                            fetch(USER_INFO_UPDATE + providerDetails.providerId,
                                 {
                                     method: 'POST',
                                     headers: {
@@ -150,8 +142,7 @@ export default class AddAddressScreen extends Component {
                                             lang: response.data.lang,
                                             fcmId: response.data.fcm_id,
                                         }
-                                        ProviderDetails.Provider = userData;
-                                        //this.showToast(response.message);
+                                        updateProviderDetails(userData);
                                     }
                                     else {
                                         this.setState({
@@ -189,31 +180,25 @@ export default class AddAddressScreen extends Component {
             if (granted) {
                 Geolocation.getCurrentPosition(
                     (position) => {
-                        console.log("Position >> " + JSON.stringify(position));
                         this.setState({
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude
                         });
-
-                        //Update Address to Database
                         fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + 'AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030')
                             .then((response) => response.json())
                             .then((responseJson) => {
-
-                                console.log('ADDRESS GEOCODE is BACK!! => ' + JSON.stringify(responseJson.results[0].formatted_address));
-
                                 this.setState({
                                     address: responseJson.results[0].formatted_address,
                                     isLoading: false,
-                                })
-
+                                });
+                                const { userInfo: { providerDetails }, updateProviderDetails } = this.props;
                                 const userData = {
                                     "address": responseJson.results[0].formatted_address,
                                     "lat": this.state.latitude,
                                     "lang": this.state.longitude,
                                 }
 
-                                fetch(USER_INFO_UPDATE + ProviderDetails.Provider.providerId,
+                                fetch(USER_INFO_UPDATE + providerDetails.providerId,
                                     {
                                         method: 'POST',
                                         headers: {
@@ -224,7 +209,6 @@ export default class AddAddressScreen extends Component {
                                     })
                                     .then((response) => response.json())
                                     .then((response) => {
-                                        console.log("Response ::" + JSON.stringify(response));
                                         if (response.result) {
                                             this.setState({
                                                 isLoading: false,
@@ -243,8 +227,7 @@ export default class AddAddressScreen extends Component {
                                                 lang: response.data.lang,
                                                 fcmId: response.data.fcm_id,
                                             }
-                                            ProviderDetails.Provider = userData;
-                                            //this.showToast(response.message);
+                                            updateProviderDetails(userData);
                                         }
                                         else {
                                             this.setState({
@@ -332,15 +315,14 @@ export default class AddAddressScreen extends Component {
 
     //Update Address to Database
     updateAddressToDatabase(latitude, longitude, address) {
-
-        console.log("UpdateAddressToDatabase");
+        const { userInfo: { providerDetails }, updateProviderDetails } = this.props;
         const userData = {
             "address": address,
             "lat": latitude,
             "lang": longitude,
         }
 
-        fetch(USER_INFO_UPDATE + ProviderDetails.Provider.providerId,
+        fetch(USER_INFO_UPDATE + providerDetails.providerId,
          {
                 method: 'POST',
                 headers: {
@@ -351,7 +333,6 @@ export default class AddAddressScreen extends Component {
             })
             .then((response) => response.json())
             .then((response) => {
-                console.log("Response" + JSON.stringify(response));
                 if (response.result) {
                     this.setState({
                         isLoading: false,
@@ -372,8 +353,7 @@ export default class AddAddressScreen extends Component {
                         lang: response.data.lang,
                         fcmId: response.data.fcm_id,
                     }
-                    ProviderDetails.Provider = userData;
-    
+                    updateProviderDetails(userData);
                     this.showToast(response.message);
                 }
                 else {
@@ -463,6 +443,18 @@ export default class AddAddressScreen extends Component {
         );
     }
 }
+
+const mapStateToProps = state => ({
+    userInfo: state.userInfo
+});
+
+const mapDispatchToProps = dispatch => ({
+    updateProviderDetails: details => {
+        dispatch(updateProviderDetails(details));
+    }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProAddAddressScreen);
 
 const styles = StyleSheet.create({
     container: {

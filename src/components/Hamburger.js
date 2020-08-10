@@ -10,15 +10,23 @@ import {
     updateCoordinatesError,
     updateOthersCoordinates,
     updatingOthersCoordinates,
-    updateOthersCoordinatesError
+    updateOthersCoordinatesError,
+    updateOnlineStatus,
+    updateConnectivityStatus,
+    updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import firebase from 'react-native-firebase';
 import Toast from 'react-native-simple-toast';
+import OnlineUsers from './OnlineUsers';
+import NetInfo from "@react-native-community/netinfo";
+import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
 import UserDetails from './UserDetails';
 import { imageExists } from '../misc/helpers';
 import { Notifications } from 'react-native-notifications';
+
+const socket = Config.socket;
 
 const Android = Platform.OS === 'android';
 
@@ -53,10 +61,13 @@ const styles = StyleSheet.create({
     titleText: { fontSize: 20, fontWeight: 'bold', color: 'black', textAlignVertical: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }
 })
 class Hamburger extends React.Component {
-    constructor() {
+    constructor(props) {
         super();
         this.state = {
-            employeesLocationsFetched: false
+            employeesLocationsFetched: false,
+            connectivityAvailable: false,
+            availabilityChecked: false,
+            availabilityObj: {}
         }
         Notifications.events().registerRemoteNotificationsRegistered(event => {
             // TODO: Send the token to my server so it could send back push notifications...
@@ -70,28 +81,26 @@ class Hamburger extends React.Component {
     }
     componentDidMount() {
         const {
-            navigation,
-            fetchNotifications,
             fetchedNotifications,
             fetchedMessages,
-            fetchingOthersCoordinates,
-            fetchedOthersCoordinates,
-            fetchOthersCoordinatesError,
-            jobsInfo: { allJobRequestsClient }
+            jobsInfo: { allJobRequestsClient },
+            updateLiveChatUsers,
+            userInfo: { userDetails },
         } = this.props;
-        const senderId = UserDetails.User.userId;
+        const senderId = userDetails.userId;
         const userRef = firebase.database().ref(`liveLocation/${senderId}`);
 
-        firebase.notifications().onNotification( async notification => {
+        this.checkNoficationsAvailability();
+
+        firebase.notifications().onNotification(async notification => {
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
+            console.log('current count --', currentGenericCount);
+            console.log('actual notification --', notification);
             const newGenericCount = currentGenericCount + 1;
             let newJobRequests = [...jobRequests];
-
             fetchedNotifications({ type: 'generic', value: newGenericCount });
             const { title, body, data } = notification;
-
-            console.log('notification', notification);
             const orderId = data.orderId;
             let pos = 0;
 
@@ -137,7 +146,7 @@ class Hamburger extends React.Component {
                 fetchedPendingJobInfo(newJobRequests);
                 this.showToast("Demande de chat acceptée");
                 updateActiveRequest(false);
-                navigation.goBack();
+                navigation.navigate('DashBoard');
             }
             else if (title == "Chat Request Rejected") {
                 this.setState({
@@ -202,28 +211,58 @@ class Hamburger extends React.Component {
         });
 
         allJobRequestsClient.map(obj => {
+            console.log(' all request info --', obj)
             const { employee_id } = obj;
             firebase.database().ref('chatting').
                 child(senderId).
                 child(employee_id)
                 .on('child_added', data => {
-                    const { messagesInfo: { dataChatSource } } = this.props;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val())
-                    newDataChatSource[employee_id] = newArr;
-                    fetchedMessages(newDataChatSource);
+                    if (data.val()) {
+                        const { messagesInfo: { dataChatSource } } = this.props;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                        newArr.push(data.val());
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => {
+                            if (a)
+                                return a.time
+                        })))
+                            .map(time => {
+                                return newData.find(a => {
+                                    if (a) return a.time === time
+                                })
+                            });
+                        newDataChatSource[employee_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
+
                 });
             firebase.database().ref('chatting').
                 child(senderId).
                 child(employee_id)
                 .once('value', data => {
-                    const { dataChatSource } = this.props.messagesInfo;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val())
-                    newDataChatSource[employee_id] = newArr;
-                    fetchedMessages(newDataChatSource);
+                    if (data) {
+                        const { dataChatSource } = this.props.messagesInfo;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                        newArr.push(data.val())
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => {
+                            if (a)
+                                return a.time
+                        })))
+                            .map(time => {
+                                return newData.find(a => {
+                                    if (a)
+                                        a.time === time
+                                })
+                            });
+                        newDataChatSource[employee_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
+
                 });
         });
         /** fetch users current position and upload it to db */
@@ -299,6 +338,40 @@ class Hamburger extends React.Component {
                 });
             fetchedNotifications({ type: 'adminMessages', value: adminMessageCount });
         });
+
+        const { updateOnlineStatus, updateConnectivityStatus } = this.props
+
+        NetInfo.addEventListener(status => {
+            updateConnectivityStatus(status.isConnected);
+        });
+        NetInfo.fetch().then(status => {
+            updateConnectivityStatus(status.isConnected);
+        });
+        socket.on('connect', () => {
+            const userId = userDetails.userId;
+            if (userId) {
+                socket.emit('connected', userId);
+                updateOnlineStatus(true)
+            }
+        });
+        socket.on('user-disconnected', users => {
+            console.log('user disconnected');
+            updateLiveChatUsers(users);
+            OnlineUsers.Users = users;
+        })
+        socket.on('user-joined', users => {
+            console.log('user joined')
+            updateLiveChatUsers(users);
+            OnlineUsers.Users = users;
+        })
+        socket.on('disconnect', info => {
+            console.log('disconnection info --', info)
+            updateLiveChatUsers({});
+            const { generalInfo: { online, connectivityAvailable } } = this.props
+            updateOnlineStatus(false)
+            if (!online && connectivityAvailable) socket.open();
+        });
+        socket.open();
     }
 
     componentDidUpdate() {
@@ -310,10 +383,45 @@ class Hamburger extends React.Component {
     }
 
     componentWillUnmount() {
-        const senderId = UserDetails.User.userId;
-        //const receiverId = ProviderDetails.Provider.providerId;
+        const { userInfo: { userDetails } } = this.props;
+        const senderId = userDetails.userId;
         firebase.database().ref('adminChatting').child(senderId).off('child_changed')
         firebase.database().ref('chatting').child(senderId).off('child_changed');
+    }
+
+    checkNoficationsAvailability = async () => {
+        if (Platform.OS === 'android') {
+            try {
+                await firebase.messaging().requestPermission();
+                const fcmToken = await firebase.messaging().getToken();
+                if (fcmToken) {
+                    const enabled = await firebase.messaging().hasPermission();
+                    if (enabled) {
+                        console.log('FCM messaging has permission:' + enabled)
+                        firebase.notifications().onNotificationDisplayed((notification) => {
+                            // Process your notification as required
+                            // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification.
+                            const { title, body } = notification;
+                            console.log('NotificationDisplayed : ', notification);
+                        });
+                    }
+                    else {
+                        try {
+                            await firebase.messaging().requestPermission();
+                            console.log('FCM permission granted')
+                        }
+                        catch (error) {
+                            console.log('FCM Permission Error', error);
+                        }
+                    }
+                }
+                else {
+                    console.log('FCM Token not available');
+                }
+            } catch (e) {
+                console.log('Error initializing FCM', e);
+            }
+        }
     }
 
     fetchEmployeeLocations = () => {
@@ -355,7 +463,7 @@ class Hamburger extends React.Component {
     }
 
     showToast = message => {
-        Toast.show(message);
+        Toast.show(message, Toast.SHORT);
     }
 
     render() {
@@ -390,6 +498,7 @@ const mapStateToProps = state => {
         messagesInfo: state.messagesInfo,
         generalInfo: state.generalInfo,
         jobsInfo: state.jobsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -445,6 +554,15 @@ const mapDispatchToProps = dispatch => {
         },
         updateActiveRequest: val => {
             dispatch(updateActiveRequest(val));
+        },
+        updateOnlineStatus: val => {
+            dispatch(updateOnlineStatus(val));
+        },
+        updateConnectivityStatus: val => {
+            dispatch(updateConnectivityStatus(val));
+        },
+        updateLiveChatUsers: val => {
+            dispatch(updateLiveChatUsers(val));
         }
     }
 }

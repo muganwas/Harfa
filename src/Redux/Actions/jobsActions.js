@@ -286,7 +286,6 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
                             delivery_lat: job.delivery_lat,
                             delivery_lang: job.delivery_lang,
                         }
-                        //ProPendingRequest.Request = jobData;
                         //check if image is reachable
                         imageExists(job.customer_details.image).then(res => {
                             jobData.imageAvailable = res;

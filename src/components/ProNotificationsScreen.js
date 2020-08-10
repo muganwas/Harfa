@@ -39,8 +39,7 @@ function StatusBarPlaceHolder() {
 class ProNotificationsScreen extends Component {
 
     constructor(props) {
-      super(props)
-    
+      super();
       this.state = {
          isLoading: true,
          isNoData: true,
@@ -54,27 +53,6 @@ class ProNotificationsScreen extends Component {
         const { fetchedNotifications } = this.props;
         fetchedNotifications({type: 'generic', value: 0});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
-        
-        // fetch(NOTIFICATION_URL)
-        //     .then((response) => response.json())
-        //     .then((responseJson) => {
-        //         this.setState({
-        //             dataSource: responseJson.data,
-        //             isLoading: false
-        //         })
-        //     })
-        //     .catch((error) => {
-        //         console.log(error);
-        //         this.setState({
-        //             isLoading: false
-        //         })
-        //         ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT)
-        //     })
-
-        // this.setState({
-        //     isLoading: false,
-        //     isNoData: true,
-        // })
     }
 
     componentWillUnmount() {

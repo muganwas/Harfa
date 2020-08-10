@@ -1,26 +1,17 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions,
-    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Modal
+    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
 } from 'react-native';
+import {withNavigation} from 'react-navigation';
 import firebase from 'react-native-firebase';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import WaitingDialog from './WaitingDialog';
-import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
-import ProviderDetails from './ProviderDetails';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
-import ProPendingJobRequest from './ProPendingJobRequest';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -57,8 +48,8 @@ function StatusBarPlaceHolder() {
 class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
-        super(props)
-        const { jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
+        super()
+        const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = props;
         var currRequestPos;
         jobRequestsProviders.map((obj, key) => {
             if (obj) {
@@ -68,10 +59,10 @@ class ProAcceptRejectJobScreen extends Component {
         });
 
         this.state = {
-            senderId: ProviderDetails.Provider.providerId,
-            senderImage: ProviderDetails.Provider.imageSource,
-            senderName: ProviderDetails.Provider.name,
-            senderSurname: ProviderDetails.Provider.surname,
+            senderId: providerDetails.providerId,
+            senderImage: providerDetails.imageSource,
+            senderName: providerDetails.name,
+            senderSurname: providerDetails.surname,
             inputMessage: '',
             showButton: false,
             isAcceptJob: jobRequestsProviders[currRequestPos].status === "Accepted",
@@ -105,7 +96,6 @@ class ProAcceptRejectJobScreen extends Component {
 
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
         firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
             .on('child_added', value => {
                 this.setState(prevState => {
@@ -130,115 +120,6 @@ class ProAcceptRejectJobScreen extends Component {
         return true;
     }
 
-    selectPhoto = () => {
-
-        console.log('SELECT PHOTO ');
-
-        ImagePicker.showImagePicker(options, (response) => {
-            console.log('Response = ', response);
-
-            if (response.didCancel) {
-                console.log('User cancelled image picker');
-            }
-            else if (response.error) {
-                console.log('ImagePicker Error: ', response.error);
-            }
-            else {
-
-                let source
-
-                source = { uri: response.uri };
-
-                this.setState({
-                    imageURI: source,
-                    imageDataObject: response,
-                });
-
-                this.getImageURL(response)
-            }
-        });
-    }
-
-    getImageURL = async (imageObject) => {
-
-        let message = {
-            textMessage: 'uploading',
-            imageMessage: imageObject,
-            time: firebase.database.ServerValue.TIMESTAMP,
-            senderId: this.state.senderId,
-            senderImage: this.state.senderImage,
-            senderName: this.state.senderName,
-            receiverId: this.state.receiverId,
-            receiverName: this.state.receiverName,
-            receiverImage: this.state.receiverImage,
-            serviceName: this.state.serviceName,
-            orderId: this.state.orderId,
-            type: "image",
-            date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
-
-        this.setState({
-            isUploading: true
-        })
-
-        let imageData = new FormData();
-        imageData.append('file', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-
-        fetch(GET_IMAGE_URL, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "multipart/form-data",
-                "otherHeader": "foo",
-            },
-            body: imageData
-        })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                //console.log("Response getImageURL >> " + JSON.stringify(responseJson));
-                this.setState({
-                    isLoading: false
-                })
-                if (responseJson.result) {
-                    this.sendImageTask(responseJson.file);
-                }
-                else {
-                    Alert.alert(
-                        "OUPS !",
-                        responseJson.message,
-                        [
-                            {
-                                text: 'Annuler',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retenter',
-                                onPress: () => this.getImageURL(imageObject),
-                            },
-                        ]
-                    );
-                }
-            })
-            .catch((error) => {
-                Alert.alert(
-                    "OUPS !",
-                    error,
-                    [
-                        {
-                            text: 'Annuler',
-                            onPress: () => console.log('Cancel Pressed'),
-                        },
-                        {
-                            text: 'Retenter',
-                            onPress: () => this.getImageURL(imageObject),
-                        },
-                    ]
-                );
-            });
-    }
-
     renderMessageItem = ({ item }) => {
         return (
             this.state.senderId != item.senderId
@@ -256,28 +137,12 @@ class ProAcceptRejectJobScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={{
-                            width: 125, height: 135, backgroundColor: 'white',
-                            borderRadius: 3, marginRight: 10
-                        }}>
-                            <Image style={{ width: 110, height: 110, marginHorizontal: 7.5, marginTop: 7.5 }}
-                                source={{ uri: item.imageMessage }}>
-                            </Image>
-                            <Text style={{
-                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
-                                color: 'black', marginRight: 7.5, marginTop: 2
-                            }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                        </View>
-                    </View>
+                    : null
                 :
                 item.type == 'text'
                     ?
@@ -288,37 +153,12 @@ class ProAcceptRejectJobScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={{
-                            width: 125, height: 135, backgroundColor: 'white', borderRadius: 3,
-                            marginRight: 10
-                        }}>
-                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5 }}
-                                source={item.textMessage == "uploading" ? item.imageMessage : { uri: item.imageMessage }}
-                                resizeMode='cover'>
-                            </Image>
-                            <Text style={{
-                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
-                                color: 'black', marginRight: 7.5, marginTop: 2
-                            }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                            {this.state.isUploading && item.textMessage == "uploading" && (
-                                <View style={styles.loaderStyle}>
-                                    <ActivityIndicator
-                                        style={{ height: 40 }}
-                                        color="#C00"
-                                        size="large" />
-                                </View>
-                            )}
-                        </View>
-                    </View>
+                    : null
         )
     }
 
@@ -380,8 +220,6 @@ class ProAcceptRejectJobScreen extends Component {
 
             }
 
-            console.log("MessageData : " + JSON.stringify(message));
-
             let recentMessageReceiver = {
                 textMessage: this.state.inputMessage,
                 imageMessage: '',
@@ -423,81 +261,11 @@ class ProAcceptRejectJobScreen extends Component {
         }
     }
 
-    sendImageTask = async (imageURL) => {
-
-
-        if (imageURL != '' && imageURL != null) {
-            let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                senderId: this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId: this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-            }
-            let recentMessageReceiver = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-            }
-            let recentMessageSender = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-            }
-
-            //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
-            if (array.length > 0) {
-                array.splice(array.length - 1, 1);
-                this.setState({ dataChatSource: array });
-            }
-
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
-            firebase.database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
-
-            firebase.database().ref().update(recentUpdates)
-
-            this.setState({
-                isUploading: false,
-            })
-        }
-    }
-
     acceptJobTask = () => {
-
         this.setState({
             isLoading: true
         });
-
+        const { userInfo: { providerDetails } } = this.props;
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -505,18 +273,18 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Accepted",
-                "body": 'Your request has been accepted by ' + ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
+                "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
-                    image: ProviderDetails.Provider.imageSource,
-                    fcmId: ProviderDetails.Provider.fcmId,
-                    name: ProviderDetails.Provider.name,
-                    surname: ProviderDetails.Provider.surname,
-                    mobile: ProviderDetails.Provider.mobile,
-                    description: ProviderDetails.Provider.description,
-                    address: ProviderDetails.Provider.address,
-                    lat: ProviderDetails.Provider.lat,
-                    lang: ProviderDetails.Provider.lang,
+                    ProviderId: providerDetails.providerId,
+                    image: providerDetails.imageSource,
+                    fcmId: providerDetails.fcmId,
+                    name: providerDetails.name,
+                    surname: providerDetails.surname,
+                    mobile: providerDetails.mobile,
+                    description: providerDetails.description,
+                    address: providerDetails.address,
+                    lat: providerDetails.lat,
+                    lang: providerDetails.lang,
                     serviceName: this.state.serviceName,
                     orderId: this.state.orderId,
                     mainId: this.state.mainId,
@@ -551,7 +319,7 @@ class ProAcceptRejectJobScreen extends Component {
                     })
 
                     var jobData = {
-                        id: rresponseJson.data.id,
+                        id: responseJson.data.id,
                         order_id: responseJson.data.order_id,
                         user_id: responseJson.data.user_id,
                         image: responseJson.data.image,
@@ -582,7 +350,7 @@ class ProAcceptRejectJobScreen extends Component {
                             }
 
                             let updates = {};
-                            updates['tracking/' + ProPendingJobRequest.Request.order_id] = locationData;
+                            updates['tracking/' + this.props.navigation.state.params.orderId] = locationData;
                             firebase.database().ref().update(updates);
                         });
                 }
@@ -604,11 +372,10 @@ class ProAcceptRejectJobScreen extends Component {
     };
 
     rejectJobTask = () => {
-
         this.setState({
             isLoading: true
-        })
-
+        });
+        const { userInfo: { providerDetails } } = this.props;
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -616,18 +383,18 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Rejected",
-                "body": 'Your request has been rejected by ' + ProviderDetails.Provider.name + ' Request Id : ' + ProPendingJobRequest.Request.order_id,
+                "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
-                    ProviderId: ProviderDetails.Provider.providerId,
-                    image: ProviderDetails.Provider.imageSource,
-                    fcmId: ProviderDetails.Provider.fcmId,
-                    name: ProviderDetails.Provider.name,
-                    surname: ProviderDetails.Provider.surname,
-                    mobile: ProviderDetails.Provider.mobile,
-                    description: ProviderDetails.Provider.description,
-                    address: ProviderDetails.Provider.address,
-                    lat: ProviderDetails.Provider.lat,
-                    lang: ProviderDetails.Provider.lang,
+                    ProviderId: providerDetails.providerId,
+                    image: providerDetails.imageSource,
+                    fcmId: providerDetails.fcmId,
+                    name: providerDetails.name,
+                    surname: providerDetails.surname,
+                    mobile: providerDetails.mobile,
+                    description: providerDetails.description,
+                    address: providerDetails.address,
+                    lat: providerDetails.lat,
+                    lang: providerDetails.lang,
                     serviceName: this.state.serviceName,
                     orderId: this.state.orderId,
                     mainId: this.state.mainId,
@@ -680,20 +447,20 @@ class ProAcceptRejectJobScreen extends Component {
     };
 
     goToMapDirection = () => {
-        const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+        const { userInfo: { providerDetails }, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
         const { currRequestPos } = this.state;
         var newjobRequestsProviders = [...jobRequestsProviders];
         var jobData = {
-            ProviderId: ProviderDetails.Provider.providerId,
-            image: ProviderDetails.Provider.imageSource,
-            fcmId: ProviderDetails.Provider.fcmId,
-            name: ProviderDetails.Provider.name,
-            surname: ProviderDetails.Provider.surname,
-            mobile: ProviderDetails.Provider.mobile,
-            description: ProviderDetails.Provider.description,
-            address: ProviderDetails.Provider.address,
-            lat: ProviderDetails.Provider.lat,
-            lang: ProviderDetails.Provider.lang,
+            ProviderId: providerDetails.providerId,
+            image: providerDetails.imageSource,
+            fcmId: providerDetails.fcmId,
+            name: providerDetails.name,
+            surname: providerDetails.surname,
+            mobile: providerDetails.mobile,
+            description: providerDetails.description,
+            address: providerDetails.address,
+            lat: providerDetails.lat,
+            lang: providerDetails.lang,
             serviceName: this.state.serviceName,
             orderId: this.state.orderId,
             mainId: this.state.mainId,
@@ -705,9 +472,6 @@ class ProAcceptRejectJobScreen extends Component {
         }
         newjobRequestsProviders[currRequestPos] = jobData;
         fetchedPendingJobInfo(newjobRequestsProviders);
-
-        //console.log("goToMapDirection :>>> " + JSON.stringify(ProPendingJobRequest.Request))
-
         this.props.navigation.navigate("ProMapDirection", {
             'pageTitle': "ProAcceptRejectJob",
         });
@@ -724,6 +488,7 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     render() {
+        const { showButton } = this.state;
         return (
             <View style={styles.container}>
 
@@ -807,20 +572,17 @@ class ProAcceptRejectJobScreen extends Component {
                             onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                         </TextInput>
 
-                        <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', marginRight: 25 }}
+                        {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', marginRight: 25 }}
                             onPress={this.selectPhoto.bind(this)}>
                             <Image style={{ width: 20, height: 20 }}
                                 source={require('../icons/camera.png')} />
-                        </TouchableOpacity>
-
-                        {this.state.showButton &&
-                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                onPress={this.sendMessageTask}>
-                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    ENVOYER
-                            </Text>
+                        </TouchableOpacity>*/}
+                        <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                                    onPress={this.sendMessageTask}>
+                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                        ENVOYER
+                                    </Text>
                             </TouchableOpacity>
-                        }
                     </View>
                 </View>
 
@@ -935,7 +697,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -965,4 +728,4 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProAcceptRejectJobScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(withNavigation(ProAcceptRejectJobScreen));

@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import {View, Text, TouchableOpacity, Image, StyleSheet, Dimensions, BackHandler, 
     ScrollView, Modal, StatusBar, Platform} from 'react-native';
+import {connect} from 'react-redux';
+import {withNavigation} from 'react-navigation';
 import Toast from 'react-native-simple-toast';
 import { AirbnbRating } from 'react-native-ratings';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import UserDetails from './UserDetails';
 import ReviewDialogCustomer from './ReviewDialogCustomer';
 import WaitingDialog from './WaitingDialog';
 import Config from './Config';
@@ -36,21 +36,20 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class BookingDetailsScreen extends Component {
+class BookingDetailsScreen extends Component {
 
   constructor(props) {
-    super(props)
-  
+    super();
     this.state = {
         isLoading: false,
         isErrorToast: false,
-        bookingDetails: this.props.navigation.state.params.bookingDetails,
+        bookingDetails: props.navigation.state.params.bookingDetails,
         isDialogLogoutVisible: false,
         mainId:'',
-        customer_rating: this.props.navigation.state.params.bookingDetails.customer_rating,
-        customer_review: this.props.navigation.state.params.bookingDetails.customer_review,
-        employee_rating: this.props.navigation.state.params.bookingDetails.employee_rating,
-        employee_review: this.props.navigation.state.params.bookingDetails.employee_review
+        customer_rating: props.navigation.state.params.bookingDetails.customer_rating,
+        customer_review: props.navigation.state.params.bookingDetails.customer_review,
+        employee_rating: props.navigation.state.params.bookingDetails.employee_rating,
+        employee_review: props.navigation.state.params.bookingDetails.employee_review
     };
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   };
@@ -70,13 +69,6 @@ export default class BookingDetailsScreen extends Component {
 
     //Call also from ReviewDialog
     changeDialogVisibility = (bool, text, bookingDetails, rating, review) => {
-
-        console.log("isDialogLogoutVisible : "+bool);
-        console.log("Text >> "+text);
-        console.log("Rating >> "+rating);
-        console.log("Review >> "+review);
-        console.log("MainId >> "+this.state.bookingDetails._id);
-
         if(this.state.bookingDetails.customer_rating == '')
         {
             if(rating != '')
@@ -135,8 +127,6 @@ export default class BookingDetailsScreen extends Component {
             "review": review,
         }
 
-        console.log("Submitted : "+JSON.stringify(reviewData));
-
         fetch(REVIEW_RATING,
             {
                 method: 'POST',
@@ -186,11 +176,10 @@ export default class BookingDetailsScreen extends Component {
     }
     
   render() {
+      const { userInfo: { userDetails } } = this.props;
     return (
         <View style={styles.container}>
-
             <StatusBarPlaceHolder/>
-
             <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                 paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5}}>
                 <View style={{ flex: 1, flexDirection: 'row',}}>
@@ -315,14 +304,14 @@ export default class BookingDetailsScreen extends Component {
                         <View style={styles.providerDetailsContainer}>
                             <View style={{ flexDirection: 'column' }}>
                                 <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
-                                    {UserDetails.User.username}
+                                    {userDetails.username}
                                 </Text>
                                 <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5 }}>
                                     <Image
                                         style={{ height: 15, width: 15, alignSelf: 'center', alignContent: 'flex-start', borderRadius: 100, }}
                                         source={require('../icons/mobile.png')} />
                                     <Text style={{ color: 'black', fontSize: 12, color: 'grey', textAlignVertical: 'center', marginLeft: 5 }}>
-                                        {UserDetails.User.mobile}
+                                        {userDetails.mobile}
                                     </Text>
                                 </View>
                                 <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5, marginRight: 50 }}>
@@ -379,6 +368,23 @@ export default class BookingDetailsScreen extends Component {
   }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withNavigation(BookingDetailsScreen));
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -423,4 +429,4 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         marginTop: 10,
     },
-})
+});

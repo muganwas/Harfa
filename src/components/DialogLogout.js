@@ -18,8 +18,7 @@ const screenHeight = Dimensions.get('window').height;
 export default class DialogLogout extends Component {
 
     constructor(props) {
-      super(props)
-
+      super();
       this.state = {
           width: Dimensions.get('window').width,
       }

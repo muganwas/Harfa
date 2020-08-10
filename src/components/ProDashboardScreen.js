@@ -19,21 +19,17 @@ import ProChatAcceptScreen from './ProChatAcceptScreen';
 import ProMapDirectionScreen from './ProMapDirectionScreen';
 import ProAllMessageScreen from './ProAllMessageScreen'
 import ProAcceptRejectJobScreen from './ProAcceptRejectJobScreen';
-import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import ProBookingScreen from './ProBookingScreen';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
-import OnlineUsers from './OnlineUsers';
-import NetInfo from "@react-native-community/netinfo";
 //import Geocoding from 'react-native-geocoding'
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { imageExists } from '../misc/helpers';
 import { startFetchingJobProvider, fetchAllJobRequestsProError, fetchedAllJobRequestsPro, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
-
-const socket = Config.socket;
 
 const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -47,7 +43,6 @@ const screenHeight = Dimensions.get('window').height;
 const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
-import { imageExists } from '../misc/helpers';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
 const database = firebase.database();
@@ -71,18 +66,17 @@ function StatusBarPlaceHolder() {
 }
 
 class ProDashBoardScreen extends Component {
-
     constructor(props) {
-        super(props)
-        const { jobsInfo: { dataWorkSource } } = this.props;
+        super();
+        const { jobsInfo: { dataWorkSource }, generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails } } = props;
         this.state = {
             isLoading: true,
             isErrorToast: false,
             mainId: '',
             reviewData: '',
             width: Dimensions.get('window').width,
-            status: ProviderDetails.Provider.status == '1' ? "ONLINE" : "OFFLINE",
-            availBackground: ProviderDetails.Provider.status == '1' ? 'green' : 'red',
+            status: online && providerDetails.status === "1" && connectivityAvailable ? "ONLINE" : "OFFLINE",
+            availBackground: online && providerDetails.status === "1"  && connectivityAvailable ? 'green' : 'red',
             dataSource: [],
             dataUserSource: [],
             dataWorkSource: dataWorkSource || [],
@@ -96,70 +90,49 @@ class ProDashBoardScreen extends Component {
             refreshing: false,
             pause: false,
             backClickCount: 0,
-            online: false,
-            connectivityAvailable: false,
             proImageAvailable: null,
         }
         this.springValue = new Animated.Value(100);
-        this.onRefresh();
     }
 
     //Get All Bookings
-    async componentDidMount() {
-        const { navigation, jobsInfo: { dataWorkSource, jobRequestsProviders } } = this.props;
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-        NetInfo.addEventListener(state => {
-            if (!state.isConnected) this.setState({ connectivityAvailable: false });
-            else this.setState({ connectivityAvailable: true });
-        });
-        NetInfo.fetch().then(state => {
-            if (!state.isConnected) this.setState({ connectivityAvailable: false });
-            else this.setState({ connectivityAvailable: true });
-        });
-        socket.on('connect', () => {
-            const userId = ProviderDetails.Provider.providerId;
-            if (userId) {
-                socket.emit('connected', userId);
-                this.setState({ online: true });
-            }
-            console.log('connected');
-        });
-        socket.on('user-disconnected', users => {
-            console.log('someone disconnected')
-            OnlineUsers.Users = users;
-        })
-        socket.on('user-joined', users => {
-            console.log('someone connected')
-            OnlineUsers.Users = users;
-        })
-        socket.on('disconnect', info => {
-            console.log('you disconnected')
-            // console.log(info);
-            this.setState({ online: false });
-            if (!this.state.online && this.state.connectivityAvailable) socket.open();
-        })
-        socket.open();
+    componentDidMount = async () => {
+        const { navigation, jobsInfo: { dataWorkSource } } = this.props;
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
         navigation.addListener('willFocus', async () => {
             this.onRefresh();
         });
-        this.onRefresh();
+        this.onRefresh(); 
         this.setState({ dataWorkSource, isLoading: false, isWorkRequest: true });
     }
 
     componentDidUpdate() {
-        const { jobsInfo: { dataWorkSource }, fetchJobRequestHistory } = this.props;
+        const { jobsInfo: { dataWorkSource }, fetchJobRequestHistory, generalInfo: { connectivityAvailable }, userInfo: { providerDetails } } = this.props;
+        const { status } = this.state;
         if (!dataWorkSource.length)
-            fetchJobRequestHistory(ProviderDetails.Provider.providerId);
+            fetchJobRequestHistory(providerDetails.providerId);
+        if (!connectivityAvailable && status === "ONLINE") 
+            this.setState({
+                status: "OFFLINE",
+                availBackground: "red",
+            });
+        else if (connectivityAvailable && providerDetails.status === "1" && status === "OFFLINE") {
+            this.setState({
+                status: "ONLINE",
+                availBackground: "green",
+            });
+        }
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
+        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton);
         this.notificationOpenedListener();
     }
 
     //Recent Chat Message
-    getAllRecentChat() {
-        let dbRef = firebase.database().ref('recentMessage').child(ProviderDetails.Provider.providerId);
+    getAllRecentChat = () => {
+        const { userInfo: { providerDetails } } = this.props;
+        let dbRef = firebase.database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', (snapshot) => {
             const key = snapshot.key;
             const message = snapshot.val();
@@ -171,14 +144,20 @@ class ProDashBoardScreen extends Component {
             if (message != null) {
                 dbRef.on('child_added', val => {
                     const { dataSource } = this.state;
+
                     let message = val.val();
                     let present = false;
                     dataSource.map(obj => {
                         if (JSON.stringify(obj) === JSON.stringify(message))
                             present = true;
                     })
-                    if (!present)
+                    if (!present) {
+                        let exists;
+                        imageExists(message.image).then(res => { exists = res });
+                        message.exists = exists;
                         this.setState(prevState => ({ dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true }));
+                    }
+
                 })
             }
             else {
@@ -190,12 +169,12 @@ class ProDashBoardScreen extends Component {
         })
     }
 
-    getAllRecentUser() {
+    getAllRecentUser = () => {
         this.setState({
             isLoading: true
-        })
-
-        fetch(RECENT_USER + ProviderDetails.Provider.providerId)
+        });
+        const { userInfo: { providerDetails } } = this.props;
+        fetch(RECENT_USER + providerDetails.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
                 if (responseJson.result) {
@@ -233,7 +212,6 @@ class ProDashBoardScreen extends Component {
                     currentPos = key;
                 }
             });
-            const customerImage = item.image;
             return (
                 <TouchableOpacity style={styles.itemMainContainer}
                     onPress={() => {
@@ -253,7 +231,7 @@ class ProDashBoardScreen extends Component {
                     }}>
                     <View style={styles.itemImageView}>
                         <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                            source={customerImage ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                            source={item.exists ? { uri: item.image } : require('../images/generic_avatar.png')} />
                     </View>
                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                         <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -279,8 +257,8 @@ class ProDashBoardScreen extends Component {
     }
 
     renderWorkItem = ({ item }) => {
-        //console.log(item);
-        if (item && String(item.employee_id) === String(ProviderDetails.Provider.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
+        const { userInfo: { providerDetails } } = this.props;
+        if (item && String(item.employee_id) === String(providerDetails.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
             return (
                 <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
                     onPress={() => this.props.navigation.navigate("ProBookingDetails", {
@@ -346,9 +324,9 @@ class ProDashBoardScreen extends Component {
         }
     }
 
-    updateAvailabilityInMongoDB = userData => {
-
-        fetch(PRO_INFO_UPDATE + ProviderDetails.Provider.providerId,
+    updateAvailabilityInMongoDB = async userData => {
+        const { userInfo: { providerDetails } } = this.props;
+        await fetch(PRO_INFO_UPDATE + providerDetails.providerId,
             {
                 method: 'POST',
                 headers: {
@@ -357,50 +335,42 @@ class ProDashBoardScreen extends Component {
                 },
                 body: JSON.stringify(userData)
             })
-            .then((response) => response.json())
             .then((response) => {
-                //console.log("Response" + JSON.stringify(response));
-                if (response.result) {
-                    if (this.state.status == 'ONLINE') {
-                        this.setState({
-                            status: "OFFLINE",
-                            availBackground: 'red',
-                            isLoading: false,
-                            isErrorToast: false
-                        })
-                    }
-                    else if (this.state.status == 'OFFLINE') {
-                        this.setState({
-                            status: "ONLINE",
-                            availBackground: 'green',
-                            isLoading: false,
-                            isErrorToast: false
-                        })
-                    }
-                    //ToastAndroid.show(response.message, ToastAndroid.show);
-                    this.showToast(response.message)
+                return response.json()
+            })
+            .then((response) => {
+                const { result, data } = response;
+                const { generalInfo: { online } } = this.props;
+                if (result && data) {
+                    providerDetails.status = data.status;
+                    this.setState({
+                        status: data.status === "1" && online ? "ONLINE" : "OFFLINE",
+                        availBackground: data.status === "1" && online ? 'green' : 'red',
+                        isLoading: false,
+                        isErrorToast: false
+                    });
+                    this.showToast(response.message);
                 }
                 else {
                     this.setState({
                         isLoading: false,
                     })
                     //ToastAndroid.show(response.message, ToastAndroid.show);
-                    this.showToast(response.message)
+                    this.showToast(response.message);
                 }
             })
             .catch((error) => {
                 console.log("Error :" + error);
                 this.setState({
                     isLoading: false,
-                })
-            })
-            .done()
-
+                });
+            });
     }
 
     changeAvailabilityStaus = () => {
+        const { userInfo: { providerDetails } } = this.props;
         var statusValue = null;
-        const providerId = ProviderDetails.Provider.providerId;
+        const providerId = providerDetails.providerId;
         const usersRef = database.ref('users/' + providerId);
         this.setState({
             isLoading: true,
@@ -419,20 +389,17 @@ class ProDashBoardScreen extends Component {
         usersRef.once('value', data => {
             if (data) {
                 usersRef.update(userData).then(() => {
-                    console.log("updated");
                     this.updateAvailabilityInMongoDB(userData);
-                }).
-                    catch(e => {
-                        console.log(e.message)
-                    });
+                }).catch(e => {
+                    console.log(e.message)
+                });
             }
             else {
                 usersRef.set(userData).then(() => {
                     this.updateAvailabilityInMongoDB(userData);
-                }).
-                    catch(e => {
-                        console.log(e.message);
-                    });
+                }).catch(e => {
+                    console.log(e.message);
+                });
             }
         })
 
@@ -526,7 +493,7 @@ class ProDashBoardScreen extends Component {
             const { dispatchSelectedJobRequest } = this.props;
             if (status == 'Pending') {
                 dispatchSelectedJobRequest(jobInfo);
-                this.props.navigation.navigate("ProAcceptRejectJob");
+                this.props.navigation.navigate("ProAcceptRejectJob", { orderId: jobInfo.orderId });
             }
             else if (status == 'Accepted') {
                 dispatchSelectedJobRequest(jobInfo);
@@ -538,7 +505,7 @@ class ProDashBoardScreen extends Component {
     }
 
     acceptChatRequest = pos => {
-        const { fetchedPendingJobInfo, jobsInfo, jobsInfo: { jobRequestsProviders }, dispatchSelectedJobRequest } = this.props;
+        const { fetchedPendingJobInfo, userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders }, dispatchSelectedJobRequest } = this.props;
         var newjobRequestsProviders = [...jobRequestsProviders];
         const {
             id,
@@ -574,7 +541,7 @@ class ProDashBoardScreen extends Component {
                 "title": "Chat Request Accepted",
                 "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
                 "data": {
-                    ProviderData: ProviderDetails.Provider,
+                    ProviderData: providerDetails,
                     serviceName: service_name,
                     orderId: order_id,
                     mainId: id,
@@ -646,10 +613,10 @@ class ProDashBoardScreen extends Component {
 
     renderPendingJobs = ({ item, index }) => {
         if (item) {
-            const { image, name, imageAvailable, user_id, service_name, chat_status, status } = item;
+            const { image, name, imageAvailable, user_id, service_name, chat_status, status, order_id } = item;
             return (
                 <TouchableOpacity style={styles.pendingJobRow}
-                    onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id })}>
+                    onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id, orderId: order_id })}>
                     <LinearGradient style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
@@ -710,7 +677,6 @@ class ProDashBoardScreen extends Component {
             })
             .then((response) => response.json())
             .then((response) => {
-                //console.log("Response" + JSON.stringify(response));
                 if (response.result) {
                     this.setState({
                         isLoading: false,
@@ -718,9 +684,7 @@ class ProDashBoardScreen extends Component {
                         mainId: "",
                         isErrorToast: false
                     })
-                    //ToastAndroid.show("Review submitted", ToastAndroid.show);
                     this.showToast("Review submitted");
-
                     this.onRefresh();
                 }
                 else {
@@ -740,8 +704,8 @@ class ProDashBoardScreen extends Component {
             .done()
     }
 
-    askForReview(item) {
-        const { fetchJobRequestHistory } = this.props;
+    askForReview = (item) => {
+        const { fetchJobRequestHistory, userInfo: { providerDetails } } = this.props;
         if (item.customer_review != "Requested" && item.customer_rating == "") {
             this.setState({
                 isLoading: true,
@@ -750,11 +714,11 @@ class ProDashBoardScreen extends Component {
             const askReviewData = {
                 "order_id": item._id,
                 "user_id": item.user_id,
-                "employee_id": ProviderDetails.Provider.providerId,
+                "employee_id": providerDetails.providerId,
                 'notification': {
                     "fcm_id": item.user_details.fcm_id,
                     "title": "Ask For Review",
-                    "body": ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname + " waiting for your feedback",
+                    "body": providerDetails.name + " " + providerDetails.surname + " waiting for your feedback",
                 }
             }
 
@@ -774,11 +738,11 @@ class ProDashBoardScreen extends Component {
                             isLoading: false,
                             dataWorkSource: [],
                             isErrorToast: false,
-                        })
+                        });
+                        const { userInfo: { providerDetails } } = this.props;
                         //ToastAndroid.show("Request submitted successfully", ToastAndroid.show);
                         this.showToast("Request submitted successfully")
-
-                        fetchJobRequestHistory(ProviderDetails.Provider.providerId);
+                        fetchJobRequestHistory(providerDetails.providerId);
                     }
                     else {
                         this.setState({
@@ -801,7 +765,6 @@ class ProDashBoardScreen extends Component {
                 .done()
         }
         else if (item.customer_review == "Requested") {
-            console.log("You have already asked, Please wait for customer feedback");
             this.setState({
                 isErrorToast: true
             })
@@ -844,7 +807,6 @@ class ProDashBoardScreen extends Component {
 
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
-        console.log('job requests', jobRequestsProviders);
         return (
             <View style={styles.container}>
 
@@ -884,7 +846,7 @@ class ProDashBoardScreen extends Component {
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
-                            onRefresh={this.onRefresh.bind(this)}
+                            onRefresh={this.onRefresh}
                             title="Loading" />
                     }>
                     <View>
@@ -1010,7 +972,7 @@ class ProDashBoardScreen extends Component {
                         // ItemSeparatorComponent={this.renderSeparator}
                         />
                     </View> : null}
-                    
+
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -1033,7 +995,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

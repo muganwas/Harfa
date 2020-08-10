@@ -28,7 +28,7 @@ export const imageExists = async image_url => {
             result = true;
         }).
         catch(e => {
-            console.log(e.message);
+            //console.log(e.message);
             result = false;
         });
     else result = false;

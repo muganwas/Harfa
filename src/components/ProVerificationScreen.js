@@ -9,7 +9,7 @@ import ShakingText from 'react-native-shaking-text';
 import firebase from 'react-native-firebase';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
-import ProPendingRequest from './ProPendingJobRequest';
+import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
@@ -24,11 +24,10 @@ const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
 class ProVerificationScreen extends Component {
 
     constructor(props) {
-        super(props)
-    
+        super();
         this.state = {
-            mobile: this.props.navigation.state.params.mobile,
-            otpToMatch: this.props.navigation.state.params.otp,
+            mobile: props.navigation.state.params.mobile,
+            otpToMatch: props.navigation.state.params.otp,
             otp: '',
             error: '',
             timer: 30,
@@ -38,7 +37,6 @@ class ProVerificationScreen extends Component {
     }   
 
     componentDidMount(){
-
         //From ProLoginPhoneScreen
         this.setState({
             mobile: this.props.navigation.state.params.mobile,
@@ -86,9 +84,7 @@ class ProVerificationScreen extends Component {
             })
 
             firebase.messaging().getToken().then((fcmToken) => {
-
-                console.log("ProVerificationFCM ID " + fcmToken);
-
+                const { updateProviderDetails } = this.props;
                 if (fcmToken) {
 
                     const mobileData = {
@@ -132,11 +128,8 @@ class ProVerificationScreen extends Component {
                                     invoice: responseJson.data.invoice,
                                     status: responseJson.data.status,
                                 }
-                                ProviderDetails.Provider = providerData;
-
-                                console.log("ProVerificationScreen checkValidation : " + JSON.stringify(ProviderDetails.Provider))
-
-                                fetchProvidersJobRequests({}, id)
+                                updateProviderDetails(providerData);
+                                fetchProvidersJobRequests({},id)
                             }
                             else {
                                 this.props.navigation.navigate("ProRegister", {
@@ -259,6 +252,9 @@ const mapDispatchToProps = dispatch => {
     return {
         fetchProvidersJobRequests: (props, providerId, navTo) => {
             dispatch(getPendingJobRequestProvider(props, providerId, navTo));
+        },
+        updateProviderDetails: details => {
+            dispatch(updateProviderDetails(details));
         }
     }
 }

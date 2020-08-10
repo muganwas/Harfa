@@ -1,8 +1,8 @@
 
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, ScrollView, Dimensions,
-     ActivityIndicator,ToastAndroid, Alert, StatusBar, Platform, BackHandler, Modal} from 'react-native';
+import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, Dimensions, Alert, StatusBar, Platform, BackHandler, Modal} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import {connect} from 'react-redux';
 import AsyncStorage from '@react-native-community/async-storage';
 import firebase from 'react-native-firebase';
 import ShakingText from 'react-native-shaking-text';
@@ -10,6 +10,7 @@ import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import ProviderDetails from './ProviderDetails';
 import Axios from 'axios';
+import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 //const colorPrimary = '#FFBF0F';
 const colorPrimaryDark = '#C5940E';
@@ -37,16 +38,14 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ProRegisterFBScreen extends Component {
-
+class ProRegisterFBScreen extends Component {
     constructor(props) {
-        super(props)
-    
+        super();
         this.state = {
-            name: this.props.navigation.state.params.name,
+            name: props.navigation.state.params.name,
             surname:'',
-            email: this.props.navigation.state.params.email,
-            image: this.props.navigation.state.params.image,
+            email: props.navigation.state.params.email,
+            image: props.navigation.state.params.image,
             mobile: '',
             serviceName: 'Select services',
             serviceId: '',
@@ -57,7 +56,7 @@ export default class ProRegisterFBScreen extends Component {
             invoice: '1',
             error: '',
             currentPage: 0,
-            account_type: this.props.navigation.state.params.accountType,
+            account_type: props.navigation.state.params.accountType,
             isLoading: false,
         }
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -111,10 +110,8 @@ export default class ProRegisterFBScreen extends Component {
     registerTask()
     {
         firebase.messaging().getToken().then((fcmToken) => {
-            console.log("ProRegister FCM ID " + fcmToken);
-
+            const { updateProviderDetails } = this.props;
             if (fcmToken) {
-
                 const userData = {
                     "username": this.state.name,
                     "surname": this.state.surname, 
@@ -131,9 +128,6 @@ export default class ProRegisterFBScreen extends Component {
                     "type": "google",
                     "account_type": this.state.account_type
                  }
-
-                 console.log("Data >> "+JSON.stringify(userData));
-
                  this.setState({
                      isLoading: true
                  })
@@ -147,7 +141,6 @@ export default class ProRegisterFBScreen extends Component {
                     if(responseJson.status === 200 && responseJson.data.createdDate)
                     {
                         const id = responseJson.data.id;
-        
                         var providerData = {
                             providerId: responseJson.data.id,
                             name: responseJson.data.username,
@@ -166,9 +159,7 @@ export default class ProRegisterFBScreen extends Component {
                             fcmId: responseJson.data.fcm_id,
                             accountType: responseJson.data.account_type
                         }
-        
-                        ProviderDetails.Provider = providerData;
-        
+                        updateProviderDetails(providerData);
                         //Store data like sharedPreference
                         AsyncStorage.setItem('userId', id);
                         AsyncStorage.setItem('userType', 'Provider');
@@ -389,6 +380,18 @@ export default class ProRegisterFBScreen extends Component {
         );
     }
 }
+
+const mapStateToProps = state => ({
+    userInfo: state.userInfo
+});
+
+const mapDispatchToProps = dispatch => ({
+    updateProviderDetails: details => {
+        dispatch(updateProviderDetails(details));
+    }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProRegisterFBScreen);
 
 const styles = StyleSheet.create({
     container: {

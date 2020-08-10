@@ -9,7 +9,7 @@ const screenHeight = Dimensions.get('window').height;
 export default class WaitingDialog extends Component {
 
     constructor(props) {
-      super(props)
+      super();
     };
 
   render() {

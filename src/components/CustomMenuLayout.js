@@ -13,11 +13,11 @@ const colorPrimary = '#FFBF0F';
 class CustomMenuLayout extends Component {
 
     constructor(props) {
-        super(props)
-      
+        super();
+        const { userInfo: { userDetails } } = props;
         this.state = {
-           image: UserDetails.User.image,
-           name: UserDetails.User.username,
+           image: userDetails.image,
+           name: userDetails.username,
            isDialogLogoutVisible: false,
         };
     };
@@ -32,7 +32,8 @@ class CustomMenuLayout extends Component {
     }
 
     render() {
-        const imageSource = UserDetails.User.image; 
+        const { userInfo: { userDetails } } = this.props;
+        const imageSource = userDetails.image; 
         const { notificationsInfo, fetchedNotifications } = this.props;
         return (
             <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
@@ -40,7 +41,7 @@ class CustomMenuLayout extends Component {
                     <ScrollView>
                         <View style={styles.header}>
                             <Image source={ imageSource ? {uri: imageSource} : require('../images/generic_avatar.png')} style={styles.headerImage}/>
-                            <Text style={[styles.textHeader, {color: 'white'}]}>{UserDetails.User.username}</Text>
+                            <Text style={[styles.textHeader, {color: 'white'}]}>{userDetails.username}</Text>
                         </View>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
@@ -104,9 +105,9 @@ class CustomMenuLayout extends Component {
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
                                 fetchedNotifications({type: 'adminMessages', value: 0});
-                                /**Nedd to confirm how this works */
-                                //this.props.navigation.navigate("ChatWithAdmin")
-                                //this.props.navigation.dispatch(DrawerActions.closeDrawer())
+                                console.log('going to admin')
+                                this.props.navigation.navigate("ChatWithAdmin")
+                                this.props.navigation.dispatch(DrawerActions.closeDrawer())
                                 }}>
                             <View style={styles.row}>
                                <Image source={require('../icons/message.png')} style={styles.menuImage}/>
@@ -235,7 +236,8 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
-        notificationsInfo: state.notificationsInfo
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
     }
 }
 

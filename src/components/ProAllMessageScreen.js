@@ -13,6 +13,7 @@ import ProviderDetails from './ProviderDetails';
 import ProChatScreen from './ProChatScreen';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import { imageExists } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 
@@ -46,8 +47,7 @@ function StatusBarPlaceHolder() {
 class ProAllMessageScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super()
         this.state = {
             isLoading: false,
             dataSource: [],
@@ -62,18 +62,20 @@ class ProAllMessageScreen extends Component {
 
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
-        let dbRef = firebase.database().ref('recentMessage').child(ProviderDetails.Provider.providerId);
+        const { userInfo: { providerDetails } } = this.props;
+        let dbRef = firebase.database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', snapshot => {
             //const key = snapshot.key;
             const message = snapshot.val();
-
             if (message != null) {
-                dbRef.on('child_added', val => {
+                dbRef.on('child_added', async val => {
                     let message = val.val();
                     this.setState({
                         isLoading: false,
                     });
-
+                    let exists;
+                    await imageExists(message.image).then(res => { exists = res });
+                    message.exists = exists;
                     this.setState((prevState) => {
                         return {
                             dataSource: [...prevState.dataSource, message],
@@ -134,6 +136,7 @@ class ProAllMessageScreen extends Component {
 
     renderRecentMessageItem = ({ item }) => {
         const { dispatchSelectedJobRequest, jobsInfo: { allJobRequestsProviders } } = this.props;
+        let { exists } = item;
         let currentPos;
         allJobRequestsProviders.map((obj, key) => {
             if (obj.user_id === item.id) {
@@ -144,7 +147,7 @@ class ProAllMessageScreen extends Component {
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => {
-                    dispatchSelectedJobRequest({user_id: item.id});
+                    dispatchSelectedJobRequest({ user_id: item.id });
                     this.props.navigation.navigate("ProChat", {
                         currentPos,
                         'receiverId': item.id,
@@ -157,7 +160,7 @@ class ProAllMessageScreen extends Component {
                 }}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={item.image ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                        source={exists ? { uri: item.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -288,7 +291,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

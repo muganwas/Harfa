@@ -35,8 +35,6 @@ const colorYellow = '#FFBF0F';
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
 
-console.log(`Register URL Next: ${REGISTER_URL}`);
-
 const options = {
   title: 'Select a photo',
   takePhotoButtonTitle: 'Take a photo',
@@ -63,10 +61,9 @@ function StatusBarPlaceHolder() {
 
 export default class RegisterScreen extends Component {
   constructor(props) {
-    super(props);
-
+    super();
     this.state = {
-      accountType: this.props.navigation.state.params.accountType, //From AccountTypeScreen
+      accountType: props.navigation.state.params.accountType, //From AccountTypeScreen
       username: '',
       email: '',
       password: '',
@@ -218,30 +215,6 @@ export default class RegisterScreen extends Component {
                   isToastShow: true,
                 });
 
-                //const id = responseJson.data.id;
-
-                /*var userData = {
-                  userId: responseJson.data.id,
-                  accountType: responseJson.data.acc_type,
-                  email: responseJson.data.email,
-                  password: responseJson.data.password,
-                  username: responseJson.data.username,
-                  image: responseJson.data.image,
-                  mobile: responseJson.data.mobile,
-                  dob: responseJson.data.dob,
-                  address: responseJson.data.address,
-                  lat: responseJson.data.lat,
-                  lang: responseJson.data.lang,
-                  fcmId: responseJson.data.fcm_id,
-                };
-                UserDetails.User = userData;*/
-
-                //console.log(UserDetails)
-
-                //Store data like sharedPreference
-                //AsyncStorage.setItem('userId', id);
-                // AsyncStorage.setItem('userType', 'User');
-
                 Alert.alert(
                   'Successfully Registered !',
                   'We have send you a email verification link to your registered email id and then Login to your account',
@@ -257,7 +230,6 @@ export default class RegisterScreen extends Component {
                   ],
                 );
               } else {
-                console.log('Response Else ');
                 this.setState({
                   isLoading: false,
                 });

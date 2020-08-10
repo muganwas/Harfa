@@ -10,9 +10,10 @@ import UserDetails from './UserDetails';
 import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
-import OnlineUsers from './OnlineUsers';
 import { imageExists } from '../misc/helpers';
+import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
+import { cloneDeep } from 'lodash';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
 
 const colorPrimary = '#FFBF0F';
@@ -48,35 +49,35 @@ function StatusBarPlaceHolder() {
 }
 
 class ProviderDetailsScreen extends Component {
-
     constructor(props) {
-      super(props)
-    
+      super();
+      const { navigation, generalInfo: { OnlineUsers } } = props;
+      const liveChatStatus = OnlineUsers[navigation.state.params.providerId] ? OnlineUsers[navigation.state.params.providerId].status : "0";
       this.state = {
-        providerId: this.props.navigation.state.params.providerId,
-        name: this.props.navigation.state.params.name,
-        surname: this.props.navigation.state.params.surname,
-        image: this.props.navigation.state.params.image,
+        providerId: navigation.state.params.providerId,
+        name: navigation.state.params.name,
+        surname: navigation.state.params.surname,
+        image: navigation.state.params.image,
         imageAvailable: false,
-        mobile: this.props.navigation.state.params.mobile,
-        avgRating: this.props.navigation.state.params.avgRating,
-        distance: this.props.navigation.state.params.distance,
-        address: this.props.navigation.state.params.address,
-        description: this.props.navigation.state.params.description,
-        status: this.props.navigation.state.params.status,
-        fcmId: this.props.navigation.state.params.fcmId,
-        accountType: this.props.navigation.state.params.accountType,
-        serviceName: this.props.navigation.state.params.serviceName,
-        serviceId: this.props.navigation.state.params.serviceId,
+        mobile: navigation.state.params.mobile,
+        avgRating: navigation.state.params.avgRating,
+        distance: navigation.state.params.distance,
+        address: navigation.state.params.address,
+        description: navigation.state.params.description,
+        status: navigation.state.params.status,
+        online: navigation.state.params.status === "1" && liveChatStatus === "1",
+        liveChatStatus,
+        fcmId: navigation.state.params.fcmId,
+        accountType: navigation.state.params.accountType,
+        serviceName: navigation.state.params.serviceName,
+        serviceId: navigation.state.params.serviceId,
         requestStatus: '',
         isJobAccepted: false,
         isErrorToast: false,
         isLoading: false,
-       
         timer: null,
         minutes_Counter: '04',
         seconds_Counter: '59',
-
         title: '',
         body: '',
         data: '',
@@ -86,7 +87,9 @@ class ProviderDetailsScreen extends Component {
 
   requestForBooking = () => {
 
-      if(UserDetails.User.lang == "")
+    const { userInfo: { userDetails } } = this.props;
+
+      if(userDetails.lang == "")
       {
         this.setState({
           isErrorToast: true,
@@ -94,7 +97,7 @@ class ProviderDetailsScreen extends Component {
         this.showToast('Please update address first')
         //ToastAndroid.show("Please update address", ToastAndroid.SHORT);
       }
-      else if(UserDetails.User.mobile == '')
+      else if(userDetails.mobile == '')
       {
         this.setState({
           isErrorToast: true,
@@ -102,7 +105,7 @@ class ProviderDetailsScreen extends Component {
         this.showToast('Please update mobile first')
         //ToastAndroid.show("Please update your mobile number", ToastAndroid.SHORT);
       }
-      else if(this.state.status == '0')
+      else if(!this.state.online)
       {
         this.setState({
           isErrorToast: true,
@@ -118,22 +121,22 @@ class ProviderDetailsScreen extends Component {
         })
   
         const data = {
-          'user_id': UserDetails.User.userId,
+          'user_id': userDetails.userId,
           'employee_id': this.state.providerId,
           'service_id': this.state.serviceId,
-          'delivery_address': UserDetails.User.address,
-          'delivery_lat' : UserDetails.User.lat,
-          'delivery_lang': UserDetails.User.lang,
+          'delivery_address': userDetails.address,
+          'delivery_lat' : userDetails.lat,
+          'delivery_lang': userDetails.lang,
           'notification': {
             "fcm_id": this.props.navigation.state.params.fcmId,
             "title": "Booking Request",
-            "body": 'A booking request from ' + UserDetails.User.username,
+            "body": 'A booking request from ' + userDetails.username,
             "data": {
-              userId: UserDetails.User.userId,
+              userId: userDetails.userId,
               serviceName: this.state.serviceName,
-              delivery_address: UserDetails.User.address,
-              delivery_lat : UserDetails.User.lat,
-              delivery_lang: UserDetails.User.lang,
+              delivery_address: userDetails.address,
+              delivery_lat : userDetails.lat,
+              delivery_lang: userDetails.lang,
             },
           } 
         }
@@ -271,8 +274,8 @@ class ProviderDetailsScreen extends Component {
   } 
 
   componentDidUpdate(){
-    const { jobsInfo: { activeRequest } } = this.props;
-    const { requestStatus } = this.state;
+    const { jobsInfo: { activeRequest }, generalInfo: { OnlineUsers } } = this.props;
+    const { requestStatus, liveChatStatus } = this.state;
       if(this.state.minutes_Counter == '00'){ 
         if(this.state.seconds_Counter == '00')
         {
@@ -286,24 +289,31 @@ class ProviderDetailsScreen extends Component {
       }
     if (!activeRequest && requestStatus == 'Waiting for acceptance...') 
       this.setState({requestStatus: ''});
+    const currentliveChatStatus = OnlineUsers[this.state.providerId] ? OnlineUsers[this.state.providerId].status : "0";
+    if (liveChatStatus !== currentliveChatStatus) {
+      this.setState({
+        online: this.state.status === "1" && currentliveChatStatus === "1",
+        liveChatStatus: currentliveChatStatus,
+      });
+    }
   }
 
   componentDidMount(){
     const { image } = this.props.navigation.state.params;
+    const { generalInfo: { OnlineUsers } } = this.props;
     imageExists(image).then(imageAvailable => {
       this.setState({imageAvailable});
     })
-    const onlineUsers = OnlineUsers.Users;
-
+    const onlineUsers = OnlineUsers;
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     const { providerId } = this.state;
     const userRef = database.ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {
-        if (result && result.key === "status" && providerId) 
+        if (result && result.key === "status" && providerId) {
             if (onlineUsers[providerId] && result.val() === '1') this.setState({status: onlineUsers[providerId].status});
             else this.setState({status: result.val()});
-        else console.log('provider id unavailable')
+        } else console.log('provider id unavailable')
     });
 
     userRef.once('value', data => {
@@ -319,7 +329,6 @@ class ProviderDetailsScreen extends Component {
             }
         }
     });
-
   }
 
   componentWillUnmount() {
@@ -333,9 +342,9 @@ class ProviderDetailsScreen extends Component {
   }
 
   goToChatScreen = () => {
-
-    data = this.state.data;
-
+    const { userInfo: { userDetails }, jobsInfo: { jobRequests }, fetchedPendingJobInfo } = this.props;
+    let newJobRequests = cloneDeep(jobRequests);
+    let data = this.state.data;
     const providerData = JSON.parse(data.ProviderData);
 
     var pendingJobData = {
@@ -354,14 +363,12 @@ class ProviderDetailsScreen extends Component {
       service_name: this.state.serviceName,
       chat_status : data.chat_status,
       status : data.status,
-      delivery_address: UserDetails.User.address,
-      delivery_lat: UserDetails.User.lat,
-      delivery_lang: UserDetails.User.lang,
+      delivery_address: userDetails.address,
+      delivery_lat: userDetails.lat,
+      delivery_lang: userDetails.lang,
     }
-    PendingJobRequest.Request = pendingJobData;
-
-    console.log("goToChatScreen ProviderInfo : " + JSON.stringify(PendingJobRequest.Request));
-
+    newJobRequests.push(pendingJobData);
+    fetchedPendingJobInfo(newJobRequests);
     this.props.navigation.navigate("Chat", {
       'titlePage': "ProviderDetails",
       'isJobAccepted': this.state.isJobAccepted,
@@ -439,9 +446,9 @@ class ProviderDetailsScreen extends Component {
           </View>
 
           <View style={styles.onlineOfflineView}>
-            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.status === '1' ? colorGreen : colorRed }]}>
+            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.online ? colorGreen : colorRed }]}>
               <Text style={{color: 'white', fontWeight: 'bold',}}>
-                {this.state.status === '1' ? "ONLINE" : "OFFLINE"}</Text>
+                {this.state.online ? "ONLINE" : "OFFLINE"}</Text>
             </View>
           </View>
         </View>
@@ -561,7 +568,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -590,6 +598,12 @@ const mapDispatchToProps = dispatch => {
         },
         updateActiveRequest: val => {
           dispatch(updateActiveRequest(val));
+        },
+        updateUserDetails: details => {
+            dispatch(updateUserDetails(details));
+        },
+        updateProviderDetails: details => {
+            dispatch(updateProviderDetails(details));
         }
     }
 }

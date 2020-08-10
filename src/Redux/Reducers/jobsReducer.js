@@ -124,7 +124,9 @@ const jobsReducer = (state=initialState, action) => {
                 activeRequest: action.payload
             }
         default: 
-            return state;
+            return {
+                ...state
+            }
     }
 }
 

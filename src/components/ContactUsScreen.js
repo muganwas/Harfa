@@ -30,11 +30,9 @@ function StatusBarPlaceHolder() {
 export default class ContactUsScreen extends Component{
 
     constructor(props) {
-      super(props)
+      super()
     
-      this.state = {
-         
-      };
+      this.state = {};
     };
     
 

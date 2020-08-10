@@ -6,34 +6,28 @@ import { notificationsFetched } from '../Redux/Actions/notificationActions';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import {DrawerActions} from 'react-navigation-drawer';
 import ProDialogLogout from './ProDialogLogout';
-import ProviderDetails from './ProviderDetails';
 
 const colorPrimary = '#FFBF0F';
 
 class CustomMenuLayout extends Component {
 
     constructor(props) {
-      super(props)
-    
+      super();
       this.state = {
           isDialogLogoutVisible: false
       };
     };
 
     changeDialogVisibility = (bool) => {
-       
         this.props.navigation.dispatch(DrawerActions.closeDrawer());
-
         this.setState({
             isDialogLogoutVisible: bool
         })
     }
 
     render() {
-        const imageSource = ProviderDetails.Provider.imageSource; 
-        const { notificationsInfo, fetchedNotifications } = this.props;
-        console.log('custom menu')
-        console.log(imageSource)
+        const { notificationsInfo, fetchedNotifications, userInfo: { providerDetails } } = this.props;
+        const imageSource = providerDetails.imageSource; 
         return (
             <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
                 <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>
@@ -43,7 +37,7 @@ class CustomMenuLayout extends Component {
                             <Text style={{fontSize: 12, color: 'white', 
                                    alignItems: 'center',justifyContent: 'center',marginTop: 5,}}>
                                 Welcome</Text>
-                            <Text style={[styles.textHeader, {color: 'white'}]}>{ProviderDetails.Provider.name+" "+ProviderDetails.Provider.surname}</Text>
+                            <Text style={[styles.textHeader, {color: 'white'}]}>{providerDetails.name+" "+providerDetails.surname}</Text>
                         </View>
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
@@ -249,7 +243,8 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
-        notificationsInfo: state.notificationsInfo
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
     }
 }
 

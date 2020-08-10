@@ -11,7 +11,6 @@ import Polyline from '@mapbox/polyline';
 import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import UserDetails from './UserDetails';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import Config from './Config';
 
@@ -46,8 +45,8 @@ function StatusBarPlaceHolder() {
 class MapDirectionScreen extends Component {
 
     constructor(props) {
-        super(props)
-        const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
+        super();
+        const { userInfo: { userDetails }, generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, navigation } = props;
         var currRequestPos;
         jobRequests.map((obj, key) => {
             const currEmpId = obj.employee_id;
@@ -65,9 +64,9 @@ class MapDirectionScreen extends Component {
             coords: [],
             isLoading: true,
 
-            senderId: UserDetails.User.userId,
-            senderImage: UserDetails.User.image,
-            senderName: UserDetails.User.username,
+            senderId: userDetails.userId,
+            senderImage: userDetails.image,
+            senderName: userDetails.username,
             inputMessage: '',
             dataChatSource: [],
             currRequestPos,
@@ -85,7 +84,7 @@ class MapDirectionScreen extends Component {
             providerLang: jobRequests[currRequestPos].lang,
             serviceName: jobRequests[currRequestPos].service_name,
             isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
-            titlePage: this.props.navigation.state.params.titlePage,
+            titlePage: navigation.state.params.titlePage,
             mapKey: Math.random(2),
             employeeLocationFetched: othersCoordinates[employee_id] ? true : false
         };
@@ -507,7 +506,7 @@ class MapDirectionScreen extends Component {
     }
 
     render() {
-        const { jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, generalInfo: { othersCoordinates } } = this.props;
+        const {userInfo: { userDetails }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, generalInfo: { othersCoordinates } } = this.props;
         const { 
             currRequestPos,
             sourceLat, 
@@ -552,7 +551,7 @@ class MapDirectionScreen extends Component {
                             latitude: sourceLat,
                             longitude: sourceLng,
                         }}
-                        title={UserDetails.User.username}
+                        title={userDetails.username}
                         description="Vous">
                         <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
                             source={require('../icons/home_marker.png')} />
@@ -789,7 +788,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

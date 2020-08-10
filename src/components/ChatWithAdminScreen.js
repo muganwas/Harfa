@@ -1,19 +1,12 @@
 import React, { Component } from 'react';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator
+    BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView
 } from 'react-native';
-//import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
-import ProviderDetails from './ProviderDetails';
-import ImagePicker from 'react-native-image-picker';
+import {connect} from 'react-redux';
 import firebase from 'react-native-firebase';
+import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
 
 const screenWidth = Dimensions.get('window').width;
 //const screenHeight = Dimensions.get('window').height;
@@ -25,13 +18,13 @@ const options = {
     quality: 1
 };
 
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
-
-const GET_IMAGE_URL = Config.baseURL+"thirdpartyapi/chatupload";
+const ios = Platform.OS === 'ios';
+const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
+const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload";
 
 function StatusBarPlaceHolder() {
     return (
-        Platform.OS === 'ios' ?
+        ios ?
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
@@ -45,41 +38,44 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class ChatWithAdminScreen extends Component {
+class ChatWithAdminScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super();
+        const { userInfo: { userDetails, providerDetails } } = props;
+        const senderId = providerDetails.providerId || userDetails.userId;
+        const senderName = providerDetails.name || userDetails.username;
+        const senderImage = providerDetails.imageSource || userDetails.image;
         this.state = {
-            senderId: ProviderDetails.Provider.providerId,
-            senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
-            senderImage: ProviderDetails.Provider.imageSource,
+            senderId: senderId,
+            senderName: senderName,
+            senderImage: senderImage,
             inputMessage: '',
             showButton: false,
             dataChatSource: [],
             isLoading: true,
             isUploading: false,
-
             receiverId: "1",
             receiverName: "Admin",
-            receiverImage: 'http://laabhaa.co.in/projects/Rupesh/user-profile.png',
+            receiverImage: require('../images/generic_avatar.png'),
         };
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentWillMount() {
-
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-        console.log("Sender Id: "+this.state.senderId);
-        console.log("Receiver Id: "+this.state.receiverId);
-
         firebase.database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId)
-            .on('child_added', (value) => {
-                this.setState((prevState) => {
+            .on('child_added', value => {
+                this.setState(prevState => {
+                    //filter out only unique messages
+                    let newData = [...prevState.dataChatSource];
+                    if (value.val()) 
+                        newData.push(value.val());
+                    const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
+                    .map(time => {
+                        return newData.find(a => a ? a.time === time : null)
+                    });
                     return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
+                        dataChatSource: [...uniqueData],
                         isLoading: false,
                     }
                 })
@@ -94,118 +90,9 @@ export default class ChatWithAdminScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
-    }
-
-    selectPhoto = () => {
-
-        console.log('SELECT PHOTO ');
-
-        ImagePicker.showImagePicker(options, (response) => {
-            console.log('Response = ', response);
-
-            if (response.didCancel) {
-                console.log('User cancelled image picker');
-            }
-            else if (response.error) {
-                console.log('ImagePicker Error: ', response.error);
-            }
-            else {
-              
-                let source 
-                
-                source = { uri: response.uri };
-               
-                this.setState({
-                    imageURI: source,
-                    imageDataObject: response,
-                });
-
-                this.getImageURL(response)
-            }
-        });
-    }
-
-    getImageURL = async (imageObject) => {
-       
-        let message = {
-            textMessage: 'uploading',
-            imageMessage: imageObject,
-            time: firebase.database.ServerValue.TIMESTAMP,
-            senderId: this.state.senderId,
-            senderImage: this.state.senderImage,
-            senderName: this.state.senderName,
-            receiverId: this.state.receiverId,
-            receiverName: this.state.receiverName,
-            receiverImage: this.state.receiverImage,
-            type: "image",
-            date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
-
-        this.setState({
-            isUploading: true
-        })
-        
-        let imageData = new FormData();
-        imageData.append('file', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-           
-        fetch(GET_IMAGE_URL , {
-            method: 'POST',
-            headers: {
-                "Content-Type": "multipart/form-data",
-                "otherHeader": "foo",
-            },
-            body: imageData
-         })
-         .then((response) => response.json())
-         .then((responseJson) => {
-            console.log("Response getImageURL >> "+JSON.stringify(responseJson));
-            this.setState({
-                isLoading: false
-            })
-            if(responseJson.result)
-            {
-                this.sendImageTask(responseJson.file);
-            }
-            else
-            {
-                Alert.alert(
-                    "OOPS !",
-                    responseJson.message,
-                    [
-                        {
-                            text: 'Cancel',
-                            onPress: () => console.log('Cancel Pressed'),
-                        },
-                        {
-                            text: 'Retry',
-                            onPress: () => this.getImageURL(imageObject),
-                        },
-                    ]
-                );
-            }
-         })
-        .catch((error) => {
-            Alert.alert(
-                "OOPS !",
-                error,
-                [
-                    {
-                        text: 'Cancel',
-                        onPress: () => console.log('Cancel Pressed'),
-                    },
-                    {
-                        text: 'Retry',
-                        onPress: () => this.getImageURL(imageObject),
-                    },
-                ]
-            );
-        });
     }
 
     convertTime = (time) => {
@@ -237,10 +124,6 @@ export default class ChatWithAdminScreen extends Component {
     }
 
     sendMessageTask = async () => {
-
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
-
         if (this.state.inputMessage.length > 0) {
             let msgId = firebase.database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
@@ -268,7 +151,7 @@ export default class ChatWithAdminScreen extends Component {
                 image: this.state.senderImage,
                 type: "text",
             }
-            
+
             updates['adminChatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
             updates['adminChatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
             firebase.database().ref().update(updates);
@@ -283,60 +166,6 @@ export default class ChatWithAdminScreen extends Component {
             inputMessage: '',
             showButton: false,
         });
-    }
-
-    sendImageTask = async (imageURL) => {
-       
-        console.log("Sender Id : "+this.state.senderId);
-        console.log("Receiver Id : "+this.state.receiverId);
-
-        if(imageURL != '' && imageURL != null)
-        {
-            let msgId = firebase.database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage : '',
-                imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                senderId : this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId : this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage : this.state.receiverImage,
-                type: "image",
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(),
-            }
-            let recentMessage= {
-                textMessage : '',
-                imageMessage: imageURL,
-                time : firebase.database.ServerValue.TIMESTAMP,
-                date : new Date().getDate() +"/"+ (new Date().getMonth()+1)+"/"+new Date().getFullYear(), 
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                type: "image",
-            }
-
-            //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
-            if (array.length > 0) {
-                array.splice(array.length-1, 1);
-                this.setState({ dataChatSource: array });
-            }
-
-            updates['adminChatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['adminChatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
-            firebase.database().ref().update(updates);
-
-            recentUpdates['recentChatAdmin/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = recentMessage;
-            firebase.database().ref().update(recentUpdates);
-
-            this.setState({
-                isUploading: false,
-            })
-        }
     }
 
     renderMessageItem = ({ item }) => {
@@ -357,32 +186,12 @@ export default class ChatWithAdminScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={{width: 125, height: 135, backgroundColor: 'white',
-                              borderRadius: 3, marginRight: 10}}>
-                            <Image style={{ width: 110, height: 110, marginHorizontal: 7.5, marginTop: 7.5}}
-                                source={{ uri: item.imageMessage }}>
-                            </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 7.5, marginTop: 2 }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                        </View>
-                        {this.state.isUploading && item.textMessage == "uploading" &&(
-                            <View style={styles.loaderStyle}>
-                                <ActivityIndicator
-                                    style={{ height: 40 }}
-                                    color="#C00"
-                                    size="large" />
-                            </View>
-                        )}
-                    </View>
+                    : null
                 :
                 item.type == 'text'
                     ?
@@ -393,33 +202,12 @@ export default class ChatWithAdminScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
+                                    {this.convertTime(item && item.time)}
                                 </Text>
                             </View>
                         </View>
                     </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={{width: 125, height: 135, backgroundColor: 'white',borderRadius: 3, 
-                            marginRight: 10}}>
-                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5}}
-                                source={item.textMessage == "uploading" ? item.imageMessage : {uri: item.imageMessage}}
-                                resizeMode='cover'>
-                            </Image>
-                            <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right', 
-                                 color: 'black', marginRight: 7.5, marginTop: 2 }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                            {this.state.isUploading && item.textMessage == "uploading" &&(
-                            <View style={styles.loaderStyle}>
-                                <ActivityIndicator
-                                    style={{ height: 40 }}
-                                    color="#C00"
-                                    size="large" />
-                            </View>
-                        )}
-                        </View>
-                    </View>
+                    : null
         )
     }
 
@@ -432,11 +220,11 @@ export default class ChatWithAdminScreen extends Component {
     }
 
     render() {
+        const { showButton } = this.state;
         return (
 
-            <View style={styles.container}>
-
-                <StatusBarPlaceHolder/>
+            <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
+                <StatusBarPlaceHolder />
 
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
@@ -446,14 +234,14 @@ export default class ChatWithAdminScreen extends Component {
                         paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                     }}>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center',}}
+                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
                                 onPress={() => this.props.navigation.goBack()}>
                                 <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10, }}
-                                source={{ uri: this.state.receiverImage }} />
+                                source={this.state.receiverImage} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
                                 {this.state.receiverName}
                             </Text>
@@ -492,30 +280,36 @@ export default class ChatWithAdminScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-
-                            <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
-                             alignContent: 'center', marginRight: 25 }}
-                             onPress={this.selectPhoto.bind(this)}>
-                                <Image style={{ width: 20, height: 20 }}
-                                    source={require('../icons/camera.png')} />
+                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                                onPress={this.sendMessageTask}>
+                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                    ENVOYER
+                                </Text>
                             </TouchableOpacity>
-
-                            {this.state.showButton &&
-                                <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                    onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        SEND
-                                    </Text>
-                                </TouchableOpacity>
-                            }
                         </View>
                     </View>
                 </ImageBackground>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }
 
+const mapStateToProps = state => {
+    return {
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
+    }
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        fetchNotifications: data => {
+            dispatch(startFetchingNotification(data));
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatWithAdminScreen);
 
 const styles = StyleSheet.create({
     container: {
@@ -568,6 +362,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'center'
-      },
+    },
 
 });

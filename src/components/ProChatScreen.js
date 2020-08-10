@@ -4,23 +4,19 @@ import { startFetchingNotification, notificationsFetched, notificationError } fr
 import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform
+    BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
+    KeyboardAvoidingView,
 } from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import ProviderDetails from './ProviderDetails';
 import firebase from 'react-native-firebase';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
-
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const ios = Platform.OS === 'ios';
+const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
 const options = {
     title: 'Select a photo',
@@ -48,23 +44,27 @@ function StatusBarPlaceHolder() {
 const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 
 class ProChatScreen extends Component {
-
     constructor(props) {
-        super(props)
-        const { messagesInfo: { dataChatSource, fetched }, navigation: { state: { params: { currentPos } } }, jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } } } = this.props;
-        console.log('data chat source', dataChatSource)
-        console.log('selected job req', user_id)
+        super()
+        const {
+            messagesInfo: { dataChatSource, fetched },
+            navigation: { state: { params: { currentPos } } },
+            jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } },
+            navigation,
+            userInfo: { providerDetails }
+        } = props;
+        console.log('prop messages --', dataChatSource)
         this.state = {
             showButton: false,
-            senderId: ProviderDetails.Provider.providerId,
-            senderName: ProviderDetails.Provider.name + " " + ProviderDetails.Provider.surname,
-            senderImage: ProviderDetails.Provider.imageSource,
+            senderId: providerDetails.providerId,
+            senderName: providerDetails.name + " " + providerDetails.surname,
+            senderImage: providerDetails.imageSource,
             inputMessage: '',
             showButton: false,
             dataChatSource: dataChatSource[user_id] || [],
             isLoading: !fetched,
             //From ProDashboardScreen && ProMapDirection
-            pageTitle: this.props.navigation.state.params.pageTitle,
+            pageTitle: navigation.state.params.pageTitle,
 
             receiverId: allJobRequestsProviders[currentPos].user_id,
             receiverName: allJobRequestsProviders[currentPos].user_details.username,
@@ -79,16 +79,14 @@ class ProChatScreen extends Component {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    componentDidUpdate(){
+    componentDidUpdate() {
         const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
         const { isLoading } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
-        console.log('local', localDataChatSource)
-        console.log('up state', dataChatSource)
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
-            this.setState({ dataChatSource: dataChatSource[user_id]});
+            this.setState({ dataChatSource: dataChatSource[user_id] });
     }
 
     componentWillUnmount() {
@@ -103,115 +101,6 @@ class ProChatScreen extends Component {
         else if (this.state.pageTitle === 'ProAllMessage')
             this.props.navigation.navigate("ProAllMessage");
         return true;
-    }
-
-    selectPhoto = () => {
-
-        console.log('SELECT PHOTO ');
-
-        ImagePicker.showImagePicker(options, (response) => {
-            console.log('Response = ', response);
-
-            if (response.didCancel) {
-                console.log('User cancelled image picker');
-            }
-            else if (response.error) {
-                console.log('ImagePicker Error: ', response.error);
-            }
-            else {
-
-                let source
-
-                source = { uri: response.uri };
-
-                this.setState({
-                    imageURI: source,
-                    imageDataObject: response,
-                });
-
-                this.getImageURL(response)
-            }
-        });
-    }
-
-    getImageURL = async imageObject => {
-
-        let message = {
-            textMessage: 'uploading',
-            imageMessage: imageObject,
-            time: firebase.database.ServerValue.TIMESTAMP,
-            senderId: this.state.senderId,
-            senderImage: this.state.senderImage,
-            senderName: this.state.senderName,
-            receiverId: this.state.receiverId,
-            receiverName: this.state.receiverName,
-            receiverImage: this.state.receiverImage,
-            serviceName: this.state.serviceName,
-            orderId: this.state.orderId,
-            type: "image",
-            date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-        }
-        this.setState(prevState => ({
-            dataChatSource: [...prevState.dataChatSource, message]
-        }))
-
-        this.setState({
-            isUploading: true
-        })
-
-        let imageData = new FormData();
-        imageData.append('file', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-
-        fetch(GET_IMAGE_URL, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "multipart/form-data",
-                "otherHeader": "foo",
-            },
-            body: imageData
-        })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                console.log("Response getImageURL >> " + JSON.stringify(responseJson));
-                this.setState({
-                    isLoading: false
-                })
-                if (responseJson.result) {
-                    this.sendImageTask(responseJson.file);
-                }
-                else {
-                    Alert.alert(
-                        "OOPS !",
-                        responseJson.message,
-                        [
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retry',
-                                onPress: () => this.getImageURL(imageObject),
-                            },
-                        ]
-                    );
-                }
-            })
-            .catch((error) => {
-                Alert.alert(
-                    "OOPS !",
-                    error,
-                    [
-                        {
-                            text: 'Cancel',
-                            onPress: () => console.log('Cancel Pressed'),
-                        },
-                        {
-                            text: 'Retry',
-                            onPress: () => this.getImageURL(imageObject),
-                        },
-                    ]
-                );
-            });
     }
 
     convertTime = (time) => {
@@ -304,166 +193,49 @@ class ProChatScreen extends Component {
         });
     }
 
-    sendImageTask = async imageURL => {
-
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
-
-        if (imageURL != '' && imageURL != null) {
-            let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                senderId: this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId: this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-            }
-            let recentMessageReceiver = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-            }
-            let recentMessageSender = {
-                textMessage: '',
-                imageMessage: imageURL,
-                time: firebase.database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
-                type: "image",
-            }
-
-            //Remove Last item from Array
-            var array = [...this.state.dataChatSource]; // make a separate copy of the array
-            if (array.length > 0) {
-                array.splice(array.length - 1, 1);
-                this.setState({ dataChatSource: array });
-            }
-
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
-            firebase.database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
-
-            firebase.database().ref().update(recentUpdates)
-
-            this.setState({
-                isUploading: false,
-            })
-        }
-    }
-
     renderMessageItem = ({ item }) => {
-        return (
-            this.state.senderId != item.senderId
-                ?
-                item.type == 'text'
+        if (item) {
+            return (
+                this.state.senderId != item.senderId
                     ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={styles.itemLeftChatContainer}>
-                            <View style={styles.itemChatImageView}>
-                                <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={this.state.userImageAvailable ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
-                            </View>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={{
-                            width: 125, height: 135, backgroundColor: 'white',
-                            borderRadius: 3, marginRight: 10
-                        }}>
-                            <Image style={{ width: 110, height: 110, marginHorizontal: 7.5, marginTop: 7.5 }}
-                                source={{ uri: item.imageMessage }}>
-                            </Image>
-                            <Text style={{
-                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
-                                color: 'black', marginRight: 7.5, marginTop: 2
-                            }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                        </View>
-                        {this.state.isUploading && item.textMessage == "uploading" && (
-                            <View style={styles.loaderStyle}>
-                                <ActivityIndicator
-                                    style={{ height: 40 }}
-                                    color="#C00"
-                                    size="large" />
-                            </View>
-                        )}
-                    </View>
-                :
-                item.type == 'text'
-                    ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={styles.itemRightChatContainer}>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    {this.convertTime(item.time)}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                    :
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={{
-                            width: 125, height: 135, backgroundColor: 'white', borderRadius: 3,
-                            marginRight: 10
-                        }}>
-                            <Image style={{ width: 115, height: 115, marginHorizontal: 5, marginTop: 5 }}
-                                source={item.textMessage == "uploading" ? item.imageMessage : { uri: item.imageMessage }}
-                                resizeMode='cover'>
-                            </Image>
-                            <Text style={{
-                                fontSize: 8, color: 'black', textAlignVertical: 'center', textAlign: 'right',
-                                color: 'black', marginRight: 7.5, marginTop: 2
-                            }}>
-                                {this.convertTime(item.time)}
-                            </Text>
-                            {this.state.isUploading && item.textMessage == "uploading" && (
-                                <View style={styles.loaderStyle}>
-                                    <ActivityIndicator
-                                        style={{ height: 40 }}
-                                        color="#C00"
-                                        size="large" />
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                            <View style={styles.itemLeftChatContainer}>
+                                <View style={styles.itemChatImageView}>
+                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
+                                        source={this.state.userImageAvailable ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
                                 </View>
-                            )}
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {this.convertTime(item && item.time)}
+                                    </Text>
+                                </View>
+                            </View>
                         </View>
-                    </View>
-        )
+                        : null
+                    :
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                            <View style={styles.itemRightChatContainer}>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
+                                        { item && this.convertTime(item.time)}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                        : null
+            )
+        }
+        return
     }
 
     renderSeparator = () => {
@@ -475,16 +247,12 @@ class ProChatScreen extends Component {
     }
 
     render() {
-
+        let { showButton } = this.state;
         return (
-
-            <View style={styles.container}>
-
+            <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
-
-                <ImageBackground style={styles.container}
+                <ImageBackground style={styles.subContainer}
                     source={require('../icons/bg_chat.png')}>
-
                     <View style={{
                         flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                         paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
@@ -525,37 +293,7 @@ class ProChatScreen extends Component {
                                     onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
                             </View>
                         </View>
-                        <View style={styles.footer}>
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
-                            <View style={{ flex: 1, flexDirection: 'row' }}>
-                                <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                                    placeholder='Type a message'
-                                    value={this.state.inputMessage}
-                                    multiline={true}
-                                    onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                                </TextInput>
-
-                                <TouchableOpacity style={{
-                                    height: 50, justifyContent: 'center', alignItems: 'center',
-                                    alignContent: 'center', marginRight: 25
-                                }}
-                                    onPress={this.selectPhoto.bind(this)}>
-                                    <Image style={{ width: 20, height: 20 }}
-                                        source={require('../icons/camera.png')} />
-                                </TouchableOpacity>
-
-                                {this.state.showButton &&
-                                    <TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0, }}
-                                        onPress={this.sendMessageTask}>
-                                        <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: colorYellow, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                            SEND
-                                    </Text>
-                                    </TouchableOpacity>
-                                }
-                            </View>
-                        </View>
                     </ScrollView>
-
                     {this.state.isLoading && (
                         <View style={styles.loaderStyle}>
                             <ActivityIndicator
@@ -564,8 +302,34 @@ class ProChatScreen extends Component {
                                 size="large" />
                         </View>
                     )}
+                    <View style={styles.footer}>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
+                                placeholder='Type a message'
+                                value={this.state.inputMessage}
+                                multiline={true}
+                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                            </TextInput>
+
+                            {/*<TouchableOpacity style={{
+                                    height: 50, justifyContent: 'center', alignItems: 'center',
+                                    alignContent: 'center', marginRight: 25
+                                }}
+                                    onPress={this.selectPhoto.bind(this)}>
+                                    <Image style={{ width: 20, height: 20 }}
+                                        source={require('../icons/camera.png')} />
+                                </TouchableOpacity>*/}
+                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                                onPress={this.sendMessageTask}>
+                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                    ENVOYER
+                                    </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </ImageBackground>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }
@@ -574,6 +338,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colorBg,
+    },
+    subContainer: {
+        backgroundColor: 'yellow',
+        flex: 1
     },
     listView: {
         flex: 1,
@@ -586,6 +354,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         justifyContent: 'center',
         position: 'absolute', //Footer
+        marginBottom: 0,
         bottom: 0, //Footer
     },
     itemLeftChatContainer: {
@@ -629,7 +398,8 @@ const mapStateToProps = state => {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
         messagesInfo: state.messagesInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        userInfo: state.userInfo
     }
 }
 

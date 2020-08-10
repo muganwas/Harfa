@@ -131,8 +131,8 @@ android {
         applicationId "com.harfa"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.4"
+        versionCode 6
+        versionName "1.6"
         multiDexEnabled true
     }
     splits {

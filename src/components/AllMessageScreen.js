@@ -15,6 +15,7 @@ import firebase from 'react-native-firebase';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 import UserDetails from './UserDetails';
+import { imageExists } from '../misc/helpers';
 import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
 
 const colorPrimary = '#FFBF0F';
@@ -47,8 +48,7 @@ function StatusBarPlaceHolder() {
 class AllMessageScreen extends Component {
 
     constructor(props) {
-        super(props)
-
+        super();
         this.state = {
             isLoading: true,
             dataSource: [],
@@ -63,23 +63,24 @@ class AllMessageScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
-    componentDidMount() {
-        let dbRef = firebase.database().ref('recentMessage').child(UserDetails.User.userId);
-
-        dbRef.once('value', (snapshot) => {
+    componentDidMount(){
+        const { userInfo: { userDetails } } = this.props;
+        let dbRef = firebase.database().ref('recentMessage').child(userDetails.userId);
+        dbRef.once('value', snapshot => {
             const key = snapshot.key;
             const message = snapshot.val();
 
             if (message != null) {
-                dbRef.on('child_added', (val) => {
+                dbRef.on('child_added', async val => {
 
                     let message = val.val();
                     this.setState({
                         isLoading: false,
                     });
-
+                    let exists;
+                    await imageExists(message.image).then(res => {exists = res});
+                    message.exists = exists;
                     this.setState((prevState) => {
-
                         return {
                             dataSource: [...prevState.dataSource, message],
                             fullData: [...prevState.fullData, message],
@@ -142,6 +143,7 @@ class AllMessageScreen extends Component {
 
     renderRecentMessageItem = ({ item }) => {
         const { dispatchSelectedJobRequest } = this.props;
+        const { exists } = item;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => {
@@ -158,7 +160,7 @@ class AllMessageScreen extends Component {
                 }}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={item.image ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                        source={exists ? { uri: item.image } : require('../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -283,7 +285,8 @@ class AllMessageScreen extends Component {
 
 const mapStateToProps = state => {
     return {
-        notificationsInfo: state.notificationsInfo
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
     }
 }
 
@@ -312,7 +315,7 @@ const AppStackNavigator = createStackNavigator({
         }
     },
     ChatAfterBookingDetails: {
-        screen: ChatAfterBookingDetailsScreen,
+        screen: connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen),
         navigationOptions: {
             header: null
         }

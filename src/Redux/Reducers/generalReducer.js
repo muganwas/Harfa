@@ -7,7 +7,10 @@ import {
     FETCHING_COORDINATES_ERROR,
     FETCHING_OTHERS_COORDINATES,
     FETCHED_OTHERS_COORDINATES,
-    FETCHING_OTHERS_COORDINATES_ERROR
+    FETCHING_OTHERS_COORDINATES_ERROR,
+    UPDATE_ONLINE_STATUS,
+    UPDATE_CONNECTIVITY_STATUS,
+    UPDATE_LIVE_CHAT_USERS
 } from '../types';
 
 const initialState = {
@@ -18,6 +21,9 @@ const initialState = {
     fetched: false,
     fetching: false,
     error: null,
+    online: false,
+    OnlineUsers: {},
+    connectivityAvailable: false,
     coordinatesError: null
 }
 
@@ -87,8 +93,25 @@ const generalReducer = (state=initialState, action) => {
                 coordinatesError: action.payload
             }
         }
+        case UPDATE_ONLINE_STATUS: 
+            return {
+                ...state,
+                online: action.payload
+            }
+        case UPDATE_CONNECTIVITY_STATUS: 
+            return {
+                ...state,
+                connectivityAvailable: action.payload
+            }
+        case UPDATE_LIVE_CHAT_USERS: 
+            return {
+                ...state,
+                OnlineUsers: action.payload
+            }
         default: 
-            return state;
+            return {
+                ...state
+            }
     }
 }
 

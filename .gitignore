@@ -65,3 +65,9 @@ buck-out/
 android/java_pid828.hprof
 android/app/debug/app-debug.apk
 *.apk
+android/app/release/app-release.apk
+android/app/release/app-release.aab
+android/app/release/app-release.aab
+*.gradle
+android/app/build.gradle
+android/app/release/output.json
