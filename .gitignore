@@ -63,3 +63,4 @@ buck-out/
 /ios/Pods/
 # heavy android files
 android/java_pid828.hprof
+*.apk
