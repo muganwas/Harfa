@@ -16,7 +16,7 @@ import {
     updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
 import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
@@ -88,11 +88,11 @@ class Hamburger extends React.Component {
             userInfo: { userDetails },
         } = this.props;
         const senderId = userDetails.userId;
-        const userRef = firebase.database().ref(`liveLocation/${senderId}`);
+        const userRef = database().ref(`liveLocation/${senderId}`);
 
         this.checkNoficationsAvailability();
 
-        firebase.notifications().onNotification(async notification => {
+        /*firebase.notifications().onNotification(async notification => {
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
             console.log('current count --', currentGenericCount);
@@ -110,13 +110,13 @@ class Hamburger extends React.Component {
             });
 
             if (title == "Chat Request Accepted" && pos != null) {
-                /*this.setState({
-                    requestStatus: title,
-                    title: title,
-                    body: body,
-                    data: data,
-                    isToastShow: true,
-                })*/
+                //this.setState({
+                //    requestStatus: title,
+                //    title: title,
+                //    body: body,
+                //    data: data,
+                //    isToastShow: true,
+                //})
                 var providerData = JSON.parse(data.ProviderData);
 
                 var pendingJobData = {
@@ -208,12 +208,12 @@ class Hamburger extends React.Component {
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
-        });
+        });*/
 
         allJobRequestsClient.map(obj => {
             console.log(' all request info --', obj)
             const { employee_id } = obj;
-            firebase.database().ref('chatting').
+            database().ref('chatting').
                 child(senderId).
                 child(employee_id)
                 .on('child_added', data => {
@@ -238,7 +238,7 @@ class Hamburger extends React.Component {
                     }
 
                 });
-            firebase.database().ref('chatting').
+            database().ref('chatting').
                 child(senderId).
                 child(employee_id)
                 .once('value', data => {
@@ -299,7 +299,7 @@ class Hamburger extends React.Component {
         /** lookout for pros changing position */
         this.fetchEmployeeLocations();
 
-        firebase.database().ref('chatting').child(senderId).on('child_changed', result => {
+        database().ref('chatting').child(senderId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             Android ? Notifications.postLocalNotification({
                 title: "Harfa Messages",
@@ -320,7 +320,7 @@ class Hamburger extends React.Component {
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
         });
 
-        firebase.database().ref('adminChatting').child(senderId).on('child_changed', result => {
+        database().ref('adminChatting').child(senderId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             const adminMessageCount = notificationsInfo.adminMessages;
             Android ? Notifications.postLocalNotification({
@@ -385,8 +385,8 @@ class Hamburger extends React.Component {
     componentWillUnmount() {
         const { userInfo: { userDetails } } = this.props;
         const senderId = userDetails.userId;
-        firebase.database().ref('adminChatting').child(senderId).off('child_changed')
-        firebase.database().ref('chatting').child(senderId).off('child_changed');
+        database().ref('adminChatting').child(senderId).off('child_changed')
+        database().ref('chatting').child(senderId).off('child_changed');
     }
 
     checkNoficationsAvailability = async () => {
@@ -433,7 +433,7 @@ class Hamburger extends React.Component {
         } = this.props;
         jobRequests.map(obj => {
             const { employee_id } = obj;
-            firebase.database().ref(`liveLocation/${employee_id}`).once('value', result => {
+            database().ref(`liveLocation/${employee_id}`).once('value', result => {
                 const { generalInfo: { othersCoordinates } } = this.props;
                 let newOthersCoordinates = Object.assign({}, othersCoordinates);
                 const loc = result.val();
@@ -444,12 +444,12 @@ class Hamburger extends React.Component {
                     fetchOthersCoordinatesError(e.message);
                 });
 
-            firebase.database().ref(`liveLocation/${employee_id}`).
+            database().ref(`liveLocation/${employee_id}`).
                 on('child_changed', () => {
                     const { generalInfo: { othersCoordinates } } = this.props;
                     let newOthersCoordinates = Object.assign({}, othersCoordinates);
                     fetchingOthersCoordinates();
-                    firebase.database().ref(`liveLocation/${employee_id}`).
+                    database().ref(`liveLocation/${employee_id}`).
                         once('value', result => {
                             newOthersCoordinates[employee_id] = result.val();
                             fetchedOthersCoordinates(newOthersCoordinates);

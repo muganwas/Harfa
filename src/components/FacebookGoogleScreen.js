@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
+import {
+    View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
     Dimensions, ActivityIndicator, Alert, ToastAndroid, Platform, BackHandler
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
 import AsyncStorage from '@react-native-community/async-storage';
 import 'react-native-gesture-handler';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
@@ -45,15 +46,16 @@ const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -82,7 +84,7 @@ class FacebookGoogleScreen extends Component {
         GoogleSignin.configure({});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
-    
+
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
@@ -149,85 +151,62 @@ class FacebookGoogleScreen extends Component {
         const { fetchJobRequests, updateUserDetails } = this.props;
         this.setState({
             isLoading: true,
-        })
+        });
 
-        firebase.messaging().getToken().then((fcmToken) => {
-            console.log("RegisterTask FCM ID " + fcmToken);
+        const fcmToken = null;
+        if (fcmToken) {
 
-            if (fcmToken) {
+            const userData = {
+                "acc_type": this.state.accountType,
+                "username": name,
+                "email": email,
+                "image": image,
+                "mobile": "",
+                "dob": "",
+                "fcm_id": fcmToken,
+                "type": "google"
+            }
+            console.log("Data: " + JSON.stringify(userData));
 
-                const userData = {
-                    "acc_type": this.state.accountType,
-                    "username": name,
-                    "email": email,
-                    "image": image,
-                    "mobile": "",
-                    "dob": "",
-                    "fcm_id": fcmToken,
-                    "type" : "google"
-                }
-                console.log("Data: " + JSON.stringify(userData));
+            Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
+                .then(responseJson => {
+                    // console.log("Response Register")
+                    console.log(responseJson);
+                    if (responseJson.status === 200 && responseJson.data.createdDate) {
+                        this.setState({
+                            isLoading: false,
+                            isErrorToast: true,
+                        })
+                        const id = responseJson.data.id;
 
-                Axios.post(REGISTER_URL, { data: JSON.stringify(userData)})
-                    .then(responseJson => {
-                        // console.log("Response Register")
-                        console.log(responseJson);
-                        if (responseJson.status === 200 && responseJson.data.createdDate) {
-                            this.setState({
-                                isLoading: false,
-                                isErrorToast: true,
-                            })
-                            const id = responseJson.data.id;
-
-                            var userData = {
-                                userId: responseJson.data.id,
-                                accountType: responseJson.data.acc_type,
-                                email: responseJson.data.email,
-                                password: responseJson.data.password,
-                                username: responseJson.data.username,
-                                image: responseJson.data.image,
-                                mobile: responseJson.data.mobile,
-                                dob: responseJson.data.dob,
-                                address: responseJson.data.address,
-                                lat: responseJson.data.lat,
-                                lang: responseJson.data.lang,
-                                fcmId: responseJson.data.fcm_id,
-                            }
-                            updateUserDetails(userData);
-                            //Store data like sharedPreference
-                            AsyncStorage.setItem('userId', id);
-                            AsyncStorage.setItem('userType', 'User');
-                            fetchJobRequests(this.props, id, "Home");
+                        var userData = {
+                            userId: responseJson.data.id,
+                            accountType: responseJson.data.acc_type,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            username: responseJson.data.username,
+                            image: responseJson.data.image,
+                            mobile: responseJson.data.mobile,
+                            dob: responseJson.data.dob,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            fcmId: responseJson.data.fcm_id,
                         }
-                        else {
-                            console.log("Response Else ");
-                            this.setState({
-                                isLoading: false,
-                            })
-                            Alert.alert(
-                                "OOPS !",
-                                responseJson.data.message,
-                                [
-                                    {
-                                        text: 'Cancel',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retry',
-                                        onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
-                                    },
-                                ]
-                            );
-                        }
-                    })
-                    .catch((error) => {
-                        console.log("Error :" + error);
+                        updateUserDetails(userData);
+                        //Store data like sharedPreference
+                        AsyncStorage.setItem('userId', id);
+                        AsyncStorage.setItem('userType', 'User');
+                        fetchJobRequests(this.props, id, "Home");
+                    }
+                    else {
+                        console.log("Response Else ");
                         this.setState({
                             isLoading: false,
                         })
                         Alert.alert(
                             "OOPS !",
-                            error.message,
+                            responseJson.data.message,
                             [
                                 {
                                     text: 'Cancel',
@@ -239,10 +218,31 @@ class FacebookGoogleScreen extends Component {
                                 },
                             ]
                         );
+                    }
+                })
+                .catch((error) => {
+                    console.log("Error :" + error);
+                    this.setState({
+                        isLoading: false,
                     })
-                    .done()
-            }
-        })
+                    Alert.alert(
+                        "OOPS !",
+                        error.message,
+                        [
+                            {
+                                text: 'Cancel',
+                                onPress: () => console.log('Cancel Pressed'),
+                            },
+                            {
+                                text: 'Retry',
+                                onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
+                            },
+                        ]
+                    );
+                })
+                .done()
+        }
+
     }
 
     checkValidation() {
@@ -250,11 +250,10 @@ class FacebookGoogleScreen extends Component {
         if (this.state.email == '') {
             this.setState({ error: 'Entrez une adresse email valide' })
         }
-        else if(this.state.password == '') {
-            this.setState({error: 'Entrer le mot de passe'})
+        else if (this.state.password == '') {
+            this.setState({ error: 'Entrer le mot de passe' })
         }
-        else
-        {
+        else {
             console.log("Else");
             this.authenticateTask()
         }
@@ -268,86 +267,64 @@ class FacebookGoogleScreen extends Component {
             isLoading: true,
         })
 
-        firebase.messaging().getToken().then((fcmToken) => {
-            console.log("RegisterTask FCM ID " + fcmToken);
+        const fcmToken = null;
 
-            if (fcmToken) {
+        if (fcmToken) {
 
-                const data = {
-                    "email": this.state.email,
-                    "password": this.state.password,
-                    "fcm_id": fcmToken
-                }
-                console.log("Data: " + JSON.stringify(data));
+            const data = {
+                "email": this.state.email,
+                "password": this.state.password,
+                "fcm_id": fcmToken
+            }
+            console.log("Data: " + JSON.stringify(data));
 
-                fetch(AUTHENTICATE_URL,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    })
-                    .then((response) => response.json())
-                    .then((responseJson) => {
-                        console.log("Response Login >> " + JSON.stringify(responseJson));
-                        if (responseJson.result) {
-                            this.setState({
-                                isLoading: false,
-                                isErrorToast: true,
-                            })
-                            const id = responseJson.data.id;
+            fetch(AUTHENTICATE_URL,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then((response) => response.json())
+                .then((responseJson) => {
+                    console.log("Response Login >> " + JSON.stringify(responseJson));
+                    if (responseJson.result) {
+                        this.setState({
+                            isLoading: false,
+                            isErrorToast: true,
+                        })
+                        const id = responseJson.data.id;
 
-                            var userData = {
-                                userId: responseJson.data.id,
-                                accountType: responseJson.data.acc_type,
-                                email: responseJson.data.email,
-                                password: responseJson.data.password,
-                                username: responseJson.data.username,
-                                image: responseJson.data.image,
-                                mobile: responseJson.data.mobile,
-                                dob: responseJson.data.dob,
-                                address: responseJson.data.address,
-                                lat: responseJson.data.lat,
-                                lang: responseJson.data.lang,
-                                fcmId: responseJson.data.fcm_id,
-                            }
-                            updateUserDetails(userData);
-                            //Store data like sharedPreference
-                            AsyncStorage.setItem('userId', id);
-                            AsyncStorage.setItem('userType', 'User');
-                            fetchJobRequests(this.props, id, "Home");
+                        var userData = {
+                            userId: responseJson.data.id,
+                            accountType: responseJson.data.acc_type,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            username: responseJson.data.username,
+                            image: responseJson.data.image,
+                            mobile: responseJson.data.mobile,
+                            dob: responseJson.data.dob,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            fcmId: responseJson.data.fcm_id,
                         }
-                        else {
-                            console.log("Response Else ");
-                            this.setState({
-                                isLoading: false,
-                            })
-                            Alert.alert(
-                                "OOPS !",
-                                responseJson.message,
-                                [
-                                    {
-                                        text: 'Annuler',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retenter',
-                                        onPress: () => this.authenticateTask(),
-                                    },
-                                ]
-                            );
-                        }
-                    })
-                    .catch((error) => {
-                        console.log("Error :" + error);
+                        updateUserDetails(userData);
+                        //Store data like sharedPreference
+                        AsyncStorage.setItem('userId', id);
+                        AsyncStorage.setItem('userType', 'User');
+                        fetchJobRequests(this.props, id, "Home");
+                    }
+                    else {
+                        console.log("Response Else ");
                         this.setState({
                             isLoading: false,
                         })
                         Alert.alert(
-                            "OUPS !",
-                            "Une erreur s'est produite, veuillez réessayer plus tard",
+                            "OOPS !",
+                            responseJson.message,
                             [
                                 {
                                     text: 'Annuler',
@@ -359,10 +336,30 @@ class FacebookGoogleScreen extends Component {
                                 },
                             ]
                         );
+                    }
+                })
+                .catch((error) => {
+                    console.log("Error :" + error);
+                    this.setState({
+                        isLoading: false,
                     })
-                    .done()
-            }
-        })
+                    Alert.alert(
+                        "OUPS !",
+                        "Une erreur s'est produite, veuillez réessayer plus tard",
+                        [
+                            {
+                                text: 'Annuler',
+                                onPress: () => console.log('Cancel Pressed'),
+                            },
+                            {
+                                text: 'Retenter',
+                                onPress: () => this.authenticateTask(),
+                            },
+                        ]
+                    );
+                })
+                .done()
+        }
     }
 
     changeWaitingDialogVisibility = (bool) => {
@@ -375,16 +372,16 @@ class FacebookGoogleScreen extends Component {
         return (
             <View style={styles.container}>
 
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
 
                 <KeyboardAwareScrollView
-                    contentContainerStyle={{justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
+                    contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>
 
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ height: 200, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
-                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15,}}
+                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15, }}
                                 onPress={() => this.props.navigation.goBack()}>
                                 <Image style={{ width: 20, height: 20, alignSelf: 'center', }}
                                     source={require('../icons/arrow_back.png')} />
@@ -406,7 +403,7 @@ class FacebookGoogleScreen extends Component {
                                 <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
                                     placeholder='Email'
                                     value={this.state.email}
-                                    onChangeText={(emailInput) => this.setState({email: emailInput})}>
+                                    onChangeText={(emailInput) => this.setState({ email: emailInput })}>
                                 </TextInput>
                             </View>
 
@@ -461,20 +458,20 @@ class FacebookGoogleScreen extends Component {
                                     Gmail
                                 </Text>
                             </TouchableOpacity>
-                        <View>
-                    </View>
-                </View>
-                    <TouchableOpacity style={{padding: 5,}}
-                        onPress={()=> this.props.navigation.navigate("Register", {
-                            "accountType": this.state.accountType
-                        })}>
-                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
-                            Vous n'avez pas de compte? S'inscrire
+                            <View>
+                            </View>
+                        </View>
+                        <TouchableOpacity style={{ padding: 5, }}
+                            onPress={() => this.props.navigation.navigate("Register", {
+                                "accountType": this.state.accountType
+                            })}>
+                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
+                                Vous n'avez pas de compte? S'inscrire
                         </Text>
-                    </TouchableOpacity>
-               </View>
+                        </TouchableOpacity>
+                    </View>
 
-            </KeyboardAwareScrollView>
+                </KeyboardAwareScrollView>
 
                 {/* {this.state.isLoading && (
                     <View style={styles.loaderStyle}>

@@ -4,7 +4,7 @@ import {
     BackHandler, StatusBar, Platform, Modal
 } from 'react-native';
 import { connect } from 'react-redux';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import WaitingDialog from './WaitingDialog';
 import Toast from 'react-native-simple-toast';
 import Config from './Config';
@@ -115,7 +115,7 @@ class ProChatAcceptScreen extends Component {
                         isLoading: false,
                         secondTimeLoader: "1"
                     });
-                    firebase.database().ref(`liveLocation/${responseJson.data.id}`).once('value', result => {
+                    database().ref(`liveLocation/${responseJson.data.id}`).once('value', result => {
                         const { latitude, longitude } = result.val();
                         const fullDist = getDistance(latitude, longitude, responseJson.data.lat, responseJson.data.lang, 'K');
                         const distance = parseFloat(fullDist).toFixed(1);

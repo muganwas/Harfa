@@ -1,10 +1,10 @@
 
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, Dimensions, Alert, StatusBar, Platform, BackHandler, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import {connect} from 'react-redux';
+import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, Dimensions, Alert, StatusBar, Platform, BackHandler, Modal } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
+import { connect } from 'react-redux';
 import AsyncStorage from '@react-native-community/async-storage';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
@@ -19,22 +19,23 @@ const colorYellow = '#FFBF0F';
 
 const screenWidth = Dimensions.get('window').width;
 
-const REGISTER_URL = Config.baseURL+'employee/register'
+const REGISTER_URL = Config.baseURL + 'employee/register'
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -43,7 +44,7 @@ class ProRegisterFBScreen extends Component {
         super();
         this.state = {
             name: props.navigation.state.params.name,
-            surname:'',
+            surname: '',
             email: props.navigation.state.params.email,
             image: props.navigation.state.params.image,
             mobile: '',
@@ -62,10 +63,10 @@ class ProRegisterFBScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
 
-    componentDidMount(){
+    componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
-    
+
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
@@ -74,72 +75,63 @@ class ProRegisterFBScreen extends Component {
         this.props.navigation.goBack();
         return true;
     }
-    
+
     checkValidation = () => {
 
-        if(this.state.name == '')
-        {
-            this.setState({error: 'Enter name'});
+        if (this.state.name == '') {
+            this.setState({ error: 'Enter name' });
         }
-        else if(this.state.email == '')
-        {
-            this.setState({error: 'Enter surname'});
+        else if (this.state.email == '') {
+            this.setState({ error: 'Enter surname' });
         }
-        else if(this.state.mobile == '')
-        {
-            this.setState({error: 'Enter mobile'});
+        else if (this.state.mobile == '') {
+            this.setState({ error: 'Enter mobile' });
         }
-        else if(this.state.serviceName == 'Select services')
-        {
-            this.setState({error: 'Select services'});
+        else if (this.state.serviceName == 'Select services') {
+            this.setState({ error: 'Select services' });
         }
-        else if(this.state.description == '')
-        {
-            this.setState({error: 'Enter description'});
+        else if (this.state.description == '') {
+            this.setState({ error: 'Enter description' });
         }
-        else if(this.state.address == '' || this.state.address == "Select Address")
-        {
-            this.setState({error: 'Enter address'});
+        else if (this.state.address == '' || this.state.address == "Select Address") {
+            this.setState({ error: 'Enter address' });
         }
-        else
-        {
-           this.registerTask();
+        else {
+            this.registerTask();
         }
     }
 
-    registerTask()
-    {
-        firebase.messaging().getToken().then((fcmToken) => {
-            const { updateProviderDetails } = this.props;
-            if (fcmToken) {
-                const userData = {
-                    "username": this.state.name,
-                    "surname": this.state.surname, 
-                    "email": this.state.email,
-                    'image': this.state.image,
-                    "mobile": this.state.mobile,
-                    "services": this.state.serviceId,
-                    "description": this.state.description,
-                    "address": this.state.address,
-                    "lat": this.state.lat,
-                    "lang": this.state.lng,
-                    "invoice": this.state.invoice,
-                    "fcm_id": fcmToken,
-                    "type": "google",
-                    "account_type": this.state.account_type
-                 }
-                 this.setState({
-                     isLoading: true
-                 })
-                 
-                 Axios.post(REGISTER_URL , {data:JSON.stringify(userData)})
-                 .then((responseJson) => {
+    registerTask() {
+        const fcmToken = null;
+        const { updateProviderDetails } = this.props;
+        if (fcmToken) {
+            const userData = {
+                "username": this.state.name,
+                "surname": this.state.surname,
+                "email": this.state.email,
+                'image': this.state.image,
+                "mobile": this.state.mobile,
+                "services": this.state.serviceId,
+                "description": this.state.description,
+                "address": this.state.address,
+                "lat": this.state.lat,
+                "lang": this.state.lng,
+                "invoice": this.state.invoice,
+                "fcm_id": fcmToken,
+                "type": "google",
+                "account_type": this.state.account_type
+            }
+            this.setState({
+                isLoading: true
+            })
+
+            Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
+                .then((responseJson) => {
                     console.log(responseJson);
                     this.setState({
                         isLoading: false
                     })
-                    if(responseJson.status === 200 && responseJson.data.createdDate)
-                    {
+                    if (responseJson.status === 200 && responseJson.data.createdDate) {
                         const id = responseJson.data.id;
                         var providerData = {
                             providerId: responseJson.data.id,
@@ -163,12 +155,11 @@ class ProRegisterFBScreen extends Component {
                         //Store data like sharedPreference
                         AsyncStorage.setItem('userId', id);
                         AsyncStorage.setItem('userType', 'Provider');
-        
+
                         //ToastAndroid.show('Successfully Registered', ToastAndroid.SHORT);
                         this.props.navigation.navigate("ProHome");
                     }
-                    else
-                    {
+                    else {
                         Alert.alert(
                             "OOPS !",
                             responseJson.data.message,
@@ -184,9 +175,9 @@ class ProRegisterFBScreen extends Component {
                             ]
                         );
                     }
-                 })
+                })
                 .catch((error) => {
-                    console.log("Error >> "+error)
+                    console.log("Error >> " + error)
                     Alert.alert(
                         "OOPS !",
                         error,
@@ -206,12 +197,10 @@ class ProRegisterFBScreen extends Component {
                         isLoading: false
                     })
                 });
-            }
-         })
-       
+        }
     }
 
-    getDataFromServiceScreen=(data)=> {
+    getDataFromServiceScreen = (data) => {
         var data = data.split("/")
         this.setState({
             serviceId: data[0],
@@ -219,9 +208,9 @@ class ProRegisterFBScreen extends Component {
         })
     };
 
-    getDataFromAddAddressScreen=(data)=> {
-    
-        console.log("Data : "+data);
+    getDataFromAddAddressScreen = (data) => {
+
+        console.log("Data : " + data);
 
         var data = data.split("/")
         this.setState({
@@ -236,23 +225,25 @@ class ProRegisterFBScreen extends Component {
             isLoading: bool
         })
     }
-    
+
     render() {
         return (
             <View style={StyleSheet.container}>
 
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
 
-                <KeyboardAwareScrollView contentContainerStyle={{justifyContent: 'center', 
-                    alignItems: 'center', alwaysBounceVertical: true }}
+                <KeyboardAwareScrollView contentContainerStyle={{
+                    justifyContent: 'center',
+                    alignItems: 'center', alwaysBounceVertical: true
+                }}
                     keyboardShouldPersistTaps='handled'>
 
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ flex: 0.25, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
-                           <TouchableOpacity style ={{width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 15, marginTop: 10}}
+                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 15, marginTop: 10 }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image  style ={{width: 20, height: 20}}
-                                    source={require('../icons/arrow_back.png')}/>
+                                <Image style={{ width: 20, height: 20 }}
+                                    source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
 
                             <Image
@@ -262,8 +253,10 @@ class ProRegisterFBScreen extends Component {
 
                         <View style={styles.logincontainer}>
 
-                            <View style={{width: screenWidth - 50, height: 50, justifyContent: 'center',
-                                marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'}}>
+                            <View style={{
+                                width: screenWidth - 50, height: 50, justifyContent: 'center',
+                                marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'
+                            }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                                     <View style={styles.buttonPrimaryDark}>
                                         <Text style={styles.text}>Account Type</Text>
@@ -281,7 +274,7 @@ class ProRegisterFBScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_user_64dp.png')}></Image>
-                                <Text style={{width: screenWidth-85, marginLeft: 10, textAlignVertical: 'center', alignSelf: 'center' }}>
+                                <Text style={{ width: screenWidth - 85, marginLeft: 10, textAlignVertical: 'center', alignSelf: 'center' }}>
                                     {this.props.navigation.state.params.name}
                                 </Text>
                             </View>
@@ -289,7 +282,7 @@ class ProRegisterFBScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                <Text style={{ width: screenWidth-85, marginLeft: 10, textAlignVertical: 'center', alignSelf: 'center' }}>
+                                <Text style={{ width: screenWidth - 85, marginLeft: 10, textAlignVertical: 'center', alignSelf: 'center' }}>
                                     {this.props.navigation.state.params.email}
                                 </Text>
                             </View>
@@ -297,7 +290,7 @@ class ProRegisterFBScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/mobile.png')}></Image>
-                                  <TextInput style={{ width: screenWidth-85, height: 45,  marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 45, marginLeft: 10 }}
                                     placeholder='Mobile'
                                     keyboardType='numeric'
                                     maxLength={10}
@@ -308,10 +301,11 @@ class ProRegisterFBScreen extends Component {
                             <View style={styles.textView1}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_settings_64dp.png')}></Image>
-                                 <Text
-                                    style={{ width: screenWidth-85, color: 'black', fontSize: 16, textAlignVertical:'center', marginLeft: 10 }}
+                                <Text
+                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, textAlignVertical: 'center', marginLeft: 10 }}
                                     onPress={() => this.props.navigation.navigate('ProServiceSelect', {
-                                        onGoBack: this.getDataFromServiceScreen, })}>
+                                        onGoBack: this.getDataFromServiceScreen,
+                                    })}>
                                     {this.state.serviceName}
                                 </Text>
                             </View>
@@ -320,7 +314,7 @@ class ProRegisterFBScreen extends Component {
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/description.png')}></Image>
                                 <TextInput
-                                    style={{ width: screenWidth-85, color: 'black', fontSize: 16, marginLeft: 10 }}
+                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, marginLeft: 10 }}
                                     placeholder='Description'
                                     multiline={true}
                                     onChangeText={(descriptionInput) => this.setState({ error: '', description: descriptionInput })}>
@@ -330,18 +324,19 @@ class ProRegisterFBScreen extends Component {
                             <View style={styles.textView1}>
                                 <Image style={{ width: 15, height: 15, }}
                                     source={require('../icons/maps_location.png')}></Image>
-                                <Text style={{ width: screenWidth-85, height: '100%', color: 'black', fontSize: 16, textAlignVertical:'center',  marginLeft: 10 }}
-                                 onPress={() => this.props.navigation.navigate('SelectAddress', {
-                                    onGoBack: this.getDataFromAddAddressScreen, })}>
+                                <Text style={{ width: screenWidth - 85, height: '100%', color: 'black', fontSize: 16, textAlignVertical: 'center', marginLeft: 10 }}
+                                    onPress={() => this.props.navigation.navigate('SelectAddress', {
+                                        onGoBack: this.getDataFromAddAddressScreen,
+                                    })}>
                                     {this.state.address}
                                 </Text>
                             </View>
 
                             <View style={styles.textView}>
-                                <Text style={{  color: 'black', fontSize: 16, textAlign: 'center', textAlignVertical:'center', marginTop: 5 }}>
+                                <Text style={{ color: 'black', fontSize: 16, textAlign: 'center', textAlignVertical: 'center', marginTop: 5 }}>
                                     Can you provide invoice
                                 </Text>
-                               
+
                                 <View style={{ flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center" }}>
                                     <TouchableOpacity style={this.state.invoice == '1' ? styles.invoiceBorder : styles.invoice}
                                         onPress={() => this.setState({ invoice: '1' })}>
@@ -352,7 +347,7 @@ class ProRegisterFBScreen extends Component {
                                         <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
                                     </TouchableOpacity>
                                 </View>
-                            </View>    
+                            </View>
 
                             <TouchableOpacity style={styles.buttonContainer}
                                 onPress={this.checkValidation}>
@@ -456,24 +451,24 @@ const styles = StyleSheet.create({
         marginRight: 5
     },
     textInputView: {
-        flexDirection: 'row', 
-        width: screenWidth-40, 
-        height: 45, 
+        flexDirection: 'row',
+        width: screenWidth - 40,
+        height: 45,
         justifyContent: 'center',
-        alignItems: 'center', 
-        borderRadius: 5, 
-        backgroundColor: 'white', 
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 }, 
-        shadowOpacity: 0.75, 
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
         marginBottom: 10
     },
-    textView1:{
+    textView1: {
         flex: 1,
         flexDirection: 'row',
-        width: screenWidth-40,
+        width: screenWidth - 40,
         height: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
@@ -486,13 +481,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 15,
         paddingTop: 15,
-        paddingBottom: 15, 
-        paddingLeft: 5, 
+        paddingBottom: 15,
+        paddingLeft: 5,
         paddingRight: 5
     },
     textView: {
         flex: 1,
-        width: screenWidth-40,
+        width: screenWidth - 40,
         height: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
@@ -505,32 +500,32 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 15,
         paddingTop: 15,
-        paddingBottom: 15, 
-        paddingLeft: 5, 
+        paddingBottom: 15,
+        paddingLeft: 5,
         paddingRight: 5
     },
     textInputViewDes: {
-        flexDirection: 'row', 
-        width: screenWidth - 40, 
-        height: 120, 
+        flexDirection: 'row',
+        width: screenWidth - 40,
+        height: 120,
         justifyContent: 'center',
-        alignItems: 'center', 
-        borderRadius: 5, 
-        backgroundColor: 'white', 
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 }, 
-        shadowOpacity: 0.75, 
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
         marginBottom: 10
     },
-    separator:{
+    separator: {
         borderBottomWidth: 0.8,
         borderBottomColor: '#ebebeb',
         marginTop: 5,
         marginBottom: 5
     },
-    buttonContainer : {
+    buttonContainer: {
         width: 200,
         paddingTop: 10,
         backgroundColor: '#000000',

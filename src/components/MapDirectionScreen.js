@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 //import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import { connect } from 'react-redux';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import LinearGradient from 'react-native-linear-gradient';
@@ -101,7 +101,7 @@ class MapDirectionScreen extends Component {
         this.getDirections(employeeLatitude + "," + employeeLongitude, this.state.destinationLocation);
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         
-        firebase.notifications().onNotification((notification) => {
+        /*firebase.notifications().onNotification((notification) => {
             const { title, body, data } = notification;
             var currRequestPos = jobRequests.length + 1;
             var newJobRequests = [...jobRequests];
@@ -229,7 +229,7 @@ class MapDirectionScreen extends Component {
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
-        });
+        });*/
     }
 
     componentDidUpdate() {

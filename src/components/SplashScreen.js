@@ -5,7 +5,7 @@ import { createAppContainer, } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import AsyncStorage from '@react-native-community/async-storage';
 import RNExitApp from 'react-native-exit-app';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import HomeScreen from './HomeScreen';
 import DashboardScreen from './DashboardScreen';
 import AfterSplashScreen from './AfterSplashScreen';
@@ -25,11 +25,11 @@ import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import UserDetails from './UserDetails';
 import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
+import messaging from '@react-native-firebase/messaging';
 import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
 
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
 const USER_GET_PROFILE = Config.baseURL + "users/";
-const database = firebase.database();
 
 class SplashScreen extends Component {
 
@@ -56,52 +56,50 @@ class SplashScreen extends Component {
     }
 
     getUserType = async userId => {
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        if (enabled) {
+            /** find out about this token nonsense later */
+            this.getFCMToken(userId);
+        }
+        else {
 
-        firebase.messaging().hasPermission().
-            then(async enabled => {
-                if (enabled) {
-                    this.getFCMToken(userId);
-                }
-                else {
-                    await firebase.messaging().requestPermission()
-                        .then(() => {
-                            this.getFCMToken(userId);
-                        })
-                        .catch(error => {
-                            Alert.alert(
-                                "Permission Request",
-                                "You don't have permission for notification. Please enable notification then try again ",
-                                [
-                                    {
-                                        text: 'Back',
-                                        onPress: () => {
-                                            if (Platform.OS == 'android')
-                                                BackHandler.exitApp();
-                                            else
-                                                RNExitApp.exitApp();
-                                        },
-                                        style: 'cancel',
-                                    },
-                                    {
-                                        text: 'OK',
-                                        onPress: () => {
-                                            if (Platform.OS == 'android')
-                                                BackHandler.exitApp();
-                                            else
-                                                RNExitApp.exitApp();
-                                        },
-                                    },
-                                ]
-                            );
+            //check for notification permissions here
 
-                            //User has rejected permissions
-                        });
-                }
-            });
+            Alert.alert(
+                "Permission Request",
+                "You don't have permission for notification. Please enable notification then try again ",
+                [
+                    {
+                        text: 'Back',
+                        onPress: () => {
+                            if (Platform.OS == 'android')
+                                BackHandler.exitApp();
+                            else
+                                RNExitApp.exitApp();
+                        },
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            if (Platform.OS == 'android')
+                                BackHandler.exitApp();
+                            else
+                                RNExitApp.exitApp();
+                        },
+                    },
+                ]
+            );
+
+            //User has rejected permissions
+        }
     }
 
     getFCMToken = async userId => {
-        const fcmToken = await firebase.messaging().getToken();
+        const fcmToken = await messaging().getToken();
         if (fcmToken) {
             console.log("Splash FCMID >> " + fcmToken);
 
@@ -133,7 +131,7 @@ class SplashScreen extends Component {
                         var status;
                         if (responseJson && responseJson.result) {
                             const id = responseJson.data.id;
-                            const usersRef = database.ref(`users/${id}`);
+                            const usersRef = database().ref(`users/${id}`);
                             await usersRef.once('value', snapshot => {
                                 const value = snapshot.val();
                                 if (value)

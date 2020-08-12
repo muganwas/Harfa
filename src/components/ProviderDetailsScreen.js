@@ -4,9 +4,9 @@ import {View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityInd
    Linking, Alert, BackHandler, StatusBar, Platform } from 'react-native';
 import { Rating, AirbnbRating } from 'react-native-ratings';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import firebase from 'react-native-firebase';
 import Toast from 'react-native-simple-toast';
 import UserDetails from './UserDetails';
+import database from '@react-native-firebase/database';
 import Config from './Config';
 import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
@@ -31,7 +31,6 @@ const BOOKING_REQUEST = Config.baseURL+"jobrequest/addjobrequest";
 const PRO_GET_PROFILE = Config.baseURL+"employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
-const database = firebase.database();
 
 function StatusBarPlaceHolder() {
   return (
@@ -307,7 +306,7 @@ class ProviderDetailsScreen extends Component {
     const onlineUsers = OnlineUsers;
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     const { providerId } = this.state;
-    const userRef = database.ref(`users/${providerId}`);
+    const userRef = database().ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {
         if (result && result.key === "status" && providerId) {

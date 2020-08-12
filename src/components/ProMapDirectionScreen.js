@@ -8,7 +8,7 @@ import {
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import Geolocation from 'react-native-geolocation-service';
 import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
@@ -124,7 +124,7 @@ class ProMapDirectionScreen extends Component {
 
             let updates = {};
             updates['tracking/' + this.state.orderId] = locationData;
-            firebase.database().ref().update(updates);
+            database().ref().update(updates);
 
             this.setState({
                 sourcesourceLocation: usersCoordinates.latitude + "," + usersCoordinates.longitude,
@@ -150,7 +150,7 @@ class ProMapDirectionScreen extends Component {
 
                 let updates = {};
                 updates['tracking/' + this.state.orderId] = locationData;
-                firebase.database().ref().update(updates);
+                database().ref().update(updates);
 
                 this.setState({
                     sourcesourceLocation: usersCoordinates.latitude + "," + usersCoordinates.longitude,

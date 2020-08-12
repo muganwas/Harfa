@@ -10,7 +10,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 //import { DrawerActions } from 'react-navigation-drawer';
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
@@ -45,7 +45,6 @@ const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
-const database = firebase.database();
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -132,7 +131,7 @@ class ProDashBoardScreen extends Component {
     //Recent Chat Message
     getAllRecentChat = () => {
         const { userInfo: { providerDetails } } = this.props;
-        let dbRef = firebase.database().ref('recentMessage').child(providerDetails.providerId);
+        let dbRef = database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', (snapshot) => {
             const key = snapshot.key;
             const message = snapshot.val();
@@ -371,7 +370,7 @@ class ProDashBoardScreen extends Component {
         const { userInfo: { providerDetails } } = this.props;
         var statusValue = null;
         const providerId = providerDetails.providerId;
-        const usersRef = database.ref('users/' + providerId);
+        const usersRef = database().ref('users/' + providerId);
         this.setState({
             isLoading: true,
         })

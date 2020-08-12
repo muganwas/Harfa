@@ -1,10 +1,12 @@
 
 import React, { Component } from 'react';
-import { View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity
-    , Dimensions, Alert, Platform, BackHandler, Modal} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import {connect} from 'react-redux';
-import firebase from 'react-native-firebase';
+import {
+    View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity
+    , Dimensions, Alert, Platform, BackHandler, Modal
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
+import { connect } from 'react-redux';
+import database from '@react-native-firebase/database';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
@@ -18,22 +20,23 @@ const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const REGISTER_URL = Config.baseURL+'employee/register';
+const REGISTER_URL = Config.baseURL + 'employee/register';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -43,7 +46,7 @@ class ProRegisterScreen extends Component {
         super();
         this.state = {
             name: '',
-            surname:'',
+            surname: '',
             email: '',
             password: '',
             image: '',
@@ -63,10 +66,10 @@ class ProRegisterScreen extends Component {
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
 
-    componentDidMount(){
+    componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
-    
+
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
@@ -78,77 +81,68 @@ class ProRegisterScreen extends Component {
 
     checkValidation = () => {
 
-        if(this.state.name == '')
-        {
-            this.setState({error: 'Enter name'});
+        if (this.state.name == '') {
+            this.setState({ error: 'Enter name' });
         }
-        else if(this.state.email == '')
-        {
-            this.setState({error: 'Enter surname'});
+        else if (this.state.email == '') {
+            this.setState({ error: 'Enter surname' });
         }
-        else if(this.state.mobile == '')
-        {
-            this.setState({error: 'Enter mobile'});
+        else if (this.state.mobile == '') {
+            this.setState({ error: 'Enter mobile' });
         }
-        else if(this.state.serviceName == 'Select services')
-        {
-            this.setState({error: 'Select services'});
+        else if (this.state.serviceName == 'Select services') {
+            this.setState({ error: 'Select services' });
         }
-        else if(this.state.description == '')
-        {
-            this.setState({error: 'Enter description'});
+        else if (this.state.description == '') {
+            this.setState({ error: 'Enter description' });
         }
-        else if(this.state.address == '' || this.state.address == "Select Address")
-        {
-            this.setState({error: 'Enter address'});
+        else if (this.state.address == '' || this.state.address == "Select Address") {
+            this.setState({ error: 'Enter address' });
         }
-        else
-        {
-           this.registerTask();
+        else {
+            this.registerTask();
         }
     }
 
-    registerTask()
-    {
-        firebase.messaging().getToken().then((fcmToken) => {
-            const { updateProviderDetails } = this.props;
-            if (fcmToken) {
+    registerTask() {
+        const fcmToken = null;
+        const { updateProviderDetails } = this.props;
+        if (fcmToken) {
 
-                const userData = {
-                    "username": this.state.name,
-                    "surname": this.state.surname, 
-                    "email": this.state.email,
-                    "password": this.state.password,
-                    'image': this.state.image,
-                    "mobile": this.state.mobile,
-                    "services": this.state.serviceId,
-                    "description": this.state.description,
-                    "address": this.state.address,
-                    "lat": this.state.lat,
-                    "lang": this.state.lng,
-                    "invoice": this.state.invoice,
-                    "fcm_id": fcmToken,
-                    "type" : "normal",
-                    "account_type": this.state.account_type
-                 }
+            const userData = {
+                "username": this.state.name,
+                "surname": this.state.surname,
+                "email": this.state.email,
+                "password": this.state.password,
+                'image': this.state.image,
+                "mobile": this.state.mobile,
+                "services": this.state.serviceId,
+                "description": this.state.description,
+                "address": this.state.address,
+                "lat": this.state.lat,
+                "lang": this.state.lng,
+                "invoice": this.state.invoice,
+                "fcm_id": fcmToken,
+                "type": "normal",
+                "account_type": this.state.account_type
+            }
 
-                 //console.log("Register Data : "+JSON.stringify(userData));
+            //console.log("Register Data : "+JSON.stringify(userData));
 
-                 this.setState({
-                     isLoading: true
-                 })
-                 
-                 Axios.post(REGISTER_URL, JSON.stringify(userData))
-                 .then(responseJson => {
+            this.setState({
+                isLoading: true
+            })
+
+            Axios.post(REGISTER_URL, JSON.stringify(userData))
+                .then(responseJson => {
                     // console.log("Response RegisterPro >> "+JSON.stringify(responseJson));
                     this.setState({
                         isLoading: false
                     });
 
-                    if(responseJson.status === 200 && responseJson.data.createdDate)
-                    {
+                    if (responseJson.status === 200 && responseJson.data.createdDate) {
                         const id = responseJson.data.id;
-        
+
                         var providerData = {
                             providerId: responseJson.data.id,
                             name: responseJson.data.username,
@@ -168,23 +162,22 @@ class ProRegisterScreen extends Component {
                             accountType: responseJson.data.account_type
                         }
                         updateProviderDetails(providerData);
-                        Alert.alert(  
-                            "Successfully Registered !",  
-                            "We have send you a email verification link to your registered email id and then Login to your account",  
-                            [  
-                              {  
-                                text: 'Cancel',  
-                                onPress: () => console.log('Cancel Pressed'),  
-                              },  
-                              {
-                                text: 'Ok', 
-                                onPress: () => this.props.navigation.goBack(),
-                              },  
-                            ]  
-                        );  
+                        Alert.alert(
+                            "Successfully Registered !",
+                            "We have send you a email verification link to your registered email id and then Login to your account",
+                            [
+                                {
+                                    text: 'Cancel',
+                                    onPress: () => console.log('Cancel Pressed'),
+                                },
+                                {
+                                    text: 'Ok',
+                                    onPress: () => this.props.navigation.goBack(),
+                                },
+                            ]
+                        );
                     }
-                    else
-                    {
+                    else {
                         Alert.alert(
                             "OOPS !",
                             responseJson.data.message,
@@ -200,7 +193,7 @@ class ProRegisterScreen extends Component {
                             ]
                         );
                     }
-                 })
+                })
                 .catch((error) => {
                     Alert.alert(
                         "OOPS !",
@@ -220,12 +213,10 @@ class ProRegisterScreen extends Component {
                         isLoading: false
                     })
                 });
-            }
-         })
-       
+        }
     }
 
-    getDataFromServiceScreen=(data)=> {
+    getDataFromServiceScreen = (data) => {
         var data = data.split("/")
         this.setState({
             serviceId: data[0],
@@ -233,9 +224,9 @@ class ProRegisterScreen extends Component {
         })
     };
 
-    getDataFromAddAddressScreen=(data)=> {
-       
-        console.log("Data : "+data);
+    getDataFromAddAddressScreen = (data) => {
+
+        console.log("Data : " + data);
 
         var data = data.split("/")
         this.setState({
@@ -250,23 +241,23 @@ class ProRegisterScreen extends Component {
             isLoading: bool
         })
     }
-    
+
     render() {
         return (
             <View style={StyleSheet.container}>
 
-                <StatusBarPlaceHolder/>
+                <StatusBarPlaceHolder />
 
-                <KeyboardAwareScrollView contentContainerStyle={{justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
+                <KeyboardAwareScrollView contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>
 
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ flex: 0.25, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center', }}>
-                           <TouchableOpacity style ={{width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 5,}}
+                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 5, }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image  style ={{width: 20, height: 20, alignSelf: 'center'}}
-                                    source={require('../icons/arrow_back.png')}/>
+                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                    source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
                             <Image
                                 style={{ width: 170, height: 170 }}
@@ -275,12 +266,14 @@ class ProRegisterScreen extends Component {
 
                         <View style={styles.logincontainer}>
 
-                            <ShakingText style={{ color: 'red', fontWeight: 'bold', marginBottom: 5}}>
+                            <ShakingText style={{ color: 'red', fontWeight: 'bold', marginBottom: 5 }}>
                                 {this.state.error}
                             </ShakingText>
 
-                            <View style={{width: screenWidth - 50, height: 50, justifyContent: 'center',
-                                marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'}}>
+                            <View style={{
+                                width: screenWidth - 50, height: 50, justifyContent: 'center',
+                                marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'
+                            }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                                     <View style={styles.buttonPrimaryDark}>
                                         <Text style={styles.text}>Account Type</Text>
@@ -294,16 +287,16 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_user_64dp.png')}></Image>
-                                  <TextInput style={{ width: screenWidth-85, height: 45,  marginLeft: 10 }}
-                                    placeholder= {this.state.currentPage == 0 ? 'Username' : "Company name"}
+                                <TextInput style={{ width: screenWidth - 85, height: 45, marginLeft: 10 }}
+                                    placeholder={this.state.currentPage == 0 ? 'Username' : "Company name"}
                                     onChangeText={(nameInput) => this.setState({ error: '', name: nameInput })}>
-                                  </TextInput>
+                                </TextInput>
                             </View>
 
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                  <TextInput style={{ width: screenWidth-85, height: 45,  marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 45, marginLeft: 10 }}
                                     placeholder='Email'
                                     onChangeText={(emailInput) => this.setState({ error: '', email: emailInput })}>
                                 </TextInput>
@@ -312,7 +305,7 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_lock_64dp.png')}></Image>
-                                  <TextInput style={{ width: screenWidth-85, height: 45,  marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 45, marginLeft: 10 }}
                                     placeholder='Password'
                                     secureTextEntry={true}
                                     onChangeText={(passwordInput) => this.setState({ error: '', password: passwordInput })}>
@@ -322,7 +315,7 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/mobile.png')}></Image>
-                                  <TextInput style={{ width: screenWidth-85, height: 45,  marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 45, marginLeft: 10 }}
                                     placeholder='Mobile'
                                     keyboardType='numeric'
                                     maxLength={10}
@@ -333,10 +326,11 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textView1}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_settings_64dp.png')}></Image>
-                                 <Text
-                                    style={{ width: screenWidth-85, color: 'black', fontSize: 16, textAlignVertical:'center', marginLeft: 10 }}
+                                <Text
+                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, textAlignVertical: 'center', marginLeft: 10 }}
                                     onPress={() => this.props.navigation.navigate('ProServiceSelect', {
-                                        onGoBack: this.getDataFromServiceScreen, })}>
+                                        onGoBack: this.getDataFromServiceScreen,
+                                    })}>
                                     {this.state.serviceName}
                                 </Text>
                             </View>
@@ -345,7 +339,7 @@ class ProRegisterScreen extends Component {
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/description.png')}></Image>
                                 <TextInput
-                                    style={{ width: screenWidth-85, color: 'black', fontSize: 16, marginLeft: 10 }}
+                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, marginLeft: 10 }}
                                     placeholder='Description'
                                     multiline={true}
                                     onChangeText={(descriptionInput) => this.setState({ error: '', description: descriptionInput })}>
@@ -355,28 +349,29 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textView1}>
                                 <Image style={{ width: 15, height: 15, }}
                                     source={require('../icons/maps_location.png')}></Image>
-                                <Text style={{ width: screenWidth-85, height: '100%', color: 'black', fontSize: 16, textAlignVertical:'center',  marginLeft: 10 }}
-                                 onPress={() => this.props.navigation.navigate('SelectAddress', {
-                                    onGoBack: this.getDataFromAddAddressScreen, })}>
+                                <Text style={{ width: screenWidth - 85, height: '100%', color: 'black', fontSize: 16, textAlignVertical: 'center', marginLeft: 10 }}
+                                    onPress={() => this.props.navigation.navigate('SelectAddress', {
+                                        onGoBack: this.getDataFromAddAddressScreen,
+                                    })}>
                                     {this.state.address}
                                 </Text>
                             </View>
 
                             <View style={styles.textView}>
-                                <Text style={{  color: 'black', fontSize: 16, textAlign: 'center', textAlignVertical:'center', marginTop: 5 }}>
+                                <Text style={{ color: 'black', fontSize: 16, textAlign: 'center', textAlignVertical: 'center', marginTop: 5 }}>
                                     Can you provide invoice
                                 </Text>
-                                <View style={{flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center"}}>
+                                <View style={{ flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center" }}>
                                     <TouchableOpacity style={this.state.invoice == 1 ? styles.invoiceBorder : styles.invoice}
-                                        onPress={() => this.setState({invoice: 1})}>
-                                        <Text style={{color:'white', alignSelf: 'center', textAlignVertical: 'center',}}>Yes</Text>
+                                        onPress={() => this.setState({ invoice: 1 })}>
+                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>Yes</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={[this.state.invoice == 0 ? styles.invoiceBorder : styles.invoice, {marginLeft: 20,}]}
-                                        onPress={() => this.setState({invoice: 0})}> 
-                                        <Text style={{color:'white', alignSelf: 'center', textAlignVertical: 'center',}}>No</Text>
+                                    <TouchableOpacity style={[this.state.invoice == 0 ? styles.invoiceBorder : styles.invoice, { marginLeft: 20, }]}
+                                        onPress={() => this.setState({ invoice: 0 })}>
+                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
                                     </TouchableOpacity>
                                 </View>
-                            </View>    
+                            </View>
 
                             <TouchableOpacity style={styles.buttonContainer}
                                 onPress={this.checkValidation}>
@@ -481,24 +476,24 @@ const styles = StyleSheet.create({
         marginRight: 5
     },
     textInputView: {
-        flexDirection: 'row', 
-        width: screenWidth-40, 
-        height: 45, 
+        flexDirection: 'row',
+        width: screenWidth - 40,
+        height: 45,
         justifyContent: 'center',
-        alignItems: 'center', 
-        borderRadius: 5, 
-        backgroundColor: 'white', 
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 }, 
-        shadowOpacity: 0.75, 
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
         marginBottom: 10
     },
-    textView1:{
+    textView1: {
         flex: 1,
         flexDirection: 'row',
-        width: screenWidth-40,
+        width: screenWidth - 40,
         height: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
@@ -511,13 +506,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 15,
         paddingTop: 15,
-        paddingBottom: 15, 
-        paddingLeft: 5, 
+        paddingBottom: 15,
+        paddingLeft: 5,
         paddingRight: 5
     },
     textView: {
         flex: 1,
-        width: screenWidth-40,
+        width: screenWidth - 40,
         height: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
@@ -530,32 +525,32 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 15,
         paddingTop: 15,
-        paddingBottom: 15, 
-        paddingLeft: 5, 
+        paddingBottom: 15,
+        paddingLeft: 5,
         paddingRight: 5
     },
     textInputViewDes: {
-        flexDirection: 'row', 
-        width: screenWidth - 40, 
-        height: 120, 
+        flexDirection: 'row',
+        width: screenWidth - 40,
+        height: 120,
         justifyContent: 'center',
-        alignItems: 'center', 
-        borderRadius: 5, 
-        backgroundColor: 'white', 
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 }, 
-        shadowOpacity: 0.75, 
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
         marginBottom: 10
     },
-    separator:{
+    separator: {
         borderBottomWidth: 0.8,
         borderBottomColor: '#ebebeb',
         marginTop: 5,
         marginBottom: 5
     },
-    buttonContainer : {
+    buttonContainer: {
         width: 200,
         paddingTop: 10,
         backgroundColor: '#000000',

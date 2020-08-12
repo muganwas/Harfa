@@ -1,7 +1,6 @@
 
 import React, { Component } from 'react';
 import {View, Image, Text, StatusBar, TouchableOpacity, BackHandler} from 'react-native';
-import firebase from 'react-native-firebase';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import RNExitApp from 'react-native-exit-app';
 

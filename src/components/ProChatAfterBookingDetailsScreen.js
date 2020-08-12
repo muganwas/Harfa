@@ -6,7 +6,7 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator,
     KeyboardAvoidingView
 } from 'react-native';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black } from '../Constants/colors';
 
@@ -136,13 +136,13 @@ class ProChatAfterBookingDetailsScreen extends Component {
     sendMessageTask = async () => {
 
         if (this.state.inputMessage.length > 0) {
-            let msgId = firebase.database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
+            let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
                 textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time: firebase.database.ServerValue.TIMESTAMP,
+                time: database.ServerValue.TIMESTAMP,
                 senderId: this.state.senderId,
                 senderImage: this.state.senderImage,
                 senderName: this.state.senderName,
@@ -157,7 +157,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
             let recentMessageReceiver = {
                 textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time: firebase.database.ServerValue.TIMESTAMP,
+                time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.senderId,
                 name: this.state.senderName,
@@ -169,7 +169,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
             let recentMessageSender = {
                 textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time: firebase.database.ServerValue.TIMESTAMP,
+                time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.receiverId,
                 name: this.state.receiverName,
@@ -180,11 +180,11 @@ class ProChatAfterBookingDetailsScreen extends Component {
             }
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
             updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
-            firebase.database().ref().update(updates);
+            database().ref().update(updates);
 
             recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
             recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
-            firebase.database().ref().update(recentUpdates);
+            database().ref().update(recentUpdates);
 
             this.setState({ inputMesage: '' });
         }

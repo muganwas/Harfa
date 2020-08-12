@@ -16,8 +16,8 @@ import {
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { AirbnbRating } from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
-import firebase from 'react-native-firebase';
 import Config from './Config';
+import database from '@react-native-firebase/database';
 import UserDetails from './UserDetails';
 import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
@@ -157,7 +157,7 @@ class ListOfProviderScreen extends Component {
           imageAvaliable = false;
         }
         tempDatasource[key].imageAvailable = imageAvaliable;
-        firebase.database().ref(`liveLocation/${_id}`).once('value', result => {
+        database().ref(`liveLocation/${_id}`).once('value', result => {
           const { latitude, longitude } = result.val();
           const dist = getDistance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
           distInfo[_id] = parseFloat(dist).toFixed(1);

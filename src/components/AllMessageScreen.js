@@ -10,7 +10,7 @@ import { createAppContainer, } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
@@ -65,7 +65,7 @@ class AllMessageScreen extends Component {
 
     componentDidMount(){
         const { userInfo: { userDetails } } = this.props;
-        let dbRef = firebase.database().ref('recentMessage').child(userDetails.userId);
+        let dbRef = database().ref('recentMessage').child(userDetails.userId);
         dbRef.once('value', snapshot => {
             const key = snapshot.key;
             const message = snapshot.val();

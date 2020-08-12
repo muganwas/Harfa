@@ -4,7 +4,7 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView
 } from 'react-native';
 import {connect} from 'react-redux';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import Config from './Config';
 
@@ -63,7 +63,7 @@ class ChatWithAdminScreen extends Component {
 
     componentWillMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-        firebase.database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId)
+        database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId)
             .on('child_added', value => {
                 this.setState(prevState => {
                     //filter out only unique messages
@@ -125,13 +125,13 @@ class ChatWithAdminScreen extends Component {
 
     sendMessageTask = async () => {
         if (this.state.inputMessage.length > 0) {
-            let msgId = firebase.database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId).push().key;
+            let msgId = database().ref('adminChatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
                 textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time: firebase.database.ServerValue.TIMESTAMP,
+                time: database.ServerValue.TIMESTAMP,
                 senderId: this.state.senderId,
                 senderImage: this.state.senderImage,
                 senderName: this.state.senderName,
@@ -144,7 +144,7 @@ class ChatWithAdminScreen extends Component {
             let recentMessage = {
                 textMessage: this.state.inputMessage,
                 imageMessage: '',
-                time: firebase.database.ServerValue.TIMESTAMP,
+                time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
                 id: this.state.senderId,
                 name: this.state.senderName,
@@ -154,10 +154,10 @@ class ChatWithAdminScreen extends Component {
 
             updates['adminChatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
             updates['adminChatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
-            firebase.database().ref().update(updates);
+            database().ref().update(updates);
 
             recentUpdates['recentChatAdmin/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = recentMessage;
-            firebase.database().ref().update(recentUpdates);
+            database().ref().update(recentUpdates);
 
             this.setState({ inputMesage: '' });
         }

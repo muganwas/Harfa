@@ -8,7 +8,6 @@ import {
 import ShakingText from 'react-native-shaking-text';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
-import firebase from 'react-native-firebase';
 import Config from './Config';
 import UserDetails from './UserDetails'
 //import PendingJobRequest from './PendingJobRequest';
@@ -87,53 +86,51 @@ class VerificationScreen extends Component {
                 isLoading: true
             });
 
-            firebase.messaging().getToken().then((fcmToken) => {
-                console.log("ProRegister FCM ID " + fcmToken);
+            const fcmToken = null;
 
-                if (fcmToken) {
-                    const mobileData = {
-                        "mobile": this.state.mobile,
-                        "fcm_id": fcmToken
-                    }
-                    //Check mobile no. is already register or not
-                    fetch(MOBILE_EXISTS_URL, {
-                        method: "POST",
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(mobileData)
-                    })
-                        .then((response) => response.json())
-                        .then((responseJson) => {
-
-                            console.log("Response : " + JSON.stringify(responseJson));
-                            this.setState({
-                                isLoading: false
-                            })
-                            if (responseJson.result) {
-                                const id = responseJson.data.id;
-
-                                //Store data like sharedPreference
-                                AsyncStorage.setItem('userId', id);
-                                AsyncStorage.setItem('userType', 'User');
-
-                                this.getProfile(id);
-                            }
-                            else {
-                                this.props.navigation.navigate("Register", {
-                                    'mobile': this.state.mobile
-                                });
-                            }
-                        })
-                        .catch((error) => {
-                            alert("Error : " + error);
-                            this.setState({
-                                isLoading: false
-                            })
-                        });
+            if (fcmToken) {
+                const mobileData = {
+                    "mobile": this.state.mobile,
+                    "fcm_id": fcmToken
                 }
-            });
+                //Check mobile no. is already register or not
+                fetch(MOBILE_EXISTS_URL, {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(mobileData)
+                })
+                    .then((response) => response.json())
+                    .then((responseJson) => {
+
+                        console.log("Response : " + JSON.stringify(responseJson));
+                        this.setState({
+                            isLoading: false
+                        })
+                        if (responseJson.result) {
+                            const id = responseJson.data.id;
+
+                            //Store data like sharedPreference
+                            AsyncStorage.setItem('userId', id);
+                            AsyncStorage.setItem('userType', 'User');
+
+                            this.getProfile(id);
+                        }
+                        else {
+                            this.props.navigation.navigate("Register", {
+                                'mobile': this.state.mobile
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        alert("Error : " + error);
+                        this.setState({
+                            isLoading: false
+                        })
+                    });
+            }
         }
     }
 

@@ -1,12 +1,13 @@
 
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {View,StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity, 
-    ScrollView,Dimensions, ActivityIndicator} from 'react-native';
+import {
+    View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
+    ScrollView, Dimensions, ActivityIndicator
+} from 'react-native';
 import { getPendingJobRequestProvider } from '../Redux/Actions/jobsActions';
 import AsyncStorage from '@react-native-community/async-storage';
 import ShakingText from 'react-native-shaking-text';
-import firebase from 'react-native-firebase';
 import Config from './Config';
 import ProviderDetails from './ProviderDetails';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
@@ -18,8 +19,8 @@ const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
-const MOBILE_EXISTS_URL = Config.baseURL+'employee/check/mobile'
-const PENDING_JOB_PROVIDER = Config.baseURL+"jobrequest/customer_status_check/";
+const MOBILE_EXISTS_URL = Config.baseURL + 'employee/check/mobile'
+const PENDING_JOB_PROVIDER = Config.baseURL + "jobrequest/customer_status_check/";
 
 class ProVerificationScreen extends Component {
 
@@ -34,9 +35,9 @@ class ProVerificationScreen extends Component {
             opacity: 1,
             isLoading: false,
         }
-    }   
+    }
 
-    componentDidMount(){
+    componentDidMount() {
         //From ProLoginPhoneScreen
         this.setState({
             mobile: this.props.navigation.state.params.mobile,
@@ -44,26 +45,26 @@ class ProVerificationScreen extends Component {
         });
 
         this.interval = setInterval(
-          () => this.setState((prevState)=> ({ timer: prevState.timer - 1 })),
-          1000
+            () => this.setState((prevState) => ({ timer: prevState.timer - 1 })),
+            1000
         );
     }
 
-    componentDidUpdate(){
-        if(this.state.timer === 0){ 
-          clearInterval(this.interval);
-          this.setState({
-            timer: '', 
-            opacity: 0,
+    componentDidUpdate() {
+        if (this.state.timer === 0) {
+            clearInterval(this.interval);
+            this.setState({
+                timer: '',
+                opacity: 0,
 
-        });
+            });
         }
     }
 
-    componentWillUnmount(){
+    componentWillUnmount() {
         clearInterval(this.interval);
         this.setState({
-            timer: '', 
+            timer: '',
             opacity: 0,
         });
     }
@@ -73,9 +74,8 @@ class ProVerificationScreen extends Component {
         if (this.state.otp == '') {
             this.setState({ error: 'Please enter valid OTP' })
         }
-        else if(this.state.otp != this.state.otpToMatch)
-        {
-            this.setState({error:'OTP does not match'})
+        else if (this.state.otp != this.state.otpToMatch) {
+            this.setState({ error: 'OTP does not match' })
         }
         else {
             //Check mobile no. is already register or not
@@ -83,116 +83,119 @@ class ProVerificationScreen extends Component {
                 isLoading: true
             })
 
-            firebase.messaging().getToken().then((fcmToken) => {
-                const { updateProviderDetails } = this.props;
-                if (fcmToken) {
+            const fcmToken = null;
+            const { updateProviderDetails } = this.props;
+            if (fcmToken) {
 
-                    const mobileData = {
-                        "mobile": this.state.mobile,
-                        "fcm_id": fcmToken,
-                    }
+                const mobileData = {
+                    "mobile": this.state.mobile,
+                    "fcm_id": fcmToken,
+                }
 
-                    fetch(MOBILE_EXISTS_URL, {
-                        method: "POST",
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(mobileData)
-                    })
-                        .then((response) => response.json())
-                        .then((responseJson) => {
+                fetch(MOBILE_EXISTS_URL, {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(mobileData)
+                })
+                    .then((response) => response.json())
+                    .then((responseJson) => {
 
-                            console.log("ProVerificationScreen checkValidation : " + JSON.stringify(responseJson));
-                            this.setState({
-                                isLoading: false
-                            })
-                            if (responseJson.result) {
-                                const id = responseJson.data.id;
-
-                                //Store data like sharedPreference
-                                AsyncStorage.setItem('userId', id);
-                                AsyncStorage.setItem('userType', 'Provider');
-
-                                var providerData = {
-                                    providerId: responseJson.data.id,
-                                    name: responseJson.data.username,
-                                    imageSource: responseJson.data.image,
-                                    surname: responseJson.data.surname,
-                                    mobile: responseJson.data.mobile,
-                                    services: responseJson.data.services,
-                                    description: responseJson.data.description,
-                                    address: responseJson.data.address,
-                                    lat: responseJson.data.lat,
-                                    lang: responseJson.data.lang,
-                                    invoice: responseJson.data.invoice,
-                                    status: responseJson.data.status,
-                                }
-                                updateProviderDetails(providerData);
-                                fetchProvidersJobRequests({},id)
-                            }
-                            else {
-                                this.props.navigation.navigate("ProRegister", {
-                                    'mobile': this.state.mobile
-                                })
-                            }
+                        console.log("ProVerificationScreen checkValidation : " + JSON.stringify(responseJson));
+                        this.setState({
+                            isLoading: false
                         })
-                        .catch((error) => {
-                            alert("Error" + error);
-                            this.setState({
-                                isLoading: false
+                        if (responseJson.result) {
+                            const id = responseJson.data.id;
+
+                            //Store data like sharedPreference
+                            AsyncStorage.setItem('userId', id);
+                            AsyncStorage.setItem('userType', 'Provider');
+
+                            var providerData = {
+                                providerId: responseJson.data.id,
+                                name: responseJson.data.username,
+                                imageSource: responseJson.data.image,
+                                surname: responseJson.data.surname,
+                                mobile: responseJson.data.mobile,
+                                services: responseJson.data.services,
+                                description: responseJson.data.description,
+                                address: responseJson.data.address,
+                                lat: responseJson.data.lat,
+                                lang: responseJson.data.lang,
+                                invoice: responseJson.data.invoice,
+                                status: responseJson.data.status,
+                            }
+                            updateProviderDetails(providerData);
+                            fetchProvidersJobRequests({}, id)
+                        }
+                        else {
+                            this.props.navigation.navigate("ProRegister", {
+                                'mobile': this.state.mobile
                             })
-                        });
-                }
-                else {
-                    // user doesn't have a device token yet
-                }
-            });
+                        }
+                    })
+                    .catch((error) => {
+                        alert("Error" + error);
+                        this.setState({
+                            isLoading: false
+                        })
+                    });
+            }
+            else {
+                // user doesn't have a device token yet
+            }
         }
     }
 
     render() {
         return (
-            <View style = {styles.container}>
-                
-            <StatusBar barStyle='light-content' backgroundColor='#C5940E' />
+            <View style={styles.container}>
 
-            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true}}
-                        keyboardShouldPersistTaps='always'>
-                   <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                        <View style={{ flex: 0.35, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center'}}>
-                            
-                           <TouchableOpacity style ={{width: 20, height: 20, alignSelf: 'flex-start', marginLeft: 15}}
-                                    onPress={() => this.props.navigation.goBack()}>
-                                    <Image  style ={{width: 20, height: 20}}
-                                        source={require('../icons/arrow_back.png')}/>
+                <StatusBar barStyle='light-content' backgroundColor='#C5940E' />
+
+                <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
+                    keyboardShouldPersistTaps='always'>
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ flex: 0.35, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
+
+                            <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'flex-start', marginLeft: 15 }}
+                                onPress={() => this.props.navigation.goBack()}>
+                                <Image style={{ width: 20, height: 20 }}
+                                    source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
-                            
-                            <Image 
-                                style ={{width: 170, height: 170}} 
-                                source={require('../images/harfa_logo.png')}/>
+
+                            <Image
+                                style={{ width: 170, height: 170 }}
+                                source={require('../images/harfa_logo.png')} />
                         </View>
 
                         <View style={styles.logincontainer}>
 
                             <View>
-                                <Text style={{color: colorYellow, fontSize: 18, fontWeight: 'bold', alignItems: 'center', justifyContent: 'center'}}>
+                                <Text style={{ color: colorYellow, fontSize: 18, fontWeight: 'bold', alignItems: 'center', justifyContent: 'center' }}>
                                     Activate your account
                                 </Text>
                             </View>
 
-                            <View style={{flexDirection: 'column'}}>                
-                                <Text style={{fontSize: 12, alignItems: 'center', justifyContent: 'center', 
-                                    textAlign: 'center', marginLeft: 30, marginRight: 30, marginTop: 10, }}>
-                                    We're sending an SMS to phone number 
+                            <View style={{ flexDirection: 'column' }}>
+                                <Text style={{
+                                    fontSize: 12, alignItems: 'center', justifyContent: 'center',
+                                    textAlign: 'center', marginLeft: 30, marginRight: 30, marginTop: 10,
+                                }}>
+                                    We're sending an SMS to phone number
                                 </Text>
-                                <Text style={{fontSize: 14, alignItems: 'center', justifyContent: 'center', 
-                                    fontWeight: 'bold',  textAlign: 'center', marginBottom: 40}}>
-                                {this.state.mobile}
+                                <Text style={{
+                                    fontSize: 14, alignItems: 'center', justifyContent: 'center',
+                                    fontWeight: 'bold', textAlign: 'center', marginBottom: 40
+                                }}>
+                                    {this.state.mobile}
                                 </Text>
                             </View>
 
-                            <ShakingText style={{color: 'red', fontWeight: 'bold', marginBottom: 10}}>
+                            <ShakingText style={{ color: 'red', fontWeight: 'bold', marginBottom: 10 }}>
                                 {this.state.error}
                             </ShakingText>
 
@@ -203,41 +206,41 @@ class ProVerificationScreen extends Component {
                                     style={{ opacity: this.state.opacity }}
                                     size="large">
                                 </ActivityIndicator>
-                                <Text style={{color: 'black', fontWeight: 'bold', textAlign:'center'}}>
+                                <Text style={{ color: 'black', fontWeight: 'bold', textAlign: 'center' }}>
                                     {this.state.timer}
                                 </Text>
 
                             </View>
 
                             <View style={styles.textInputView}>
-                                <TextInput 
-                                    style={{ width: screenWidth-85, height: 50, color: 'black', fontSize: 16, }}
+                                <TextInput
+                                    style={{ width: screenWidth - 85, height: 50, color: 'black', fontSize: 16, }}
                                     placeholder='Your 6-digits code'
                                     keyboardType='numeric'
-                                    onChangeText={ (otpInput) => this.setState({error:'', otp: otpInput})}
+                                    onChangeText={(otpInput) => this.setState({ error: '', otp: otpInput })}
                                     value={this.state.otp}>
-                                </TextInput>    
+                                </TextInput>
                             </View>
 
-                            <TouchableOpacity style = {styles.buttonContainer}
+                            <TouchableOpacity style={styles.buttonContainer}
                                 onPress={this.checkValidation}>
                                 <Text style={styles.text}>
                                     Verify
                                 </Text>
-                            </TouchableOpacity>   
-                        </View>     
-                  </View>
-            </ScrollView>
-            
-            <View style={styles.loaderStyle}>
-                {this.state.isLoading && (
-                    <ActivityIndicator
-                        style={{ height: 80 }}
-                        color="#C00"
-                        size="large" />
-                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </ScrollView>
+
+                <View style={styles.loaderStyle}>
+                    {this.state.isLoading && (
+                        <ActivityIndicator
+                            style={{ height: 80 }}
+                            color="#C00"
+                            size="large" />
+                    )}
+                </View>
             </View>
-        </View>
         );
     }
 }
@@ -264,10 +267,10 @@ export default connect(mapStateToProps, mapDispatchToProps)(ProVerificationScree
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent : 'center',
-        alignItems: 'center',  
-        backgroundColor: "#E8EEE9" 
-     },
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: "#E8EEE9"
+    },
     logincontainer: {
         flex: .65,
         alignItems: 'center',
@@ -276,27 +279,27 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     textInputView: {
-        flexDirection: 'row', 
-        width: screenWidth - 40, 
-        height: 45, 
+        flexDirection: 'row',
+        width: screenWidth - 40,
+        height: 45,
         justifyContent: 'center',
-        alignItems: 'center', 
-        borderRadius: 5, 
-        backgroundColor: 'white', 
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 }, 
-        shadowOpacity: 0.75, 
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
-        marginBottom: 10 
+        marginBottom: 10
     },
-    separator:{
+    separator: {
         borderBottomWidth: 0.8,
         borderBottomColor: '#ebebeb',
         marginTop: 5,
         marginBottom: 5
     },
-    buttonContainer : {
+    buttonContainer: {
         width: 200,
         paddingTop: 10,
         backgroundColor: '#000000',

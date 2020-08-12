@@ -15,8 +15,7 @@ import {
     updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
-import geolocation from '@react-native-community/geolocation';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
 import { Notifications } from 'react-native-notifications';
 import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
@@ -72,7 +71,7 @@ class Hamburger extends React.Component {
         this.fetchOthersLocations();
         allJobRequestsProviders.map(obj => {
             const { user_id } = obj;
-            firebase.database().ref('chatting').child(receiverId).child(user_id)
+            database().ref('chatting').child(receiverId).child(user_id)
                 .on('child_added', data => {
                     if (data.val()) {
                         const { messagesInfo: { dataChatSource } } = this.props;
@@ -90,7 +89,7 @@ class Hamburger extends React.Component {
                     }
                 });
 
-            firebase.database().ref("chatting").child(receiverId).child(user_id)
+            database().ref("chatting").child(receiverId).child(user_id)
                 .once('value', data => {
                     if (data.val()) {
                         const { messagesInfo: { dataChatSource } } = this.props;
@@ -108,7 +107,7 @@ class Hamburger extends React.Component {
 
                 });
         });
-        const userRef = firebase.database().ref(`liveLocation/${receiverId}`);
+        const userRef = database().ref(`liveLocation/${receiverId}`);
         /** get pros current position and upload it to db */
         geolocation.getCurrentPosition(info => {
             const { coords: { latitude, longitude } } = info;
@@ -141,7 +140,7 @@ class Hamburger extends React.Component {
             console.log(error)
         }, { enableHighAccuracy: true });
 
-        firebase.notifications().onNotification(notification => {
+        /*firebase.notifications().onNotification(notification => {
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body, data } = notification;
             const currentGenericCount = notificationsInfo.generic;
@@ -172,9 +171,9 @@ class Hamburger extends React.Component {
                 newJobRequestsProviders.splice(pos, 1);
                 dispatchFetchedProJobRequests(newJobRequestsProviders);
             }
-        });
+        });*/
 
-        firebase.database().ref('chatting').child(receiverId).on('child_changed', result => {
+        database().ref('chatting').child(receiverId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             const currentMessagesCount = notificationsInfo.messages;
             const newMessagesCount = currentMessagesCount + 1;
@@ -197,7 +196,7 @@ class Hamburger extends React.Component {
                 });
         });
 
-        firebase.database().ref('adminChatting').child(receiverId).on('child_changed', result => {
+        database().ref('adminChatting').child(receiverId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             const adminMessageCount = notificationsInfo.adminMessages;
             Android ? Notifications.postLocalNotification({
@@ -262,8 +261,8 @@ class Hamburger extends React.Component {
     componentWillUnmount() {
         const { userInfo: { providerDetails } } = this.props;
         const senderId = providerDetails.providerId;
-        firebase.database().ref('adminChatting').child(senderId).off('child_changed')
-        firebase.database().ref('chatting').child(senderId).off('child_changed');
+        database().ref('adminChatting').child(senderId).off('child_changed')
+        database().ref('chatting').child(senderId).off('child_changed');
     }
 
     fetchOthersLocations = () => {
@@ -271,11 +270,11 @@ class Hamburger extends React.Component {
         jobRequestsProviders.map(obj => {
             const { user_id } = obj;
             /** lookout for users changed position */
-            firebase.database().ref(`liveLocation/${user_id}`).on('child_changed', () => {
+            database().ref(`liveLocation/${user_id}`).on('child_changed', () => {
                 fetchingOthersCoordinates();
                 const { generalInfo: { othersCoordinates } } = this.props;
                 let newOthersCoordinates = Object.assign({}, othersCoordinates);
-                firebase.database().ref(`liveLocation/${user_id}`).once('value', result => {
+                database().ref(`liveLocation/${user_id}`).once('value', result => {
                     newOthersCoordinates[user_id] = result.val();
                     fetchedOthersCoordinates(newOthersCoordinates);
                 }).
@@ -285,7 +284,7 @@ class Hamburger extends React.Component {
             });
 
             /**fetch users current position */
-            firebase.database().ref(`liveLocation/${user_id}`).once('value', result => {
+            database().ref(`liveLocation/${user_id}`).once('value', result => {
                 const { generalInfo: { othersCoordinates } } = this.props;
                 let newOthersCoordinates = Object.assign({}, othersCoordinates);
                 newOthersCoordinates[user_id] = result.val();

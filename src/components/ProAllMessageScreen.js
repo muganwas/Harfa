@@ -5,7 +5,7 @@ import {
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import firebase from 'react-native-firebase';
+import database from '@react-native-firebase/database';
 import { createAppContainer, } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
@@ -63,7 +63,7 @@ class ProAllMessageScreen extends Component {
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
         const { userInfo: { providerDetails } } = this.props;
-        let dbRef = firebase.database().ref('recentMessage').child(providerDetails.providerId);
+        let dbRef = database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', snapshot => {
             //const key = snapshot.key;
             const message = snapshot.val();
