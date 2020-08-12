@@ -9,18 +9,15 @@ import ShakingText from 'react-native-shaking-text';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
 import Config from './Config';
-import UserDetails from './UserDetails'
-//import PendingJobRequest from './PendingJobRequest';
 import { updateUserDetails } from '../Redux/Actions/userActions';
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
+import messaging from '@react-native-firebase/messaging';
 
 //const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 //const colorBg = '#E8EEE9';
-
 const screenWidth = Dimensions.get('window').width;
-
 const MOBILE_EXISTS_URL = Config.baseURL + 'users/check/mobile'
 const USER_GET_PROFILE = Config.baseURL + "users/"
 //const PENDING_JOB = Config.baseURL+"jobrequest/user_status_check/";
@@ -85,9 +82,7 @@ class VerificationScreen extends Component {
             this.setState({
                 isLoading: true
             });
-
-            const fcmToken = null;
-
+            const fcmToken = await messaging().getToken();
             if (fcmToken) {
                 const mobileData = {
                     "mobile": this.state.mobile,

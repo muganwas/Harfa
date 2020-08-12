@@ -6,10 +6,9 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
-import database from '@react-native-firebase/database';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
-import ProviderDetails from './ProviderDetails';
+import messaging from '@react-native-firebase/messaging';
 import WaitingDialog from './WaitingDialog';
 import Axios from 'axios';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
@@ -105,10 +104,9 @@ class ProRegisterScreen extends Component {
     }
 
     registerTask() {
-        const fcmToken = null;
+        const fcmToken = await messaging().getToken();
         const { updateProviderDetails } = this.props;
         if (fcmToken) {
-
             const userData = {
                 "username": this.state.name,
                 "surname": this.state.surname,
@@ -126,12 +124,9 @@ class ProRegisterScreen extends Component {
                 "type": "normal",
                 "account_type": this.state.account_type
             }
-
-            //console.log("Register Data : "+JSON.stringify(userData));
-
             this.setState({
                 isLoading: true
-            })
+            });
 
             Axios.post(REGISTER_URL, JSON.stringify(userData))
                 .then(responseJson => {

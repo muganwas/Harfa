@@ -4,11 +4,10 @@ import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, Dimensions,
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import AsyncStorage from '@react-native-community/async-storage';
-import database from '@react-native-firebase/database';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
-import ProviderDetails from './ProviderDetails';
+import messaging from '@react-native-firebase/messaging';
 import Axios from 'axios';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 
@@ -102,7 +101,7 @@ class ProRegisterFBScreen extends Component {
     }
 
     registerTask() {
-        const fcmToken = null;
+        const fcmToken = await messaging().getToken();
         const { updateProviderDetails } = this.props;
         if (fcmToken) {
             const userData = {

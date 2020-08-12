@@ -9,7 +9,7 @@ import { getPendingJobRequestProvider } from '../Redux/Actions/jobsActions';
 import AsyncStorage from '@react-native-community/async-storage';
 import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
-import ProviderDetails from './ProviderDetails';
+import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 const colorPrimary = '#262425';
@@ -81,9 +81,8 @@ class ProVerificationScreen extends Component {
             //Check mobile no. is already register or not
             this.setState({
                 isLoading: true
-            })
-
-            const fcmToken = null;
+            });
+            const fcmToken = await messaging().getToken();
             const { updateProviderDetails } = this.props;
             if (fcmToken) {
 

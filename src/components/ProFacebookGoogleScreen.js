@@ -14,7 +14,7 @@ import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 're
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 import Config from './Config';
-import ProviderDetails from './ProviderDetails';
+import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 
 const colorPrimary = '#262425';
@@ -144,17 +144,13 @@ class FacebookGoogleScreen extends Component {
     }
 
     fbGmailLoginTask = (name, email, image) => {
-
         this.setState({
             isLoading: true,
-        })
-
-        const fcmToken = null;
-
+        });
+        const fcmToken = await messaging().getToken();
         const { updateProviderDetails } = this.props;
         const { fetchProvidersJobRequests, fetchJobRequestHistory } = this.props;
         if (fcmToken) {
-
             const userData = {
                 "username": name,
                 "email": email,
@@ -163,9 +159,7 @@ class FacebookGoogleScreen extends Component {
                 "dob": "",
                 "fcm_id": fcmToken,
                 "type": 'google',
-            }
-            console.log("Data: " + JSON.stringify(userData));
-
+            };
             fetch(CHECK_EMAIL,
                 {
                     method: 'POST',
@@ -293,14 +287,11 @@ class FacebookGoogleScreen extends Component {
     }
 
     authenticateProTask = () => {
-
         const { fetchProvidersJobRequests, fetchJobRequestHistory } = this.props;
-
         this.setState({
             isLoading: true,
         });
-
-        const fcmToken = null;
+        const fcmToken = await messaging().getToken();
         const { updateProviderDetails } = this.props;
         if (fcmToken) {
             const data = {

@@ -22,8 +22,6 @@ import ProHomeScreen from './ProHomeScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
 import SelectAddressScreen from './SelectAddressScreen';
 import Config from './Config';
-import ProviderDetails from './ProviderDetails';
-import UserDetails from './UserDetails';
 import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import messaging from '@react-native-firebase/messaging';
 import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
@@ -102,7 +100,6 @@ class SplashScreen extends Component {
         const fcmToken = await messaging().getToken();
         if (fcmToken) {
             console.log("Splash FCMID >> " + fcmToken);
-
             AsyncStorage.getItem('userType')
                 .then((userType) => this.autoLogin(userId, userType, fcmToken));
         }

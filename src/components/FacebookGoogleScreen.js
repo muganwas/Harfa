@@ -8,12 +8,11 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
 import AsyncStorage from '@react-native-community/async-storage';
 import 'react-native-gesture-handler';
-import database from '@react-native-firebase/database';
+import messaging from '@react-native-firebase/messaging';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
-import UserDetails from './UserDetails';
 import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import WaitingDialog from './WaitingDialog';
 import Axios from 'axios';
@@ -152,10 +151,8 @@ class FacebookGoogleScreen extends Component {
         this.setState({
             isLoading: true,
         });
-
-        const fcmToken = null;
+        const fcmToken = await messaging().getToken();
         if (fcmToken) {
-
             const userData = {
                 "acc_type": this.state.accountType,
                 "username": name,
@@ -166,8 +163,6 @@ class FacebookGoogleScreen extends Component {
                 "fcm_id": fcmToken,
                 "type": "google"
             }
-            console.log("Data: " + JSON.stringify(userData));
-
             Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
                 .then(responseJson => {
                     // console.log("Response Register")
@@ -261,22 +256,16 @@ class FacebookGoogleScreen extends Component {
 
     authenticateTask = () => {
         const { fetchJobRequests, updateUserDetails } = this.props;
-        console.log("authenticateTask")
-
         this.setState({
             isLoading: true,
-        })
-
-        const fcmToken = null;
-
+        });
+        const fcmToken = await messaging().getToken();
         if (fcmToken) {
-
             const data = {
                 "email": this.state.email,
                 "password": this.state.password,
                 "fcm_id": fcmToken
             }
-            console.log("Data: " + JSON.stringify(data));
 
             fetch(AUTHENTICATE_URL,
                 {
