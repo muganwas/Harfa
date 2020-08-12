@@ -143,7 +143,7 @@ class FacebookGoogleScreen extends Component {
         }
     }
 
-    fbGmailLoginTask = (name, email, image) => {
+    fbGmailLoginTask = async (name, email, image) => {
         this.setState({
             isLoading: true,
         });
@@ -286,7 +286,7 @@ class FacebookGoogleScreen extends Component {
         }
     }
 
-    authenticateProTask = () => {
+    authenticateProTask = async () => {
         const { fetchProvidersJobRequests, fetchJobRequestHistory } = this.props;
         this.setState({
             isLoading: true,

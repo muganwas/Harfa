@@ -21,11 +21,9 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import moment from 'moment';
 import ImagePicker from 'react-native-image-picker';
-import AsyncStorage from '@react-native-community/async-storage';
-import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 import Config from './Config';
-import UserDetails from './UserDetails';
+import messaging from '@react-native-firebase/messaging';
 import WaitingDialog from './WaitingDialog';
 
 //const colorPrimary = '#262425';
@@ -176,11 +174,11 @@ export default class RegisterScreen extends Component {
     }
   };
 
-  registerTask(imageObject) {
+  async registerTask(imageObject) {
     this.setState({
       isLoading: true,
     });
-    const fcmToken = null;
+    const authStatus = await messaging().requestPermission();
     const {
       username,
       email,

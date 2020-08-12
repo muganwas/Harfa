@@ -146,7 +146,7 @@ class FacebookGoogleScreen extends Component {
         }
     }
 
-    fbGoogleLoginCustomerTask = (name, email, image) => {
+    fbGoogleLoginCustomerTask = async (name, email, image) => {
         const { fetchJobRequests, updateUserDetails } = this.props;
         this.setState({
             isLoading: true,
@@ -254,7 +254,7 @@ class FacebookGoogleScreen extends Component {
         }
     }
 
-    authenticateTask = () => {
+    authenticateTask = async () => {
         const { fetchJobRequests, updateUserDetails } = this.props;
         this.setState({
             isLoading: true,

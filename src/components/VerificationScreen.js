@@ -71,7 +71,7 @@ class VerificationScreen extends Component {
         });
     }
 
-    checkValidation = () => {
+    checkValidation = async () => {
         if (this.state.otp == '') {
             this.setState({ error: 'Please enter valid OTP' })
         }

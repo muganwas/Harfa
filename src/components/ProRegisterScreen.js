@@ -103,7 +103,7 @@ class ProRegisterScreen extends Component {
         }
     }
 
-    registerTask() {
+    async registerTask() {
         const fcmToken = await messaging().getToken();
         const { updateProviderDetails } = this.props;
         if (fcmToken) {

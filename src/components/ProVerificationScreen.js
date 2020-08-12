@@ -69,7 +69,7 @@ class ProVerificationScreen extends Component {
         });
     }
 
-    checkValidation = () => {
+    checkValidation = async () => {
         const { fetchProvidersJobRequests } = this.props;
         if (this.state.otp == '') {
             this.setState({ error: 'Please enter valid OTP' })
