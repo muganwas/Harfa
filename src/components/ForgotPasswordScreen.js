@@ -101,7 +101,7 @@ export default class ForgotPasswordScreen extends Component {
                         isLoading: false,
                     })  
                     Alert.alert(  
-                        "OUPS !",  
+                        "OOPS !",  
                         responseJson.message,  
                         [  
                           {  
@@ -122,7 +122,7 @@ export default class ForgotPasswordScreen extends Component {
                     isLoading: false,
                 })
                 Alert.alert(  
-                    "OUPS !",  
+                    "OOPS !",  
                     "Une erreur s'est produite, veuillez réessayer plus tard",  
                     [  
                       {  

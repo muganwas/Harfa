@@ -16,6 +16,8 @@ import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../Redux/Act
 import Config from './Config';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
+import simpleToast from 'react-native-simple-toast';
+import firebaseAuth from '@react-native-firebase/auth';
 
 const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';

@@ -82,7 +82,6 @@ class RegisterScreen extends Component {
       isLoading: false,
       isToastShow: false,
     };
-    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
 
   componentDidMount() {
@@ -105,7 +104,7 @@ class RegisterScreen extends Component {
     );
   }
 
-  handleBackButtonClick() {
+  handleBackButtonClick = () => {
     this.props.navigation.goBack();
     return true;
   }
@@ -135,11 +134,10 @@ class RegisterScreen extends Component {
   selectPhoto = () => {
     console.log('SELECT PHOTO ');
     ImagePicker.showImagePicker(options, response => {
-      console.log('response --', response)
       if (response.didCancel) {
-        console.log('User cancelled image picker');
+        simpleToast.show('You canceled image selection', simpleToast.SHORT);
       } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
+        simpleToast.show('Something went wrong, try again.', simpleToast.SHORT);
       } else {
         let source;
         source = { uri: response.uri };
@@ -152,7 +150,7 @@ class RegisterScreen extends Component {
     });
   };
 
-  emailValidate(email) {
+  emailValidate = email => {
     let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
     if (reg.test(email) === false) {
       this.setState({ error: 'Email is incorrect', email: email });
@@ -180,7 +178,7 @@ class RegisterScreen extends Component {
     }
   };
 
-  async registerTask(imageObject) {
+  registerTask = async imageObject => {
     this.setState({
       isLoading: true,
     });

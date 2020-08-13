@@ -15,6 +15,8 @@ import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import WaitingDialog from './WaitingDialog';
+import firebaseAuth from '@react-native-firebase/auth';
+import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
 
 //const colorPrimary = '#262425';
@@ -61,8 +63,7 @@ function StatusBarPlaceHolder() {
 class FacebookGoogleScreen extends Component {
 
     constructor(props) {
-        super()
-
+        super();
         this.state = {
             accountType: props.navigation.state.params.accountType,
             email: '',
@@ -71,12 +72,6 @@ class FacebookGoogleScreen extends Component {
             isLoading: false,
             isErrorToast: ''
         }
-        that = this;
-        this.facebookLoginTask = this.facebookLoginTask.bind(this);
-        this.fbGoogleLoginCustomerTask = this.fbGoogleLoginCustomerTask.bind(this);
-        this.checkValidation = this.checkValidation.bind(this);
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
 
     componentDidMount() {
@@ -88,12 +83,12 @@ class FacebookGoogleScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
 
-    async facebookLoginTask() {
+    facebookLoginTask = async () => {
 
         LoginManager.logInWithPermissions(["public_profile", "email"]).then(function (result) {
             if (result.isCancelled) {
@@ -121,7 +116,7 @@ class FacebookGoogleScreen extends Component {
         );
     }
 
-    async googleLoginTask() {
+    googleLoginTask = async () => {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
@@ -235,23 +230,18 @@ class FacebookGoogleScreen extends Component {
                         ]
                     );
                 })
-                .done()
+                .done();
         }
 
     }
 
-    checkValidation() {
-        console.log("CheckValidation");
-        if (this.state.email == '') {
-            this.setState({ error: 'Entrez une adresse email valide' })
-        }
-        else if (this.state.password == '') {
-            this.setState({ error: 'Entrer le mot de passe' })
-        }
-        else {
-            console.log("Else");
-            this.authenticateTask()
-        }
+    checkValidation = () => {
+        if (this.state.email == '')
+            this.setState({ error: 'Entrez une adresse email valide' });
+        else if (this.state.password == '')
+            this.setState({ error: 'Entrer le mot de passe' });
+        else
+            this.authenticateTask();
     }
 
     authenticateTask = async () => {
@@ -261,97 +251,120 @@ class FacebookGoogleScreen extends Component {
         });
         const fcmToken = await messaging().getToken();
         if (fcmToken) {
-            const data = {
-                "email": this.state.email,
-                "password": this.state.password,
-                "fcm_id": fcmToken
-            }
-
-            fetch(AUTHENTICATE_URL,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then((response) => response.json())
-                .then((responseJson) => {
-                    console.log("Response Login >> " + JSON.stringify(responseJson));
-                    if (responseJson.result) {
-                        this.setState({
-                            isLoading: false,
-                            isErrorToast: true,
-                        })
-                        const id = responseJson.data.id;
-
-                        var userData = {
-                            userId: responseJson.data.id,
-                            accountType: responseJson.data.acc_type,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            username: responseJson.data.username,
-                            image: responseJson.data.image,
-                            mobile: responseJson.data.mobile,
-                            dob: responseJson.data.dob,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            fcmId: responseJson.data.fcm_id,
-                        }
-                        updateUserDetails(userData);
-                        //Store data like sharedPreference
-                        AsyncStorage.setItem('userId', id);
-                        AsyncStorage.setItem('userType', 'User');
-                        fetchJobRequests(this.props, id, "Home");
+            firebaseAuth().signInWithEmailAndPassword(this.state.email, this.state.password).then(result => {
+                const { user } = result;
+                if (user && typeof user === 'object') {
+                    const data = {
+                        "email": this.state.email,
+                        "password": this.state.password,
+                        "fcm_id": fcmToken
                     }
-                    else {
-                        console.log("Response Else ");
-                        this.setState({
-                            isLoading: false,
+                    fetch(AUTHENTICATE_URL,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data)
                         })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Annuler',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retenter',
-                                    onPress: () => this.authenticateTask(),
-                                },
-                            ]
-                        );
-                    }
-                })
-                .catch((error) => {
-                    console.log("Error :" + error);
-                    this.setState({
-                        isLoading: false,
-                    })
+                        .then((response) => response.json())
+                        .then((responseJson) => {
+                            if (responseJson.result) {
+                                this.setState({
+                                    isLoading: false,
+                                    isErrorToast: true,
+                                })
+                                const id = responseJson.data.id;
+
+                                var userData = {
+                                    userId: responseJson.data.id,
+                                    accountType: responseJson.data.acc_type,
+                                    email: responseJson.data.email,
+                                    password: responseJson.data.password,
+                                    username: responseJson.data.username,
+                                    image: responseJson.data.image,
+                                    mobile: responseJson.data.mobile,
+                                    dob: responseJson.data.dob,
+                                    address: responseJson.data.address,
+                                    lat: responseJson.data.lat,
+                                    lang: responseJson.data.lang,
+                                    fcmId: responseJson.data.fcm_id,
+                                }
+                                updateUserDetails(userData);
+                                //Store data like sharedPreference
+                                AsyncStorage.setItem('userId', id);
+                                AsyncStorage.setItem('userType', 'User');
+                                fetchJobRequests(this.props, id, "Home");
+                            }
+                            else {
+                                console.log("Response Else ");
+                                this.setState({
+                                    isLoading: false,
+                                })
+                                Alert.alert(
+                                    "OOPS !",
+                                    responseJson.message,
+                                    [
+                                        {
+                                            text: 'Annuler',
+                                            onPress: () => console.log('Cancel Pressed'),
+                                        },
+                                        {
+                                            text: 'Retenter',
+                                            onPress: () => this.authenticateTask(),
+                                        },
+                                    ]
+                                );
+                            }
+                        })
+                        .catch(error => {
+                            console.log('API auth error --', error);
+                            this.setState({
+                                isLoading: false,
+                            });
+                            Alert.alert(
+                                "OOPS !",
+                                "Une erreur s'est produite, veuillez réessayer plus tard",
+                                [
+                                    {
+                                        text: 'Annuler',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                    },
+                                    {
+                                        text: 'Retenter',
+                                        onPress: () => this.authenticateTask(),
+                                    },
+                                ]
+                            );
+                        })
+                        .done();
+                }
+
+            }).catch(error => {
+                if (error.code === 'auth/user-not-found') {
+                    //simpleToast.show("You've not registered yet, please register first.");
                     Alert.alert(
-                        "OUPS !",
-                        "Une erreur s'est produite, veuillez réessayer plus tard",
+                        null,
+                        "You've not registered yet, please register first",
                         [
                             {
-                                text: 'Annuler',
+                                text: 'Ok',
                                 onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retenter',
-                                onPress: () => this.authenticateTask(),
-                            },
+                            }
                         ]
                     );
-                })
-                .done()
+                }
+                else {
+                    simpleToast.show("Something went wrong, try again later");
+                    console.log('login error code --', error.code)
+                }
+                this.setState({isLoading:false})
+            });
         }
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
