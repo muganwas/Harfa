@@ -59,13 +59,9 @@ class SplashScreen extends Component {
             authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
             authStatus === messaging.AuthorizationStatus.PROVISIONAL;
         if (enabled) {
-            /** find out about this token nonsense later */
             this.getFCMToken(userId);
         }
         else {
-
-            //check for notification permissions here
-
             Alert.alert(
                 "Permission Request",
                 "You don't have permission for notification. Please enable notification then try again ",
@@ -91,15 +87,12 @@ class SplashScreen extends Component {
                     },
                 ]
             );
-
-            //User has rejected permissions
         }
     }
 
     getFCMToken = async userId => {
         const fcmToken = await messaging().getToken();
         if (fcmToken) {
-            console.log("Splash FCMID >> " + fcmToken);
             AsyncStorage.getItem('userType')
                 .then((userType) => this.autoLogin(userId, userType, fcmToken));
         }

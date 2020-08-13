@@ -1,11 +1,20 @@
 import {
     UPDATE_PROVIDER_DETAILS,
-    UPDATE_USER_DETAILS
+    UPDATE_USER_DETAILS,
+    UPDATE_NEW_USER_INFO
+
 } from '../types';
 
 export const updateProviderDetails = payload => {
     return {
         type: UPDATE_PROVIDER_DETAILS,
+        payload
+    }
+}
+
+export const updateNewUserInfo = payload => {
+    return {
+        type: UPDATE_NEW_USER_INFO,
         payload
     }
 }

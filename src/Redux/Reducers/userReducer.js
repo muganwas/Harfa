@@ -1,10 +1,12 @@
 import {
     UPDATE_PROVIDER_DETAILS,
     UPDATE_USER_DETAILS,
-    RESET_USER_DETAILS
+    RESET_USER_DETAILS,
+    UPDATE_NEW_USER_INFO
 } from '../types';
 
 const initialState = {
+    newUser: {},
     userDetails: {
         userId: '',
         accountType: '',
@@ -90,6 +92,11 @@ const userReducer = (state = initialState, action) => {
                     fcmId: '',
                     accountType: '',
                 }
+            }
+        case UPDATE_NEW_USER_INFO: 
+            return {
+                ...state,
+                newUser: action.payload
             }
         default:
             return {

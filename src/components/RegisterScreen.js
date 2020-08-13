@@ -15,22 +15,29 @@ import {
   Platform,
   BackHandler,
 } from 'react-native';
+import { connect } from 'react-redux';
 import axios from 'axios';
 import ShakingText from 'react-native-shaking-text';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
+import simpleToast from 'react-native-simple-toast';
 import moment from 'moment';
 import ImagePicker from 'react-native-image-picker';
 import database from '@react-native-firebase/database';
 import Config from './Config';
+import { updateNewUserInfo } from '../Redux/Actions/userActions';
 import messaging from '@react-native-firebase/messaging';
+import firebaseAuth from '@react-native-firebase/auth';
+import storage from '@react-native-firebase/storage';
 import WaitingDialog from './WaitingDialog';
+import { cloneDeep } from 'lodash';
 
 //const colorPrimary = '#262425';
 const colorPrimaryDark = '#C5940E';
 const colorYellow = '#FFBF0F';
 //const colorBg = '#E8EEE9';
-const usersRef = database().ref();
+const usersRef = database().ref('/users_info');
+const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
 
@@ -58,7 +65,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-export default class RegisterScreen extends Component {
+class RegisterScreen extends Component {
   constructor(props) {
     super();
     this.state = {
@@ -83,8 +90,11 @@ export default class RegisterScreen extends Component {
       'hardwareBackPress',
       this.handleBackButtonClick,
     );
-    usersRef.child('/users_info').once('value').then(info => {
-      console.log('info --', info.val())
+    storageRef.list().then(result => {
+      // Loop over each item
+      result.items.forEach(ref => {
+        console.log('storage ref loop', ref.fullPath);
+      });
     });
   }
 
@@ -124,19 +134,15 @@ export default class RegisterScreen extends Component {
 
   selectPhoto = () => {
     console.log('SELECT PHOTO ');
-
     ImagePicker.showImagePicker(options, response => {
-      console.log('Response = ', response);
-
+      console.log('response --', response)
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.error) {
         console.log('ImagePicker Error: ', response.error);
       } else {
         let source;
-
         source = { uri: response.uri };
-
         this.setState({
           imageURI: source,
           imageDataObject: response,
@@ -178,17 +184,20 @@ export default class RegisterScreen extends Component {
     this.setState({
       isLoading: true,
     });
+    const fcmToken = await messaging().getToken();
     const authStatus = await messaging().requestPermission();
-    const {
-      username,
-      email,
-      mobile,
-      password,
-      dob,
-      accountType,
-    } = this.state;
-
-    if (fcmToken) {
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    if (enabled && fcmToken) {
+      const {
+        username,
+        email,
+        mobile,
+        password,
+        dob,
+        accountType,
+      } = this.state;
 
       const userData = {
         'username': username,
@@ -197,69 +206,127 @@ export default class RegisterScreen extends Component {
         'password': password,
         'dob': dob,
         'acc_type': accountType,
-        'image': imageObject.fileName,
         'fcm_id': fcmToken,
         'type': 'normal',
       };
+      firebaseAuth()
+        .createUserWithEmailAndPassword(email, password)
+        .then(result => {
+          const { fileName, path } = imageObject;
+          const { updateNewUserInfo } = this.props;
+          const { user, user: { uid } } = result;
+          /*user.sendEmailVerification().then(() => {
+            simpleToast.show('Verification Email sent', simpleToast.LONG);
+          }).catch(error => {
+            console.log('send emil confirmation error --', error.message)
+          });*/
+          const newUser = Object.assign({ uid }, userData);
+          const userDataRef = storageRef.child(`/${uid}/${fileName}`)
+          updateNewUserInfo(newUser);
+          userDataRef.putFile(path).then(uploadRes => {
+            const { state } = uploadRes;
+            if (state === 'success') {
+              userDataRef.getDownloadURL().then(urlResult => {
+                let newUserData = cloneDeep(userData);
+                newUserData.image = urlResult;
+                console.log('url result', urlResult);
+                axios
+                  .post(REGISTER_URL, { data: JSON.stringify(newUserData) })
+                  .then(responseJson => {
+                    if (responseJson.status === 200 && responseJson.data.createdDate) {
 
-      axios
-        .post(REGISTER_URL, { data: JSON.stringify(userData) })
-        .then(responseJson => {
-          if (responseJson.status === 200 && responseJson.data.createdDate) {
+                      this.setState({
+                        isLoading: false,
+                        isToastShow: true,
+                      });
 
-            this.setState({
-              isLoading: false,
-              isToastShow: true,
-            });
-
-            Alert.alert(
-              'Successfully Registered !',
-              'We have send you a email verification link to your registered email id and then Login to your account',
-              [
-                {
-                  text: 'Cancel',
-                  onPress: () => console.log('Cancel Pressed'),
-                },
-                {
-                  text: 'Ok',
-                  onPress: () => this.props.navigation.goBack(),
-                },
-              ],
-            );
-          } else {
-            this.setState({
-              isLoading: false,
-            });
-            Alert.alert('OOPS !', responseJson.data.message, [
-              {
-                text: 'Cancel',
-                onPress: () => console.log('Cancel Pressed'),
-              },
-              {
-                text: 'Retry',
-                onPress: () =>
-                  this.registerTask(this.state.imageDataObject),
-              },
-            ]);
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
-          this.setState({
-            isLoading: false,
+                      Alert.alert(
+                        'Successfully Registered !',
+                        'We have send you a email verification link to your registered email id and then Login to your account',
+                        [
+                          {
+                            text: 'Cancel',
+                            onPress: () => console.log('Cancel Pressed'),
+                          },
+                          {
+                            text: 'Ok',
+                            onPress: () => this.props.navigation.goBack(),
+                          },
+                        ],
+                      );
+                    } else {
+                      this.setState({
+                        isLoading: false,
+                      });
+                      Alert.alert('OOPS !', responseJson.data.message, [
+                        {
+                          text: 'Cancel',
+                          onPress: () => console.log('Cancel Pressed'),
+                        },
+                        {
+                          text: 'Retry',
+                          onPress: () =>
+                            this.registerTask(this.state.imageDataObject),
+                        },
+                      ]);
+                    }
+                  })
+                  .catch(error => {
+                    console.log('Error :' + error);
+                    this.setState({
+                      isLoading: false,
+                    });
+                    Alert.alert('OOPS !', error.message, [
+                      {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                      },
+                      {
+                        text: 'Retry',
+                        onPress: () => this.registerTask(this.state.imageDataObject),
+                      },
+                    ]);
+                  })
+                  .done();
+              })
+            }
+          }).catch(error => {
+            console.log('image upload error', error.messge)
           });
-          Alert.alert('OOPS !', error.message, [
-            {
-              text: 'Cancel',
-              onPress: () => console.log('Cancel Pressed'),
+        }).catch(error => {
+          if (error.code === 'auth/email-already-in-use')
+            this.setState({ error: 'The email is already registerd.' });
+          if (error.code === 'auth/invalid-email')
+            this.setState({ error: 'That email address is invalid!' });
+          console.log('account creation error: -', error.message);
+        });
+    }
+    else {
+      Alert.alert(
+        "Permission Request",
+        "You don't have permission for notification. Please enable notification then try again ",
+        [
+          {
+            text: 'Back',
+            onPress: () => {
+              if (Platform.OS == 'android')
+                BackHandler.exitApp();
+              else
+                RNExitApp.exitApp();
             },
-            {
-              text: 'Retry',
-              onPress: () => this.registerTask(this.state.imageDataObject),
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: () => {
+              if (Platform.OS == 'android')
+                BackHandler.exitApp();
+              else
+                RNExitApp.exitApp();
             },
-          ]);
-        })
-        .done();
+          },
+        ]
+      );
     }
   }
 
@@ -483,6 +550,16 @@ export default class RegisterScreen extends Component {
     );
   }
 }
+
+const mapSateToProps = state => ({
+  newUser: state.userInfo.newUser
+});
+
+const mapDispatchToProps = dispatch => ({
+  updateNewUserInfo: newUser => dispatch(updateNewUserInfo(newUser))
+});
+
+export default connect(mapSateToProps, mapDispatchToProps)(RegisterScreen);
 
 const styles = StyleSheet.create({
   container: {
