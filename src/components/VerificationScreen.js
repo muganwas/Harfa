@@ -12,18 +12,13 @@ import Config from './Config';
 import { updateUserDetails } from '../Redux/Actions/userActions';
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import messaging from '@react-native-firebase/messaging';
+import { colorYellow, colorPrimaryDark } from '../Constants/colors';
 
-//const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-//const colorBg = '#E8EEE9';
 const screenWidth = Dimensions.get('window').width;
 const MOBILE_EXISTS_URL = Config.baseURL + 'users/check/mobile'
 const USER_GET_PROFILE = Config.baseURL + "users/"
-//const PENDING_JOB = Config.baseURL+"jobrequest/user_status_check/";
 
 class VerificationScreen extends Component {
-
     constructor(props) {
         super();
         this.state = {
@@ -129,8 +124,7 @@ class VerificationScreen extends Component {
         }
     }
 
-    getProfile(userId) {
-
+    getProfile = userId => {
         fetch(USER_GET_PROFILE + userId, {
             method: "GET",
             headers: {

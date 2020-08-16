@@ -3,25 +3,17 @@ import { View, TouchableOpacity, Image, Text, StyleSheet, Dimensions, Permission
 import Geolocation from 'react-native-geolocation-service';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
-import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import {connect} from 'react-redux';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0';
+import { colorPrimary, colorPrimaryDark, colorBg, colorGray, colorYellow } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-//const screenHeight = Dimensions.get('window').height;
 
 const USER_INFO_UPDATE = Config.baseURL + "employee/";
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{
@@ -49,7 +41,6 @@ class ProAddAddressScreen extends Component {
             isLoading: true,
             isErrorToast: false,
         };
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     watchID = null;
@@ -80,12 +71,12 @@ class ProAddAddressScreen extends Component {
         this.watchID != null && Geolocation.clearWatch(this.watchID);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
 
-    async getCurrentLocation() {
+    getCurrentLocation = async () => {
         if (Platform.OS == 'ios') {
             const { updateProviderDetails } = this.props;
             await Geolocation.requestAuthorization();
@@ -265,7 +256,7 @@ class ProAddAddressScreen extends Component {
           });
     }
 
-    async permissionRequest() {
+    permissionRequest = async () => {
         try {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -296,7 +287,7 @@ class ProAddAddressScreen extends Component {
         }
     }
 
-    getDataFromAddAddressScreen = (data) => {
+    getDataFromAddAddressScreen = data => {
 
         this.setState({
             isLoading: true,
@@ -314,7 +305,7 @@ class ProAddAddressScreen extends Component {
     }
 
     //Update Address to Database
-    updateAddressToDatabase(latitude, longitude, address) {
+    updateAddressToDatabase = (latitude, longitude, address) => {
         const { userInfo: { providerDetails }, updateProviderDetails } = this.props;
         const userData = {
             "address": address,
@@ -372,11 +363,11 @@ class ProAddAddressScreen extends Component {
             .done()
     }
 
-    showToast = (message) => {
+    showToast = message => {
         Toast.show(message);
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })

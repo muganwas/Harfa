@@ -4,21 +4,14 @@ import {connect} from 'react-redux';
 import Geolocation from 'react-native-geolocation-service';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
-import UserDetails from './UserDetails';
 import { updateUserDetails } from '../Redux/Actions/userActions';
+import { colorPrimary, colorPrimaryDark, colorBg, colorGray, colorYellow } from '../Constants/colors';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const USER_INFO_UPDATE = Config.baseURL + "users/";
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 function StatusBarPlaceHolder() {

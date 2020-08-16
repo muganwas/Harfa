@@ -15,16 +15,11 @@ import ShakingText from 'react-native-shaking-text';
 import 'react-native-gesture-handler';
 import {
   LoginManager,
-  //LoginButton,
   AccessToken,
   GraphRequest,
   GraphRequestManager,
 } from 'react-native-fbsdk';
-
-//const colorPrimary = '#262425';
-//const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-//const colorBg = '#E8EEE9';
+import { colorYellow } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -49,8 +44,6 @@ export default class LoginPhoneScreen extends Component {
       opacity: 1,
       isLoading: false,
     };
-
-    this._responseInfoCallback = this._responseInfoCallback.bind(this);
   }
 
   checkValidation = () => {
@@ -112,7 +105,7 @@ export default class LoginPhoneScreen extends Component {
       });
   };
 
-  async facebookLoginTask() {
+  facebookLoginTask = () => {
     LoginManager.logInWithPermissions(['public_profile']).then(
       function(result) {
         if (result.isCancelled) {

@@ -22,7 +22,7 @@ import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
 import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
-import UserDetails from './UserDetails';
+import messaging from '@react-native-firebase/messaging';
 import { imageExists } from '../misc/helpers';
 import { Notifications } from 'react-native-notifications';
 
@@ -91,7 +91,9 @@ class Hamburger extends React.Component {
         const userRef = database().ref(`liveLocation/${senderId}`);
 
         this.checkNoficationsAvailability();
-
+        messaging().onMessage(message => {
+            console.log('message in --', message)
+        });
         /*firebase.notifications().onNotification(async notification => {
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
@@ -211,7 +213,6 @@ class Hamburger extends React.Component {
         });*/
 
         allJobRequestsClient.map(obj => {
-            console.log(' all request info --', obj)
             const { employee_id } = obj;
             database().ref('chatting').
                 child(senderId).
@@ -392,22 +393,29 @@ class Hamburger extends React.Component {
     checkNoficationsAvailability = async () => {
         if (Platform.OS === 'android') {
             try {
-                await firebase.messaging().requestPermission();
-                const fcmToken = await firebase.messaging().getToken();
+                const authStatus = await messaging().requestPermission();
+                const fcmToken = await messaging().getToken();
                 if (fcmToken) {
-                    const enabled = await firebase.messaging().hasPermission();
+                    const enabled =
+                        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+                        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
                     if (enabled) {
-                        console.log('FCM messaging has permission:' + enabled)
-                        firebase.notifications().onNotificationDisplayed((notification) => {
-                            // Process your notification as required
-                            // ANDROID: Remote notifications do not contain the channel ID. You will have to specify this manually if you'd like to re-display the notification.
-                            const { title, body } = notification;
-                            console.log('NotificationDisplayed : ', notification);
-                        });
+                        console.log('Notificationd enabled');
+                        messaging()
+                            .getInitialNotification()
+                            .then(remoteMessage => {
+                                if (remoteMessage) {
+                                    console.log(
+                                        'Notification caused app to open from quit state:',
+                                        remoteMessage.notification,
+                                    );
+                                    //setInitialRoute(remoteMessage.data.type);
+                                }
+                            });
                     }
                     else {
                         try {
-                            await firebase.messaging().requestPermission();
+                            await messaging().requestPermission();
                             console.log('FCM permission granted')
                         }
                         catch (error) {

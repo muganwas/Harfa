@@ -3,9 +3,7 @@ import {
     View, StyleSheet, TouchableOpacity, Image, Dimensions, TextInput, Animated,
     Text, ToastAndroid, BackHandler, StatusBar, Platform, Modal,
 } from 'react-native';
-import { createAppContainer, } from 'react-navigation';
 import { connect } from 'react-redux';
-import { createStackNavigator } from 'react-navigation-stack';
 import RNExitApp from 'react-native-exit-app';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import AsyncStorage from '@react-native-community/async-storage';
@@ -13,18 +11,11 @@ import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
 import Config from './Config';
-import ProviderDetails from './ProviderDetails';
-import ProServiceSelectScreen from './ProServiceSelectScreen';
-import SelectAddressScreen from './SelectAddressScreen';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-
-//const bgColor = '#E8EEE9';
-//const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
+import { colorYellow, colorPrimaryDark } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -41,7 +32,7 @@ const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -60,7 +51,7 @@ function StatusBarPlaceHolder() {
 class ProMyProfileScreen extends Component {
 
     constructor(props) {
-        super()
+        super();
         const { userInfo: { providerDetails } } = props;
         this.state = {
             providerId: providerDetails.providerId,
@@ -81,7 +72,6 @@ class ProMyProfileScreen extends Component {
             backClickCount: 0
         }
         this.springValue = new Animated.Value(100);
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     selectPhoto = () => {
@@ -132,14 +122,14 @@ class ProMyProfileScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -167,7 +157,7 @@ class ProMyProfileScreen extends Component {
     }
 
     //getProfile no need
-    getProfile(providerId) {
+    getProfile = providerId => {
 
         if (providerId !== null) {
             this.setState({
@@ -217,7 +207,7 @@ class ProMyProfileScreen extends Component {
         }
     }
 
-    getDataFromServiceScreen = (data) => {
+    getDataFromServiceScreen = data => {
         console.log("Data : " + data);
 
         var data = data.split("/")
@@ -227,7 +217,7 @@ class ProMyProfileScreen extends Component {
         })
     }
 
-    getDataFromAddAddressScreen = (data) => {
+    getDataFromAddAddressScreen = data => {
 
         console.log("Data : " + data);
 
@@ -250,8 +240,7 @@ class ProMyProfileScreen extends Component {
     }
 
     //Information Update
-    updateInformation(providerId) {
-
+    updateInformation = providerId => {
         const userData = {
             "username": this.state.name,
             "surname": '',
@@ -305,10 +294,7 @@ class ProMyProfileScreen extends Component {
     }
 
     //Image Update
-    updateImageTask(providerId, imageObject) {
-
-        console.log("ImageObjectURI : " + imageObject.uri);
-
+    updateImageTask = (providerId, imageObject) => {
         let imageData = new FormData();
         imageData.append('image', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
 
@@ -354,11 +340,11 @@ class ProMyProfileScreen extends Component {
             .done()
     }
 
-    showToast = (message) => {
+    showToast = message => {
         Toast.show(message);
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
@@ -406,7 +392,7 @@ class ProMyProfileScreen extends Component {
                                 margin: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
                                 shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
                             }}
-                                onPress={this.selectPhoto.bind(this)}>
+                                onPress={this.selectPhoto}>
 
                                 <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                                     source={require('../icons/camera.png')} />
@@ -561,32 +547,9 @@ const mapDispatchToProps = dispatch => ({
     }
 });
 
-const AppStackNavigator = createStackNavigator({
-    ProMyProfile: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(ProMyProfileScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProServiceSelect: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(ProServiceSelectScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    SelectAddress: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(SelectAddressScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-});
-
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+export default connect(mapStateToProps, mapDispatchToProps)(ProMyProfileScreen);
 
 const styles = StyleSheet.create({
-
     container: {
         flex: 1,
         justifyContent: 'center',

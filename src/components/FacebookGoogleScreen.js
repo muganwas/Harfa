@@ -18,33 +18,26 @@ import WaitingDialog from './WaitingDialog';
 import firebaseAuth from '@react-native-firebase/auth';
 import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
-
-//const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorYellow, colorBg, colorPrimaryDark } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
-const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/user_status_check/";
 const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate';
 
 var that;
 
-responseFbCallbackCustomer = ((error, result) => {
+const responseFbCallbackCustomer = ((error, result) => {
     if (error) {
         console.log("Error : " + JSON.stringify(result));
     }
     else {
-        console.log("Result Customer : " + JSON.stringify(result));
-        console.log("Customer Email : " + result.email);
         that.fbGoogleLoginCustomerTask(result.name, result.email, result.picture.data.url)
     }
 })
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -75,7 +68,7 @@ class FacebookGoogleScreen extends Component {
     }
 
     componentDidMount() {
-        GoogleSignin.configure({});
+        GoogleSignin.configure({webClientId: Config.clientId});
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
@@ -89,7 +82,6 @@ class FacebookGoogleScreen extends Component {
     }
 
     facebookLoginTask = async () => {
-
         LoginManager.logInWithPermissions(["public_profile", "email"]).then(function (result) {
             if (result.isCancelled) {
                 console.log("Login cancelled");
@@ -120,9 +112,7 @@ class FacebookGoogleScreen extends Component {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
-            console.log("UserInfo >> " + JSON.stringify(result));
-
-            this.fbGoogleLoginCustomerTask(result.user.name, result.user.email, result.user.photo)
+            this.fbGoogleLoginCustomerTask(result.user.name, result.user.email, result.user.photo);
         }
         catch (error) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -148,89 +138,94 @@ class FacebookGoogleScreen extends Component {
         });
         const fcmToken = await messaging().getToken();
         if (fcmToken) {
-            const userData = {
-                "acc_type": this.state.accountType,
-                "username": name,
-                "email": email,
-                "image": image,
-                "mobile": "",
-                "dob": "",
-                "fcm_id": fcmToken,
-                "type": "google"
-            }
-            Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
-                .then(responseJson => {
-                    // console.log("Response Register")
-                    console.log(responseJson);
-                    if (responseJson.status === 200 && responseJson.data.createdDate) {
-                        this.setState({
-                            isLoading: false,
-                            isErrorToast: true,
-                        })
-                        const id = responseJson.data.id;
+            firebaseAuth().signInWithEmailAndPassword(this.state.email, this.state.password).then(result => {
+                const { user } = result;
+                if (user && typeof user === 'object') {
+                    const userData = {
+                        "acc_type": this.state.accountType,
+                        "username": name,
+                        "email": email,
+                        "image": image,
+                        "mobile": "",
+                        "dob": "",
+                        "fcm_id": fcmToken,
+                        "type": "google"
+                    }
+                    Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
+                        .then(responseJson => {
+                            // console.log("Response Register")
+                            console.log(responseJson);
+                            if (responseJson.status === 200 && responseJson.data.createdDate) {
+                                this.setState({
+                                    isLoading: false,
+                                    isErrorToast: true,
+                                })
+                                const id = responseJson.data.id;
 
-                        var userData = {
-                            userId: responseJson.data.id,
-                            accountType: responseJson.data.acc_type,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            username: responseJson.data.username,
-                            image: responseJson.data.image,
-                            mobile: responseJson.data.mobile,
-                            dob: responseJson.data.dob,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            fcmId: responseJson.data.fcm_id,
-                        }
-                        updateUserDetails(userData);
-                        //Store data like sharedPreference
-                        AsyncStorage.setItem('userId', id);
-                        AsyncStorage.setItem('userType', 'User');
-                        fetchJobRequests(this.props, id, "Home");
-                    }
-                    else {
-                        console.log("Response Else ");
-                        this.setState({
-                            isLoading: false,
+                                var userData = {
+                                    userId: responseJson.data.id,
+                                    accountType: responseJson.data.acc_type,
+                                    email: responseJson.data.email,
+                                    password: responseJson.data.password,
+                                    username: responseJson.data.username,
+                                    image: responseJson.data.image,
+                                    mobile: responseJson.data.mobile,
+                                    dob: responseJson.data.dob,
+                                    address: responseJson.data.address,
+                                    lat: responseJson.data.lat,
+                                    lang: responseJson.data.lang,
+                                    fcmId: responseJson.data.fcm_id,
+                                }
+                                updateUserDetails(userData);
+                                //Store data like sharedPreference
+                                AsyncStorage.setItem('userId', id);
+                                AsyncStorage.setItem('userType', 'User');
+                                fetchJobRequests(this.props, id, "Home");
+                            }
+                            else {
+                                console.log("Response Else ");
+                                this.setState({
+                                    isLoading: false,
+                                })
+                                Alert.alert(
+                                    "OOPS !",
+                                    responseJson.data.message,
+                                    [
+                                        {
+                                            text: 'Cancel',
+                                            onPress: () => console.log('Cancel Pressed'),
+                                        },
+                                        {
+                                            text: 'Retry',
+                                            onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
+                                        },
+                                    ]
+                                );
+                            }
                         })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.data.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
-                                },
-                            ]
-                        );
-                    }
-                })
-                .catch((error) => {
-                    console.log("Error :" + error);
-                    this.setState({
-                        isLoading: false,
-                    })
-                    Alert.alert(
-                        "OOPS !",
-                        error.message,
-                        [
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retry',
-                                onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
-                            },
-                        ]
-                    );
-                })
-                .done();
+                        .catch((error) => {
+                            console.log("Error :" + error);
+                            this.setState({
+                                isLoading: false,
+                            })
+                            Alert.alert(
+                                "OOPS !",
+                                error.message,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                    },
+                                    {
+                                        text: 'Retry',
+                                        onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
+                                    },
+                                ]
+                            );
+                        })
+                        .done();
+                }
+            });
         }
 
     }
@@ -359,7 +354,7 @@ class FacebookGoogleScreen extends Component {
                     simpleToast.show("Something went wrong, try again later");
                     console.log('login error code --', error.code)
                 }
-                this.setState({isLoading:false})
+                this.setState({ isLoading: false })
             });
         }
     }
@@ -604,4 +599,3 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
 });
-

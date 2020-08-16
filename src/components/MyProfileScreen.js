@@ -21,12 +21,12 @@ import ImagePicker from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import Config from './Config';
 import AsyncStorage from '@react-native-community/async-storage';
-import UserDetails from './UserDetails';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import Toast from 'react-native-simple-toast';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
+import { colorYellow, colorPrimaryDark,colorPrimary } from '../Constants/colors';
 
 const options = {
   title: 'Select a photo',
@@ -34,11 +34,6 @@ const options = {
   chooseFromLibraryButtonTitle: 'Choose from gallery',
   quality: 1,
 };
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -48,7 +43,7 @@ const USER_INFO_UPDATE = Config.baseURL + 'users/';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
   return Platform.OS === 'ios' ? (
     <View
       style={{
@@ -88,11 +83,9 @@ class MyProfileScreen extends Component {
   }
 
   componentDidMount() {
-    console.log('My Profile Mount');
-    console.log(this.state);
     BackHandler.addEventListener(
       'hardwareBackPress',
-      this.handleBackButtonClick.bind(this),
+      this.handleBackButtonClick,
     );
   }
 
@@ -100,21 +93,18 @@ class MyProfileScreen extends Component {
     console.log('My Profile Unmount');
     BackHandler.removeEventListener(
       'hardwareBackPress',
-      this.handleBackButtonClick.bind(this),
+      this.handleBackButtonClick,
     );
   }
 
-  handleBackButtonClick() {
-    // this.props.navigation.navigate("DashBoard");
-    // return true;
-
+  handleBackButtonClick = () => {
     if (Platform.OS == 'ios')
       this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
     else
       this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
   }
 
-  _spring() {
+  _spring = () => {
     this.setState({backClickCount: 1}, () => {
       Animated.sequence([
         Animated.spring(this.springValue, {
@@ -135,7 +125,7 @@ class MyProfileScreen extends Component {
   }
 
   //getProfile no need
-  getProfile(userId) {
+  getProfile = userId => {
     if (userId !== null) {
       this.setState({
         isLoading: true,
@@ -229,7 +219,7 @@ class MyProfileScreen extends Component {
   };
 
   //Information Update
-  updateInformation(userId) {
+  updateInformation = userId => {
     this.setState({
       isLoading: true,
     });
@@ -274,7 +264,7 @@ class MyProfileScreen extends Component {
   }
 
   //Image Update
-  updateImageTask(userId, imageObject) {
+  updateImageTask = (userId, imageObject) => {
     this.setState({
       isLoading: true,
     });
@@ -323,7 +313,7 @@ class MyProfileScreen extends Component {
   };
 
   render() {
-    const { userInfo: { userDetails } } = props;
+    const { userInfo: { userDetails } } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -379,7 +369,7 @@ class MyProfileScreen extends Component {
                 source={
                   this.state.galleryCameraImage == ''
                     ? this.state.imageSource
-                      ? this.state.imageSource
+                      ? {uri: this.state.imageSource}
                       : require('../images/generic_avatar.png')
                     : {uri: this.state.imageSource}
                 }
@@ -401,7 +391,7 @@ class MyProfileScreen extends Component {
                   shadowRadius: 5,
                   elevation: 5,
                 }}
-                onPress={this.selectPhoto.bind(this)}>
+                onPress={this.selectPhoto}>
                 <Image
                   style={{width: 20, height: 20, alignSelf: 'center'}}
                   source={require('../icons/camera.png')}

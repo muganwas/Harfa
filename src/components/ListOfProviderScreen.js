@@ -13,32 +13,24 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { AirbnbRating } from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
 import Config from './Config';
 import database from '@react-native-firebase/database';
-import UserDetails from './UserDetails';
 import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
 import { getDistance } from '../misc/helpers';
 import { imageExists } from '../misc/helpers';
-
-//const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-//const colorGray = '#C0C0C0';
+import { colorPrimaryDark, colorYellow, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-//const screenHeight = Dimensions.get('window').height;
 
 const GET_ALL_PROVIDER_URL = Config.baseURL + 'job/serviceprovider/';
 const GET_EMPLOYEE_RATINGS = Config.baseURL + 'jobrequest/employeeReviews/';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
   return Platform.OS === 'ios' ? (
     <View
       style={{
@@ -58,7 +50,6 @@ class ListOfProviderScreen extends Component {
     super();
     const { navigation } = props;
     this.state = {
-      //From DashboardScreen
       serviceName: navigation.state.params.serviceName,
       serviceId: navigation.state.params.serviceId,
       dataSource: [],
@@ -71,7 +62,6 @@ class ListOfProviderScreen extends Component {
       distanceOrder: true,
       reviewOrder: true
     };
-    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
 
   componentDidMount() {
@@ -179,7 +169,7 @@ class ListOfProviderScreen extends Component {
     );
   }
 
-  handleBackButtonClick() {
+  handleBackButtonClick = () => {
     this.props.navigation.navigate('DashBoard');
     return true;
   }

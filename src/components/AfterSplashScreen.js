@@ -1,14 +1,10 @@
 
 import React, { Component } from 'react';
-import {View, Image, Text, StatusBar, TouchableOpacity, BackHandler} from 'react-native';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import {View, Image, Text, StatusBar, TouchableOpacity, BackHandler, Platform} from 'react-native';
 import RNExitApp from 'react-native-exit-app';
+import { colorYellow } from '../Constants/colors';
 
-//const colorPrimary = '#262425';
-//const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F'
-
-export default class AfterSplashScreen extends Component {
+class AfterSplashScreen extends Component {
     async componentDidMount()
     {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -18,7 +14,7 @@ export default class AfterSplashScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (Platform.OS == 'android')
             BackHandler.exitApp();
         else
@@ -53,6 +49,8 @@ export default class AfterSplashScreen extends Component {
         )
     }
 }
+
+export default AfterSplashScreen;
 
 const styles = {
     container: {

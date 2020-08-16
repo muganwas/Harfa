@@ -11,19 +11,13 @@ import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorYellow, colorPrimaryDark } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
 const MOBILE_EXISTS_URL = Config.baseURL + 'employee/check/mobile'
-const PENDING_JOB_PROVIDER = Config.baseURL + "jobrequest/customer_status_check/";
 
 class ProVerificationScreen extends Component {
-
     constructor(props) {
         super();
         this.state = {

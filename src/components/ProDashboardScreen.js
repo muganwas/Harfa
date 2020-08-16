@@ -4,38 +4,28 @@ import {
     Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity,
     ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform
 } from 'react-native';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import { createAppContainer } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-//import { DrawerActions } from 'react-navigation-drawer';
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
-import ProChatScreen from './ProChatScreen';
-import ProChatAcceptScreen from './ProChatAcceptScreen';
-import ProMapDirectionScreen from './ProMapDirectionScreen';
-import ProAllMessageScreen from './ProAllMessageScreen'
-import ProAcceptRejectJobScreen from './ProAcceptRejectJobScreen';
 import Config from './Config';
-import ProBookingScreen from './ProBookingScreen';
-import ProBookingDetailsScreen from './ProBookingDetailsScreen';
-import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
-//import Geocoding from 'react-native-geocoding'
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { imageExists } from '../misc/helpers';
-import { startFetchingJobProvider, fetchAllJobRequestsProError, fetchedAllJobRequestsPro, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { 
+    startFetchingJobProvider, 
+    fetchAllJobRequestsProError, 
+    fetchedAllJobRequestsPro, 
+    fetchedJobProviderInfo, 
+    fetchProviderJobInfoError, 
+    setSelectedJobRequest, 
+    getAllWorkRequestPro 
+} from '../Redux/Actions/jobsActions';
+import { colorPrimary, colorBg, colorYellow, colorPrimaryDark, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -48,7 +38,7 @@ const ASK_FOR_REVIEW = Config.baseURL + "notification/addreviewrequest";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -404,7 +394,7 @@ class ProDashBoardScreen extends Component {
 
     };
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -652,7 +642,7 @@ class ProDashBoardScreen extends Component {
 
     }
 
-    reviewTask(rating, review) {
+    reviewTask = (rating, review) => {
 
         this.setState({
             isLoading: true,
@@ -772,11 +762,11 @@ class ProDashBoardScreen extends Component {
         }
     }
 
-    showToast = (message) => {
+    showToast = message => {
         Toast.show(message);
     }
 
-    onRefresh() {
+    onRefresh = () => {
         this.state.refreshing = true;
         this.setState({
             dataSource: [],
@@ -912,31 +902,6 @@ class ProDashBoardScreen extends Component {
                                 </View>
                             </View>
                         }
-                        {/*this.state.isRecentUser &&
-                            <View style={styles.mainContainer}>
-                                <View style={styles.recentMessageHeader}>
-                                    <Text style={{
-                                        flex: 1, textAlignVertical: 'center', alignItems: 'flex-start', fontSize: 18,
-                                        alignContent: 'flex-start', justifyContent: 'flex-start', marginLeft: 15, fontWeight: 'bold'}}>
-                                        Recent User
-                                    </Text>
-                                    {false && 
-                                    <TouchableOpacity style={styles.viewAll}>
-                                        <Text style={styles.textViewAll}>View All</Text>
-                                    </TouchableOpacity>
-                                    }
-                                </View>
-                                <View style={styles.listView}>
-                                    <FlatList
-                                        numColumns={1}
-                                        data={this.state.dataUserSource}
-                                        renderItem={this.renderRecentUserItem}
-                                        keyExtractor={(item, index) => index.toString()}
-                                        showsVerticalScrollIndicator={false}
-                                        extraData={this.state} />
-                                </View>
-                            </View>*/
-                        }
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false, "", "", "", "", "")}>
                             <ReviewDialog style={{
@@ -1034,67 +999,8 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-const AppStackNavigator = createStackNavigator({
-    ProDashBoard: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(ProDashBoardScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProAllMessage: {
-        screen: ProAllMessageScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProChat: {
-        screen: ProChatScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProChatAccept:
-    {
-        screen: ProChatAcceptScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProAcceptRejectJob: {
-        screen: ProAcceptRejectJobScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProMapDirection:
-    {
-        screen: ProMapDirectionScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProBooking: {
-        screen: ProBookingScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProBookingDetails: {
-        screen: ProBookingDetailsScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProChatAfterBookingDetails: {
-        screen: ProChatAfterBookingDetailsScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-});
 
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+export default connect(mapStateToProps, mapDispatchToProps)(ProDashBoardScreen);
 
 const styles = StyleSheet.create({
     container: {

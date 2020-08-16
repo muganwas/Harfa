@@ -1,29 +1,19 @@
 import React, { Component } from 'react';
 import {View, Text, TouchableOpacity, Image, StyleSheet, Dimensions, BackHandler, Modal, ToastAndroid, 
     StatusBar, Platform,} from 'react-native';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
 import WaitingDialog from './WaitingDialog';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import { Rating, AirbnbRating } from 'react-native-ratings';
-import ProviderDetails from './ProviderDetails';
+import { AirbnbRating } from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorPrimary, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{

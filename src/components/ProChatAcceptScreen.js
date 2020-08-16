@@ -11,24 +11,18 @@ import Config from './Config';
 import { getDistance } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
+import { colorPrimary, colorPrimaryDark, colorBg, colorYellow } from '../Constants/colors';
+import SoundPlayer from 'react-native-sound';
 
-var SoundPlayer = require('react-native-sound');
 var song = null;
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-
 const screenWidth = Dimensions.get('window').width;
-//const screenHeight = Dimensions.get('window').height;
 
 const USER_GET_PROFILE = Config.baseURL + "users/"
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -49,17 +43,6 @@ class ProChatAcceptScreen extends Component {
     constructor(props) {
         super();
         const { navigation } = props;
-        console.log('pro accept chat .. ')
-        /*const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { employee_id } } } = this.props;
-        var currRequestPos;
-        
-        console.log('selected job', this.props.selectedJobRequest)
-        Object.keys(jobRequestsProviders).map(key => {
-            const currEmpId = jobRequestsProviders[key].employee_id;
-            if (currEmpId === employee_id) currRequestPos = key;
-        });
-        const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
-        const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;*/
         this.state = {
             userId: '',
             userName: '',
@@ -84,7 +67,6 @@ class ProChatAcceptScreen extends Component {
             seconds_Counter: '59',
             secondTimeLoader: ''
         }
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     //get UserData
@@ -202,7 +184,7 @@ class ProChatAcceptScreen extends Component {
         }
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         song.stop();
         this.props.navigation.navigate("ProDashBoard");
         return true;
@@ -359,7 +341,7 @@ class ProChatAcceptScreen extends Component {
             });
     }
 
-    rejectedAfterNoResponse() {
+    rejectedAfterNoResponse = () => {
         const { userInfo: { providerDetails } } = this.props;
         const data = {
             main_id: this.props.navigation.state.params.mainId,
@@ -418,11 +400,11 @@ class ProChatAcceptScreen extends Component {
         this.props.navigation.goBack();
     }
 
-    showToast = (message) => {
+    showToast = message => {
         Toast.show(message, Toast.LONG);
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })

@@ -12,27 +12,20 @@ import database from '@react-native-firebase/database';
 import Geolocation from 'react-native-geolocation-service';
 import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
-import ProviderDetails from './ProviderDetails';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-
-//const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-//const colorGray = '#C0C0C0' 
+import { colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -90,7 +83,6 @@ class ProMapDirectionScreen extends Component {
             proImageAvailable: currentRequest.imageAvailable,
             isJobAccepted: currentRequest.status === 'Accepted',
         };
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     async componentDidMount() {
@@ -113,7 +105,7 @@ class ProMapDirectionScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    async onRefresh() {
+    onRefresh = async () => {
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
         //Get latitude & longitude on Location change
         if (Platform.OS == 'ios') {
@@ -167,7 +159,7 @@ class ProMapDirectionScreen extends Component {
         }
     }
 
-    async permissionRequest() {
+    permissionRequest = async () => {
         try {
             if (Platform.OS == 'ios') Geolocation.requestAuthorization();
             else {
@@ -185,7 +177,7 @@ class ProMapDirectionScreen extends Component {
         }
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (this.state.pageTitle == "ProDashboard")
             this.props.navigation.navigate("ProDashBoard");
         else if (this.state.pageTitle == "ProAcceptRejectJob")
@@ -198,7 +190,7 @@ class ProMapDirectionScreen extends Component {
         Linking.openURL('tel:' + this.state.userMobile)
     }
 
-    async getDirections(startLoc, destinationLoc) {
+    getDirections = async (startLoc, destinationLoc) => {
         try {
             let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`)
             let respJson = await resp.json();
@@ -265,9 +257,7 @@ class ProMapDirectionScreen extends Component {
     }
 
     jobCompleteTask = () => {
-
         this.setState({isLoading: true});
-
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
         const data = {
@@ -407,7 +397,7 @@ class ProMapDirectionScreen extends Component {
             })
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })

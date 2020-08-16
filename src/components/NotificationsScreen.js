@@ -11,23 +11,17 @@ import Toast from 'react-native-simple-toast';
 //import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
-import UserDetails from './UserDetails';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
+import { colorYellow, colorPrimaryDark, colorBg, colorGray } from '../Constants/colors';
 
-//const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
 const screenWidth = Dimensions.get('window').width;
 
 const NOTIFICATION_URL = Config.baseURL + "notification/get-customer-notification/";
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -54,7 +48,6 @@ class NotificationsScreen extends Component {
             backClickCount: 0,
         };
         this.springValue = new Animated.Value(100);
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
@@ -72,7 +65,7 @@ class NotificationsScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
@@ -80,7 +73,7 @@ class NotificationsScreen extends Component {
 
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -151,7 +144,6 @@ class NotificationsScreen extends Component {
 
     //GridView Items
     renderItem = ({ item }) => {
-
         return (
             <View style={{
                 flex: 1, flexDirection: 'row', margin: 5, padding: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
@@ -178,7 +170,7 @@ class NotificationsScreen extends Component {
         )
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })

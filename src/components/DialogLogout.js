@@ -1,76 +1,74 @@
 import React, { Component } from 'react';
-import {StyleSheet, Text, View, Platform, Dimensions, TouchableOpacity, TouchableHighlight, BackHandler} from 'react-native'
-import Modal from 'react-native-modalbox';
+import { StyleSheet, Text, View, Platform, Dimensions, TouchableOpacity, TouchableHighlight, BackHandler } from 'react-native';
+import { connect } from 'react-redux';
+import firebaseAuth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-community/async-storage';
-import RNExitApp from 'react-native-exit-app';
+import { resetUserDetails } from '../Redux/Actions/userActions';
 import Config from './Config';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { colorBg } from '../Constants/colors';
 
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
-
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
-
-export default class DialogLogout extends Component {
+class DialogLogout extends Component {
 
     constructor(props) {
-      super();
-      this.state = {
-          width: Dimensions.get('window').width,
-      }
-      Dimensions.addEventListener('change', (e) => {
-          this.setState(e.window);
-      })
+        super();
+        this.state = {
+            width: Dimensions.get('window').width,
+        }
+        Dimensions.addEventListener('change', (e) => {
+            this.setState(e.window);
+        })
     };
 
-    async closeDialogLogout (action) {
-        if(action == 'Ok')
-        {
+    closeDialogLogout = async action => {
+        const { resetUserDetails, navigation, userInfo } = this.props;
+        if (action == 'Ok') {
+            if (firebaseAuth().currentUser) firebaseAuth().signOut();
             await AsyncStorage.removeItem('userId');
             await AsyncStorage.removeItem('userType');
-
-            console.log("Logout");    
-           if (Platform.OS == 'android') BackHandler.exitApp();
-           else {
-                Config.socket.close();
-                RNExitApp.exitApp();
-           }
+            resetUserDetails();
+            Config.socket.close();
+            navigation.navigate('AfterSplash')
         }
-        else if(action == 'Cancel')
-        {
+        else if (action == 'Cancel') {
             console.log("Logout Cancel");
         }
         this.props.changeDialogVisibility(false);
     }
 
-  render() {
-    return (
-      
-        <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
-            <View style={[styles.modal, {width: this.state.width - 80}]}>
-                <View style={styles.textView}>
-                    <Text style={[styles.text, {fontSize: 20}]}> Se déconnecter! </Text>
-                    <Text style={styles.text}> Êtes-vous sûr de vous déconnecter? </Text>
+    render() {
+        return (
+            <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
+                <View style={[styles.modal, { width: this.state.width - 80 }]}>
+                    <View style={styles.textView}>
+                        <Text style={[styles.text, { fontSize: 20 }]}> Se déconnecter! </Text>
+                        <Text style={styles.text}> Êtes-vous sûr de vous déconnecter? </Text>
+                    </View>
+                    <View style={styles.buttonView}>
+                        <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Cancel')}
+                            underlayColor={colorBg}>
+                            <Text style={[styles.text, { color: 'blue' }]}> Annuler </Text>
+                        </TouchableHighlight>
+                        <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Ok')}
+                            underlayColor={colorBg}>
+                            <Text style={[styles.text, { color: 'blue' }]}> {"D'accord"} </Text>
+                        </TouchableHighlight>
+                    </View>
                 </View>
-                <View style={styles.buttonView}> 
-                    <TouchableHighlight style={styles.touchableHighlight} onPress={ () => this.closeDialogLogout('Cancel')}
-                        underlayColor={colorBg}>
-                        <Text style={[styles.text, {color: 'blue'}]}> Annuler </Text>
-                    </TouchableHighlight>
-                    <TouchableHighlight style={styles.touchableHighlight} onPress={ () => this.closeDialogLogout('Ok')}
-                        underlayColor={colorBg}>
-                        <Text style={[styles.text, {color: 'blue'}]}> {"D'accord"} </Text>
-                    </TouchableHighlight>
-                </View>
-            </View>
-        </TouchableOpacity>
-    );
-  }
+            </TouchableOpacity>
+        );
+    }
 }
+
+const mapStateToProps = state => ({
+    userInfo: state.userInfo
+});
+const mapDispatchToProps = dispatch => ({
+    resetUserDetails: () => {
+        dispatch(resetUserDetails());
+    }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(DialogLogout);
 
 const styles = StyleSheet.create({
 
@@ -117,4 +115,3 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     }
 });
-

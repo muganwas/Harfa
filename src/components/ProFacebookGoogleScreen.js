@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
-    Dimensions, ActivityIndicator, Alert, ToastAndroid, Platform, BackHandler
+    Dimensions, Alert, Platform, BackHandler
 } from 'react-native';
 import { connect } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
@@ -16,22 +16,15 @@ import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../Redux/Act
 import Config from './Config';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-import simpleToast from 'react-native-simple-toast';
-import firebaseAuth from '@react-native-firebase/auth';
-
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
-const PENDING_JOB_PROVIDER = Config.baseURL + "jobrequest/customer_status_check/";
 const AUTHENTICATE_URL = Config.baseURL + "employee/authenticate";
 
 var that;
 
-responseFbCallbackPro = ((error, result) => {
+const responseFbCallbackPro = ((error, result) => {
     if (error) {
         console.log("Error : " + JSON.stringify(result));
     }
@@ -44,7 +37,7 @@ responseFbCallbackPro = ((error, result) => {
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -61,7 +54,6 @@ function StatusBarPlaceHolder() {
 }
 
 class FacebookGoogleScreen extends Component {
-
     constructor(props) {
         super();
         this.state = {
@@ -73,15 +65,10 @@ class FacebookGoogleScreen extends Component {
             isErrorToast: ''
         }
         that = this;
-        this.facebookLoginTask = this.facebookLoginTask.bind(this);
-        this.fbGmailLoginTask = this.fbGmailLoginTask.bind(this);
-        this.checkValidation = this.checkValidation.bind(this);
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
 
     componentDidMount() {
-        GoogleSignin.configure({})
+        GoogleSignin.configure({ webClientId: Config.clientId });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
@@ -89,12 +76,12 @@ class FacebookGoogleScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
 
-    async facebookLoginTask() {
+    facebookLoginTask = async () => {
         LoginManager.logInWithPermissions(["public_profile", "email"]).then(result => {
             if (result.isCancelled) {
                 console.log("Login cancelled");
@@ -119,9 +106,8 @@ class FacebookGoogleScreen extends Component {
         );
     }
 
-    async googleLoginTask() {
+    googleLoginTask = async () => {
         try {
-
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
             console.log("UserInfo >> " + JSON.stringify(result));
@@ -275,7 +261,7 @@ class FacebookGoogleScreen extends Component {
         }
     }
 
-    checkValidation() {
+    checkValidation = () => {
         if (this.state.email == '') {
             this.setState({ error: 'Enter valid email' })
         }
@@ -389,7 +375,7 @@ class FacebookGoogleScreen extends Component {
         }
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
@@ -470,7 +456,7 @@ class FacebookGoogleScreen extends Component {
                         <View style={{ flexDirection: 'row' }}>
 
                             <TouchableOpacity style={[styles.buttonFGContainer, { backgroundColor: '#3c599b' }]}
-                                onPress={this.facebookLoginTask.bind(this)}>
+                                onPress={this.facebookLoginTask}>
                                 <Image style={{ width: 20, height: 20, }}
                                     source={require('../icons/facebook.png')} />
                                 <Text style={styles.text}>
@@ -479,7 +465,7 @@ class FacebookGoogleScreen extends Component {
                             </TouchableOpacity>
 
                             <TouchableOpacity style={[styles.buttonFGContainer, { backgroundColor: '#DD4D3B' }]}
-                                onPress={this.googleLoginTask.bind(this)}>
+                                onPress={this.googleLoginTask}>
                                 <Image style={{ width: 20, height: 20 }}
                                     source={require('../icons/google.png')} />
                                 <Text style={styles.text}>

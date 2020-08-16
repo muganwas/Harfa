@@ -8,25 +8,17 @@ import WaitingDialog from './WaitingDialog';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Toast from 'react-native-simple-toast';
 import ViewPager from "@react-native-community/viewpager";
-import ProviderDetails from './ProviderDetails';
 import Config from './Config';
-import ProBookingDetailsScreen from './ProBookingDetailsScreen';
-import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
 import Hamburger from './ProHamburger';
+import { colorPrimary, colorPrimaryDark, colorBg } from '../Constants/colors';
 
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-//const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/'
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{
@@ -55,10 +47,6 @@ class ProBookingScreen extends Component {
             backClickCount: 0
         };
         this.springValue = new Animated.Value(100);
-        this.onPageSelected.bind(this);
-        this.selectPage.bind(this);
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
@@ -75,14 +63,14 @@ class ProBookingScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -109,8 +97,7 @@ class ProBookingScreen extends Component {
         });
     }
 
-    getAllBookings()
-    {
+    getAllBookings = () => {
         this.setState({
             isLoading: true,
             bookingCompleteData: [],
@@ -163,13 +150,12 @@ class ProBookingScreen extends Component {
             })
     }
 
-    onPageSelected(event) {
+    onPageSelected = event => {
         currentPage = event.nativeEvent.position;
         this.setState({ currentPage });
     };
 
-    selectPage(title) {
-
+    selectPage = title => {
         if (title == "Completed") {
             this.viewPager.setPage(0);
             this.setState({
@@ -336,29 +322,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
 });
 
-const AppStackNavigator = createStackNavigator({
-    ProBooking: {
-        screen: connect(mapStateToProps, mapStateToProps)(ProBookingScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProBookingDetails: {
-        screen: ProBookingDetailsScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProChatAfterBookingDetails: {
-        screen: ProChatAfterBookingDetailsScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-});
-
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+export default connect(mapStateToProps, mapStateToProps)(ProBookingScreen);
 
 const styles = StyleSheet.create({
     container: {

@@ -1,27 +1,17 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, 
-    ActivityIndicator, StatusBar, Platform, Animated, BackHandler} from 'react-native';
+import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, StatusBar, Platform, Animated, BackHandler} from 'react-native';
 import RNExitApp from 'react-native-exit-app';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-//import { DrawerActions } from 'react-navigation-drawer';
-//import Config from './Config';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import { colorGray, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
-//const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
 const screenWidth = Dimensions.get('window').width;
-
-//const NOTIFICATION_URL = Config.baseURL+"";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{
@@ -52,21 +42,21 @@ class ProNotificationsScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications } = this.props;
         fetchedNotifications({type: 'generic', value: 0});
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
+        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -95,7 +85,6 @@ class ProNotificationsScreen extends Component {
 
     //GridView Items
     renderItem = ({ item }) => {
-
         return (
             <View style={{
                 flex: 1, flexDirection: 'row', margin: 5, padding: 10,
@@ -124,11 +113,8 @@ class ProNotificationsScreen extends Component {
     
   render() {
     return (
-
       <View style={styles.container}>
-
        <StatusBarPlaceHolder/>
-
         <View style={styles.header} >
             <Hamburger
                 Notifications={Notifications}

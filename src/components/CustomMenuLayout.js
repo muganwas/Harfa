@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import { notificationsFetched } from '../Redux/Actions/notificationActions';
 import {DrawerActions} from 'react-navigation-drawer';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-import UserDetails from './UserDetails';
 import DialogLogout from './DialogLogout';
 
 const colorPrimary = '#FFBF0F';
@@ -22,10 +21,8 @@ class CustomMenuLayout extends Component {
         };
     };
 
-    changeDialogVisibility = (bool) => {
-       
+    changeDialogVisibility = bool => {
         this.props.navigation.dispatch(DrawerActions.closeDrawer());
-
         this.setState({
             isDialogLogoutVisible: bool
         })
@@ -46,7 +43,7 @@ class CustomMenuLayout extends Component {
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => { 
-                                this.props.navigation.navigate("DashBoard")
+                                this.props.navigation.navigate("Dashboard")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                             }}>
                             <View style={styles.row}>
@@ -151,7 +148,7 @@ class CustomMenuLayout extends Component {
 
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false)}>
-                            <DialogLogout changeDialogVisibility={this.changeDialogVisibility} />
+                            <DialogLogout navigation={this.props.navigation} changeDialogVisibility={this.changeDialogVisibility} />
                         </Modal>
 
                     </ScrollView>

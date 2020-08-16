@@ -31,12 +31,8 @@ import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import WaitingDialog from './WaitingDialog';
 import { cloneDeep } from 'lodash';
+import { colorYellow, colorPrimaryDark } from '../Constants/colors';
 
-//const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-//const colorBg = '#E8EEE9';
-const usersRef = database().ref('/users_info');
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
@@ -50,7 +46,7 @@ const options = {
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
   return Platform.OS === 'ios' ? (
     <View
       style={{

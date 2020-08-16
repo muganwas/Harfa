@@ -8,6 +8,7 @@ import RNExitApp from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
 import HomeScreen from './HomeScreen';
 import DashboardScreen from './DashboardScreen';
+import ProDashboardScreen from './ProDashboardScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
@@ -306,10 +307,11 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
+const SplashScreenComponent = connect(mapStateToProps, mapDispatchToProps)(SplashScreen);
+
 const AppStackNavigator = createStackNavigator({
-    Splash:
-    {
-        screen: connect(mapStateToProps, mapDispatchToProps)(SplashScreen),
+    Splash: {
+        screen: SplashScreenComponent,
         navigationOptions: {
             header: null
         }
@@ -320,12 +322,6 @@ const AppStackNavigator = createStackNavigator({
             header: null
         }
     },
-    // LoginPhone : {
-    //     screen: LoginPhoneScreen,
-    //     navigationOptions: {
-    //         header: null
-    //     }
-    // },
     FacebookGoogle: {
         screen: FacebookGoogleScreen,
         navigationOptions: {
@@ -338,12 +334,6 @@ const AppStackNavigator = createStackNavigator({
             header: null
         }
     },
-    // Verification: {
-    //     screen: VerificationScreen,
-    //     navigationOptions: {
-    //         header: null
-    //     }
-    // },
     Register: {
         screen: RegisterScreen,
         navigationOptions: {
@@ -352,6 +342,12 @@ const AppStackNavigator = createStackNavigator({
     },
     Dashboard: {
         screen: DashboardScreen,
+        navigationOptions: {
+            header: null
+        }
+    },
+    ProDashboard: {
+        screen: ProDashboardScreen,
         navigationOptions: {
             header: null
         }

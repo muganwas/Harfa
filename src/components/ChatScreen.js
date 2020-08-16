@@ -8,7 +8,6 @@ import {
     KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import database from '@react-native-firebase/database';
-import UserDetails from './UserDetails';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 

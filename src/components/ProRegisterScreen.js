@@ -12,18 +12,14 @@ import messaging from '@react-native-firebase/messaging';
 import WaitingDialog from './WaitingDialog';
 import Axios from 'axios';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorYellow, colorPrimaryDark } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'employee/register';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -40,7 +36,6 @@ function StatusBarPlaceHolder() {
 }
 
 class ProRegisterScreen extends Component {
-
     constructor(props) {
         super();
         this.state = {
@@ -62,7 +57,6 @@ class ProRegisterScreen extends Component {
             account_type: props.navigation.state.params.accountType,
             isLoading: false,
         }
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
 
     componentDidMount() {
@@ -73,13 +67,12 @@ class ProRegisterScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
 
     checkValidation = () => {
-
         if (this.state.name == '') {
             this.setState({ error: 'Enter name' });
         }
@@ -103,7 +96,7 @@ class ProRegisterScreen extends Component {
         }
     }
 
-    async registerTask() {
+    registerTask = async () => {
         const fcmToken = await messaging().getToken();
         const { updateProviderDetails } = this.props;
         if (fcmToken) {
@@ -211,7 +204,7 @@ class ProRegisterScreen extends Component {
         }
     }
 
-    getDataFromServiceScreen = (data) => {
+    getDataFromServiceScreen = data => {
         var data = data.split("/")
         this.setState({
             serviceId: data[0],
@@ -219,10 +212,7 @@ class ProRegisterScreen extends Component {
         })
     };
 
-    getDataFromAddAddressScreen = (data) => {
-
-        console.log("Data : " + data);
-
+    getDataFromAddAddressScreen = data => {
         var data = data.split("/")
         this.setState({
             address: data[0],
@@ -231,18 +221,16 @@ class ProRegisterScreen extends Component {
         })
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
-        })
+        });
     }
 
     render() {
         return (
             <View style={StyleSheet.container}>
-
                 <StatusBarPlaceHolder />
-
                 <KeyboardAwareScrollView contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>

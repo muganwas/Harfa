@@ -59,7 +59,7 @@ const userReducer = (state = initialState, action) => {
             }
         case RESET_USER_DETAILS:
             return {
-                ...state,
+                newUser: {},
                 userDetails: {
                     userId: '',
                     accountType: '',
@@ -91,9 +91,11 @@ const userReducer = (state = initialState, action) => {
                     status: '',
                     fcmId: '',
                     accountType: '',
-                }
+                },
+                providerDetailsFetched: false,
+                userDetailsFetched: false
             }
-        case UPDATE_NEW_USER_INFO: 
+        case UPDATE_NEW_USER_INFO:
             return {
                 ...state,
                 newUser: action.payload

@@ -1,13 +1,9 @@
 import React, { Component } from 'react';
-import {StyleSheet, Text, Dimensions, ActivityIndicator, View} from 'react-native'
+import {StyleSheet, Text, ActivityIndicator, View} from 'react-native';
 import CardView from 'react-native-cardview';
-import Colors from './Colors';
-
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+import { white } from '../Constants/colors';
 
 export default class WaitingDialog extends Component {
-
     constructor(props) {
       super();
     };
@@ -45,7 +41,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         alignItems: 'center',
         textAlign: 'center',
-        backgroundColor: Colors.color.colorWhite,
+        backgroundColor: white,
         borderRadius: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },

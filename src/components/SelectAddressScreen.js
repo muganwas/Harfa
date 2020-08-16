@@ -1,23 +1,16 @@
 import React, { Component } from 'react';
 import {View, Image, TextInput, Dimensions, StyleSheet,FlatList, ActivityIndicator, Text,
 TouchableOpacity, ToastAndroid, BackHandler, StatusBar, Platform,} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
+import { colorPrimary, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 const GOOGLE_ADDRESS_SERVICE = "https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030&types=geocode&language=en&input="
 const LAT_LNG_URL = "https://maps.googleapis.com/maps/api/place/details/json?key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030&placeid=";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{
@@ -33,7 +26,6 @@ function StatusBarPlaceHolder() {
 }
 
 export default class SelectAddressScreen extends Component {
-
   constructor(props) {
     super();
     this.state = {
@@ -43,7 +35,6 @@ export default class SelectAddressScreen extends Component {
       lat: 0,
       lng: 0,
     };
-    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   };
 
   componentWillMount() {
@@ -54,17 +45,15 @@ export default class SelectAddressScreen extends Component {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
 
-  handleBackButtonClick() {
+  handleBackButtonClick = () => {
     this.props.navigation.goBack();
     return true;
   }
 
-  getAddress = (value) => {
-
+  getAddress = value => {
     this.setState({
       isLoading: true,
-    })
-
+    });
     fetch(GOOGLE_ADDRESS_SERVICE+value)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -84,12 +73,10 @@ export default class SelectAddressScreen extends Component {
       })
   }
 
-  moveToPreviousScreen(placeId, description) {
-
+  moveToPreviousScreen = (placeId, description) => {
     this.setState({
       isLoading: true,
-    })
-
+    });
     fetch(LAT_LNG_URL+placeId)
     .then((response) => response.json())
     .then((responseJson) => {
@@ -100,7 +87,7 @@ export default class SelectAddressScreen extends Component {
         address: description,
         lat: responseJson.result.geometry.location.lat,
         lng: responseJson.result.geometry.location.lng
-      })
+      });
       this.props.navigation.state.params.onGoBack(this.state.address+"/"+this.state.lat+"/"+this.state.lng);
       this.props.navigation.goBack();
     })
@@ -110,7 +97,7 @@ export default class SelectAddressScreen extends Component {
         isLoading: false
       })
       ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
-    })
+    });
   }
 
   //GridView Items
@@ -130,9 +117,7 @@ export default class SelectAddressScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
-
         <StatusBarPlaceHolder/>
-       
         <View style={styles.header}>
           <View style={{ flex: 1, flexDirection: 'row' }}>
             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center',}}
@@ -145,7 +130,6 @@ export default class SelectAddressScreen extends Component {
             </Text>
           </View>
         </View>
-
            <View style={{flexDirection: 'row', width: '100%', height: 70,  backgroundColor: colorYellow,
                 paddingLeft: 20, paddingRight: 20, paddingTop: 10, paddingBottom: 10, justifyContent: 'center',}}>
                 <View style={{ flexDirection: 'row', width: screenWidth-20, height: 50, justifyContent: 'center', 
@@ -249,4 +233,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   }
-})
+});

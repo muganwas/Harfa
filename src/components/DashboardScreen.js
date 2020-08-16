@@ -5,31 +5,16 @@ import {
     TouchableOpacity, StatusBar, Dimensions,
     Animated, BackHandler, Alert, Modal, Platform
 } from 'react-native';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { createAppContainer, } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
-import ListOfProviderScreen from './ListOfProviderScreen';
-import ProviderDetailsScreen from './ProviderDetailsScreen';
-import ChatScreen from './ChatScreen';
-import MapDirectionScreen from './MapDirectionScreen';
-import AddAddressScreen from './AddAddressScreen';
-import SelectAddressScreen from './SelectAddressScreen';
-import PendingJobRequest from './PendingJobRequest';
 import Hamburger from './Hamburger';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-//const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorPrimary, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const SERVICES_URL = Config.baseURL + 'service/getall'
@@ -52,7 +37,7 @@ function StatusBarPlaceHolder() {
     );
 }
 
-class DashBoardScreen extends Component {
+class DashboardScreen extends Component {
     constructor(props) {
         super();
         this.state = {
@@ -73,6 +58,7 @@ class DashBoardScreen extends Component {
     //Get All Services
     componentDidMount() {
         this.onRefresh();
+        console.log('dash props', this.props)
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
     }
 
@@ -153,7 +139,7 @@ class DashBoardScreen extends Component {
                     justifyContent: 'center'
                 }}
                     onPress={() => {
-                        this.props.navigation.navigate("ListOfProvider", {
+                        this.props.navigation.navigate("ListOfProviders", {
                             'serviceName': item.service_name,
                             'serviceId': item.id
                         })
@@ -288,7 +274,7 @@ class DashBoardScreen extends Component {
                     </View>
                 </View>
 
-                <View style={[styles.gridView, { marginBottom: PendingJobRequest.Request.order_id == '' ? 0 : 75 }]}>
+                <View style={[styles.gridView, { marginBottom: jobRequests.length === 0 ? 0 : 75 }]}>
                     <FlatList
                         keyboardShouldPersistTaps={'handled'}
                         numColumns={3}
@@ -370,53 +356,7 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-const AppStackNavigator = createStackNavigator({
-    DashBoard: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(DashBoardScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    ListOfProvider: {
-        screen: ListOfProviderScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProviderDetails: {
-        screen: ProviderDetailsScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    Chat: {
-        screen: ChatScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    MapDirection: {
-        screen: MapDirectionScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    AddAddress: {
-        screen: AddAddressScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    SelectAddress: {
-        screen: SelectAddressScreen,
-        navigationOptions: {
-            header: null
-        }
-    }
-});
-
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+export default connect(mapStateToProps, mapDispatchToProps)(DashboardScreen);
 
 const styles = StyleSheet.create({
     container: {

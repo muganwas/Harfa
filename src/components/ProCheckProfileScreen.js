@@ -1,15 +1,8 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, Image, Dimensions, TouchableOpacity, Text} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
+import { colorPrimary, colorBg, colorYellow } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 export default class ProCheckProfileScreen extends Component {
   render() {
@@ -89,4 +82,4 @@ const styles = StyleSheet.create({
         borderRadius: 2,
        
       },
-})
+});

@@ -8,20 +8,14 @@ import { AirbnbRating } from 'react-native-ratings';
 import ReviewDialogCustomer from './ReviewDialogCustomer';
 import WaitingDialog from './WaitingDialog';
 import Config from './Config';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-//const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorBg, colorPrimaryDark, colorPrimary } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-//const screenHeight = Dimensions.get('window').height;
 
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{

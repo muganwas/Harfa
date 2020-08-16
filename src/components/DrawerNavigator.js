@@ -1,40 +1,52 @@
 
-import React , { Component } from 'react';
-import {createAppContainer} from 'react-navigation';
-import {createDrawerNavigator } from 'react-navigation-drawer';
+import React, { Component } from 'react';
+import { createAppContainer } from 'react-navigation';
+import { createDrawerNavigator } from 'react-navigation-drawer';
+import DashboardScreen from './DashboardScreen';
+import AccountTypeScreen from './AccountTypeScreen';
+import AfterSplashScreen from './AfterSplashScreen';
 import CustomMenuLayout from './CustomMenuLayout';
 import ChatWithAdminScreen from './ChatWithAdminScreen';
-import DashBoardScreen from './DashboardScreen';
 import AboutUsScreen from './AboutUsScreen';
-import ContactUsScreen from './ContactUsScreen'; 
+import ContactUsScreen from './ContactUsScreen';
 import MyProfileScreen from './MyProfileScreen';
 import AllMessageScreen from './AllMessageScreen';
 import NotificationsScreen from './NotificationsScreen';
 import BookingScreen from './BookingScreen';
+import ProAccountTypeScreen from './ProAccountTypeScreen';
+import ListOfProviderScreen from './ListOfProviderScreen';
+import FacebookGoogleScreen from './FacebookGoogleScreen';
+import AddAddressScreen from './AddAddressScreen';
 
 const MyDrawerNavigator = createDrawerNavigator({
-    Dashboard: {screen: DashBoardScreen},
-    MyProfile: {screen: MyProfileScreen},
-    Booking: {screen: BookingScreen},
-    AboutUs: {screen: AboutUsScreen},
-    ChatWithAdmin: {screen: ChatWithAdminScreen},
-    ContactUs: {screen: ContactUsScreen},
-    AllMessage: {screen: AllMessageScreen},
-    Notifications: {screen: NotificationsScreen},
+    FacebookGoogle: { screen: FacebookGoogleScreen},
+    AfterSplash: { screen: AfterSplashScreen },
+    AccountType: { screen: AccountTypeScreen },
+    ProAccountType: { screen: ProAccountTypeScreen },
+    Dashboard: { screen: DashboardScreen },
+    ListOfProviders: { screen: ListOfProviderScreen },
+    AddAddress: { screen: AddAddressScreen },
+    MyProfile: { screen: MyProfileScreen },
+    Booking: { screen: BookingScreen },
+    AboutUs: { screen: AboutUsScreen },
+    ChatWithAdmin: { screen: ChatWithAdminScreen },
+    ContactUs: { screen: ContactUsScreen },
+    AllMessage: { screen: AllMessageScreen },
+    Notifications: { screen: NotificationsScreen },
 },
-{
-    initialRouteName: 'Dashboard',
-    drawerWidth: 275,
-    drawerPosition: 'left',
-    drawerType: "push-screen",
-    contentComponent: CustomMenuLayout,
-}
+    {
+        initialRouteName: 'Dashboard',
+        drawerWidth: 275,
+        drawerPosition: 'left',
+        drawerType: "push-screen",
+        contentComponent: CustomMenuLayout,
+    }
 );
 
 const AppContainer = createAppContainer(MyDrawerNavigator);
 
-export default class DrawerNavigator extends Component{
-    render(){
-        return <AppContainer/>
+export default class DrawerNavigator extends Component {
+    render() {
+        return <AppContainer />
     }
 }

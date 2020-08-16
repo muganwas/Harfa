@@ -1,20 +1,8 @@
 import React, { Component } from 'react';
-import { View, Image, Text, StatusBar, TouchableOpacity, BackHandler } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
-
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F'
+import { View, Text, StatusBar, TouchableOpacity, BackHandler } from 'react-native';
+import { colorYellow } from '../Constants/colors';
 
 export default class ProAccountTypeScreen extends Component {
-
-    constructor(props) {
-      super()
-    
-      this.state = {};
-      this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
-    };
-
     componentDidMount(){
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
@@ -23,7 +11,7 @@ export default class ProAccountTypeScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
@@ -31,9 +19,7 @@ export default class ProAccountTypeScreen extends Component {
     render() {
         return (
             <View style={styles.container}>
-
                 <StatusBar barStyle='light-content' backgroundColor='#000000' />
-
                 <Text style={{color: 'white', fontSize: 20, marginBottom: 50, fontWeight: 'bold', color: 'white'}}>
                      Sélectionnez votre type de compte
                 </Text>

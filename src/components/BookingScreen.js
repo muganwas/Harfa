@@ -2,26 +2,17 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, FlatList, ActivityIndicator,
     BackHandler, StatusBar, Platform, Modal, Animated} from 'react-native';
-import {createAppContainer,} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
-//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import ViewPager from "@react-native-community/viewpager";
 import Toast from 'react-native-simple-toast';
-import UserDetails from './UserDetails';
 import Config from './Config';
-import BookingDetailsScreen from './BookingDetailsScreen';
-import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
 import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
+import { colorBg, colorPrimaryDark, colorPrimary } from '../Constants/colors';
 
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-//const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/customer_request/';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -43,8 +34,7 @@ function StatusBarPlaceHolder() {
 class BookingScreen extends Component {
 
     constructor(props) {
-        super()
-
+        super();
         this.state = {
             bookingCompleteData: [],
             bookingRejectData: [],
@@ -53,10 +43,6 @@ class BookingScreen extends Component {
             isLoading: true,
             backClickCount: 0,
         };
-        this.onPageSelected.bind(this);
-        this.selectPage.bind(this);
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
         this.springValue = new Animated.Value(100);
     };
 
@@ -72,14 +58,14 @@ class BookingScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if(Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();    
         else
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({backClickCount: 1}, () => {
             Animated.sequence([
                 Animated.spring(
@@ -106,7 +92,7 @@ class BookingScreen extends Component {
         });
     }
 
-    getAllBookings(){
+    getAllBookings = () => {
         this.setState({
             isLoading: true,
             bookingCompleteData: [],
@@ -162,12 +148,12 @@ class BookingScreen extends Component {
             })
     }
 
-    onPageSelected(event) {
+    onPageSelected = event => {
         currentPage = event.nativeEvent.position;
         this.setState({ currentPage });
     };
 
-    selectPage(title) {
+    selectPage = title => {
 
         if (title == "Completed") {
             this.viewPager.setPage(0);
@@ -228,11 +214,11 @@ class BookingScreen extends Component {
         )
     }
 
-    showToast = (message) => {
+    showToast = message => {
         Toast.show(message);
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
@@ -308,14 +294,6 @@ class BookingScreen extends Component {
                         )}
                     </View>
                 </ViewPager>
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
                     <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
                     <TouchableOpacity
@@ -348,29 +326,7 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-const AppStackNavigator = createStackNavigator({
-    Booking: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(BookingScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    BookingDetails: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(BookingDetailsScreen),
-        navigationOptions: {
-            header: null,
-        }
-    },
-    ChatAfterBookingDetails : {
-        screen: connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen),
-        navigationOptions: {
-            header: null
-        }
-    }
-});
-
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+export default connect(mapStateToProps, mapDispatchToProps)(BookingScreen);
 
 const styles = StyleSheet.create({
     container: {
@@ -483,4 +439,4 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center'
     },
-})
+});

@@ -6,24 +6,16 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import ImagePicker from 'react-native-image-picker';
 import database from '@react-native-firebase/database';
-import UserDetails from './UserDetails';
-import Config from './Config';
 import { imageExists } from '../misc/helpers';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
+import { colorBg, colorPrimaryDark, colorPrimary, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-//const screenHeight = Dimensions.get('window').height;
+
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         ios ?
             <View style={{
@@ -38,15 +30,6 @@ function StatusBarPlaceHolder() {
             <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
-
-const options = {
-    title: 'Sélectionnez une photo',
-    takePhotoButtonTitle: 'Prenez une photo',
-    chooseFromLibraryButtonTitle: 'Choisissez dans la galerie',
-    quality: 1
-};
-
-const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 
 class ChatAfterBookingDetailsScreen extends Component {
     constructor(props) {
@@ -74,7 +57,6 @@ class ChatAfterBookingDetailsScreen extends Component {
             isJobAccepted: props.navigation.state.params.isJobAccepted,
             proImageAvailable: null
         }
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
@@ -100,7 +82,7 @@ class ChatAfterBookingDetailsScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
@@ -116,7 +98,7 @@ class ChatAfterBookingDetailsScreen extends Component {
         return result;
     }
 
-    showHideButton = (input) => {
+    showHideButton = input => {
 
         this.setState({
             inputMessage: input,
@@ -134,10 +116,6 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     sendMessageTask = async () => {
-
-        console.log("Sender Id : " + this.state.senderId);
-        console.log("Receiver Id : " + this.state.receiverId);
-
         if (this.state.inputMessage.length > 0) {
             let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};

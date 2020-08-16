@@ -1,13 +1,8 @@
 import React, {Component} from 'react';
 import {View,StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity, 
     ScrollView, Dimensions, ActivityIndicator} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
-
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
+import { colorYellow } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 

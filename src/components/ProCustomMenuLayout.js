@@ -3,14 +3,11 @@ import React, { Component } from 'react';
 import { StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
 import { connect } from 'react-redux';
 import { notificationsFetched } from '../Redux/Actions/notificationActions';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import {DrawerActions} from 'react-navigation-drawer';
 import ProDialogLogout from './ProDialogLogout';
-
-const colorPrimary = '#FFBF0F';
+import { colorPrimary } from '../Constants/colors';
 
 class CustomMenuLayout extends Component {
-
     constructor(props) {
       super();
       this.state = {
@@ -18,11 +15,11 @@ class CustomMenuLayout extends Component {
       };
     };
 
-    changeDialogVisibility = (bool) => {
+    changeDialogVisibility = bool => {
         this.props.navigation.dispatch(DrawerActions.closeDrawer());
         this.setState({
             isDialogLogoutVisible: bool
-        })
+        });
     }
 
     render() {
@@ -122,30 +119,6 @@ class CustomMenuLayout extends Component {
                                <Text style={styles.textMenu}>À propos de nous</Text>
                             </View>
                         </TouchableHighlight>
-
-                        {/* <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() => this.props.navigation.navigate("ContactUs")}>
-                            <View style={styles.row}>
-                               <Image source={require('../icons/ic_contact_us_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Contact us</Text>
-                            </View>
-                        </TouchableHighlight> */}
-
-                        {/* <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() => this.props.navigation.navigate("Setting")}>
-                            <View style={styles.row}>
-                               <Image source={require('../icons/tutorial.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Tutorial</Text>
-                            </View>
-                        </TouchableHighlight> */}
-
-                        {/* <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() => this.props.navigation.navigate("Setting")}>
-                            <View style={styles.row}>
-                               <Image source={require('../icons/tutorial.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Become a Customer</Text>
-                            </View>
-                        </TouchableHighlight> */}
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => this.changeDialogVisibility(true)}>

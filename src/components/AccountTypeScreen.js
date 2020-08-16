@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
-import { View, Image, Text, StatusBar, TouchableOpacity, BackHandler } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
-
-const colorPrimary = '#262425';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F'
+import { View, Text, StatusBar, TouchableOpacity, BackHandler } from 'react-native';
+import { colorYellow } from '../Constants/colors';
 
 export default class AccountTypeScreen extends Component {
     constructor(props) {

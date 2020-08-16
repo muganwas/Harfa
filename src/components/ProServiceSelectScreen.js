@@ -1,20 +1,14 @@
 import React, { Component } from 'react';
 import {Text, StyleSheet, View, Image, FlatList, ActivityIndicator,TouchableOpacity, 
   ToastAndroid, StatusBar, Platform} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'  
 import CheckBox from 'react-native-check-box';
 import Config from './Config';
+import { colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
-const SERVICES_URL = Config.baseURL+'service/getall'
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-
+const SERVICES_URL = Config.baseURL+'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{
@@ -30,7 +24,6 @@ function StatusBarPlaceHolder() {
 }
 
 export default class ProServiceSelectScreen extends Component {
-
   constructor(props) {
     super();
     this.state = {
@@ -41,7 +34,7 @@ export default class ProServiceSelectScreen extends Component {
     }
   }
 
-  onCheckBoxPress(id, serviceName) {
+  onCheckBoxPress = (id, serviceName) => {
     let tmpId = this.state.selectedServiceId;
     let tmpName = this.state.selectedServiceName;
 
@@ -83,7 +76,6 @@ export default class ProServiceSelectScreen extends Component {
 
   //Get All Services
   componentDidMount() {
-
     fetch(SERVICES_URL)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -98,7 +90,7 @@ export default class ProServiceSelectScreen extends Component {
           isLoading: false
         })
         ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
-      })
+      });
   }
 
   checkValidation = () => {
@@ -117,10 +109,7 @@ export default class ProServiceSelectScreen extends Component {
   render() {
     return (
         <View style={styles.container}>
-          {/* <StatusBar barStyle='light-content' backgroundColor='#C5940E' /> */}
-
           <StatusBarPlaceHolder/>
-
           <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
               paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5}}>
             <View style={{ flex: 1, flexDirection: 'row'}}>

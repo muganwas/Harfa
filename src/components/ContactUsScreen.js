@@ -1,18 +1,12 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Platform, StatusBar, BackHandler} from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' ;
+import { colorBg, colorPrimaryDark, colorPrimary } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{
@@ -28,14 +22,6 @@ function StatusBarPlaceHolder() {
 }
 
 export default class ContactUsScreen extends Component{
-
-    constructor(props) {
-      super()
-    
-      this.state = {};
-    };
-    
-
     componentDidMount() {
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
     }

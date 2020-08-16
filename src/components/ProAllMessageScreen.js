@@ -6,29 +6,19 @@ import {
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import database from '@react-native-firebase/database';
-import { createAppContainer, } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
-import ProviderDetails from './ProviderDetails';
-import ProChatScreen from './ProChatScreen';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { imageExists } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-//const colorGray = '#C0C0C0'
+import { colorPrimary, colorPrimaryDark, colorBg, colorYellow } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -47,7 +37,7 @@ function StatusBarPlaceHolder() {
 class ProAllMessageScreen extends Component {
 
     constructor(props) {
-        super()
+        super();
         this.state = {
             isLoading: false,
             dataSource: [],
@@ -61,7 +51,7 @@ class ProAllMessageScreen extends Component {
     };
 
     componentDidMount() {
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         const { userInfo: { providerDetails } } = this.props;
         let dbRef = database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', snapshot => {
@@ -97,17 +87,17 @@ class ProAllMessageScreen extends Component {
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick.bind(this));
+        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -184,9 +174,7 @@ class ProAllMessageScreen extends Component {
         )
     }
 
-    searchTask(textInput) {
-
-        console.log("Pro Message Search >> " + textInput);
+    searchTask = (textInput) => {
 
         let text = textInput.toLowerCase()
         let tracks = this.state.fullData
@@ -322,29 +310,7 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-const AppStackNavigator = createStackNavigator({
-    ProAllMessage: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(ProAllMessageScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProChat: {
-        screen: ProChatScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-    ProChatAfterBookingDetails: {
-        screen: ProChatAfterBookingDetailsScreen,
-        navigationOptions: {
-            header: null
-        }
-    },
-});
-
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+export default connect(mapStateToProps, mapDispatchToProps)(ProAllMessageScreen);
 
 const styles = StyleSheet.create({
     container: {

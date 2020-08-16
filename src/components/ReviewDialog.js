@@ -1,22 +1,14 @@
 import React, { Component } from 'react';
-import {StyleSheet, Text, View, Platform, Dimensions, TouchableOpacity, TouchableHighlight, Image, TextInput} from 'react-native'
-import { Rating, AirbnbRating } from 'react-native-ratings';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import {StyleSheet, Text, View, Dimensions, TouchableOpacity, TouchableHighlight, Image, TextInput} from 'react-native'
+import { AirbnbRating } from 'react-native-ratings';
+import { colorGray, colorYellow, colorBg } from '../Constants/colors';
 
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0';
 
 export default class DialogReview extends Component {
-
     constructor(props) {
       super();
       var data1 = props.data.split("//////");
       this.state = {
-        //   data: props.data,
-        //   rating: '3',
          data: JSON.parse(data1[0]),
          rating: ""+data1[1],
           review: '',
@@ -28,14 +20,13 @@ export default class DialogReview extends Component {
       })
     };
 
-    changeReviewDialogVisibility = (bool) => {
-       
+    changeReviewDialogVisibility = bool => {
         this.setState({
             isReviewDialogVisible: bool
-        })
+        });
     }
 
-    closeReviewDialog= (action) => {
+    closeReviewDialog= action => {
         if(action == 'Submit')
         {
             console.log("Submit");
@@ -50,7 +41,6 @@ export default class DialogReview extends Component {
 
   render() {
     return (
-      
         <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
             <View style={[styles.modal, {width: this.state.width - 80}]}>
                 <View style={styles.textView}>
@@ -101,7 +91,6 @@ export default class DialogReview extends Component {
 }
 
 const styles = StyleSheet.create({
-
     contentContainer: {
         flex: 1,
         alignItems: 'center',
@@ -153,4 +142,3 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     }
 });
-

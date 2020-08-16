@@ -6,30 +6,19 @@ import {
 } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { createAppContainer, } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
-import UserDetails from './UserDetails';
 import { imageExists } from '../misc/helpers';
-import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-//const colorGray = '#C0C0C0';
+import { colorYellow, colorBg, colorPrimaryDark, colorPrimary } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -60,7 +49,6 @@ class AllMessageScreen extends Component {
         };
 
         this.springValue = new Animated.Value(100);
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount(){
@@ -105,7 +93,7 @@ class AllMessageScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         // this.props.navigation.navigate("DashBoard");
         // return true;
         if (Platform.OS == 'ios')
@@ -114,7 +102,7 @@ class AllMessageScreen extends Component {
             this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
     }
 
-    _spring() {
+    _spring = () => {
         this.setState({ backClickCount: 1 }, () => {
             Animated.sequence([
                 Animated.spring(
@@ -148,7 +136,7 @@ class AllMessageScreen extends Component {
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => {
                     dispatchSelectedJobRequest({employee_id: item.id});
-                    this.props.navigation.navigate("Chat", {
+                    this.props.navigation.navigate("ChatAfterBooking", {
                         'providerId': item.id,
                         'providerName': item.name,
                         'providerSurname': '',
@@ -184,7 +172,7 @@ class AllMessageScreen extends Component {
         )
     }
 
-    searchTask(textInput) {
+    searchTask = (textInput) => {
 
         let text = textInput.toLowerCase()
         let tracks = this.state.fullData
@@ -306,24 +294,7 @@ const mapDispatchToProps = dispatch => {
         }
     }
 }
-
-const AppStackNavigator = createStackNavigator({
-    AllMessage: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(AllMessageScreen),
-        navigationOptions: {
-            header: null
-        }
-    },
-    ChatAfterBookingDetails: {
-        screen: connect(mapStateToProps, mapDispatchToProps)(ChatAfterBookingDetailsScreen),
-        navigationOptions: {
-            header: null
-        }
-    }
-});
-
-const XYZ = createAppContainer(AppStackNavigator);
-export default XYZ;
+export default connect(mapStateToProps, mapDispatchToProps)(AllMessageScreen)
 
 const styles = StyleSheet.create({
     container: {

@@ -2,37 +2,24 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityIndicator, Modal,
    Linking, Alert, BackHandler, StatusBar, Platform } from 'react-native';
-import { Rating, AirbnbRating } from 'react-native-ratings';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { AirbnbRating } from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
-import UserDetails from './UserDetails';
 import database from '@react-native-firebase/database';
 import Config from './Config';
-import PendingJobRequest from './PendingJobRequest';
 import WaitingDialog from './WaitingDialog';
 import { imageExists } from '../misc/helpers';
 import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { cloneDeep } from 'lodash';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0' 
-const colorGreen = 'green';
-const colorRed = 'red';
+import { colorGray, colorGreen, colorRed, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 const BOOKING_REQUEST = Config.baseURL+"jobrequest/addjobrequest";
-const PRO_GET_PROFILE = Config.baseURL+"employee/";
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
   return (
       Platform.OS === 'ios' ?
       <View style={{
@@ -81,7 +68,6 @@ class ProviderDetailsScreen extends Component {
         body: '',
         data: '',
       }
-      this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
   requestForBooking = () => {
@@ -335,7 +321,7 @@ class ProviderDetailsScreen extends Component {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
 
-  handleBackButtonClick() {
+  handleBackButtonClick = () => {
     this.props.navigation.goBack();
     return true;
   }
@@ -408,9 +394,9 @@ class ProviderDetailsScreen extends Component {
     Toast.show(message);
   }
 
-  changeWaitingDialogVisibility = (bool) => {
+  changeWaitingDialogVisibility = bool => {
     this.setState({
-      isLoading: false
+      isLoading: bool
     })
   }
 
@@ -418,9 +404,7 @@ class ProviderDetailsScreen extends Component {
     const { imageAvailable } = this.state;
     return (
       <View style={styles.container}>
-
         <StatusBarPlaceHolder />
-
         <View style={styles.header}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', marginLeft: 5, }}

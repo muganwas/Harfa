@@ -1,16 +1,9 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, Platform, Dimensions, TouchableOpacity, TouchableHighlight, Image, TextInput } from 'react-native'
-import { Rating, AirbnbRating } from 'react-native-ratings';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
-
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0';
+import { AirbnbRating } from 'react-native-ratings';
+import { colorGray, colorYellow, colorBg } from '../Constants/colors';
 
 export default class DialogReviewCustomer extends Component {
-
     constructor(props) {
         super();
         var data1 = props.data.split("//////");
@@ -28,17 +21,14 @@ export default class DialogReviewCustomer extends Component {
         })
     };
 
-    changeReviewDialogVisibility = (bool) => {
-
+    changeReviewDialogVisibility = bool => {
         this.setState({
             isReviewDialogVisible: bool
-        })
+        });
     }
 
-    closeReviewDialog = (action) => {
+    closeReviewDialog = action => {
         if (action == 'Submit') {
-            console.log(this.state.data);
-            console.log("Submit");
             this.props.changeDialogVisibility(false, "Submitted", "", this.state.rating, this.state.review);
         }
         else if (action == 'Not now') {
@@ -49,7 +39,6 @@ export default class DialogReviewCustomer extends Component {
 
     render() {
         return (
-
             <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
                 <View style={[styles.modal, { width: this.state.width - 80 }]}>
                     <View style={styles.textView}>

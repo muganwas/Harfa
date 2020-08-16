@@ -19,7 +19,7 @@ export default class HeaderComponent extends Component {
                     }}>
                     <Image
                         style={{width:32, height: 32}}
-                        source={require('../icons/ic_humberger_64dp.png')}>
+                        source={require('../icons/humberger.png')}>
                     </Image>   
 
                 </TouchableOpacity>    

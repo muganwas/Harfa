@@ -7,17 +7,8 @@ import { connect } from 'react-redux';
 import AsyncStorage from '@react-native-community/async-storage';
 import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
-import ProviderDetails from './ProviderDetails'
 
-const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
 const colorBg = '#E8EEE9';
-const colorGray = '#C0C0C0'
-
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
-
 const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 
 class ProDialogLogout extends Component {
