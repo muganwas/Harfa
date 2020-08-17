@@ -9,7 +9,6 @@ import { colorPrimary, colorPrimaryDark, colorBg, colorGray, colorYellow } from 
 import Config from './Config';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 const USER_INFO_UPDATE = Config.baseURL + "users/";
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;

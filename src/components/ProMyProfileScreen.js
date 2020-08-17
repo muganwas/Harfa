@@ -77,8 +77,6 @@ class ProMyProfileScreen extends Component {
     selectPhoto = () => {
 
         ImagePicker.showImagePicker(options, (response) => {
-            console.log('Response = ', response);
-
             if (response.didCancel) {
                 console.log('User cancelled image picker');
             }
@@ -110,12 +108,12 @@ class ProMyProfileScreen extends Component {
         var serviceName = '';
 
         for (i = 0; i < services.length; i++) {
-            serviceName = serviceName + services[i].service_name + ", ";
+            serviceName = serviceName + services[i].service_name + `${services.length > 1 ? ',' : ''}`;
         }
 
         this.setState({
             services: serviceName
-        })
+        });
     }
 
     componentWillUnmount() {
@@ -156,9 +154,7 @@ class ProMyProfileScreen extends Component {
         });
     }
 
-    //getProfile no need
     getProfile = providerId => {
-
         if (providerId !== null) {
             this.setState({
                 isLoading: true
@@ -208,8 +204,6 @@ class ProMyProfileScreen extends Component {
     }
 
     getDataFromServiceScreen = data => {
-        console.log("Data : " + data);
-
         var data = data.split("/")
         this.setState({
             serviceId: data[0],
@@ -218,23 +212,18 @@ class ProMyProfileScreen extends Component {
     }
 
     getDataFromAddAddressScreen = data => {
-
-        console.log("Data : " + data);
-
         var data = data.split("/")
         this.setState({
             address: data[0],
             lat: data[1],
             lng: data[2],
-        })
+        });
     }
 
     checkValidation = () => {
-
         this.setState({
             isLoading: true,
-        })
-
+        });
         AsyncStorage.getItem('userId')
             .then((providerId) => this.updateInformation(providerId))
     }
@@ -278,7 +267,6 @@ class ProMyProfileScreen extends Component {
                         isLoading: false,
                         isErrorToast: true
                     })
-                    //ToastAndroid.show(response.message, ToastAndroid.show);
                     this.showToast(response.message);
                 }
             })
@@ -290,16 +278,13 @@ class ProMyProfileScreen extends Component {
                 })
                 this.showToast("Something went wrong");
             })
-            .done()
+            .done();
     }
 
     //Image Update
     updateImageTask = (providerId, imageObject) => {
         let imageData = new FormData();
         imageData.append('image', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-
-        console.log("ImageData : " + JSON.stringify(imageData));
-
         fetch(PRO_IMAGE_UPDATE + providerId,
             {
                 method: 'POST',
@@ -316,16 +301,14 @@ class ProMyProfileScreen extends Component {
                     this.setState({
                         isLoading: false,
                         isErrorToast: false
-                    })
-                    //ToastAndroid.show("Image Updated Successfully", ToastAndroid.show);
+                    });
                     this.showToast(response.message);
                 }
                 else {
                     this.setState({
                         isLoading: false,
                         isErrorToast: true
-                    })
-                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
+                    });
                     this.showToast(response.message);
                 }
             })

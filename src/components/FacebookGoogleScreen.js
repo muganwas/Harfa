@@ -68,7 +68,7 @@ class FacebookGoogleScreen extends Component {
     }
 
     componentDidMount() {
-        GoogleSignin.configure({webClientId: Config.clientId});
+        GoogleSignin.configure();
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
@@ -112,6 +112,7 @@ class FacebookGoogleScreen extends Component {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
+            console.log('result --', result)
             this.fbGoogleLoginCustomerTask(result.user.name, result.user.email, result.user.photo);
         }
         catch (error) {
@@ -132,102 +133,100 @@ class FacebookGoogleScreen extends Component {
     }
 
     fbGoogleLoginCustomerTask = async (name, email, image) => {
-        const { fetchJobRequests, updateUserDetails } = this.props;
         this.setState({
             isLoading: true,
         });
         const fcmToken = await messaging().getToken();
         if (fcmToken) {
-            firebaseAuth().signInWithEmailAndPassword(this.state.email, this.state.password).then(result => {
-                const { user } = result;
-                if (user && typeof user === 'object') {
-                    const userData = {
-                        "acc_type": this.state.accountType,
-                        "username": name,
-                        "email": email,
-                        "image": image,
-                        "mobile": "",
-                        "dob": "",
-                        "fcm_id": fcmToken,
-                        "type": "google"
+            const { fetchJobRequests, updateUserDetails } = this.props;
+            const userData = {
+                "acc_type": this.state.accountType,
+                "username": name,
+                "email": email,
+                "image": image,
+                "mobile": "",
+                "dob": "",
+                "fcm_id": fcmToken,
+                "type": "google"
+            }
+            Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
+                .then(responseJson => {
+                    // console.log("Response Register")
+                    console.log(responseJson);
+                    if (responseJson.status === 200 && responseJson.data.createdDate) {
+                        this.setState({
+                            isLoading: false,
+                            isErrorToast: true,
+                        })
+                        const id = responseJson.data.id;
+
+                        var userData = {
+                            userId: responseJson.data.id,
+                            accountType: responseJson.data.acc_type,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            username: responseJson.data.username,
+                            image: responseJson.data.image,
+                            mobile: responseJson.data.mobile,
+                            dob: responseJson.data.dob,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            fcmId: responseJson.data.fcm_id,
+                        }
+                        updateUserDetails(userData);
+                        //Store data like sharedPreference
+                        AsyncStorage.setItem('userId', id);
+                        AsyncStorage.setItem('userType', 'User');
+                        fetchJobRequests(this.props, id, "Home");
                     }
-                    Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
-                        .then(responseJson => {
-                            // console.log("Response Register")
-                            console.log(responseJson);
-                            if (responseJson.status === 200 && responseJson.data.createdDate) {
-                                this.setState({
-                                    isLoading: false,
-                                    isErrorToast: true,
-                                })
-                                const id = responseJson.data.id;
-
-                                var userData = {
-                                    userId: responseJson.data.id,
-                                    accountType: responseJson.data.acc_type,
-                                    email: responseJson.data.email,
-                                    password: responseJson.data.password,
-                                    username: responseJson.data.username,
-                                    image: responseJson.data.image,
-                                    mobile: responseJson.data.mobile,
-                                    dob: responseJson.data.dob,
-                                    address: responseJson.data.address,
-                                    lat: responseJson.data.lat,
-                                    lang: responseJson.data.lang,
-                                    fcmId: responseJson.data.fcm_id,
-                                }
-                                updateUserDetails(userData);
-                                //Store data like sharedPreference
-                                AsyncStorage.setItem('userId', id);
-                                AsyncStorage.setItem('userType', 'User');
-                                fetchJobRequests(this.props, id, "Home");
-                            }
-                            else {
-                                console.log("Response Else ");
-                                this.setState({
-                                    isLoading: false,
-                                })
-                                Alert.alert(
-                                    "OOPS !",
-                                    responseJson.data.message,
-                                    [
-                                        {
-                                            text: 'Cancel',
-                                            onPress: () => console.log('Cancel Pressed'),
-                                        },
-                                        {
-                                            text: 'Retry',
-                                            onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
-                                        },
-                                    ]
-                                );
-                            }
+                    else {
+                        console.log("Response Else ");
+                        this.setState({
+                            isLoading: false,
                         })
-                        .catch((error) => {
-                            console.log("Error :" + error);
-                            this.setState({
-                                isLoading: false,
-                            })
-                            Alert.alert(
-                                "OOPS !",
-                                error.message,
-                                [
-                                    {
-                                        text: 'Cancel',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retry',
-                                        onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
-                                    },
-                                ]
-                            );
-                        })
-                        .done();
-                }
-            });
+                        Alert.alert(
+                            "OOPS !",
+                            responseJson.data.message,
+                            [
+                                {
+                                    text: 'Cancel',
+                                    onPress: () => console.log('Cancel Pressed'),
+                                },
+                                {
+                                    text: 'Retry',
+                                    onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
+                                },
+                            ]
+                        );
+                    }
+                })
+                .catch((error) => {
+                    console.log("Error :" + error);
+                    this.setState({
+                        isLoading: false,
+                    })
+                    Alert.alert(
+                        "OOPS !",
+                        error.message,
+                        [
+                            {
+                                text: 'Cancel',
+                                onPress: () => console.log('Cancel Pressed'),
+                            },
+                            {
+                                text: 'Retry',
+                                onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
+                            },
+                        ]
+                    );
+                })
+                .done();
         }
-
+        else {
+            this.setState({ isLoading: false });
+            simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
+        }
     }
 
     checkValidation = () => {
@@ -351,11 +350,15 @@ class FacebookGoogleScreen extends Component {
                     );
                 }
                 else {
-                    simpleToast.show("Something went wrong, try again later");
+                    simpleToast.show("Something went wrong, try again later", simpleToast.SHORT);
                     console.log('login error code --', error.code)
                 }
                 this.setState({ isLoading: false })
             });
+        }
+        else {
+            this.setState({ isLoading: false });
+            simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
         }
     }
 

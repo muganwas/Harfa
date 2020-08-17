@@ -22,6 +22,7 @@ const MyDrawerNavigator = createDrawerNavigator({
     FacebookGoogle: { screen: FacebookGoogleScreen},
     AfterSplash: { screen: AfterSplashScreen },
     AccountType: { screen: AccountTypeScreen },
+    Home: { screen: DashboardScreen },
     ProAccountType: { screen: ProAccountTypeScreen },
     Dashboard: { screen: DashboardScreen },
     ListOfProviders: { screen: ListOfProviderScreen },

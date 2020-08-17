@@ -16,7 +16,7 @@ import {
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import database from '@react-native-firebase/database';
-import Toast from 'react-native-simple-toast';
+import geolocation from '@react-native-community/geolocation';
 import { Notifications } from 'react-native-notifications';
 import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 import Config from './Config';
@@ -25,41 +25,9 @@ import NetInfo from "@react-native-community/netinfo";
 import { black, white, red } from '../Constants/colors';
 
 const socket = Config.socket;
-
-
 const Android = Platform.OS === 'android';
 
-const styles = StyleSheet.create({
-    touchableHighlight: {
-        width: 50,
-        height: 50,
-        borderRadius: 50,
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        marginLeft: 15,
-    },
-    noticationsCount: {
-        position: 'absolute',
-        textAlignVertical: 'center',
-        textAlign: 'center',
-        borderRadius: 10,
-        color: white,
-        right: 15,
-        height: 20,
-        width: 20,
-        backgroundColor: red,
-        top: 5
-    },
-    textView: {
-        display: 'flex',
-        flexDirection: 'column',
-        textAlignVertical: 'center',
-        marginTop: !Android ? 13 : 0
-    },
-    image: { width: 25, height: 25 },
-    titleText: { fontSize: 20, fontWeight: 'bold', color: black, textAlignVertical: 'center', flex: 1 }
-})
-class Hamburger extends React.Component {
+class ProHamburger extends React.Component {
 
     state = {
         fetchedOthersLocations: false
@@ -386,4 +354,35 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Hamburger);
+export default connect(mapStateToProps, mapDispatchToProps)(ProHamburger);
+
+const styles = StyleSheet.create({
+    touchableHighlight: {
+        width: 50,
+        height: 50,
+        borderRadius: 50,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        marginLeft: 15,
+    },
+    noticationsCount: {
+        position: 'absolute',
+        textAlignVertical: 'center',
+        textAlign: 'center',
+        borderRadius: 10,
+        color: white,
+        right: 15,
+        height: 20,
+        width: 20,
+        backgroundColor: red,
+        top: 5
+    },
+    textView: {
+        display: 'flex',
+        flexDirection: 'column',
+        textAlignVertical: 'center',
+        marginTop: !Android ? 13 : 0
+    },
+    image: { width: 25, height: 25 },
+    titleText: { fontSize: 20, fontWeight: 'bold', color: black, textAlignVertical: 'center', flex: 1 }
+});

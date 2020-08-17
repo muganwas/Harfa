@@ -3,7 +3,7 @@ import {Text, StyleSheet, View, Image, FlatList, ActivityIndicator,TouchableOpac
   ToastAndroid, StatusBar, Platform} from 'react-native';
 import CheckBox from 'react-native-check-box';
 import Config from './Config';
-import { colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorBg, colorPrimary } from '../Constants/colors';
 
 const SERVICES_URL = Config.baseURL+'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
@@ -54,7 +54,6 @@ export default class ProServiceSelectScreen extends Component {
 
   //GridView Items
   renderItem = ({ item }) => {
-
     return (
       <View style={styles.header}>
         <View

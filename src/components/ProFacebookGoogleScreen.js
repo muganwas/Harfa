@@ -14,6 +14,7 @@ import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 're
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../Redux/Actions/jobsActions';
 import Config from './Config';
+import firebaseAuth from '@react-native-firebase/auth';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 import { colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
@@ -68,7 +69,7 @@ class FacebookGoogleScreen extends Component {
     }
 
     componentDidMount() {
-        GoogleSignin.configure({ webClientId: Config.clientId });
+        GoogleSignin.configure();
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
@@ -159,7 +160,6 @@ class FacebookGoogleScreen extends Component {
                 })
                 .then((response) => response.json())
                 .then(async responseJson => {
-                    // console.log("Response Register" + JSON.stringify(responseJson));
                     var status;
                     if (responseJson.result) {
                         this.setState({
@@ -259,6 +259,10 @@ class FacebookGoogleScreen extends Component {
                 })
                 .done()
         }
+        else {
+            this.setState({ isLoading: false });
+            simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
+        }
     }
 
     checkValidation = () => {
@@ -282,96 +286,109 @@ class FacebookGoogleScreen extends Component {
         const fcmToken = await messaging().getToken();
         const { updateProviderDetails } = this.props;
         if (fcmToken) {
-            const data = {
-                "email": this.state.email,
-                "password": this.state.password,
-                "fcm_id": fcmToken
-            }
-
-            fetch(AUTHENTICATE_URL,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then((response) => response.json())
-                .then((responseJson) => {
-                    if (responseJson.result) {
-                        this.setState({
-                            isLoading: false,
-                            isErrorToast: true,
-                        })
-
-                        const id = responseJson.data.id;
-                        var providerData = {
-                            providerId: responseJson.data.id,
-                            name: responseJson.data.username,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            imageSource: responseJson.data.image,
-                            surname: responseJson.data.surname,
-                            mobile: responseJson.data.mobile,
-                            services: responseJson.data.services,
-                            description: responseJson.data.description,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            invoice: responseJson.data.invoice,
-                            status: responseJson.data.status,
-                            fcmId: responseJson.data.fcm_id,
-                            accountType: responseJson.data.account_type
-                        }
-                        updateProviderDetails(providerData);
-                        //Store data like sharedPreference
-                        AsyncStorage.setItem('userId', id);
-                        AsyncStorage.setItem('userType', 'Provider');
-                        fetchJobRequestHistory(id);
-                        fetchProvidersJobRequests(this.props, id, "ProHome");
+            firebaseAuth().signInWithEmailAndPassword(this.state.email, this.state.password).then(result => {
+                const { user } = result;
+                if (user && typeof user === 'object') {
+                    const data = {
+                        "email": this.state.email,
+                        "password": this.state.password,
+                        "fcm_id": fcmToken
                     }
-                    else {
-                        this.setState({
-                            isLoading: false,
+
+                    fetch(AUTHENTICATE_URL,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data)
                         })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.authenticateProTask(),
-                                },
-                            ]
-                        );
-                    }
-                })
-                .catch((error) => {
-                    console.log("Error :" + error);
-                    this.setState({
-                        isLoading: false,
-                    })
-                    Alert.alert(
-                        "OOPS !",
-                        error.message,
-                        [
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retry',
-                                onPress: () => this.authenticateProTask(),
-                            },
-                        ]
-                    );
-                })
-                .done()
+                        .then((response) => response.json())
+                        .then((responseJson) => {
+                            if (responseJson.result) {
+                                this.setState({
+                                    isLoading: false,
+                                    isErrorToast: true,
+                                })
+
+                                const id = responseJson.data.id;
+                                var providerData = {
+                                    providerId: responseJson.data.id,
+                                    name: responseJson.data.username,
+                                    email: responseJson.data.email,
+                                    password: responseJson.data.password,
+                                    imageSource: responseJson.data.image,
+                                    surname: responseJson.data.surname,
+                                    mobile: responseJson.data.mobile,
+                                    services: responseJson.data.services,
+                                    description: responseJson.data.description,
+                                    address: responseJson.data.address,
+                                    lat: responseJson.data.lat,
+                                    lang: responseJson.data.lang,
+                                    invoice: responseJson.data.invoice,
+                                    status: responseJson.data.status,
+                                    fcmId: responseJson.data.fcm_id,
+                                    accountType: responseJson.data.account_type
+                                }
+                                updateProviderDetails(providerData);
+                                //Store data like sharedPreference
+                                AsyncStorage.setItem('userId', id);
+                                AsyncStorage.setItem('userType', 'Provider');
+                                fetchJobRequestHistory(id);
+                                fetchProvidersJobRequests(this.props, id, "ProHome");
+                            }
+                            else {
+                                this.setState({
+                                    isLoading: false,
+                                })
+                                Alert.alert(
+                                    "OOPS !",
+                                    responseJson.message,
+                                    [
+                                        {
+                                            text: 'Cancel',
+                                            onPress: () => console.log('Cancel Pressed'),
+                                        },
+                                        {
+                                            text: 'Retry',
+                                            onPress: () => this.authenticateProTask(),
+                                        },
+                                    ]
+                                );
+                            }
+                        })
+                        .catch((error) => {
+                            console.log("Error :" + error);
+                            this.setState({
+                                isLoading: false,
+                            })
+                            Alert.alert(
+                                "OOPS !",
+                                error.message,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        onPress: () => console.log('Cancel Pressed'),
+                                    },
+                                    {
+                                        text: 'Retry',
+                                        onPress: () => this.authenticateProTask(),
+                                    },
+                                ]
+                            );
+                        })
+                        .done();
+                }
+                else {
+                    this.setState({ isLoading: false });
+                    simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
+                }
+            });
+        }
+        else {
+            this.setState({ isLoading: false });
+            simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
         }
     }
 

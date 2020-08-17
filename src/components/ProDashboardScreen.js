@@ -16,14 +16,14 @@ import Hamburger from './ProHamburger';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { imageExists } from '../misc/helpers';
-import { 
-    startFetchingJobProvider, 
-    fetchAllJobRequestsProError, 
-    fetchedAllJobRequestsPro, 
-    fetchedJobProviderInfo, 
-    fetchProviderJobInfoError, 
-    setSelectedJobRequest, 
-    getAllWorkRequestPro 
+import {
+    startFetchingJobProvider,
+    fetchAllJobRequestsProError,
+    fetchedAllJobRequestsPro,
+    fetchedJobProviderInfo,
+    fetchProviderJobInfoError,
+    setSelectedJobRequest,
+    getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
 import { colorPrimary, colorBg, colorYellow, colorPrimaryDark, colorGray } from '../Constants/colors';
 
@@ -65,7 +65,7 @@ class ProDashBoardScreen extends Component {
             reviewData: '',
             width: Dimensions.get('window').width,
             status: online && providerDetails.status === "1" && connectivityAvailable ? "ONLINE" : "OFFLINE",
-            availBackground: online && providerDetails.status === "1"  && connectivityAvailable ? 'green' : 'red',
+            availBackground: online && providerDetails.status === "1" && connectivityAvailable ? 'green' : 'red',
             dataSource: [],
             dataUserSource: [],
             dataWorkSource: dataWorkSource || [],
@@ -91,7 +91,7 @@ class ProDashBoardScreen extends Component {
         navigation.addListener('willFocus', async () => {
             this.onRefresh();
         });
-        this.onRefresh(); 
+        this.onRefresh();
         this.setState({ dataWorkSource, isLoading: false, isWorkRequest: true });
     }
 
@@ -100,7 +100,7 @@ class ProDashBoardScreen extends Component {
         const { status } = this.state;
         if (!dataWorkSource.length)
             fetchJobRequestHistory(providerDetails.providerId);
-        if (!connectivityAvailable && status === "ONLINE") 
+        if (!connectivityAvailable && status === "ONLINE")
             this.setState({
                 status: "OFFLINE",
                 availBackground: "red",
@@ -115,7 +115,7 @@ class ProDashBoardScreen extends Component {
 
     componentWillUnmount() {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton);
-        this.notificationOpenedListener();
+        //this.notificationOpenedListener();
     }
 
     //Recent Chat Message
@@ -128,7 +128,7 @@ class ProDashBoardScreen extends Component {
 
             this.setState({
                 isLoading: true,
-            })
+            });
 
             if (message != null) {
                 dbRef.on('child_added', val => {
@@ -186,10 +186,9 @@ class ProDashBoardScreen extends Component {
                     isLoading: false,
                     isRecentUser: true,
                     isErrorToast: true
-                })
-                // ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
+                });
                 this.showToast("Something went wrong, Check your internet connection");
-            })
+            });
     }
 
     renderRecentMessageItem = ({ item }) => {

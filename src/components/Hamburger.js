@@ -23,11 +23,9 @@ import NetInfo from "@react-native-community/netinfo";
 import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
-import { imageExists } from '../misc/helpers';
 import { Notifications } from 'react-native-notifications';
 
 const socket = Config.socket;
-
 const Android = Platform.OS === 'android';
 
 const styles = StyleSheet.create({
