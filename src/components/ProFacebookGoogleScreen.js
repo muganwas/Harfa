@@ -198,7 +198,7 @@ class FacebookGoogleScreen extends Component {
                             status: status != undefined ? status : responseJson.data.status,
                             fcmId: responseJson.data.fcm_id,
                             accountType: responseJson.data.account_type
-                        }
+                        };
                         updateProviderDetails(providerData);
                         //Store data like sharedPreference
                         AsyncStorage.setItem('userId', id);
@@ -257,7 +257,7 @@ class FacebookGoogleScreen extends Component {
                         ]
                     );
                 })
-                .done()
+                .done();
         }
         else {
             this.setState({ isLoading: false });
@@ -293,8 +293,7 @@ class FacebookGoogleScreen extends Component {
                         "email": this.state.email,
                         "password": this.state.password,
                         "fcm_id": fcmToken
-                    }
-
+                    };
                     fetch(AUTHENTICATE_URL,
                         {
                             method: 'POST',
@@ -310,8 +309,7 @@ class FacebookGoogleScreen extends Component {
                                 this.setState({
                                     isLoading: false,
                                     isErrorToast: true,
-                                })
-
+                                });
                                 const id = responseJson.data.id;
                                 var providerData = {
                                     providerId: responseJson.data.id,

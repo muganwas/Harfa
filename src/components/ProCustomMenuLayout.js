@@ -15,6 +15,10 @@ class CustomMenuLayout extends Component {
       };
     };
 
+    componentWillMount(){
+        console.log('navigation', this.props.navigation)
+    }
+
     changeDialogVisibility = bool => {
         this.props.navigation.dispatch(DrawerActions.closeDrawer());
         this.setState({
@@ -39,7 +43,7 @@ class CustomMenuLayout extends Component {
 
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => {
-                                this.props.navigation.navigate("ProDashBoard")
+                                this.props.navigation.navigate("ProDashboard")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                             }}>
                             <View style={styles.row}>
