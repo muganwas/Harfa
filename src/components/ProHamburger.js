@@ -17,6 +17,7 @@ import {
 import { DrawerActions } from 'react-navigation-drawer';
 import database from '@react-native-firebase/database';
 import geolocation from '@react-native-community/geolocation';
+import messaging from '@react-native-firebase/messaging';
 import { Notifications } from 'react-native-notifications';
 import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 import Config from './Config';
@@ -89,7 +90,7 @@ class ProHamburger extends React.Component {
                     fetchCoordinatesError(e.message);
                 });
         }, error => {
-            console.log(error)
+            console.log(error);
         });
 
         /** look out for pros changing position */
@@ -103,10 +104,14 @@ class ProHamburger extends React.Component {
                 catch(e => {
                     console.log(e.message);
                     fetchCoordinatesError(e.message);
-                })
+                });
         }, error => {
-            console.log(error)
+            console.log(error);
         }, { enableHighAccuracy: true });
+
+        messaging().onMessage(message => {
+            console.log('message in --', message)
+        });
 
         /*firebase.notifications().onNotification(notification => {
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;

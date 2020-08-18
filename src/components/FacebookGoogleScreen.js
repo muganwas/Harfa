@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
     View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
-    Dimensions, ActivityIndicator, Alert, ToastAndroid, Platform, BackHandler
+    Dimensions, Alert, Platform, BackHandler
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
@@ -23,17 +23,6 @@ import { colorYellow, colorBg, colorPrimaryDark } from '../Constants/colors';
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
 const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate';
-
-var that;
-
-const responseFbCallbackCustomer = ((error, result) => {
-    if (error) {
-        console.log("Error : " + JSON.stringify(result));
-    }
-    else {
-        that.fbGoogleLoginCustomerTask(result.name, result.email, result.picture.data.url)
-    }
-})
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -58,12 +47,14 @@ class FacebookGoogleScreen extends Component {
     constructor(props) {
         super();
         this.state = {
-            accountType: props.navigation.state.params.accountType,
+            accountType: props.navigation.getParam('accountType'),
             email: '',
             password: '',
             opacity: 1,
             isLoading: false,
-            isErrorToast: ''
+            isErrorToast: '',
+            firebaseId: '',
+            loginType: null
         }
     }
 
@@ -81,20 +72,28 @@ class FacebookGoogleScreen extends Component {
         return true;
     }
 
+    responseFbCallbackCustomer = (error, result) => {
+        if (error) {
+            console.log("Error : " + JSON.stringify(result));
+        }
+        else {
+            const { id, name, email, picture: { data: { url } } } = result;
+            this.setState({ firebaseId: id, loginType: 'facebook' });
+            this.fbGoogleLoginCustomerTask(name, email, url);
+        }
+    }
+
     facebookLoginTask = async () => {
-        LoginManager.logInWithPermissions(["public_profile", "email"]).then(function (result) {
+        LoginManager.logInWithPermissions(["public_profile", "email"]).then(result => {
             if (result.isCancelled) {
                 console.log("Login cancelled");
             } else {
-                console.log("Result " + JSON.stringify(result));
-                console.log("Login success: " + result.grantedPermissions.toString());
-
                 AccessToken.getCurrentAccessToken().then(
                     (data) => {
                         const infoRequest = new GraphRequest(
                             '/me?fields=email,name,picture',
                             null,
-                            responseFbCallbackCustomer
+                            this.responseFbCallbackCustomer
                         );
                         // Start the graph request.
                         new GraphRequestManager().addRequest(infoRequest).start();
@@ -102,7 +101,7 @@ class FacebookGoogleScreen extends Component {
                 )
             }
         },
-            function (error) {
+            error => {
                 console.log("Login fail with error: " + error);
             }
         );
@@ -112,8 +111,9 @@ class FacebookGoogleScreen extends Component {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
-            console.log('result --', result)
-            this.fbGoogleLoginCustomerTask(result.user.name, result.user.email, result.user.photo);
+            const { user: { name, email, photo, id } } = result;
+            this.setState({ firebaseId: id, loginType: 'google' });
+            this.fbGoogleLoginCustomerTask(name, email, photo);
         }
         catch (error) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -147,19 +147,16 @@ class FacebookGoogleScreen extends Component {
                 "mobile": "",
                 "dob": "",
                 "fcm_id": fcmToken,
-                "type": "google"
+                "type": this.state.loginType,
             }
             Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
                 .then(responseJson => {
-                    // console.log("Response Register")
-                    console.log(responseJson);
                     if (responseJson.status === 200 && responseJson.data.createdDate) {
                         this.setState({
                             isLoading: false,
                             isErrorToast: true,
-                        })
+                        });
                         const id = responseJson.data.id;
-
                         var userData = {
                             userId: responseJson.data.id,
                             accountType: responseJson.data.acc_type,
@@ -173,11 +170,14 @@ class FacebookGoogleScreen extends Component {
                             lat: responseJson.data.lat,
                             lang: responseJson.data.lang,
                             fcmId: responseJson.data.fcm_id,
+                            firebaseId: this.state.firebaseId
                         }
                         updateUserDetails(userData);
                         //Store data like sharedPreference
                         AsyncStorage.setItem('userId', id);
                         AsyncStorage.setItem('userType', 'User');
+                        AsyncStorage.setItem('email', email);
+                        AsyncStorage.setItem('firebaseId', this.state.firebaseId);
                         fetchJobRequests(this.props, id, "Home");
                     }
                     else {
@@ -248,6 +248,7 @@ class FacebookGoogleScreen extends Component {
             firebaseAuth().signInWithEmailAndPassword(this.state.email, this.state.password).then(result => {
                 const { user } = result;
                 if (user && typeof user === 'object') {
+                    const { _user: { uid } } = user;
                     const data = {
                         "email": this.state.email,
                         "password": this.state.password,
@@ -270,7 +271,6 @@ class FacebookGoogleScreen extends Component {
                                     isErrorToast: true,
                                 })
                                 const id = responseJson.data.id;
-
                                 var userData = {
                                     userId: responseJson.data.id,
                                     accountType: responseJson.data.acc_type,
@@ -284,11 +284,15 @@ class FacebookGoogleScreen extends Component {
                                     lat: responseJson.data.lat,
                                     lang: responseJson.data.lang,
                                     fcmId: responseJson.data.fcm_id,
+                                    firebaseId: uid
                                 }
                                 updateUserDetails(userData);
                                 //Store data like sharedPreference
                                 AsyncStorage.setItem('userId', id);
                                 AsyncStorage.setItem('userType', 'User');
+                                const auth = { email: this.state.email, password: this.state.password};
+                                AsyncStorage.setItem('auth', JSON.stringify(auth));
+                                AsyncStorage.setItem('firebaseId', uid);
                                 fetchJobRequests(this.props, id, "Home");
                             }
                             else {
@@ -371,9 +375,7 @@ class FacebookGoogleScreen extends Component {
     render() {
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
                 <KeyboardAwareScrollView
                     contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
                     keyboardShouldPersistTaps='handled'
@@ -470,17 +472,7 @@ class FacebookGoogleScreen extends Component {
                         </Text>
                         </TouchableOpacity>
                     </View>
-
                 </KeyboardAwareScrollView>
-
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />

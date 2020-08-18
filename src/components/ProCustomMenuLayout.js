@@ -15,10 +15,6 @@ class CustomMenuLayout extends Component {
       };
     };
 
-    componentWillMount(){
-        console.log('navigation', this.props.navigation)
-    }
-
     changeDialogVisibility = bool => {
         this.props.navigation.dispatch(DrawerActions.closeDrawer());
         this.setState({
@@ -134,7 +130,7 @@ class CustomMenuLayout extends Component {
 
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false)}>
-                            <ProDialogLogout changeDialogVisibility={this.changeDialogVisibility} />
+                            <ProDialogLogout navigation={this.props.navigation} changeDialogVisibility={this.changeDialogVisibility} />
                         </Modal>
 
                     </ScrollView>

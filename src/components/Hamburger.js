@@ -28,36 +28,6 @@ import { Notifications } from 'react-native-notifications';
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
 
-const styles = StyleSheet.create({
-    touchableHighlight: {
-        width: 50,
-        height: 50,
-        borderRadius: 50,
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        marginLeft: 15,
-    },
-    noticationsCount: {
-        position: 'absolute',
-        textAlignVertical: 'center',
-        textAlign: 'center',
-        borderRadius: 10,
-        color: 'white',
-        right: 15,
-        height: 20,
-        width: 20,
-        backgroundColor: 'red',
-        top: 5
-    },
-    textView: {
-        display: 'flex',
-        flexDirection: 'column',
-        textAlignVertical: 'center',
-        marginTop: !Android ? 13 : 0
-    },
-    image: { width: 25, height: 25 },
-    titleText: { fontSize: 20, fontWeight: 'bold', color: 'black', textAlignVertical: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }
-})
 class Hamburger extends React.Component {
     constructor(props) {
         super();
@@ -574,3 +544,45 @@ const mapDispatchToProps = dispatch => {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Hamburger);
+
+const styles = StyleSheet.create({
+    touchableHighlight: {
+        width: 50,
+        height: 50,
+        borderRadius: 50,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        marginLeft: 15,
+    },
+    noticationsCount: {
+        position: 'absolute',
+        textAlignVertical: 'center',
+        textAlign: 'center',
+        borderRadius: 10,
+        color: 'white',
+        right: 15,
+        height: 20,
+        width: 20,
+        backgroundColor: 'red',
+        top: 5
+    },
+    textView: {
+        display: 'flex',
+        flexDirection: 'column',
+        textAlignVertical: 'center',
+        marginTop: !Android ? 13 : 0
+    },
+    image: { 
+        width: 25, 
+        height: 25 
+    },
+    titleText: { 
+        fontSize: 20, 
+        fontWeight: 'bold', 
+        color: 'black', 
+        textAlignVertical: 'center', 
+        flex: 1, 
+        flexDirection: 'row', 
+        alignItems: 'center' 
+    }
+});

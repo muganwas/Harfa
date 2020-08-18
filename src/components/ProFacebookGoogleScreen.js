@@ -23,19 +23,6 @@ const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
 const AUTHENTICATE_URL = Config.baseURL + "employee/authenticate";
 
-var that;
-
-const responseFbCallbackPro = ((error, result) => {
-    if (error) {
-        console.log("Error : " + JSON.stringify(result));
-    }
-    else {
-        console.log("Result Customer : " + JSON.stringify(result));
-        console.log("Customer Email : " + result.email);
-        that.fbGmailLoginTask(result.name, result.email, result.picture.data.url)
-    }
-})
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -63,7 +50,9 @@ class FacebookGoogleScreen extends Component {
             password: '',
             opacity: 1,
             isLoading: false,
-            isErrorToast: ''
+            isErrorToast: '',
+            firebaseId: '',
+            loginType: null
         }
         that = this;
     }
@@ -80,6 +69,17 @@ class FacebookGoogleScreen extends Component {
     handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
+    }
+
+    responseFbCallbackPro = (error, result) => {
+        if (error) {
+            console.log("Error : " + JSON.stringify(result));
+        }
+        else {
+            const { id, name, email, picture: { data: { url } } } = result;
+            this.setState({ firebaseId: id, loginType: 'facebook' });
+            this.fbGmailLoginTask(name, email, url);
+        }
     }
 
     facebookLoginTask = async () => {
@@ -111,9 +111,9 @@ class FacebookGoogleScreen extends Component {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
-            console.log("UserInfo >> " + JSON.stringify(result));
-
-            this.fbGmailLoginTask(result.user.name, result.user.email, result.user.photo)
+            const { user: { name, email, photo, id } } = result;
+            this.setState({ firebaseId: id, loginType: 'google' });
+            this.fbGmailLoginTask(name, email, photo);
         }
         catch (error) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -147,7 +147,7 @@ class FacebookGoogleScreen extends Component {
                 "mobile": "",
                 "dob": "",
                 "fcm_id": fcmToken,
-                "type": 'google',
+                "type": this.state.loginType,
             };
             fetch(CHECK_EMAIL,
                 {
@@ -197,12 +197,15 @@ class FacebookGoogleScreen extends Component {
                             invoice: responseJson.data.invoice,
                             status: status != undefined ? status : responseJson.data.status,
                             fcmId: responseJson.data.fcm_id,
-                            accountType: responseJson.data.account_type
+                            accountType: responseJson.data.account_type,
+                            firebaseId: this.state.firebaseId
                         };
                         updateProviderDetails(providerData);
                         //Store data like sharedPreference
                         AsyncStorage.setItem('userId', id);
                         AsyncStorage.setItem('userType', 'Provider');
+                        AsyncStorage.setItem('email', email);
+                        AsyncStorage.setItem('firebaseId', this.state.firebaseId);
                         fetchJobRequestHistory(id);
                         fetchProvidersJobRequests(this.props, id, "ProHome");
                     }
@@ -289,6 +292,7 @@ class FacebookGoogleScreen extends Component {
             firebaseAuth().signInWithEmailAndPassword(this.state.email, this.state.password).then(result => {
                 const { user } = result;
                 if (user && typeof user === 'object') {
+                    const { _user: { uid } } = user;
                     const data = {
                         "email": this.state.email,
                         "password": this.state.password,
@@ -327,12 +331,16 @@ class FacebookGoogleScreen extends Component {
                                     invoice: responseJson.data.invoice,
                                     status: responseJson.data.status,
                                     fcmId: responseJson.data.fcm_id,
-                                    accountType: responseJson.data.account_type
+                                    accountType: responseJson.data.account_type,
+                                    firebaseId: uid
                                 }
                                 updateProviderDetails(providerData);
                                 //Store data like sharedPreference
                                 AsyncStorage.setItem('userId', id);
                                 AsyncStorage.setItem('userType', 'Provider');
+                                const auth = { email: this.state.email, password: this.state.password};
+                                AsyncStorage.setItem('auth', JSON.stringify(auth));
+                                AsyncStorage.setItem('firebaseId', uid);
                                 fetchJobRequestHistory(id);
                                 fetchProvidersJobRequests(this.props, id, "ProHome");
                             }

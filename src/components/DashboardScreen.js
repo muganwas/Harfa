@@ -58,7 +58,6 @@ class DashboardScreen extends Component {
     //Get All Services
     componentDidMount() {
         this.onRefresh();
-        console.log('dash props', this.props)
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
     }
 
@@ -142,7 +141,7 @@ class DashboardScreen extends Component {
                         this.props.navigation.navigate("ListOfProviders", {
                             'serviceName': item.service_name,
                             'serviceId': item.id
-                        })
+                        });
                     }}>
                     <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
                         source={{ uri: item.image }} />

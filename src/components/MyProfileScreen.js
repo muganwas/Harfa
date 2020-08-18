@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,11 +14,11 @@ import {
   Animated,
 } from 'react-native';
 //import {NavigationActions} from 'react-navigation';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
 import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import Config from './Config';
 import AsyncStorage from '@react-native-community/async-storage';
 import DateTimePicker from 'react-native-modal-datetime-picker';
@@ -26,7 +26,8 @@ import moment from 'moment';
 import Toast from 'react-native-simple-toast';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
-import { colorYellow, colorPrimaryDark,colorPrimary } from '../Constants/colors';
+import storage from '@react-native-firebase/storage';
+import { colorYellow, colorPrimaryDark, colorPrimary } from '../Constants/colors';
 
 const options = {
   title: 'Select a photo',
@@ -35,6 +36,7 @@ const options = {
   quality: 1,
 };
 
+const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
 
 const USER_GET_PROFILE = Config.baseURL + 'users/';
@@ -54,8 +56,8 @@ const StatusBarPlaceHolder = () => {
       <StatusBar barStyle="light-content" />
     </View>
   ) : (
-    <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
-  );
+      <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
+    );
 }
 
 class MyProfileScreen extends Component {
@@ -105,7 +107,7 @@ class MyProfileScreen extends Component {
   }
 
   _spring = () => {
-    this.setState({backClickCount: 1}, () => {
+    this.setState({ backClickCount: 1 }, () => {
       Animated.sequence([
         Animated.spring(this.springValue, {
           toValue: -0.15 * 1,
@@ -119,7 +121,7 @@ class MyProfileScreen extends Component {
           useNativeDriver: true,
         }),
       ]).start(() => {
-        this.setState({backClickCount: 0});
+        this.setState({ backClickCount: 0 });
       });
     });
   }
@@ -166,24 +168,29 @@ class MyProfileScreen extends Component {
   }
 
   selectPhoto = () => {
-    ImagePicker.showImagePicker(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else {
-        let source = {uri: response.uri};
-        this.setState({
-          imageSource: source,
-          error: '',
-          galleryCameraImage: 'galleryCamera',
-          isLoading: true,
-        });
-        AsyncStorage.getItem('userId').then(providerId =>
-          this.updateImageTask(providerId, response),
-        );
-      }
-    });
+    try {
+      ImagePicker.showImagePicker(options, response => {
+        if (response.didCancel) {
+          console.log('User cancelled image picker');
+        } else if (response.error) {
+          console.log('ImagePicker Error: ', response.error);
+        } else {
+          let source = { uri: response.uri };
+          this.setState({
+            imageSource: source,
+            error: '',
+            galleryCameraImage: 'galleryCamera',
+            isLoading: true,
+          });
+          AsyncStorage.getItem('userId').then(providerId =>
+            this.updateImageTask(providerId, response),
+          );
+        }
+      });
+    }
+    catch (error) {
+      console.log('image selection error --', error)
+    }
   };
 
   handlePicker = date => {
@@ -223,7 +230,6 @@ class MyProfileScreen extends Component {
     this.setState({
       isLoading: true,
     });
-
     const userData = {
       username: this.state.name,
       mobile: this.state.mobile,
@@ -268,44 +274,56 @@ class MyProfileScreen extends Component {
     this.setState({
       isLoading: true,
     });
-
-    let imageData = new FormData();
-    imageData.append('image', {
-      type: imageObject.type,
-      uri: imageObject.uri,
-      name: imageObject.fileName,
+    const { userInfo: { userDetails: { firebaseId } } } = this.props;
+    const { fileName, path } = imageObject;
+    console.log(firebaseId)
+    const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
+    userDataRef.putFile(path).then(uploadRes => {
+      const { state } = uploadRes;
+      if (state === 'success') {
+        userDataRef.getDownloadURL().then(urlResult => {
+          let imageData = new FormData();
+          imageData.append('image', {
+            type: imageObject.type,
+            uri: urlResult,
+            name: imageObject.fileName,
+          });
+          fetch(USER_IMAGE_UPDATE + userId, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              otherHeader: 'foo',
+            },
+            body: imageData,
+          })
+            .then(response => response.json())
+            .then(response => {
+              if (response.result) {
+                this.setState({
+                  isLoading: false,
+                  isErrorToast: false,
+                });
+                this.showToast(response.message);
+              } else {
+                this.setState({
+                  isLoading: false,
+                  isErrorToast: true,
+                });
+                this.showToast('Something went wrong');
+              }
+            })
+            .catch(error => {
+              console.log('Error :' + error);
+              this.setState({
+                isLoading: false,
+              });
+            })
+            .done();
+        })
+      }
+    }).catch(error => {
+      console.log('image upload error', error.messge)
     });
-    fetch(USER_IMAGE_UPDATE + userId, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        otherHeader: 'foo',
-      },
-      body: imageData,
-    })
-      .then(response => response.json())
-      .then(response => {
-        if (response.result) {
-          this.setState({
-            isLoading: false,
-            isErrorToast: false,
-          });
-          this.showToast(response.message);
-        } else {
-          this.setState({
-            isLoading: false,
-            isErrorToast: true,
-          });
-          this.showToast('Something went wrong');
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.setState({
-          isLoading: false,
-        });
-      })
-      .done();
   }
 
   showToast = message => {
@@ -327,16 +345,16 @@ class MyProfileScreen extends Component {
             paddingRight: 20,
             paddingBottom: 5,
             shadowColor: '#000',
-            shadowOffset: {width: 0, height: 0},
+            shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.75,
             shadowRadius: 5,
             elevation: 5,
           }}>
-              
+
           <Hamburger
             Notifications={Notifications}
             navigation={this.props.navigation}
-            text='Mon Profil' 
+            text='Mon Profil'
           />
         </View>
 
@@ -350,7 +368,7 @@ class MyProfileScreen extends Component {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag">
           <View
-            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <View
               style={{
                 flex: 0.35,
@@ -369,9 +387,9 @@ class MyProfileScreen extends Component {
                 source={
                   this.state.galleryCameraImage == ''
                     ? this.state.imageSource
-                      ? {uri: this.state.imageSource}
+                      ? { uri: this.state.imageSource }
                       : require('../images/generic_avatar.png')
-                    : {uri: this.state.imageSource}
+                    : { uri: this.state.imageSource.uri }
                 }
               />
 
@@ -386,14 +404,14 @@ class MyProfileScreen extends Component {
                   backgroundColor: '#fff',
                   margin: 20,
                   shadowColor: '#000',
-                  shadowOffset: {width: 0, height: 0},
+                  shadowOffset: { width: 0, height: 0 },
                   shadowOpacity: 0.75,
                   shadowRadius: 5,
                   elevation: 5,
                 }}
                 onPress={this.selectPhoto}>
                 <Image
-                  style={{width: 20, height: 20, alignSelf: 'center'}}
+                  style={{ width: 20, height: 20, alignSelf: 'center' }}
                   source={require('../icons/camera.png')}
                 />
               </TouchableOpacity>
@@ -401,7 +419,7 @@ class MyProfileScreen extends Component {
 
             <View style={styles.logincontainer}>
               <ShakingText
-                style={{color: 'red', fontWeight: 'bold', marginBottom: 10}}>
+                style={{ color: 'red', fontWeight: 'bold', marginBottom: 10 }}>
                 {this.state.error}
               </ShakingText>
 
@@ -436,20 +454,20 @@ class MyProfileScreen extends Component {
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{width: 15, height: 15, marginLeft: 5}}
+                  style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/ic_user_64dp.png')}></Image>
                 <TextInput
-                  style={{width: screenWidth - 85, height: 50, marginLeft: 10}}
+                  style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
                   placeholder="Nom d'utilisateur"
                   value={this.state.name}
                   onChangeText={nameInput =>
-                    this.setState({error: '', name: nameInput})
+                    this.setState({ error: '', name: nameInput })
                   }></TextInput>
               </View>
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{width: 15, height: 15, marginLeft: 5}}
+                  style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/email.png')}></Image>
                 <Text
                   style={{
@@ -463,16 +481,16 @@ class MyProfileScreen extends Component {
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{width: 15, height: 15, marginLeft: 5}}
+                  style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/mobile.png')}></Image>
                 <TextInput
-                  style={{width: screenWidth - 85, height: 50, marginLeft: 10}}
+                  style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
                   placeholder="Mobile"
                   value={this.state.mobile}
                   maxLength={10}
                   keyboardType="numeric"
                   onChangeText={mobileInput =>
-                    this.setState({error: '', mobile: mobileInput})
+                    this.setState({ error: '', mobile: mobileInput })
                   }></TextInput>
               </View>
 
@@ -480,7 +498,7 @@ class MyProfileScreen extends Component {
                 style={styles.textInputView}
                 onPress={this.showPicker}>
                 <Image
-                  style={{width: 15, height: 15, marginLeft: 5}}
+                  style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/calendar.png')}></Image>
                 <Text
                   style={{
@@ -511,7 +529,7 @@ class MyProfileScreen extends Component {
           {this.state.isLoading && (
             <View style={styles.loaderStyle}>
               <ActivityIndicator
-                style={{height: 80}}
+                style={{ height: 80 }}
                 color="#C00"
                 size="large"
               />
@@ -522,7 +540,7 @@ class MyProfileScreen extends Component {
         <Animated.View
           style={[
             styles.animatedView,
-            {transform: [{translateY: this.springValue}]},
+            { transform: [{ translateY: this.springValue }] },
           ]}>
           <Text style={styles.exitTitleText}>
             Appuyez à nouveau pour quitter l'application
@@ -539,24 +557,24 @@ class MyProfileScreen extends Component {
 }
 
 const mapStateToProps = state => {
-    return {
-        notificationsInfo: state.notificationsInfo,
-        userInfo: state.userInfo
-    }
+  return {
+    notificationsInfo: state.notificationsInfo,
+    userInfo: state.userInfo
+  }
 }
 
 const mapDispatchToProps = dispatch => {
-    return {
-        fetchNotifications: data => {
-            dispatch(startFetchingNotification(data));
-        },
-        fetchedNotifications: data => {
-            dispatch(notificationsFetched(data));
-        },
-        fetchingNotificationsError: error => {
-            dispatch(notificationError(error));
-        }
+  return {
+    fetchNotifications: data => {
+      dispatch(startFetchingNotification(data));
+    },
+    fetchedNotifications: data => {
+      dispatch(notificationsFetched(data));
+    },
+    fetchingNotificationsError: error => {
+      dispatch(notificationError(error));
     }
+  }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyProfileScreen);
@@ -584,7 +602,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: 'white',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 0},
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -616,7 +634,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: '100%',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 0},
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -634,7 +652,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 120,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 0},
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,

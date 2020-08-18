@@ -13,6 +13,7 @@ import MyProfileScreen from './MyProfileScreen';
 import AllMessageScreen from './AllMessageScreen';
 import NotificationsScreen from './NotificationsScreen';
 import BookingScreen from './BookingScreen';
+import ProviderDetailsScreen from './ProviderDetailsScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
 import ListOfProviderScreen from './ListOfProviderScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
@@ -25,6 +26,7 @@ const MyDrawerNavigator = createDrawerNavigator({
     Home: { screen: DashboardScreen },
     ProAccountType: { screen: ProAccountTypeScreen },
     Dashboard: { screen: DashboardScreen },
+    ProviderDetails: { screen: ProviderDetailsScreen },
     ListOfProviders: { screen: ListOfProviderScreen },
     AddAddress: { screen: AddAddressScreen },
     MyProfile: { screen: MyProfileScreen },

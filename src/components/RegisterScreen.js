@@ -10,7 +10,6 @@ import {
   Modal,
   Dimensions,
   ImageBackground,
-  ActivityIndicator,
   Alert,
   Platform,
   BackHandler,
@@ -23,7 +22,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import simpleToast from 'react-native-simple-toast';
 import moment from 'moment';
 import ImagePicker from 'react-native-image-picker';
-import database from '@react-native-firebase/database';
 import Config from './Config';
 import { updateNewUserInfo } from '../Redux/Actions/userActions';
 import messaging from '@react-native-firebase/messaging';
@@ -85,12 +83,12 @@ class RegisterScreen extends Component {
       'hardwareBackPress',
       this.handleBackButtonClick,
     );
-    storageRef.list().then(result => {
+    /*storageRef.list().then(result => {
       // Loop over each item
       result.items.forEach(ref => {
         console.log('storage ref loop', ref.fullPath);
       });
-    });
+    });*/
   }
 
   componentWillUnmount() {
@@ -215,7 +213,7 @@ class RegisterScreen extends Component {
             console.log('send emil confirmation error --', error.message)
           });*/
           const newUser = Object.assign({ uid }, userData);
-          const userDataRef = storageRef.child(`/${uid}/${fileName}`)
+          const userDataRef = storageRef.child(`/${uid}/${fileName}`);
           updateNewUserInfo(newUser);
           userDataRef.putFile(path).then(uploadRes => {
             const { state } = uploadRes;
@@ -223,7 +221,6 @@ class RegisterScreen extends Component {
               userDataRef.getDownloadURL().then(urlResult => {
                 let newUserData = cloneDeep(userData);
                 newUserData.image = urlResult;
-                console.log('url result', urlResult);
                 axios
                   .post(REGISTER_URL, { data: JSON.stringify(newUserData) })
                   .then(responseJson => {
@@ -285,6 +282,7 @@ class RegisterScreen extends Component {
               })
             }
           }).catch(error => {
+            simpleToast.show('Image upload failed', simpleToast.SHORT);
             console.log('image upload error', error.messge)
           });
         }).catch(error => {

@@ -20,6 +20,7 @@ const initialState = {
         lat: 0,
         lang: 0,
         fcmId: '',
+        firebaseId: ''
     },
     providerDetails: {
         providerId: '',
@@ -38,6 +39,7 @@ const initialState = {
         status: '',
         fcmId: '',
         accountType: '',
+        firebaseId: ''
     },
     providerDetailsFetched: false,
     userDetailsFetched: false
@@ -73,6 +75,7 @@ const userReducer = (state = initialState, action) => {
                     lat: 0,
                     lang: 0,
                     fcmId: '',
+                    firebaseId: ''
                 },
                 providerDetails: {
                     providerId: '',
@@ -91,6 +94,7 @@ const userReducer = (state = initialState, action) => {
                     status: '',
                     fcmId: '',
                     accountType: '',
+                    firebaseId: ''
                 },
                 providerDetailsFetched: false,
                 userDetailsFetched: false

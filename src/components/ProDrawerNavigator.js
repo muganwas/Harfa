@@ -15,12 +15,19 @@ import ProAboutUsScreen from './ProAboutUsScreen';
 import ProBookingScreen from './ProBookingScreen';
 import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
 import ProForgotPasswordScreen from './ProForgotPasswordScreen';
+import AfterSplashScreen from './AfterSplashScreen';
+import AccountTypeScreen from './AccountTypeScreen';
+import DashboardScreen from './DashboardScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
 import ProRegisterFBScreen from './ProAcceptRejectJobScreen';
+import FacebookGoogleScreen from './FacebookGoogleScreen';
 import ProRegisterScreen from './ProRegisterScreen';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
 
 const ProMyDrawerNavigator = createDrawerNavigator({
+    FacebookGoogle: { screen: FacebookGoogleScreen},
+    AfterSplash: { screen: AfterSplashScreen },
+    Home: { screen: DashboardScreen },
     ProDashboard: { screen: ProDashboardScreen },
     ProHome: { screen: ProDashboardScreen },
     ProAddAddress: { screen: ProAddAddressScreen },
@@ -34,6 +41,7 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     ProBooking: { screen: ProBookingScreen },
     ProFacebookGoogle: { screen: ProFacebookGoogleScreen },
     ProForgotPassword: { screen: ProForgotPasswordScreen },
+    AccountType: { screen: AccountTypeScreen },
     ProAccountType: { screen: ProAccountTypeScreen },
     ProRegisterFB: { screen: ProRegisterFBScreen },
     ProRegister: { screen: ProRegisterScreen },

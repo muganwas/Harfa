@@ -20,19 +20,23 @@ class DialogLogout extends Component {
     };
 
     closeDialogLogout = async action => {
-        const { resetUserDetails, navigation, userInfo } = this.props;
+        const { resetUserDetails, navigation, changeDialogVisibility } = this.props;
         if (action == 'Ok') {
             if (firebaseAuth().currentUser) firebaseAuth().signOut();
             await AsyncStorage.removeItem('userId');
+            await AsyncStorage.removeItem('auth');
+            await AsyncStorage.removeItem('firebaseId');
+            await AsyncStorage.removeItem('email');
             await AsyncStorage.removeItem('userType');
             resetUserDetails();
             Config.socket.close();
-            navigation.navigate('AfterSplash')
+            changeDialogVisibility(false);
+            navigation.navigate('AfterSplash');
         }
         else if (action == 'Cancel') {
             console.log("Logout Cancel");
         }
-        this.props.changeDialogVisibility(false);
+        changeDialogVisibility(false);
     }
 
     render() {

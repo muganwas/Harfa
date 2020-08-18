@@ -22,10 +22,12 @@ import ProServiceSelectScreen from './ProServiceSelectScreen';
 import ProHomeScreen from './ProHomeScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
 import SelectAddressScreen from './SelectAddressScreen';
+import firebaseAuth from '@react-native-firebase/auth';
 import Config from './Config';
 import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import messaging from '@react-native-firebase/messaging';
 import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
+import SimpleToast from 'react-native-simple-toast';
 
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
 const USER_GET_PROFILE = Config.baseURL + "users/";
@@ -103,149 +105,164 @@ class SplashScreen extends Component {
         }
     }
 
-    autoLogin = (userId, userType, fcmToken) => {
+    inhouseLogin = (userId, userType, fcmToken) => {
         const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest, updateProviderDetails, updateUserDetails } = this.props;
+        if (userType == 'Provider') {
+            fetch(PRO_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
+                method: "GET",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then((response) => response.json())
+                .then(async responseJson => {
+                    var status;
+                    if (responseJson && responseJson.result) {
+                        const id = responseJson.data.id;
+                        const usersRef = database().ref(`users/${id}`);
+                        await usersRef.once('value', snapshot => {
+                            const value = snapshot.val();
+                            if (value)
+                                status = value.status;
+                            else {
+                                usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                    console.log('status set');
+                                }).
+                                    catch(e => {
+                                        console.log(e.message);
+                                    });
+                            }
+                        });
+                        var providerData = {
+                            providerId: responseJson.data.id,
+                            name: responseJson.data.username,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            imageSource: responseJson.data.image,
+                            surname: responseJson.data.surname,
+                            mobile: responseJson.data.mobile,
+                            services: responseJson.data.services,
+                            description: responseJson.data.description,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            invoice: responseJson.data.invoice,
+                            status: status != undefined ? status : responseJson.data.status,
+                            fcmId: responseJson.data.fcm_id,
+                            accountType: responseJson.data.account_type
+                        }
+                        updateProviderDetails(providerData);
+                        fetchJobRequestHistoryPro(userId);
+                        fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
+                    }
+                    else {
+                        this.setState({
+                            isLoading: false
+                        })
+                        Alert.alert(
+                            "OOPS !",
+                            responseJson.message,
+                            [
+                                {
+                                    text: 'Cancel',
+                                    onPress: () => console.log('Cancel Pressed'),
+                                },
+                                {
+                                    text: 'Retry',
+                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
+                                },
+                            ]
+                        );
+                    }
+                })
+                .catch(error => {
+                    this.setState({
+                        isLoading: false
+                    })
+                    alert(error);
+                    console.log('error in autologin')
+                    console.log(JSON.stringify(responseJson));
+                });
+        }
+        else if (userType == 'User') {
+
+            fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
+                method: "GET",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(responseJson => {
+                    if (responseJson && responseJson.result) {
+                        var userData = {
+                            userId: responseJson.data.id,
+                            accountType: responseJson.data.acc_type,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            username: responseJson.data.username,
+                            image: responseJson.data.image,
+                            mobile: responseJson.data.mobile,
+                            dob: responseJson.data.dob,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            fcmId: responseJson.data.fcm_id,
+                        }
+                        updateUserDetails(userData);
+                        //Check if any Ongoing Request 
+                        fetchJobRequestHistoryClient(userId);
+                        fetchPendingJobRequest(this.props, userId, 'Home');
+                    }
+                    else {
+                        this.setState({
+                            isLoading: false
+                        })
+                        Alert.alert(
+                            "OOPS !",
+                            responseJson.message,
+                            [
+                                {
+                                    text: 'Cancel',
+                                    onPress: () => console.log('Cancel Pressed'),
+                                },
+                                {
+                                    text: 'Retry',
+                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
+                                },
+                            ]
+                        );
+                    }
+                }).
+                catch((error) => {
+                    this.setState({
+                        isLoading: false
+                    })
+                    alert(error);
+                    console.log(JSON.stringify(responseJson));
+                });
+        }
+    }
+
+    autoLogin = (userId, userType, fcmToken) => {
         if (userId !== null) {
             this.setState({
                 isLoading: true,
             });
-            if (userType == 'Provider') {
-                fetch(PRO_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
-                    method: "GET",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                })
-                    .then((response) => response.json())
-                    .then(async responseJson => {
-                        var status;
-                        if (responseJson && responseJson.result) {
-                            const id = responseJson.data.id;
-                            const usersRef = database().ref(`users/${id}`);
-                            await usersRef.once('value', snapshot => {
-                                const value = snapshot.val();
-                                if (value)
-                                    status = value.status;
-                                else {
-                                    usersRef.set({ 'status': responseJson.data.status }).then(() => {
-                                        console.log('status set');
-                                    }).
-                                        catch(e => {
-                                            console.log(e.message);
-                                        });
-                                }
-                            });
-                            var providerData = {
-                                providerId: responseJson.data.id,
-                                name: responseJson.data.username,
-                                email: responseJson.data.email,
-                                password: responseJson.data.password,
-                                imageSource: responseJson.data.image,
-                                surname: responseJson.data.surname,
-                                mobile: responseJson.data.mobile,
-                                services: responseJson.data.services,
-                                description: responseJson.data.description,
-                                address: responseJson.data.address,
-                                lat: responseJson.data.lat,
-                                lang: responseJson.data.lang,
-                                invoice: responseJson.data.invoice,
-                                status: status != undefined ? status : responseJson.data.status,
-                                fcmId: responseJson.data.fcm_id,
-                                accountType: responseJson.data.account_type
-                            }
-                            updateProviderDetails(providerData);
-                            fetchJobRequestHistoryPro(userId);
-                            fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
-                        }
-                        else {
-                            this.setState({
-                                isLoading: false
-                            })
-                            Alert.alert(
-                                "OOPS !",
-                                responseJson.message,
-                                [
-                                    {
-                                        text: 'Cancel',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retry',
-                                        onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                    },
-                                ]
-                            );
-                        }
-                    })
-                    .catch(error => {
-                        this.setState({
-                            isLoading: false
-                        })
-                        alert(error);
-                        console.log('error in autologin')
-                        console.log(JSON.stringify(responseJson));
+            AsyncStorage.getItem('auth').then(storedInfo => {
+                if (storedInfo) {
+                    const { email, password } = JSON.parse(storedInfo);
+                    firebaseAuth().signInWithEmailAndPassword(email, password).then(res => {
+                        this.inhouseLogin(userId, userType, fcmToken);
+                    }).catch(error => {
+                        SimpleToast.show('Something went wrong, try closing and reopening app');
+                        console.log('auth error --', error)
                     });
-            }
-            else if (userType == 'User') {
-
-                fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
-                    method: "GET",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                })
-                    .then(response => response.json())
-                    .then(responseJson => {
-                        if (responseJson && responseJson.result) {
-                            var userData = {
-                                userId: responseJson.data.id,
-                                accountType: responseJson.data.acc_type,
-                                email: responseJson.data.email,
-                                password: responseJson.data.password,
-                                username: responseJson.data.username,
-                                image: responseJson.data.image,
-                                mobile: responseJson.data.mobile,
-                                dob: responseJson.data.dob,
-                                address: responseJson.data.address,
-                                lat: responseJson.data.lat,
-                                lang: responseJson.data.lang,
-                                fcmId: responseJson.data.fcm_id,
-                            }
-                            updateUserDetails(userData);
-                            //Check if any Ongoing Request 
-                            fetchJobRequestHistoryClient(userId);
-                            fetchPendingJobRequest(this.props, userId, 'Home');
-                        }
-                        else {
-                            this.setState({
-                                isLoading: false
-                            })
-                            Alert.alert(
-                                "OOPS !",
-                                responseJson.message,
-                                [
-                                    {
-                                        text: 'Cancel',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retry',
-                                        onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                    },
-                                ]
-                            );
-                        }
-                    }).
-                    catch((error) => {
-                        this.setState({
-                            isLoading: false
-                        })
-                        alert(error);
-                        console.log(JSON.stringify(responseJson));
-                    });
-            }
+                }
+                else this.inhouseLogin(userId, userType, fcmToken);
+            });
         }
         else {
             console.log("No Logged User");
@@ -254,7 +271,6 @@ class SplashScreen extends Component {
     }
 
     render() {
-
         return (
             <View style={styles.container}>
 

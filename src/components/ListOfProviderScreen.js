@@ -19,8 +19,7 @@ import Config from './Config';
 import database from '@react-native-firebase/database';
 import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
-import { getDistance } from '../misc/helpers';
-import { imageExists } from '../misc/helpers';
+import { getDistance, imageExists } from '../misc/helpers';
 import { colorPrimaryDark, colorYellow, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -43,15 +42,14 @@ const StatusBarPlaceHolder = () => {
   ) : (
       <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
     );
-}
+};
 
 class ListOfProviderScreen extends Component {
   constructor(props) {
     super();
-    const { navigation } = props;
     this.state = {
-      serviceName: navigation.state.params.serviceName,
-      serviceId: navigation.state.params.serviceId,
+      serviceName: null,
+      serviceId: null,
       dataSource: [],
       distInfo: {},
       distCalculated: false,
@@ -65,16 +63,38 @@ class ListOfProviderScreen extends Component {
   }
 
   componentDidMount() {
+    this.getAllProviders();
+    this.willFocus = this.props.navigation.addListener('willFocus', () => {
+      const { navigation } = this.props;
+      this.setState ({
+        serviceName: navigation.state.params.serviceName,
+        serviceId: navigation.state.params.serviceId,
+        dataSource: [],
+        distInfo: {},
+        distCalculated: false,
+        isNoData: false,
+        isData: false,
+        isLoading: true,
+        showClasses: false,
+        distanceOrder: true,
+        reviewOrder: true
+      });
+      this.getAllProviders();
+    });
     BackHandler.addEventListener(
       'hardwareBackPress',
       this.handleBackButtonClick,
     );
-    const { userInfo: { userDetails} } = this.props;
+  }
+
+  getAllProviders = () => {
+    const { userInfo: { userDetails }, navigation } = this.props;
     const data = {
       lat: userDetails.lat,
       lang: userDetails.lang,
     };
-    fetch(GET_ALL_PROVIDER_URL + this.props.navigation.state.params.serviceId, {
+    const serviceId = navigation.getParam('serviceId', null);
+    fetch(GET_ALL_PROVIDER_URL + serviceId, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -83,7 +103,7 @@ class ListOfProviderScreen extends Component {
       body: JSON.stringify(data),
     })
       .then(response => response.json())
-      .then( async responseJson => {
+      .then(async responseJson => {
         if (responseJson.result) {
           let dataSource = responseJson.data;
           dataSource.map(async (obj, key) => {
@@ -100,7 +120,7 @@ class ListOfProviderScreen extends Component {
             dataSource[key].imageAvailable = imageAvaliable;
           })
           this.setState({
-            dataSource, 
+            dataSource,
             isLoading: false,
             isNoData: false,
             isData: true,
@@ -119,6 +139,7 @@ class ListOfProviderScreen extends Component {
         });
         this.showToast('Something went wrong, Check your internet connection');
       });
+      this.calculateDistance();
   }
 
   calculateRating = async id => {
@@ -130,6 +151,10 @@ class ListOfProviderScreen extends Component {
   }
 
   componentDidUpdate() {
+    this.calculateDistance();
+  }
+
+  calculateDistance = () => {
     const { dataSource, distCalculated } = this.state;
     var distInfo = {};
     var tempDatasource = [...dataSource];
@@ -150,6 +175,7 @@ class ListOfProviderScreen extends Component {
         database().ref(`liveLocation/${_id}`).once('value', result => {
           const { latitude, longitude } = result.val();
           const dist = getDistance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
+          console.log('dist --', dist)
           distInfo[_id] = parseFloat(dist).toFixed(1);
           tempDatasource[key].hash = parseFloat(dist).toFixed(1);
           this.setState({ distInfo });
@@ -170,7 +196,7 @@ class ListOfProviderScreen extends Component {
   }
 
   handleBackButtonClick = () => {
-    this.props.navigation.navigate('DashBoard');
+    this.props.navigation.navigate('Dashboard');
     return true;
   }
 
@@ -337,7 +363,7 @@ class ListOfProviderScreen extends Component {
                 justifyContent: 'center',
                 marginLeft: 5,
               }}
-              onPress={() => this.props.navigation.goBack()}>
+              onPress={() => this.handleBackButtonClick()}>
               <Image
                 style={{ width: 20, height: 20, alignSelf: 'center' }}
                 source={require('../icons/arrow_back.png')}

@@ -1,18 +1,16 @@
 import React, { Component } from 'react';
 import {
-    StyleSheet, Text, View, Platform, Dimensions, TouchableOpacity, TouchableHighlight, BackHandler,
+    StyleSheet, Text, View, Dimensions, TouchableOpacity, TouchableHighlight, BackHandler,
     ActivityIndicator
 } from 'react-native';
 import { connect } from 'react-redux';
 import AsyncStorage from '@react-native-community/async-storage';
-import RNExitApp from 'react-native-exit-app';
+import firebaseAuth from '@react-native-firebase/auth';
+import { resetUserDetails } from '../Redux/Actions/userActions';
 import Config from './Config';
-
-const colorBg = '#E8EEE9';
-const PRO_INFO_UPDATE = Config.baseURL + "employee/";
+import { colorBg } from '../Constants/colors';
 
 class ProDialogLogout extends Component {
-
     constructor(props) {
         super();
         this.state = {
@@ -24,62 +22,24 @@ class ProDialogLogout extends Component {
         })
     };
 
-    async closeDialogLogout(action) {
+    closeDialogLogout = async action => {
         if (action == 'Ok') {
-            const userData = {
-                "status": "0"
-            }
-
-            this.setState({
-                isLoading: true
-            });
-
-            const { userInfo: { providerDetails } } = this.props;
-
-            fetch(PRO_INFO_UPDATE + providerDetails.providerId,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(userData)
-                })
-                .then((response) => response.json())
-                .then(async (response) => {
-                    console.log("Response" + JSON.stringify(response));
-                    if (response.result) {
-                        this.setState({
-                            isLoading: false
-                        })
-                        await AsyncStorage.removeItem('userId');
-                        await AsyncStorage.removeItem('userType');
-
-                        console.log("Logout");
-                        if (Platform.OS == 'android') BackHandler.exitApp();
-                        else {
-                            Config.socket.close();
-                            RNExitApp.exitApp();
-                            this.props.changeDialogVisibility(false);
-                        }
-                    }
-                    else {
-                        this.setState({
-                            isLoading: false,
-                        })
-                    }
-                })
-                .catch((error) => {
-                    console.log("Error :" + error);
-                    this.setState({
-                        isLoading: false,
-                    })
-                })
-                .done()
+            const { resetUserDetails, navigation, changeDialogVisibility } = this.props;
+            if (firebaseAuth().currentUser) firebaseAuth().signOut();
+            await AsyncStorage.removeItem('userId');
+            await AsyncStorage.removeItem('auth');
+            await AsyncStorage.removeItem('firebaseId');
+            await AsyncStorage.removeItem('email');
+            await AsyncStorage.removeItem('userType');
+            resetUserDetails();
+            Config.socket.close();
+            changeDialogVisibility(false);
+            navigation.navigate('AfterSplash');
+            console.log("Logout");
         }
         else if (action == 'Cancel') {
             console.log("Logout Cancel");
-            this.props.changeDialogVisibility(false);
+            changeDialogVisibility(false);
         }
 
     }
@@ -123,8 +83,10 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToPRops = dispatch => ({
-
-})
+    resetUserDetails: () => {
+        dispatch(resetUserDetails());
+    }
+});
 
 export default connect(mapStateToProps, mapDispatchToPRops)(ProDialogLogout)
 
