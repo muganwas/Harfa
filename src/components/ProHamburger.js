@@ -15,6 +15,7 @@ import {
     updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
+import { NavigationEvents } from 'react-navigation';
 import database from '@react-native-firebase/database';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
@@ -23,6 +24,7 @@ import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from '@react-native-community/async-storage';
 import { black, white, red } from '../Constants/colors';
 
 const socket = Config.socket;
@@ -38,6 +40,7 @@ class ProHamburger extends React.Component {
         const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, updateLiveChatUsers, userInfo: { providerDetails } } = this.props;
         const receiverId = providerDetails.providerId;
         this.fetchOthersLocations();
+        this.checkForUserType();
         allJobRequestsProviders.map(obj => {
             const { user_id } = obj;
             database().ref('chatting').child(receiverId).child(user_id)
@@ -225,6 +228,14 @@ class ProHamburger extends React.Component {
         socket.open();
     }
 
+    checkForUserType = async () => {
+        await AsyncStorage.getItem('userType').then( result => {
+            if (!result) 
+                this.props.navigation.navigate('AfterSplash');
+            
+        });
+    }
+
     componentDidUpdate() {
         const { jobsInfo: { allJobRequestsProviders, jobRequestsProviders } } = this.props;
         if (jobRequestsProviders.length && !this.state.fetchedOthersLocations)
@@ -279,6 +290,9 @@ class ProHamburger extends React.Component {
         const notificationTotal = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
         return (
             <>
+                <NavigationEvents
+                    onDidFocus={() => this.checkForUserType()}
+                />
                 <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
                     style={styles.touchableHighlight}>
                     <Image style={styles.image}

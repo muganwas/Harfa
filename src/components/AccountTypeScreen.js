@@ -3,12 +3,6 @@ import { View, Text, StatusBar, TouchableOpacity, BackHandler } from 'react-nati
 import { colorYellow } from '../Constants/colors';
 
 export default class AccountTypeScreen extends Component {
-    constructor(props) {
-      super();
-      this.state = {};
-      this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
-    };
-    
 
     componentDidMount(){
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -18,7 +12,7 @@ export default class AccountTypeScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }

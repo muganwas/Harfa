@@ -16,6 +16,7 @@ import {
     updateLiveChatUsers
 } from '../Redux/Actions/generalActions';
 import { DrawerActions } from 'react-navigation-drawer';
+import { NavigationEvents } from 'react-navigation';
 import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
 import OnlineUsers from './OnlineUsers';
@@ -23,6 +24,7 @@ import NetInfo from "@react-native-community/netinfo";
 import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
+import AsyncStorage from '@react-native-community/async-storage';
 import { Notifications } from 'react-native-notifications';
 
 const socket = Config.socket;
@@ -57,8 +59,8 @@ class Hamburger extends React.Component {
         } = this.props;
         const senderId = userDetails.userId;
         const userRef = database().ref(`liveLocation/${senderId}`);
-
         this.checkNoficationsAvailability();
+        this.checkForUserType();
         messaging().onMessage(message => {
             console.log('message in --', message)
         });
@@ -358,6 +360,14 @@ class Hamburger extends React.Component {
         database().ref('chatting').child(senderId).off('child_changed');
     }
 
+    checkForUserType = async () => {
+        await AsyncStorage.getItem('userType').then(result => {
+            if (!result)
+                this.props.navigation.navigate('AfterSplash');
+
+        });
+    }
+
     checkNoficationsAvailability = async () => {
         if (Platform.OS === 'android') {
             try {
@@ -451,6 +461,9 @@ class Hamburger extends React.Component {
         const notificationTotal = notificationsInfo.messages + notificationsInfo.generic + notificationsInfo.adminMessages;
         return (
             <>
+                <NavigationEvents
+                    onDidFocus={() => this.checkForUserType()}
+                />
                 <TouchableOpacity onPress={navigation ? () => navigation.dispatch(DrawerActions.openDrawer()) : () => { }}
                     style={styles.touchableHighlight}>
                     <Image style={styles.image}
@@ -572,17 +585,17 @@ const styles = StyleSheet.create({
         textAlignVertical: 'center',
         marginTop: !Android ? 13 : 0
     },
-    image: { 
-        width: 25, 
-        height: 25 
+    image: {
+        width: 25,
+        height: 25
     },
-    titleText: { 
-        fontSize: 20, 
-        fontWeight: 'bold', 
-        color: 'black', 
-        textAlignVertical: 'center', 
-        flex: 1, 
-        flexDirection: 'row', 
-        alignItems: 'center' 
+    titleText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'black',
+        textAlignVertical: 'center',
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center'
     }
 });

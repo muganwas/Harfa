@@ -1,6 +1,7 @@
 
 import React, { Component } from 'react';
 import {View, Image, Text, StatusBar, TouchableOpacity, BackHandler, Platform} from 'react-native';
+import { withNavigation } from 'react-navigation';
 import RNExitApp from 'react-native-exit-app';
 import { colorYellow } from '../Constants/colors';
 
@@ -50,7 +51,7 @@ class AfterSplashScreen extends Component {
     }
 }
 
-export default AfterSplashScreen;
+export default withNavigation(AfterSplashScreen);
 
 const styles = {
     container: {

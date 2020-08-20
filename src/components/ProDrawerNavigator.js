@@ -23,11 +23,13 @@ import ProRegisterFBScreen from './ProAcceptRejectJobScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
 import ProRegisterScreen from './ProRegisterScreen';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
+import DrawerNavigator from './DrawerNavigator' ;
 
 const ProMyDrawerNavigator = createDrawerNavigator({
-    FacebookGoogle: { screen: FacebookGoogleScreen},
+    FacebookGoogle: { screen: FacebookGoogleScreen },
     AfterSplash: { screen: AfterSplashScreen },
-    Home: { screen: DashboardScreen },
+    Home: { screen: () => <DrawerNavigator /> },
+    Dashboard: { screen: DashboardScreen },
     ProDashboard: { screen: ProDashboardScreen },
     ProHome: { screen: ProDashboardScreen },
     ProAddAddress: { screen: ProAddAddressScreen },

@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { createAppContainer } from 'react-navigation';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import DashboardScreen from './DashboardScreen';
+import ProDashboardScreen from './ProDashboardScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import CustomMenuLayout from './CustomMenuLayout';
@@ -13,20 +14,25 @@ import MyProfileScreen from './MyProfileScreen';
 import AllMessageScreen from './AllMessageScreen';
 import NotificationsScreen from './NotificationsScreen';
 import BookingScreen from './BookingScreen';
+import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
 import ProviderDetailsScreen from './ProviderDetailsScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
 import ListOfProviderScreen from './ListOfProviderScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
 import AddAddressScreen from './AddAddressScreen';
+import ProDrawerNavigator from './ProDrawerNavigator' ;
 
 const MyDrawerNavigator = createDrawerNavigator({
+    ProDashboard: { screen: ProDrawerNavigator },
     FacebookGoogle: { screen: FacebookGoogleScreen},
     AfterSplash: { screen: AfterSplashScreen },
     AccountType: { screen: AccountTypeScreen },
     Home: { screen: DashboardScreen },
+    ProHome: { screen: () => <ProDrawerNavigator /> },
     ProAccountType: { screen: ProAccountTypeScreen },
     Dashboard: { screen: DashboardScreen },
     ProviderDetails: { screen: ProviderDetailsScreen },
+    ProFacebookGoogle: { screen: ProFacebookGoogleScreen },
     ListOfProviders: { screen: ListOfProviderScreen },
     AddAddress: { screen: AddAddressScreen },
     MyProfile: { screen: MyProfileScreen },
