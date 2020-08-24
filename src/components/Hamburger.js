@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Platform, Alert } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
@@ -25,6 +25,7 @@ import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-community/async-storage';
+import { imageExists } from '../misc/helpers';
 import { Notifications } from 'react-native-notifications';
 
 const socket = Config.socket;
@@ -62,35 +63,62 @@ class Hamburger extends React.Component {
         this.checkNoficationsAvailability();
         this.checkForUserType();
         messaging().onMessage(message => {
-            console.log('message in --', message)
-        });
-        /*firebase.notifications().onNotification(async notification => {
+            const { notification, data } = message;
+            const { title, body } = notification;
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
-            console.log('current count --', currentGenericCount);
-            console.log('actual notification --', notification);
             const newGenericCount = currentGenericCount + 1;
             let newJobRequests = [...jobRequests];
             fetchedNotifications({ type: 'generic', value: newGenericCount });
-            const { title, body, data } = notification;
             const orderId = data.orderId;
             let pos = 0;
-
             jobRequests.map((obj, key) => {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
             });
-
-            if (title == "Chat Request Accepted" && pos != null) {
-                //this.setState({
-                //    requestStatus: title,
-                //    title: title,
-                //    body: body,
-                //    data: data,
-                //    isToastShow: true,
-                //})
+            
+            if (title == "Chat Request Rejected") {
+                newJobRequests.splice(currRequestPos, 1);
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+            }
+            else if (title == "Job Accepted") {
+                var pendingJobData = {
+                    id: data.mainId,
+                    order_id: data.orderId,
+                    employee_id: data.ProviderId,
+                    image: data.image,
+                    fcm_id: data.fcmId,
+                    name: data.name,
+                    surName: data.surname,
+                    mobile: data.mobile,
+                    description: data.description,
+                    address: data.address,
+                    lat: data.lat,
+                    lang: data.lang,
+                    service_name: data.serviceName,
+                    chat_status: data.chat_status,
+                    status: data.status,
+                    delivery_address: data.delivery_address,
+                    delivery_lat: data.delivery_lat,
+                    delivery_lang: data.delivery_lang,
+                }
+                newJobRequests[pos] = pendingJobData;
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
+            }
+            else if (title == "Job Rejected") {
+                newJobRequests.splice(pos, 1);
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
+            }
+            else if (title == "Job Completed") {
+                newJobRequests.splice(currRequestPos, 1);
+                fetchedPendingJobInfo(newJobRequests);
+                this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
+            }
+            else if (title == "Chat Request Accepted" && pos != null) {
                 var providerData = JSON.parse(data.ProviderData);
-
                 var pendingJobData = {
                     id: data.mainId,
                     order_id: data.orderId,
@@ -118,69 +146,17 @@ class Hamburger extends React.Component {
                 fetchedPendingJobInfo(newJobRequests);
                 this.showToast("Demande de chat acceptée");
                 updateActiveRequest(false);
-                navigation.navigate('DashBoard');
+                navigation.navigate('Dashboard');
             }
             else if (title == "Chat Request Rejected") {
-                this.setState({
-                    requestStatus: title,
-                    title: title,
-                    body: body,
-                    data: data,
-                    isJobAccepted: false,
-                })
                 this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
             }
             else if ((title == "No Response" || title == "Canceled") && pos != null) {
-                this.setState({
-                    requestStatus: title,
-                    title: title,
-                    body: body,
-                    data: data,
-                })
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
             }
-            else if (title == "Job Accepted" && pos != null) {
-                var pendingJobData = {
-                    id: data.mainId,
-                    order_id: data.orderId,
-                    employee_id: data.ProviderId,
-                    image: data.image,
-                    fcm_id: data.fcmId,
-                    name: data.name,
-                    surName: data.surname,
-                    mobile: data.mobile,
-                    description: data.description,
-                    address: data.address,
-                    lat: data.lat,
-                    lang: data.lang,
-                    service_name: data.serviceName,
-                    chat_status: data.chat_status,
-                    status: data.status,
-                    delivery_address: data.delivery_address,
-                    delivery_lat: data.delivery_lat,
-                    delivery_lang: data.delivery_lang,
-                }
-                newJobRequests[pos] = pendingJobData;
-                fetchedPendingJobInfo(newJobRequests);
-
-                this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
-            }
-            else if (title == "Job Rejected" && pos != null) {
-                this.setState({
-                    isJobAccepted: false
-                })
-                newJobRequests.splice(pos, 1);
-                fetchedPendingJobInfo(newJobRequests);
-                this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
-            }
-            else if (title == "Job Completed" && pos != null) {
-                newJobRequests.splice(pos, 1);
-                fetchedPendingJobInfo(newJobRequests);
-                this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
-            }
-        });*/
+        });
 
         allJobRequestsClient.map(obj => {
             const { employee_id } = obj;
@@ -343,6 +319,22 @@ class Hamburger extends React.Component {
             if (!online && connectivityAvailable) socket.open();
         });
         socket.open();
+    }
+
+    showRejectionAlert = (title, message) => {
+        Alert.alert(
+            title,
+            message,
+            [
+                {
+                    text: 'OK',
+                    onPress: () => {
+                        console.log("OK Press");
+                        this.props.navigation.navigate("Dashboard")
+                    },
+                },
+            ]
+        );
     }
 
     componentDidUpdate() {

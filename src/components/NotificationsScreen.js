@@ -111,9 +111,6 @@ class NotificationsScreen extends Component {
         fetch(NOTIFICATION_URL + userDetails.userId)
             .then((response) => response.json())
             .then((responseJson) => {
-
-                console.log("Response GetNotification >> " + JSON.stringify(responseJson))
-
                 if (responseJson.result) {
                     this.setState({
                         dataSource: responseJson.data,
@@ -145,7 +142,7 @@ class NotificationsScreen extends Component {
     //GridView Items
     renderItem = ({ item }) => {
         return (
-            <View style={{
+            <TouchableOpacity style={{
                 flex: 1, flexDirection: 'row', margin: 5, padding: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: 0.75, shadowRadius: 2, elevation: 2, backgroundColor: 'white', borderRadius: 2, justifyContent: 'center'
             }}>
@@ -166,7 +163,7 @@ class NotificationsScreen extends Component {
                         {item.createdDate}
                     </Text>
                 </View>
-            </View>
+            </TouchableOpacity>
         )
     }
 

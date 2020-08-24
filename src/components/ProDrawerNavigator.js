@@ -5,12 +5,15 @@ import { createDrawerNavigator } from 'react-navigation-drawer';
 import ProCustomMenuLayout from './ProCustomMenuLayout';
 import ProCheckProfileScreen from './ProCheckProfileScreen'
 import ProAddAddressScreen from './ProAddAddressScreen';
+import ProChatAcceptScreen from './ProChatAcceptScreen';
 import ProDashboardScreen from './ProDashboardScreen';
 import ProMyProfileScreen from './ProMyProfileScreen';
 import ProNotificationsScreen from './ProNotificationsScreen';
 import ProAllMessageScreen from './ProAllMessageScreen';
 import ChatWithAdminScreen from './ChatWithAdminScreen';
 import ContactUsScreen from './ContactUsScreen';
+import ProAcceptRejectJobScreen from './ProAcceptRejectJobScreen';
+import ProMapDirectionScreen from './ProMapDirectionScreen';
 import ProAboutUsScreen from './ProAboutUsScreen';
 import ProBookingScreen from './ProBookingScreen';
 import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
@@ -19,7 +22,7 @@ import AfterSplashScreen from './AfterSplashScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import DashboardScreen from './DashboardScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
-import ProRegisterFBScreen from './ProAcceptRejectJobScreen';
+import ProRegisterFBScreen from './ProRegisterFBScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
 import ProRegisterScreen from './ProRegisterScreen';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
@@ -28,6 +31,7 @@ import DrawerNavigator from './DrawerNavigator' ;
 const ProMyDrawerNavigator = createDrawerNavigator({
     FacebookGoogle: { screen: FacebookGoogleScreen },
     AfterSplash: { screen: AfterSplashScreen },
+    ProChatAccept: { screen: ProChatAcceptScreen },
     Home: { screen: () => <DrawerNavigator /> },
     Dashboard: { screen: DashboardScreen },
     ProDashboard: { screen: ProDashboardScreen },
@@ -45,6 +49,8 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     ProForgotPassword: { screen: ProForgotPasswordScreen },
     AccountType: { screen: AccountTypeScreen },
     ProAccountType: { screen: ProAccountTypeScreen },
+    ProAcceptRejectJob: { screen: ProAcceptRejectJobScreen },
+    ProMapDirection: { screen: ProMapDirectionScreen },
     ProRegisterFB: { screen: ProRegisterFBScreen },
     ProRegister: { screen: ProRegisterScreen },
     ProServiceSelect: { screen: ProServiceSelectScreen },

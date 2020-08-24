@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     View, StyleSheet, Text, TouchableOpacity, Image, Dimensions,
-    BackHandler, StatusBar, Platform, Modal
+    BackHandler, StatusBar, Platform, Modal, ScrollView
 } from 'react-native';
 import { connect } from 'react-redux';
 import database from '@react-native-firebase/database';
@@ -186,7 +186,7 @@ class ProChatAcceptScreen extends Component {
 
     handleBackButtonClick = () => {
         song.stop();
-        this.props.navigation.navigate("ProDashBoard");
+        this.props.navigation.navigate("ProDashboard");
         return true;
     }
 
@@ -231,7 +231,7 @@ class ProChatAcceptScreen extends Component {
             .then(response => response.json())
             .then(responseJson => {
                 const { jobsInfo: { jobRequestsProviders }, fetchedPendingJobInfo, dispatchSelectedJobRequest, navigation } = this.props;
-                let newProJobsInfo = jobRequestsProviders.filter( Boolean );
+                let newProJobsInfo = jobRequestsProviders.filter(Boolean);
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
@@ -414,130 +414,134 @@ class ProChatAcceptScreen extends Component {
         const { userInfo: { providerDetails } } = this.props;
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
                 <View style={{
-                    flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary, paddingLeft: 10,
-                    paddingRight: 20, paddingTop: 5, paddingBottom: 5
-                }}>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center' }}
-                            onPress={this.handleBackButtonClick}>
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                source={require('../icons/arrow_back.png')} />
-                        </TouchableOpacity>
-
-                        <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                            Demande
+                        flexDirection: 'row',
+                        width: '100%',
+                        backgroundColor: colorPrimary,
+                        paddingLeft: 10,
+                        paddingRight: 20,
+                        alignItems: 'center',
+                        paddingVertical: 10
+                    }}>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                            <TouchableOpacity style={{ width: 35, justifyContent: 'center' }}
+                                onPress={this.handleBackButtonClick}>
+                                <Image style={{ width: 20, height: 20 }}
+                                    resizeMode={'contain'}
+                                    source={require('../icons/arrow_back.png')} />
+                            </TouchableOpacity>
+                            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>
+                                Demande
                         </Text>
-                    </View>
-                </View>
-
-                {!this.state.isLoading && this.state.secondTimeLoader != "" &&
-                    <View style={styles.headerLayoutStyle}>
-                        <View style={styles.mainContainer}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, marginLeft: 10, marginRight: 10 }}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.minutes_Counter} : {this.state.seconds_Counter}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, }}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>salut,</Text>
-                                <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginLeft: 20, marginRight: 20 }}>
-                                <Text style={{ color: 'black', fontSize: 18, marginTop: 5, }}>Vous avez une demande de {this.state.serviceName}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
-                                <Image style={{ width: 80, height: 80, borderRadius: 100, }}
-                                    source={this.state.userImage ? { uri: this.state.userImage } : require('../images/generic_avatar.png')}>
-                                </Image>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15, }}>
-                                <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
-                                    {this.state.userName + " veux te parler!"}
-                                </Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
-
-                                <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.rejectJob}>
-                                    <Text style={styles.text}>Rejeter</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.acceptJob}>
-                                    <Text style={styles.text}>Accepter le chat</Text>
-                                </TouchableOpacity>
-                            </View>
                         </View>
-                        <View style={styles.slidingPanelLayoutStyle}>
-                            <View style={styles.containerSlide}>
-                                <View style={styles.mainContainerSlide}>
+                    </View>
+                <ScrollView>
+                    {!this.state.isLoading && this.state.secondTimeLoader != "" &&
+                        <View style={styles.headerLayoutStyle}>
+                            <View style={styles.mainContainer}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, marginLeft: 10, marginRight: 10 }}>
+                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.minutes_Counter} : {this.state.seconds_Counter}</Text>
+                                </View>
 
-                                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 15 }}>{this.state.userName}</Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, }}>
+                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>salut,</Text>
+                                    <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
+                                </View>
 
-                                    <Text style={{ fontSize: 14, alignItems: 'center', textAlign: 'center', marginTop: 5 }}>{this.state.userAddress}</Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginLeft: 20, marginRight: 20 }}>
+                                    <Text style={{ color: 'black', fontSize: 18, marginTop: 5, }}>Vous avez une demande de {this.state.serviceName}</Text>
+                                </View>
 
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                                        <Image style={{ width: 15, height: 15 }}
-                                            source={require('../icons/mobile.png')} />
-                                        <Text style={{ fontSize: 14, marginLeft: 10 }}>{this.state.userMobile}</Text>
-                                    </View>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
+                                    <Image style={{ width: 80, height: 80, borderRadius: 100, }}
+                                        source={this.state.userImage ? { uri: this.state.userImage } : require('../images/generic_avatar.png')}>
+                                    </Image>
+                                </View>
 
-                                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-                                        <Image style={{ width: 15, height: 15 }}
-                                            source={require('../icons/maps_location.png')} />
-                                        <Text style={{ fontSize: 14, marginLeft: 10 }}>{`${this.state.distance} Km loin de vous`}</Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15, }}>
+                                    <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
+                                        {this.state.userName + " veux te parler!"}
+                                    </Text>
+                                </View>
+
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
+
+                                    <TouchableOpacity style={styles.buttonContainer}
+                                        onPress={this.rejectJob}>
+                                        <Text style={styles.text}>Rejeter</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity style={styles.buttonContainer}
+                                        onPress={this.acceptJob}>
+                                        <Text style={styles.text}>Accepter le chat</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            <View style={styles.slidingPanelLayoutStyle}>
+                                <View style={styles.containerSlide}>
+                                    <View style={styles.mainContainerSlide}>
+
+                                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 15 }}>{this.state.userName}</Text>
+
+                                        <Text style={{ fontSize: 14, alignItems: 'center', textAlign: 'center', marginTop: 5 }}>{this.state.userAddress}</Text>
+
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                                            <Image style={{ width: 15, height: 15 }}
+                                                source={require('../icons/mobile.png')} />
+                                            <Text style={{ fontSize: 14, marginLeft: 10 }}>{this.state.userMobile}</Text>
+                                        </View>
+
+                                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
+                                            <Image style={{ width: 15, height: 15 }}
+                                                source={require('../icons/maps_location.png')} />
+                                            <Text style={{ fontSize: 14, marginLeft: 10 }}>{`${this.state.distance} Km loin de vous`}</Text>
+                                        </View>
+
                                     </View>
 
                                 </View>
-
                             </View>
                         </View>
+                    }
+
+                    {false && <View style={styles.mainContainer}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
+                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.timer}</Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
+                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hi,</Text>
+                            <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
+                            <Image style={{ width: 80, height: 80, borderRadius: 100, }}
+                                source={{ uri: this.state.userImage }}>
+                            </Image>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
+                            <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
+                                {this.state.userName + " veux te parler!"}
+                            </Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
+
+                            <TouchableOpacity style={styles.buttonContainer}
+                                onPress={this.acceptJob}>
+                                <Text style={styles.text}>Accepter le chat</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                }
+                    }
 
-                {false && <View style={styles.mainContainer}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
-                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.timer}</Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
-                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hi,</Text>
-                        <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
-                        <Image style={{ width: 80, height: 80, borderRadius: 100, }}
-                            source={{ uri: this.state.userImage }}>
-                        </Image>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
-                        <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
-                            {this.state.userName + " veux te parler!"}
-                        </Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
-
-                        <TouchableOpacity style={styles.buttonContainer}
-                            onPress={this.acceptJob}>
-                            <Text style={styles.text}>Accepter le chat</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-                }
-
-                <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
-                    onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
-                    <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
-                </Modal>
+                    <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+                        onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
+                        <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
+                    </Modal>
+                </ScrollView>
             </View>
         );
     }
@@ -615,7 +619,6 @@ const styles = StyleSheet.create({
     },
     headerLayoutStyle: {
         width: screenWidth,
-        marginTop: 50,
         backgroundColor: 'orange',
         justifyContent: 'center',
         alignItems: 'center',

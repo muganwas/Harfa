@@ -95,7 +95,7 @@ class ProChatScreen extends Component {
         if (this.state.pageTitle === "ProMapDirection")
             this.props.navigation.navigate("ProMapDirection");
         else if (this.state.pageTitle === "ProDashboard")
-            this.props.navigation.navigate("ProDashBoard");
+            this.props.navigation.navigate("ProDashboard");
         else if (this.state.pageTitle === 'ProAllMessage')
             this.props.navigation.navigate("ProAllMessage");
         return true;
@@ -257,7 +257,7 @@ class ProChatScreen extends Component {
                     }}>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                onPress={() => this.state.pageTitle == 'ProMapDirection' ? this.props.navigation.navigate("ProMapDirection") : this.props.navigation.navigate("ProDashBoard")}>
+                                onPress={() => this.state.pageTitle == 'ProMapDirection' ? this.props.navigation.navigate("ProMapDirection") : this.props.navigation.navigate("ProDashboard")}>
                                 <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>

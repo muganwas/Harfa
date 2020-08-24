@@ -77,30 +77,12 @@ class ChatScreen extends Component {
         const { fetchedNotifications } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-        //Get Job accept reject status
-        /*firebase.notifications().onNotification((notification) => {
-            const { title, body, data } = notification;
-            if (title == "Job Accepted") {
-                this.setState({
-                    isJobAccepted: true,
-                });
-                //ToastAndroid.show("Your request accepted", ToastAndroid.SHORT);
-            }
-            else if (title == "Job Rejected") {
-                this.setState({
-                    isJobAccepted: false,
-                });
-                //ToastAndroid.show("Your request rejected", ToastAndroid.SHORT);
-                this.props.navigation.navigate("ListOfProvider");
-            }
-        });*/
     }
 
     componentDidUpdate() {
         const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
         const { isLoading, dataChatSourceSynced } = this.state;
         const localDataChatSource = this.state.dataChatSource;
-        console.log('fetched --', fetched)
         if (fetched && isLoading)
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced)
@@ -271,7 +253,7 @@ class ChatScreen extends Component {
 
                     newJobRequests.splice(currRequestPos, 1);
                     fetchedPendingJobInfo(newJobRequests);
-                    this.props.navigation.navigate("DashBoard");
+                    this.props.navigation.navigate("Dashboard");
                 }
                 else {
                     Alert.alert("OOPS!", "Something went wrong, try again later");

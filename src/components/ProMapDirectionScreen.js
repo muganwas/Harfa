@@ -12,6 +12,7 @@ import database from '@react-native-firebase/database';
 import Geolocation from 'react-native-geolocation-service';
 import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
+import simpleToast from 'react-native-simple-toast';
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import { MAPS_API_KEY } from 'react-native-dotenv';
@@ -179,7 +180,7 @@ class ProMapDirectionScreen extends Component {
 
     handleBackButtonClick = () => {
         if (this.state.pageTitle == "ProDashboard")
-            this.props.navigation.navigate("ProDashBoard");
+            this.props.navigation.navigate("ProDashboard");
         else if (this.state.pageTitle == "ProAcceptRejectJob")
             this.props.navigation.navigate("ProAcceptRejectJob");
 
@@ -191,32 +192,40 @@ class ProMapDirectionScreen extends Component {
     }
 
     getDirections = async (startLoc, destinationLoc) => {
-        try {
-            let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`)
-            let respJson = await resp.json();
+        if (startLoc && destinationLoc) {
+            try {
+                fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`).
+                    then(resp => resp.json()).
+                    then(respJson => {
+                        if (respJson && respJson.routes[0]) {
+                            let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
+                            let routeCoordinates = points.map((point, index) => {
+                                return {
+                                    latitude: point[0],
+                                    longitude: point[1]
+                                }
+                            });
+                            //If Delay some second, works fine..Reason don't know
+                            setTimeout(() => {
+                                this.setState({
+                                    routeCoordinates: routeCoordinates,
+                                    isLoading: false,
+                                })
+                                return this.state.routeCoordinates;
+                            }, 1500);
+                        }
+                    });
 
-            let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
-            let routeCoordinates = points.map((point, index) => {
-                return {
-                    latitude: point[0],
-                    longitude: point[1]
-                }
-            })
-            //If Delay some second, works fine..Reason don't know
-            setTimeout(() => {
+            }
+            catch (error) {
                 this.setState({
-                    routeCoordinates: routeCoordinates,
                     isLoading: false,
                 })
-                return this.state.routeCoordinates;
-            }, 1500);
-        }
-        catch (error) {
-            this.setState({
-                isLoading: false,
-            })
-            alert(error)
-            return error
+                alert(error)
+                return error
+            }
+        } else {
+            simpleToast.show('Destination co-ordinates missing, try later', simpleToast.LONG);
         }
     }
 
@@ -257,7 +266,7 @@ class ProMapDirectionScreen extends Component {
     }
 
     jobCompleteTask = () => {
-        this.setState({isLoading: true});
+        this.setState({ isLoading: true });
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
         const data = {
@@ -308,7 +317,7 @@ class ProMapDirectionScreen extends Component {
                     });
                     newJobRequestsProviders.splice(this.state.currentPos, 1)
                     fetchedPendingJobInfo(newJobRequestsProviders);
-                    this.props.navigation.navigate("ProDashBoard");
+                    this.props.navigation.navigate("ProDashboard");
                 }
                 else {
                     ToastAndroid.show("Something went wrong", ToastAndroid.show);
@@ -326,7 +335,7 @@ class ProMapDirectionScreen extends Component {
     }
 
     jobCancelTask = () => {
-        this.setState({isLoading: true});
+        this.setState({ isLoading: true });
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
 
@@ -380,7 +389,7 @@ class ProMapDirectionScreen extends Component {
 
                     newJobRequestsProviders.splice(this.state.currentPos, 1);
                     fetchedPendingJobInfo(newJobRequestsProviders);
-                    this.props.navigation.navigate("ProDashBoard");
+                    this.props.navigation.navigate("ProDashboard");
                 }
                 else {
                     ToastAndroid.show("Something went wrong", ToastAndroid.show);
@@ -404,81 +413,81 @@ class ProMapDirectionScreen extends Component {
     }
 
     render() {
-        const { 
-            sourceLat, 
-            sourceLng, 
-            destinationLat, 
-            destinationLng, 
+        const {
+            sourceLat,
+            sourceLng,
+            destinationLat,
+            destinationLng,
             routeCoordinates,
             userName,
             proImageAvailable,
             userImage,
             serviceName,
             status
-            } = this.state;
+        } = this.state;
         return (
             <View style={styles.container}>
 
                 <StatusBarPlaceHolder />
-                { sourceLat && sourceLng && destinationLat && destinationLng ?
-                <MapView style={styles.map}
-                    region={{
-                        latitude: sourceLat,
-                        longitude: sourceLng,
-                        latitudeDelta: 0.0922,
-                        longitudeDelta: 0.0121,
-                    }}
-                    minZoomLevel={16}
-                    maxZoomLevel={20}>
-                    {Platform.OS === 'ios' && (
-                        <View style={styles.header}>
-                            <View style={{ flex: 1, flexDirection: 'row', margin: 5 }}>
-                                <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
-                                    onPress={() => this.props.navigation.goBack()}>
-                                    <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                        source={require('../icons/back_arrow_double.png')} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
-                    <MapView.Marker
-                        coordinate={{
+                {sourceLat && sourceLng && destinationLat && destinationLng ?
+                    <MapView style={styles.map}
+                        region={{
                             latitude: sourceLat,
                             longitude: sourceLng,
+                            latitudeDelta: 0.0922,
+                            longitudeDelta: 0.0121,
                         }}
-                        title="You"
-                        description={""}>
-                        <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
-                            source={require('../icons/car_marker.png')} />
-                    </MapView.Marker>
-                    <MapView.Marker
-                        coordinate={{
-                            latitude: destinationLat,
-                            longitude: destinationLng,
-                        }}
-                        title="Destination"
-                        description={userName}>
-                        <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
-                            source={require('../icons/home_marker.png')} />
-                    </MapView.Marker>
-                    <MapView.Polyline
-                        coordinates={routeCoordinates}
-                        strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
-                        strokeColors={[
-                            '#7F0000',
-                            '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
-                            '#B24112',
-                            '#E5845C',
-                            '#238C23',
-                            '#7F0000'
-                        ]}
-                        strokeWidth={6} />
-                </MapView> :
-                <ActivityIndicator 
-                    size={30}
-                    color={'#000'}
-                /> }
-                
+                        minZoomLevel={16}
+                        maxZoomLevel={20}>
+                        {Platform.OS === 'ios' && (
+                            <View style={styles.header}>
+                                <View style={{ flex: 1, flexDirection: 'row', margin: 5 }}>
+                                    <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
+                                        onPress={() => this.props.navigation.goBack()}>
+                                        <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                            source={require('../icons/back_arrow_double.png')} />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
+                        <MapView.Marker
+                            coordinate={{
+                                latitude: sourceLat,
+                                longitude: sourceLng,
+                            }}
+                            title="You"
+                            description={""}>
+                            <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
+                                source={require('../icons/car_marker.png')} />
+                        </MapView.Marker>
+                        <MapView.Marker
+                            coordinate={{
+                                latitude: destinationLat,
+                                longitude: destinationLng,
+                            }}
+                            title="Destination"
+                            description={userName}>
+                            <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
+                                source={require('../icons/home_marker.png')} />
+                        </MapView.Marker>
+                        <MapView.Polyline
+                            coordinates={routeCoordinates}
+                            strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+                            strokeColors={[
+                                '#7F0000',
+                                '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+                                '#B24112',
+                                '#E5845C',
+                                '#238C23',
+                                '#7F0000'
+                            ]}
+                            strokeWidth={6} />
+                    </MapView> :
+                    <ActivityIndicator
+                        size={30}
+                        color={'#000'}
+                    />}
+
                 <SlidingPanel
                     headerLayoutHeight={140}
                     headerLayout={() =>
@@ -538,19 +547,19 @@ class ProMapDirectionScreen extends Component {
                     slidingPanelLayout={() =>
                         <View style={styles.slidingPanelLayoutStyle}>
                             <View style={styles.containerSlide}>
-                                { this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
+                                {this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
                                     onPress={this.openCompleteConfirmation}>
                                     <Text style={styles.text}>
                                         Completed
                                     </Text>
-                                </TouchableOpacity> }
+                                </TouchableOpacity>}
 
-                                { !this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
+                                {!this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
                                     onPress={this.openCancelConfirmation}>
                                     <Text style={styles.text}>
                                         Cancel Request
                                     </Text>
-                                </TouchableOpacity> }
+                                </TouchableOpacity>}
 
                             </View>
                         </View>

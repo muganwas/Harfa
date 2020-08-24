@@ -71,11 +71,6 @@ class DashboardScreen extends Component {
             message,
             [
                 {
-                    // text: 'Cancel',  
-                    // onPress: () => console.log('Cancel Pressed'),  
-                    // style: 'cancel',  
-                },
-                {
                     text: "D'accord",
                     onPress: () => {
                         this.props.updateActiveRequest(false);

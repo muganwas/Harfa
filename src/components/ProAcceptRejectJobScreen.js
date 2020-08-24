@@ -28,8 +28,7 @@ const options = {
     quality: 1
 };
 
-
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -90,8 +89,6 @@ class ProAcceptRejectJobScreen extends Component {
             userImageExists: jobRequestsProviders[currRequestPos].imageAvailable,
             currRequestPos
         };
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
@@ -115,8 +112,8 @@ class ProAcceptRejectJobScreen extends Component {
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
-    handleBackButtonClick() {
-        this.props.navigation.navigate("ProDashBoard");
+    handleBackButtonClick = () => {
+        this.props.navigation.navigate("ProDashboard");
         return true;
     }
 
@@ -273,7 +270,7 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Accepted",
-                "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.props.navigation.state.params.orderId,
+                "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
                     image: providerDetails.imageSource,
@@ -383,7 +380,7 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Rejected",
-                "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
+                "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
                     image: providerDetails.imageSource,
@@ -427,10 +424,9 @@ class ProAcceptRejectJobScreen extends Component {
                     });
                     newjobRequestsProviders.splice(currRequestPos, 1);
                     fetchedPendingJobInfo(newjobRequestsProviders);
-                    this.props.navigation.navigate("ProDashBoard");
+                    this.props.navigation.replace("ProDashboard");
                 }
                 else {
-                    //ToastAndroid.show("Something went wrong", ToastAndroid.show);
                     this.setState({
                         isLoading: false,
                         isErrorToast: true
@@ -491,16 +487,14 @@ class ProAcceptRejectJobScreen extends Component {
         const { showButton } = this.state;
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                 }}>
                     <View style={{ flex: 1, flexDirection: 'row' }}>
                         <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'center' }}
-                            onPress={() => this.props.navigation.navigate("ProDashBoard")}>
+                            onPress={this.handleBackButtonClick}>
                             <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                                 source={require('../icons/arrow_back.png')} />
                         </TouchableOpacity>

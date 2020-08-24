@@ -22,7 +22,6 @@ import messaging from '@react-native-firebase/messaging';
 import { Notifications } from 'react-native-notifications';
 import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 import Config from './Config';
-import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from '@react-native-community/async-storage';
 import { black, white, red } from '../Constants/colors';
@@ -113,23 +112,18 @@ class ProHamburger extends React.Component {
         }, { enableHighAccuracy: true });
 
         messaging().onMessage(message => {
-            console.log('message in --', message)
-        });
-
-        /*firebase.notifications().onNotification(notification => {
+            const { notification, data } = message;
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
-            const { title, body, data } = notification;
+            const { title, body } = notification;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
-            console.log('notification --', notification)
             fetchedNotifications({ type: 'generic', value: newGenericCount });
-            const orderId = data.orderId;
+            const orderId = data.order_id;
             let pos = 0;
             jobRequestsProviders.map((obj, key) => {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
             });
-
             let newJobRequestsProviders = [...jobRequestsProviders]
             if (title == "Booking Request") {
                 navigation.navigate("ProChatAccept", {
@@ -147,15 +141,12 @@ class ProHamburger extends React.Component {
                 newJobRequestsProviders.splice(pos, 1);
                 dispatchFetchedProJobRequests(newJobRequestsProviders);
             }
-        });*/
+        });
 
         database().ref('chatting').child(receiverId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             const currentMessagesCount = notificationsInfo.messages;
             const newMessagesCount = currentMessagesCount + 1;
-
-            console.log('reciever --', receiverId)
-            console.log('chat reslult --', result.val())
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
             Android ? Notifications.postLocalNotification({
                 title: "Harfa Messages",
@@ -210,12 +201,10 @@ class ProHamburger extends React.Component {
         socket.on('user-disconnected', users => {
             console.log('someone disconnected')
             updateLiveChatUsers(users);
-            OnlineUsers.Users = users;
         })
         socket.on('user-joined', users => {
             console.log('someone connected');
             updateLiveChatUsers(users);
-            OnlineUsers.Users = users;
         })
         socket.on('disconnect', info => {
             const { generalInfo: { online, connectivityAvailable } } = this.props;

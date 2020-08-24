@@ -175,13 +175,12 @@ class ListOfProviderScreen extends Component {
         database().ref(`liveLocation/${_id}`).once('value', result => {
           const { latitude, longitude } = result.val();
           const dist = getDistance(latitude, longitude, usersCoordinates.latitude, usersCoordinates.longitude, 'K');
-          console.log('dist --', dist)
           distInfo[_id] = parseFloat(dist).toFixed(1);
           tempDatasource[key].hash = parseFloat(dist).toFixed(1);
           this.setState({ distInfo });
         }).
           catch(e => {
-            //console.log(e.message);
+            console.log(e.message);
           });
       });
       this.setState({ distCalculated: true, dataSource: tempDatasource });

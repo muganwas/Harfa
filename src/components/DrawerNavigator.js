@@ -4,6 +4,7 @@ import { createAppContainer } from 'react-navigation';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import DashboardScreen from './DashboardScreen';
 import ProDashboardScreen from './ProDashboardScreen';
+import MapDirectionScreen from './MapDirectionScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import CustomMenuLayout from './CustomMenuLayout';
@@ -25,6 +26,8 @@ import ProDrawerNavigator from './ProDrawerNavigator' ;
 const MyDrawerNavigator = createDrawerNavigator({
     ProDashboard: { screen: ProDrawerNavigator },
     FacebookGoogle: { screen: FacebookGoogleScreen},
+    ProDashboard: { screen: ProDashboardScreen },
+    MapDirection: { screen: MapDirectionScreen },
     AfterSplash: { screen: AfterSplashScreen },
     AccountType: { screen: AccountTypeScreen },
     Home: { screen: DashboardScreen },

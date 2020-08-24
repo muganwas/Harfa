@@ -94,7 +94,7 @@ class AllMessageScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        // this.props.navigation.navigate("DashBoard");
+        // this.props.navigation.navigate("Dashboard");
         // return true;
         if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();

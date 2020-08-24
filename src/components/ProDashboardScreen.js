@@ -4,6 +4,7 @@ import {
     Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity,
     ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform
 } from 'react-native';
+import { NavigationEvents } from 'react-navigation';
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
@@ -54,7 +55,7 @@ const StatusBarPlaceHolder = () => {
     );
 }
 
-class ProDashBoardScreen extends Component {
+class ProDashboardScreen extends Component {
     constructor(props) {
         super();
         const { jobsInfo: { dataWorkSource }, generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails } } = props;
@@ -86,6 +87,10 @@ class ProDashBoardScreen extends Component {
 
     //Get All Bookings
     componentDidMount = async () => {
+        this.initiateProps()
+    }
+
+    initiateProps = () => {
         const { navigation, jobsInfo: { dataWorkSource } } = this.props;
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
         navigation.addListener('willFocus', async () => {
@@ -692,7 +697,7 @@ class ProDashBoardScreen extends Component {
             .done()
     }
 
-    askForReview = (item) => {
+    askForReview = item => {
         const { fetchJobRequestHistory, userInfo: { providerDetails } } = this.props;
         if (item.customer_review != "Requested" && item.customer_rating == "") {
             this.setState({
@@ -766,18 +771,20 @@ class ProDashBoardScreen extends Component {
     }
 
     onRefresh = () => {
-        this.state.refreshing = true;
+        this.setState({refreshing: true});
+        const { generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails } } = this.props;
         this.setState({
             dataSource: [],
             dataUserSource: [],
             isRecentMessage: false,
-            //isWorkRequest: false,
+            status: online && providerDetails.status === "1" && connectivityAvailable ? "ONLINE" : "OFFLINE",
             isJobRequest: false,
-            isRecentUser: false
-        })
+            isRecentUser: false,
+        });
         this.getAllRecentChat();
         this.getAllRecentUser();
-        this.state.refreshing = false;
+        this.springValue = new Animated.Value(100);
+        this.setState({refreshing: false});
     }
 
     changeWaitingDialogVisibility = bool => {
@@ -797,9 +804,7 @@ class ProDashBoardScreen extends Component {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
                 <View style={styles.header}>
                     <Hamburger
                         Notifications={Notifications}
@@ -999,7 +1004,7 @@ const mapDispatchToProps = dispatch => {
 }
 
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProDashBoardScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(ProDashboardScreen);
 
 const styles = StyleSheet.create({
     container: {

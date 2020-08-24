@@ -57,28 +57,37 @@ class SplashScreen extends Component {
     }
 
     getUserType = async userId => {
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-        if (enabled) {
-            this.getFCMToken(userId);
-        }
-        else {
+        messaging().requestPermission().then(authStatus => {
+            const enabled =
+                authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+                authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+            if (enabled) {
+                this.getFCMToken(userId);
+            }
+            else {
+                Alert.alert(
+                    "Permission Request",
+                    "You don't have permission for notification. Please enable notification then try again ",
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                if (Platform.OS == 'android')
+                                    BackHandler.exitApp();
+                                else
+                                    RNExitApp.exitApp();
+                            },
+                            style: 'cancel',
+                        },
+                    ]
+                );
+            }
+        }).catch(error => {
+            console.log('Messaging permission error --', error)
             Alert.alert(
                 "Permission Request",
                 "You don't have permission for notification. Please enable notification then try again ",
                 [
-                    {
-                        text: 'Back',
-                        onPress: () => {
-                            if (Platform.OS == 'android')
-                                BackHandler.exitApp();
-                            else
-                                RNExitApp.exitApp();
-                        },
-                        style: 'cancel',
-                    },
                     {
                         text: 'OK',
                         onPress: () => {
@@ -87,22 +96,42 @@ class SplashScreen extends Component {
                             else
                                 RNExitApp.exitApp();
                         },
+                        style: 'cancel',
                     },
                 ]
             );
-        }
+        });
     }
 
     getFCMToken = async userId => {
-        const fcmToken = await messaging().getToken();
-        if (fcmToken) {
-            AsyncStorage.getItem('userType')
-                .then((userType) => this.autoLogin(userId, userType, fcmToken));
-        }
-        else {
-            // user doesn't have a device token yet
-            console.log("User don't have Token")
-        }
+        messaging().getToken().then(fcmToken => {
+            if (fcmToken) {
+                AsyncStorage.getItem('userType')
+                    .then(userType => this.autoLogin(userId, userType, fcmToken));
+            }
+            else {
+                // user doesn't have a device token yet
+                console.log("User doesn't have Token")
+            }
+        }).catch(error => {
+            Alert.alert(
+                "Auth Token",
+                "Your device has not received an authentication token, check your internet connection and try again later",
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            if (Platform.OS == 'android')
+                                BackHandler.exitApp();
+                            else
+                                RNExitApp.exitApp();
+                        },
+                        style: 'cancel',
+                    },
+                ]
+            );
+            console.log('fcm token error --', error)
+        });
     }
 
     inhouseLogin = (userId, userType, fcmToken) => {
