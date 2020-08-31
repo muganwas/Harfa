@@ -185,6 +185,7 @@ class DashboardScreen extends Component {
         else {
             dispatchSelectedJobRequest(jobInfo);
             this.props.navigation.navigate("MapDirection", {
+                currentPos: jobInfo.currentPos,
                 titlePage: "Dashboard"
             });
         }
@@ -200,12 +201,12 @@ class DashboardScreen extends Component {
         })
     }
 
-    renderPendingJobRequests = ({ item }) => {
+    renderPendingJobRequests = ({ item, index }) => {
         if (item) {
             const { image, name, employee_id, imageAvailable, surName, service_name, chat_status, status } = item;
             return (
                 <TouchableOpacity style={styles.pendingJobRow}
-                    onPress={() => this.goToNextPage(chat_status, { userType: 'client', employee_id })}>
+                    onPress={() => this.goToNextPage(chat_status, { userType: 'client', employee_id, currentPos: index })}>
                     <LinearGradient
                         style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>

@@ -46,11 +46,7 @@ class ProMapDirectionScreen extends Component {
     constructor(props) {
         super();
         const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } }, navigation } = props;
-        var currentPos;
-        //console.log('users Coordinates', usersCoordinates)
-        jobRequestsProviders.map((obj, pos) => {
-            obj.user_id === user_id ? currentPos = pos : null;
-        });
+        let currentPos = navigation.getParam('currentPos', 0);
         const currentRequest = jobRequestsProviders[currentPos] || {};
         this.state = {
             sourcesourceLocation: usersCoordinates.latitude + "," + usersCoordinates.longitude,
@@ -179,11 +175,11 @@ class ProMapDirectionScreen extends Component {
     }
 
     handleBackButtonClick = () => {
+        console.log('Page title', this.state.pageTitle)
         if (this.state.pageTitle == "ProDashboard")
             this.props.navigation.navigate("ProDashboard");
         else if (this.state.pageTitle == "ProAcceptRejectJob")
             this.props.navigation.navigate("ProAcceptRejectJob");
-
         return true;
     }
 
@@ -346,6 +342,8 @@ class ProMapDirectionScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Job Canceled",
+                "type": "JobCancellation",
+                "notification_by": "Employee",
                 "body": 'Your job request has been canceled by the service provder : ' + providerDetails.providerId,
                 "data": {
                     ProviderId: providerDetails.providerId,

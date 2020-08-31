@@ -3,13 +3,23 @@ import { connect } from 'react-redux';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
 } from 'react-native';
-import {withNavigation} from 'react-navigation';
+import { withNavigation } from 'react-navigation';
 import database from '@react-native-firebase/database';
 import WaitingDialog from './WaitingDialog';
 import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
-import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
+import { 
+    startFetchingNotification, 
+    notificationsFetched, 
+    notificationError 
+} from '../Redux/Actions/notificationActions';
+import { 
+    fetchedJobProviderInfo,
+    startFetchingJobProvider, 
+    fetchProviderJobInfoError, 
+    setSelectedJobRequest,
+    getAllWorkRequestPro
+} from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
@@ -17,7 +27,6 @@ const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
-const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload"
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -48,15 +57,10 @@ class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
         super()
-        const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } } } = props;
-        var currRequestPos;
-        jobRequestsProviders.map((obj, key) => {
-            if (obj) {
-                const currEmpId = obj.user_id;
-                if (currEmpId === user_id) currRequestPos = key;
-            }
-        });
-
+        const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders }, navigation } = props;
+        let currRequestPos = navigation.getParam('currentPos', 0);
+        console.log('current pos --', currRequestPos)
+        console.log('job info --', jobRequestsProviders[currRequestPos])
         this.state = {
             senderId: providerDetails.providerId,
             senderImage: providerDetails.imageSource,
@@ -118,45 +122,48 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
-        return (
-            this.state.senderId != item.senderId
-                ?
-                item.type == 'text'
+        if (item) {
+            return (
+                this.state.senderId != item.senderId
                     ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={styles.itemLeftChatContainer}>
-                            <View style={styles.itemChatImageView}>
-                                <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={this.state.userImageExists ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
-                            </View>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item && item.time)}
-                                </Text>
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                            <View style={styles.itemLeftChatContainer}>
+                                <View style={styles.itemChatImageView}>
+                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
+                                        source={this.state.userImageExists ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
+                                </View>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {this.convertTime(item && item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-                :
-                item.type == 'text'
-                    ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={styles.itemRightChatContainer}>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    {this.convertTime(item && item.time)}
-                                </Text>
+                        : null
+                    :
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                            <View style={styles.itemRightChatContainer}>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
+                                        {this.convertTime(item && item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-        )
+                        : null
+            )
+        }
+
     }
 
     renderSeparator = () => {
@@ -270,6 +277,8 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Accepted",
+                "type": "JobAcceptence",
+                "Notification_by": "Employee",
                 "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -305,38 +314,17 @@ class ProAcceptRejectJobScreen extends Component {
             .then((response) => response.json())
             .then((responseJson) => {
                 //console.log("Response : " + JSON.stringify(responseJson));
-                const { fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
+                const { fetchedPendingJobInfo, getAllWorkRequestPro, jobsInfo: { jobRequestsProviders } } = this.props;
                 const { currRequestPos } = this.state;
                 var newjobRequestsProviders = [...jobRequestsProviders];
-                console.log(responseJson)
                 if (responseJson.data) {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
-                    })
-
-                    var jobData = {
-                        id: responseJson.data.id,
-                        order_id: responseJson.data.order_id,
-                        user_id: responseJson.data.user_id,
-                        image: responseJson.data.image,
-                        fcm_id: responseJson.data.fcm_id,
-                        name: responseJson.data.name,
-                        mobile: responseJson.data.mobile,
-                        dob: responseJson.data.dob,
-                        address: responseJson.data.address,
-                        lat: responseJson.data.lat,
-                        lang: responseJson.data.lang,
-                        service_name: responseJson.data.service_name,
-                        chat_status: responseJson.data.chat_status,
-                        status: responseJson.data.status,
-                        delivery_address: responseJson.data.delivery_address,
-                        delivery_lat: responseJson.data.delivery_lat,
-                        delivery_lang: responseJson.data.delivery_lang,
-                    }
-                    newjobRequestsProviders[currRequestPos] = jobData;
+                    });
+                    newjobRequestsProviders.splice(currRequestPos, 1);
+                    getAllWorkRequestPro(providerDetails.providerId);
                     fetchedPendingJobInfo(newjobRequestsProviders);
-
                     //Send Location to Firebase for tracking
                     Geolocation.getCurrentPosition(
                         (position) => {
@@ -380,6 +368,8 @@ class ProAcceptRejectJobScreen extends Component {
             'notification': {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Rejected",
+                "type": "JobRejection",
+                "notification_by": "Employee",
                 "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -565,29 +555,14 @@ class ProAcceptRejectJobScreen extends Component {
                             multiline={true}
                             onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                         </TextInput>
-
-                        {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', marginRight: 25 }}
-                            onPress={this.selectPhoto.bind(this)}>
-                            <Image style={{ width: 20, height: 20 }}
-                                source={require('../icons/camera.png')} />
-                        </TouchableOpacity>*/}
                         <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
-                                    onPress={this.sendMessageTask}>
-                                    <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                        ENVOYER
+                            onPress={this.sendMessageTask}>
+                            <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
+                                ENVOYER
                                     </Text>
-                            </TouchableOpacity>
+                        </TouchableOpacity>
                     </View>
                 </View>
-
-                {/* {this.state.isLoading && (
-                <View style={styles.loaderStyle}>
-                    <ActivityIndicator
-                        style={{ height: 80 }}
-                        color="#C00"
-                        size="large" />
-                </View>
-            )} */}
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -718,6 +693,9 @@ const mapDispatchToProps = dispatch => {
         },
         dispatchSelectedJobRequest: job => {
             dispatch(setSelectedJobRequest(job));
+        },
+        getAllWorkRequestPro: providerId => {
+            getAllWorkRequestPro(providerId)
         }
     }
 }

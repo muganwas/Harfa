@@ -8,10 +8,9 @@ import {
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import database from '@react-native-firebase/database';
 import { imageExists } from '../misc/helpers';
-import { colorBg, colorPrimaryDark, colorPrimary, colorGray } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
@@ -34,11 +33,7 @@ const StatusBarPlaceHolder = () => {
 class ChatAfterBookingDetailsScreen extends Component {
     constructor(props) {
         super()
-        const { userInfo: { userDetails }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = props;
-        Object.keys(jobRequests).map(key => {
-            const currEmpId = jobRequests[key].employee_id;
-            if (currEmpId === employee_id) currRequestPos = key;
-        });
+        const { userInfo: { userDetails }, jobsInfo: { selectedJobRequest: { employee_id } } } = props;
         this.state = {
             senderId: userDetails.userId,
             senderImage: userDetails.image,
@@ -176,49 +171,51 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     renderMessageItem = ({ item }) => {
-        const senderImage = item.senderImage;
-        return (
-            this.state.senderId != item.senderId
-                ?
-                item.type == 'text'
+        if (item) {
+            const senderImage = item.senderImage;
+            return (
+                this.state.senderId != item.senderId
                     ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                        <View style={styles.itemLeftChatContainer}>
-                            <View style={styles.itemChatImageView}>
-                                <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                    source={this.state.proImageAvailable ? { uri: senderImage } : require('../images/generic_avatar.png')} />
-                            </View>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item && item.time)}
-                                </Text>
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                            <View style={styles.itemLeftChatContainer}>
+                                <View style={styles.itemChatImageView}>
+                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
+                                        source={this.state.proImageAvailable ? { uri: senderImage } : require('../images/generic_avatar.png')} />
+                                </View>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
+                                        {this.convertTime(item && item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-                :
-                item.type == 'text'
-                    ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                        <View style={styles.itemRightChatContainer}>
-                            <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
-                                    {item.textMessage}
-                                </Text>
-                                <Text style={{
-                                    fontSize: 8, color: 'black', textAlignVertical: 'center',
-                                    color: 'white', marginRight: 5, marginTop: 4
-                                }}>
-                                    {this.convertTime(item && item.time)}
-                                </Text>
+                        : null
+                    :
+                    item.type == 'text'
+                        ?
+                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                            <View style={styles.itemRightChatContainer}>
+                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
+                                        {item.textMessage}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 8, color: 'black', textAlignVertical: 'center',
+                                        color: 'white', marginRight: 5, marginTop: 4
+                                    }}>
+                                        {this.convertTime(item && item.time)}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                    : null
-        )
+                        : null
+            )
+        }
     }
 
     renderSeparator = () => {

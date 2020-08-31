@@ -48,11 +48,7 @@ class MapDirectionScreen extends Component {
     constructor(props) {
         super();
         const { userInfo: { userDetails }, generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, navigation } = props;
-        var currRequestPos;
-        jobRequests.map((obj, key) => {
-            const currEmpId = obj.employee_id;
-            if (currEmpId === employee_id) currRequestPos = key;
-        });
+        var currRequestPos = navigation.getParam('currentPos', 0);
         const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
         const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
         this.state = {
@@ -132,12 +128,13 @@ class MapDirectionScreen extends Component {
     }
 
     handleBackButtonClick = () => {
+        console.log('Page title', this.state.titlePage)
         if (this.state.titlePage == "Dashboard")
             this.props.navigation.navigate("Dashboard");
         else if (this.state.titlePage == "ProviderDetails")
             this.props.navigation.navigate("ProviderDetails");
         else if (this.state.titlePage == "Chat")
-            this.props.navigation.navigate("Chat");
+            this.props.navigation.navigate("Dashboard");
         return true;
     }
 
@@ -240,9 +237,7 @@ class MapDirectionScreen extends Component {
     }
 
     jobCancelTask = () => {
-
-        this.setState({ isLoading: true })
-
+        this.setState({ isLoading: true });
         const { fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
         const { currRequestPos } = this.state;
         var newJobRequests = [...jobRequests];
@@ -253,7 +248,9 @@ class MapDirectionScreen extends Component {
             'notification': {
                 "fcm_id": jobRequests[currRequestPos].fcm_id,
                 "title": "Job Canceled",
-                "body": 'Your job request has been canceled by ' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
+                "type": "JobCancellation",
+                "notification_by": "Customer",
+                "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
                 "data": {
                     ProviderId: jobRequests[currRequestPos].employee_id,
                     image: jobRequests[currRequestPos].image,

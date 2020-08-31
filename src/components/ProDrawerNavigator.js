@@ -16,11 +16,13 @@ import ProAcceptRejectJobScreen from './ProAcceptRejectJobScreen';
 import ProMapDirectionScreen from './ProMapDirectionScreen';
 import ProAboutUsScreen from './ProAboutUsScreen';
 import ProBookingScreen from './ProBookingScreen';
+import ProBookingDetailsScreen from './ProBookingDetailsScreen';
+import ProChatScreen from './ProChatScreen';
+import ProChatAfterBookingDetailsScreen from './ProChatAfterBookingDetailsScreen';
 import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
 import ProForgotPasswordScreen from './ProForgotPasswordScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import AccountTypeScreen from './AccountTypeScreen';
-import DashboardScreen from './DashboardScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
 import ProRegisterFBScreen from './ProRegisterFBScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
@@ -33,11 +35,12 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     AfterSplash: { screen: AfterSplashScreen },
     ProChatAccept: { screen: ProChatAcceptScreen },
     Home: { screen: () => <DrawerNavigator /> },
-    Dashboard: { screen: DashboardScreen },
+    Dashboard: { screen: () => <DrawerNavigator /> },
     ProDashboard: { screen: ProDashboardScreen },
     ProHome: { screen: ProDashboardScreen },
     ProAddAddress: { screen: ProAddAddressScreen },
     ProMyProfile: { screen: ProMyProfileScreen },
+    ProChatAfterBookingDetails: { screen: ProChatAfterBookingDetailsScreen },
     ProCheckProfile: { screen: ProCheckProfileScreen },
     ProNotifications: { screen: ProNotificationsScreen },
     ProAllMessage: { screen: ProAllMessageScreen },
@@ -45,6 +48,8 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     ContactUs: { screen: ContactUsScreen },
     AboutUs: { screen: ProAboutUsScreen },
     ProBooking: { screen: ProBookingScreen },
+    ProChat: { screen: ProChatScreen },
+    ProBookingDetails: { screen: ProBookingDetailsScreen },
     ProFacebookGoogle: { screen: ProFacebookGoogleScreen },
     ProForgotPassword: { screen: ProForgotPasswordScreen },
     AccountType: { screen: AccountTypeScreen },

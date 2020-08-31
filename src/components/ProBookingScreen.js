@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { View, StyleSheet,Dimensions, TouchableOpacity, Image, Text, FlatList, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
-import {createAppContainer} from 'react-navigation';     
-import {createStackNavigator} from 'react-navigation-stack';
-import {connect} from 'react-redux';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, FlatList, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
+import { connect } from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
 import WaitingDialog from './WaitingDialog';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
@@ -21,15 +21,16 @@ const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: colorPrimaryDark
+            }}>
+                <StatusBar
+                    barStyle="light-content" />
+            </View>
+            :
+            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
 
@@ -50,12 +51,10 @@ class ProBookingScreen extends Component {
     };
 
     componentDidMount() {
-
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             this.getAllBookings();
         });
-       
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
@@ -103,51 +102,48 @@ class ProBookingScreen extends Component {
             bookingCompleteData: [],
             bookingRejectData: [],
         });
-        const { userInfo: { providerDetails } } = this.props;
-        fetch(BOOKING_HISTORY + providerDetails.providerId)
-            .then((response) => response.json())
-            .then((responseJson) => {
-                if(responseJson.result)
-                {
-                    for(let i=0; i<responseJson.data.length; i++)
-                    {
-                        if(responseJson.data[i].chat_status == "1")
-                        {  
-                            if(responseJson.data[i].status == "Completed")
-                            { 
-                                this.state.bookingCompleteData.push(responseJson.data[i]);
+        const { userInfo } = this.props;
+        if ( userInfo && userInfo.providerDetailsFetched) {
+            const { providerDetails } = userInfo;
+            fetch(BOOKING_HISTORY + providerDetails.providerId)
+                .then((response) => response.json())
+                .then((responseJson) => {
+                    if (responseJson.result) {
+                        for (let i = 0; i < responseJson.data.length; i++) {
+                            if (responseJson.data[i].chat_status == "1") {
+                                if (responseJson.data[i].status == "Completed") {
+                                    this.state.bookingCompleteData.push(responseJson.data[i]);
+                                }
+                                else if (responseJson.data[i].status == "Rejected") {
+                                    this.state.bookingRejectData.push(responseJson.data[i]);
+                                }
                             }
-                            else if(responseJson.data[i].status == "Rejected")
-                            {
-                                this.state.bookingRejectData.push(responseJson.data[i]);
-                            }
-                        }
-                        else {
-                            if(responseJson.data[i].status == "Rejected")
-                            {
-                                this.state.bookingRejectData.push(responseJson.data[i]);
+                            else {
+                                if (responseJson.data[i].status == "Rejected") {
+                                    this.state.bookingRejectData.push(responseJson.data[i]);
+                                }
                             }
                         }
+                        this.setState({
+                            isLoading: false
+                        })
                     }
-                    this.setState({
-                        isLoading: false
-                    })
-                }
-                else{
-                    this.setState({
-                        isLoading: false
-                    })
-                }
-            })
-            .catch((error) => {
-                console.log(error);
-                this.setState({
-                    isLoading: false,
-                    isErrorToast: true
+                    else {
+                        this.setState({
+                            isLoading: false
+                        })
+                    }
                 })
-                this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet")
-                //ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
-            })
+                .catch((error) => {
+                    console.log(error);
+                    this.setState({
+                        isLoading: false,
+                        isErrorToast: true
+                    })
+                    this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet")
+                    //ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
+                })
+        }
     }
 
     onPageSelected = event => {
@@ -173,41 +169,44 @@ class ProBookingScreen extends Component {
     renderBookingHistoryItem = ({ item }) => {
         const userImage = item.user_details.image;
         return (
-            <TouchableOpacity style={{flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,}}
+            <TouchableOpacity style={{
+                flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
+                shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
+            }}
                 onPress={() => this.props.navigation.navigate("ProBookingDetails", {
-                   "bookingDetails": item })}>
+                    "bookingDetails": item
+                })}>
 
                 <View style={styles.itemContainer}>
                     <Image
                         style={{ height: 45, width: 45, alignSelf: 'flex-start', alignContent: 'flex-start', borderRadius: 100 }}
-                        source={userImage ? {uri: item.user_details.image} : require('../images/generic_avatar.png')}/>
+                        source={userImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
                     <View style={{ flexDirection: 'column' }}>
                         <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                             {item.user_details.username}
                         </Text>
-                        <View style={{flexDirection: 'row', marginLeft: 10, marginTop: 5}}>
+                        <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5 }}>
                             <Image
-                                style={{ height: 15, width: 15, alignSelf: 'center', alignContent: 'flex-start', borderRadius: 100 , }}
+                                style={{ height: 15, width: 15, alignSelf: 'center', alignContent: 'flex-start', borderRadius: 100, }}
                                 source={require('../icons/mobile.png')} />
                             <Text style={{ color: 'black', fontSize: 14, textAlignVertical: 'center', marginLeft: 5 }}>
                                 {item.user_details.mobile}
                             </Text>
                         </View>
                     </View>
-                    <View style={{ flex: 1,color: 'white',alignContent: 'center',justifyContent: 'center',}}>
-                        <Text style={{textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: 'black', marginRight: 10,}}>
-                            {item.order_id.replace("\"","")}
+                    <View style={{ flex: 1, color: 'white', alignContent: 'center', justifyContent: 'center', }}>
+                        <Text style={{ textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: 'black', marginRight: 10, }}>
+                            {item.order_id.replace("\"", "")}
                         </Text>
                     </View>
                 </View>
 
-                <View style={{flexDirection: 'row', backgroundColor: '#fafad2'}}>
-                    <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', alignSelf: 'center',  marginLeft: 10, }}>
+                <View style={{ flexDirection: 'row', backgroundColor: '#fafad2' }}>
+                    <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', alignSelf: 'center', marginLeft: 10, }}>
                         {item.service_details.service_name}
                     </Text>
-                    <View style={{ flex: 1, alignContent: 'center',justifyContent: 'center',}}>
-                        <Text style={{textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: 'black', marginRight: 10,}}>
+                    <View style={{ flex: 1, alignContent: 'center', justifyContent: 'center', }}>
+                        <Text style={{ textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: 'black', marginRight: 10, }}>
                             {item.createdDate}
                         </Text>
                     </View>
@@ -230,9 +229,11 @@ class ProBookingScreen extends Component {
         return (
             <View style={styles.container}>
 
-                <StatusBarPlaceHolder/>
-                <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                    paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5  }}>
+                <StatusBarPlaceHolder />
+                <View style={{
+                    flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
+                    paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
+                }}>
                     <Hamburger
                         navigation={this.props.navigation}
                         text='Réservations'
@@ -241,7 +242,8 @@ class ProBookingScreen extends Component {
 
                 <View style={{
                     width: screenWidth, height: 50, justifyContent: 'center',
-                    backgroundColor: colorPrimaryDark, alignItems: 'center'}}>
+                    backgroundColor: colorPrimaryDark, alignItems: 'center'
+                }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                         <TouchableOpacity style={this.state.currentPage == 0 ? styles.buttonGreen : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Completed")}>
@@ -273,7 +275,7 @@ class ProBookingScreen extends Component {
                             <View style={styles.loaderStyle}>
                                 <Text style={{ color: 'black', fontSize: 20 }}>
                                     Aucune réservation trouvée!
-                                </Text>  
+                                </Text>
                             </View>
                         )}
                     </View>
@@ -305,7 +307,7 @@ class ProBookingScreen extends Component {
                         <Text style={styles.exitText}>Exit</Text>
                     </TouchableOpacity>
                 </Animated.View>
-            
+
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -322,7 +324,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
 });
 
-export default connect(mapStateToProps, mapStateToProps)(ProBookingScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(ProBookingScreen);
 
 const styles = StyleSheet.create({
     container: {

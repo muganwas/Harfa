@@ -16,10 +16,9 @@ const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
-const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload";
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         ios ?
             <View style={{
@@ -211,7 +210,9 @@ class ChatScreen extends Component {
             'notification': {
                 "fcm_id": jobRequests[currRequestPos].fcm_id,
                 "title": "Job Canceled",
-                "body": 'Your job request has been canceled by ' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
+                "type": "JobCancellation",
+                "notification_by": "Customer",
+                "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
                 "data": {
                     ProviderId: jobRequests[currRequestPos].employee_id,
                     image: jobRequests[currRequestPos].image,

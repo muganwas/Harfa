@@ -13,8 +13,9 @@ import { startFetchingNotification, notificationsFetched, notificationError } fr
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import { colorPrimary, colorPrimaryDark, colorBg, colorYellow } from '../Constants/colors';
 import SoundPlayer from 'react-native-sound';
+import { cloneDeep } from 'lodash';
 
-var song = null;
+let song = null;
 const screenWidth = Dimensions.get('window').width;
 
 const USER_GET_PROFILE = Config.baseURL + "users/"
@@ -205,6 +206,8 @@ class ProChatAcceptScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Chat Request Accepted",
+                "type": "ChatAcceptance",
+                "notification_by": "Employee",
                 "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
                     ProviderData: providerDetails,
@@ -231,7 +234,8 @@ class ProChatAcceptScreen extends Component {
             .then(response => response.json())
             .then(responseJson => {
                 const { jobsInfo: { jobRequestsProviders }, fetchedPendingJobInfo, dispatchSelectedJobRequest, navigation } = this.props;
-                let newProJobsInfo = jobRequestsProviders.filter(Boolean);
+                let newProJobsInfo = cloneDeep(jobRequestsProviders);
+                let newJobsInfoLength = newProJobsInfo.length;
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
@@ -259,7 +263,7 @@ class ProChatAcceptScreen extends Component {
                     newProJobsInfo.push(jobData)
                     dispatchSelectedJobRequest(jobData);
                     fetchedPendingJobInfo(newProJobsInfo);
-                    navigation.navigate("ProAcceptRejectJob");
+                    navigation.navigate("ProAcceptRejectJob", {currentPos: newJobsInfoLength + 1 });
                 }
                 else {
                     this.setState({
@@ -291,6 +295,8 @@ class ProChatAcceptScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Chat Request Rejected",
+                "type": "JobRejection",
+                "notification_by": "Employee",
                 "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,

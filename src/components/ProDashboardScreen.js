@@ -4,7 +4,6 @@ import {
     Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity,
     ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform
 } from 'react-native';
-import { NavigationEvents } from 'react-navigation';
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
@@ -13,7 +12,7 @@ import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
 import Config from './Config';
 import Notifications from './Notifications';
-import Hamburger from './ProHamburger';
+import ProHamburger from './ProHamburger';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { imageExists } from '../misc/helpers';
@@ -196,22 +195,23 @@ class ProDashboardScreen extends Component {
             });
     }
 
-    renderRecentMessageItem = ({ item }) => {
+    renderRecentMessageItem = ({ item, index }) => {
         if (item) {
-            const { dispatchSelectedJobRequest, jobsInfo: { dataWorkSource } } = this.props;
+            const { dispatchSelectedJobRequest } = this.props;
+            /*
             let currentPos;
             Object.keys(dataWorkSource).map(key => {
                 if (dataWorkSource[key].user_id === item.id) {
                     currentPos = key;
                 }
-            });
+            });*/
             return (
                 <TouchableOpacity style={styles.itemMainContainer}
                     onPress={() => {
                         dispatchSelectedJobRequest({ user_id: item.id });
                         setTimeout(() => {
                             this.props.navigation.navigate("ProChat", {
-                                currentPos,
+                                currentPos: index,
                                 'userId': item.id,
                                 'name': item.name,
                                 'image': item.image,
@@ -249,12 +249,14 @@ class ProDashboardScreen extends Component {
         }
     }
 
-    renderWorkItem = ({ item }) => {
+    renderWorkItem = ({ item, index }) => {
+        console.log('work item --', item)
         const { userInfo: { providerDetails } } = this.props;
         if (item && String(item.employee_id) === String(providerDetails.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
             return (
                 <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
                     onPress={() => this.props.navigation.navigate("ProBookingDetails", {
+                        currentPos: index,
                         "bookingDetails": item
                     })}>
                     <View style={{ flex: 1, alignItems: 'center', paddingTop: 15, paddingBottom: 15, paddingLeft: 5, paddingRight: 5 }}>
@@ -277,12 +279,13 @@ class ProDashboardScreen extends Component {
         else return null;
     }
 
-    renderRecentUserItem = ({ item }) => {
+    renderRecentUserItem = ({ item, index }) => {
+        console.log('recent user --', item)
         if (item) {
             const recentUserImage = item.user_details.image;
             return (
                 <TouchableOpacity style={styles.itemMainContainer}
-                    onPress={() => this.props.navigation.navigate("ProBooking")}>
+                    onPress={() => this.props.navigation.navigate("ProBooking", {currentPos: index})}>
                     <View style={styles.itemImageView}>
                         <Image style={{ width: 40, height: 40, borderRadius: 100 }}
                             source={recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
@@ -469,7 +472,7 @@ class ProDashboardScreen extends Component {
                     review: review,
                 })
 
-                this.reviewTask(rating, review);
+                this.reviewTask(rating, review, item);
             }
         }
     }
@@ -478,19 +481,19 @@ class ProDashboardScreen extends Component {
         if (chat_status == '0') {
             this.setState({
                 isErrorToast: true,
-            })
-            //ToastAndroid.show("Accept Chat Request First", ToastAndroid.SHORT);
+            });
             this.showToast("Accept Chat Request First");
         }
         else {
             const { dispatchSelectedJobRequest } = this.props;
             if (status == 'Pending') {
                 dispatchSelectedJobRequest(jobInfo);
-                this.props.navigation.navigate("ProAcceptRejectJob", { orderId: jobInfo.orderId });
+                this.props.navigation.navigate("ProAcceptRejectJob", { currentPos: jobInfo.currentPos, orderId: jobInfo.orderId });
             }
             else if (status == 'Accepted') {
                 dispatchSelectedJobRequest(jobInfo);
                 this.props.navigation.navigate("ProMapDirection", {
+                    currentPos: jobInfo.currentPos,
                     'pageTitle': "ProDashboard",
                 });
             }
@@ -523,7 +526,7 @@ class ProDashboardScreen extends Component {
 
         this.setState({
             isLoading: true,
-        })
+        });
 
         const data = {
             main_id: id,
@@ -532,6 +535,8 @@ class ProDashboardScreen extends Component {
             'notification': {
                 "fcm_id": fcm_id,
                 "title": "Chat Request Accepted",
+                "type": "ChatAcceptance",
+                "notification_by": "Employee",
                 "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
                 "data": {
                     ProviderData: providerDetails,
@@ -584,7 +589,6 @@ class ProDashboardScreen extends Component {
 
                     newjobRequestsProviders[pos] = jobData;
                     fetchedPendingJobInfo(newjobRequestsProviders);
-
                     this.props.navigation.navigate("ProAcceptRejectJob");
                 }
                 else {
@@ -605,11 +609,12 @@ class ProDashboardScreen extends Component {
     }
 
     renderPendingJobs = ({ item, index }) => {
+        console.log('pending jobs', item)
         if (item) {
             const { image, name, imageAvailable, user_id, service_name, chat_status, status, order_id } = item;
             return (
                 <TouchableOpacity style={styles.pendingJobRow}
-                    onPress={() => this.goToProMapDirection(chat_status, status, { userType: 'provider', user_id, orderId: order_id })}>
+                    onPress={() => this.goToProMapDirection(chat_status, status, { currentPos: index, userType: 'provider', user_id, orderId: order_id })}>
                     <LinearGradient style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
@@ -646,17 +651,23 @@ class ProDashboardScreen extends Component {
 
     }
 
-    reviewTask = (rating, review) => {
-
+    reviewTask = (rating, review, item) => {
+        const { userInfo: { providerDetails } } = this.props;
         this.setState({
             isLoading: true,
-        })
-
+        });
         const reviewData = {
             "main_id": this.state.mainId,
             "type": "Employee",
             "rating": rating,
             "review": review,
+            "notification": {
+                "fcm_id": item.user_details.fcm_id,
+                "type": "Review",
+                "notification_by": "Employee",
+                "title": "Given Review",
+                "body": providerDetails.name + " " + providerDetails.surname + " has given you a review",
+            }
         }
 
         fetch(REVIEW_RATING,
@@ -710,6 +721,8 @@ class ProDashboardScreen extends Component {
                 "employee_id": providerDetails.providerId,
                 'notification': {
                     "fcm_id": item.user_details.fcm_id,
+                    "type": "ReviewRequest",
+                    "notification_by": "Employee",
                     "title": "Ask For Review",
                     "body": providerDetails.name + " " + providerDetails.surname + " waiting for your feedback",
                 }
@@ -793,20 +806,13 @@ class ProDashboardScreen extends Component {
         })
     }
 
-    /*getLocation = () => {
-        Geolocation.getCurrentPosition(info => {
-            const { coords: { longitude, latitude} } = info;
-            
-        });
-    }*/
-
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
                 <View style={styles.header}>
-                    <Hamburger
+                    <ProHamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
                         text='Harfa'

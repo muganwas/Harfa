@@ -16,7 +16,7 @@ const screenWidth = Dimensions.get('window').width;
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/customer_request/';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
         <View style={{
@@ -100,15 +100,12 @@ class BookingScreen extends Component {
         });
 
         const { userInfo: { userDetails } } = this.props;
-
         fetch(BOOKING_HISTORY + userDetails.userId)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Response : " + JSON.stringify(responseJson))
-
                 if(responseJson.result)
                 {
-                    for(let i=0; i<responseJson.data.length; i++)
+                    for(let i=0; i <responseJson.data.length; i++)
                     {
                         if(responseJson.data[i].chat_status == "1")
                         {  
@@ -131,12 +128,12 @@ class BookingScreen extends Component {
                     
                     this.setState({
                         isLoading: false
-                    })
+                    });
                 }
                 else{
                     this.setState({
                         isLoading: false
-                    })
+                    });
                 }
             })
             .catch((error) => {

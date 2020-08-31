@@ -3,18 +3,20 @@ import React, { Component } from 'react';
 import { createAppContainer } from 'react-navigation';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import DashboardScreen from './DashboardScreen';
-import ProDashboardScreen from './ProDashboardScreen';
 import MapDirectionScreen from './MapDirectionScreen';
 import AccountTypeScreen from './AccountTypeScreen';
 import AfterSplashScreen from './AfterSplashScreen';
 import CustomMenuLayout from './CustomMenuLayout';
+import ChatScreen from './ChatScreen';
 import ChatWithAdminScreen from './ChatWithAdminScreen';
+import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
 import AboutUsScreen from './AboutUsScreen';
 import ContactUsScreen from './ContactUsScreen';
 import MyProfileScreen from './MyProfileScreen';
 import AllMessageScreen from './AllMessageScreen';
 import NotificationsScreen from './NotificationsScreen';
 import BookingScreen from './BookingScreen';
+import BookingDetailsScreen from './BookingDetailsScreen';
 import ProFacebookGoogleScreen from './ProFacebookGoogleScreen';
 import ProviderDetailsScreen from './ProviderDetailsScreen';
 import ProAccountTypeScreen from './ProAccountTypeScreen';
@@ -26,10 +28,11 @@ import ProDrawerNavigator from './ProDrawerNavigator' ;
 const MyDrawerNavigator = createDrawerNavigator({
     ProDashboard: { screen: ProDrawerNavigator },
     FacebookGoogle: { screen: FacebookGoogleScreen},
-    ProDashboard: { screen: ProDashboardScreen },
+    ProDashboard: { screen: () => <ProDrawerNavigator /> },
     MapDirection: { screen: MapDirectionScreen },
     AfterSplash: { screen: AfterSplashScreen },
     AccountType: { screen: AccountTypeScreen },
+    Chat: { screen: ChatScreen},
     Home: { screen: DashboardScreen },
     ProHome: { screen: () => <ProDrawerNavigator /> },
     ProAccountType: { screen: ProAccountTypeScreen },
@@ -40,8 +43,10 @@ const MyDrawerNavigator = createDrawerNavigator({
     AddAddress: { screen: AddAddressScreen },
     MyProfile: { screen: MyProfileScreen },
     Booking: { screen: BookingScreen },
+    BookingDetails: { screen: BookingDetailsScreen },
     AboutUs: { screen: AboutUsScreen },
     ChatWithAdmin: { screen: ChatWithAdminScreen },
+    ChatAfterBookingDetails: { screen: ChatAfterBookingDetailsScreen },
     ContactUs: { screen: ContactUsScreen },
     AllMessage: { screen: AllMessageScreen },
     Notifications: { screen: NotificationsScreen },

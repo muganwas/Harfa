@@ -12,18 +12,10 @@ import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
-const options = {
-    title: 'Select a photo',
-    takePhotoButtonTitle: 'Take a photo',
-    chooseFromLibraryButtonTitle: 'Choose from gallery',
-    quality: 1
-};
-
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -51,7 +43,6 @@ class ProChatScreen extends Component {
             navigation,
             userInfo: { providerDetails }
         } = props;
-        console.log('prop messages --', dataChatSource)
         this.state = {
             showButton: false,
             senderId: providerDetails.providerId,
@@ -63,7 +54,6 @@ class ProChatScreen extends Component {
             isLoading: !fetched,
             //From ProDashboardScreen && ProMapDirection
             pageTitle: navigation.state.params.pageTitle,
-
             receiverId: allJobRequestsProviders[currentPos].user_id,
             receiverName: allJobRequestsProviders[currentPos].user_details.username,
             receiverImage: allJobRequestsProviders[currentPos].user_details.image,

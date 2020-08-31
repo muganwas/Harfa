@@ -78,7 +78,7 @@ class Hamburger extends React.Component {
             });
             
             if (title == "Chat Request Rejected") {
-                newJobRequests.splice(currRequestPos, 1);
+                newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
             }
@@ -113,7 +113,7 @@ class Hamburger extends React.Component {
                 this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
             }
             else if (title == "Job Completed") {
-                newJobRequests.splice(currRequestPos, 1);
+                newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
                 this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
             }
