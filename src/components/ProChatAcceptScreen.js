@@ -263,7 +263,8 @@ class ProChatAcceptScreen extends Component {
                     newProJobsInfo.push(jobData)
                     dispatchSelectedJobRequest(jobData);
                     fetchedPendingJobInfo(newProJobsInfo);
-                    navigation.navigate("ProAcceptRejectJob", {currentPos: newJobsInfoLength + 1 });
+                    //used + 1 before and it didnt work
+                    navigation.navigate("ProAcceptRejectJob", {currentPos: newJobsInfoLength });
                 }
                 else {
                     this.setState({

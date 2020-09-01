@@ -93,7 +93,7 @@ class MapDirectionScreen extends Component {
         const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
 
         this.getDirections(employeeLatitude + "," + employeeLongitude, this.state.destinationLocation);
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
     }
 
     componentDidUpdate() {
@@ -124,18 +124,19 @@ class MapDirectionScreen extends Component {
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        //BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     handleBackButtonClick = () => {
-        console.log('Page title', this.state.titlePage)
         if (this.state.titlePage == "Dashboard")
             this.props.navigation.navigate("Dashboard");
         else if (this.state.titlePage == "ProviderDetails")
             this.props.navigation.navigate("ProviderDetails");
         else if (this.state.titlePage == "Chat")
-            this.props.navigation.navigate("Dashboard");
-        return true;
+            this.props.navigation.navigate("Chat");
+        else 
+            this.props.navigation.goBack()
+        return true
     }
 
 

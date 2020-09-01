@@ -64,7 +64,7 @@ class ProChatScreen extends Component {
     };
 
     componentDidMount() {
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
     }
 
     componentDidUpdate() {
@@ -75,6 +75,7 @@ class ProChatScreen extends Component {
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[user_id] });
+        console.log('fetched', fetched)
     }
 
     componentWillUnmount() {

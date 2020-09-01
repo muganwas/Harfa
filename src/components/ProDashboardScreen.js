@@ -198,13 +198,6 @@ class ProDashboardScreen extends Component {
     renderRecentMessageItem = ({ item, index }) => {
         if (item) {
             const { dispatchSelectedJobRequest } = this.props;
-            /*
-            let currentPos;
-            Object.keys(dataWorkSource).map(key => {
-                if (dataWorkSource[key].user_id === item.id) {
-                    currentPos = key;
-                }
-            });*/
             return (
                 <TouchableOpacity style={styles.itemMainContainer}
                     onPress={() => {
@@ -250,7 +243,6 @@ class ProDashboardScreen extends Component {
     }
 
     renderWorkItem = ({ item, index }) => {
-        console.log('work item --', item)
         const { userInfo: { providerDetails } } = this.props;
         if (item && String(item.employee_id) === String(providerDetails.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
             return (
@@ -280,7 +272,6 @@ class ProDashboardScreen extends Component {
     }
 
     renderRecentUserItem = ({ item, index }) => {
-        console.log('recent user --', item)
         if (item) {
             const recentUserImage = item.user_details.image;
             return (
@@ -350,8 +341,7 @@ class ProDashboardScreen extends Component {
                 else {
                     this.setState({
                         isLoading: false,
-                    })
-                    //ToastAndroid.show(response.message, ToastAndroid.show);
+                    });
                     this.showToast(response.message);
                 }
             })
@@ -609,7 +599,6 @@ class ProDashboardScreen extends Component {
     }
 
     renderPendingJobs = ({ item, index }) => {
-        console.log('pending jobs', item)
         if (item) {
             const { image, name, imageAvailable, user_id, service_name, chat_status, status, order_id } = item;
             return (

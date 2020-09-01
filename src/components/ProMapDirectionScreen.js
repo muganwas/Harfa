@@ -82,13 +82,13 @@ class ProMapDirectionScreen extends Component {
         };
     };
 
-    async componentDidMount() {
+    componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             console.log("willFocus runs >>")
             this.onRefresh();
         });
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
     }
 
     componentDidUpdate() {
@@ -99,7 +99,7 @@ class ProMapDirectionScreen extends Component {
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        //BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     onRefresh = async () => {
@@ -175,12 +175,13 @@ class ProMapDirectionScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        console.log('Page title', this.state.pageTitle)
         if (this.state.pageTitle == "ProDashboard")
             this.props.navigation.navigate("ProDashboard");
         else if (this.state.pageTitle == "ProAcceptRejectJob")
             this.props.navigation.navigate("ProAcceptRejectJob");
-        return true;
+        else 
+            this.props.navigation.goBack();
+        return true
     }
 
     callPhoneTask = () => {

@@ -21,6 +21,7 @@ import {
     getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
 import Config from './Config';
+import { cloneDeep } from 'lodash';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -59,8 +60,6 @@ class ProAcceptRejectJobScreen extends Component {
         super()
         const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders }, navigation } = props;
         let currRequestPos = navigation.getParam('currentPos', 0);
-        console.log('current pos --', currRequestPos)
-        console.log('job info --', jobRequestsProviders[currRequestPos])
         this.state = {
             senderId: providerDetails.providerId,
             senderImage: providerDetails.imageSource,
@@ -313,18 +312,19 @@ class ProAcceptRejectJobScreen extends Component {
         })
             .then((response) => response.json())
             .then((responseJson) => {
-                //console.log("Response : " + JSON.stringify(responseJson));
                 const { fetchedPendingJobInfo, getAllWorkRequestPro, jobsInfo: { jobRequestsProviders } } = this.props;
                 const { currRequestPos } = this.state;
-                var newjobRequestsProviders = [...jobRequestsProviders];
+                var newjobRequestsProviders = cloneDeep(jobRequestsProviders);
                 if (responseJson.data) {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
                     });
-                    newjobRequestsProviders.splice(currRequestPos, 1);
-                    getAllWorkRequestPro(providerDetails.providerId);
+     
+                    newjobRequestsProviders[currRequestPos].chat_status = responseJson.data.chat_status;
+                    newjobRequestsProviders[currRequestPos].status = responseJson.data.status;
                     fetchedPendingJobInfo(newjobRequestsProviders);
+                    getAllWorkRequestPro(providerDetails.providerId);
                     //Send Location to Firebase for tracking
                     Geolocation.getCurrentPosition(
                         (position) => {

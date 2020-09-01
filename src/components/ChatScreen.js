@@ -45,7 +45,6 @@ class ChatScreen extends Component {
     constructor(props) {
         super();
         const { userInfo: { userDetails }, jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = props;
-        console.log('chat screen messages--', dataChatSource)
         var currRequestPos;
         Object.keys(allJobRequestsClient).map(key => {
             const currEmpId = allJobRequestsClient[key].employee_id;
@@ -75,7 +74,7 @@ class ChatScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
     }
 
     componentDidUpdate() {
@@ -388,7 +387,6 @@ class ChatScreen extends Component {
                             </View>
                         </View>
                     </ScrollView>
-
                     {this.state.isLoading && (
                         <View style={styles.loaderStyle}>
                             <ActivityIndicator
