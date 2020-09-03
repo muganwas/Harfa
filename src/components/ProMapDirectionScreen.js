@@ -5,7 +5,7 @@ import {
     Linking, PermissionsAndroid, Alert, StatusBar, Platform, Modal,
     ActivityIndicator
 } from 'react-native';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { NavigationEvents } from 'react-navigation';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import database from '@react-native-firebase/database';
@@ -85,10 +85,12 @@ class ProMapDirectionScreen extends Component {
     componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
-            console.log("willFocus runs >>")
             this.onRefresh();
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
-        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     componentDidUpdate() {
@@ -96,10 +98,6 @@ class ProMapDirectionScreen extends Component {
         const { sourceLat, sourceLng } = this.state;
         if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(sourceLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(sourceLng)))
             this.onRefresh();
-    }
-
-    componentWillUnmount() {
-        //BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     onRefresh = async () => {
@@ -175,6 +173,7 @@ class ProMapDirectionScreen extends Component {
     }
 
     handleBackButtonClick = () => {
+        console.log('pressed', this.state.pageTitle)
         if (this.state.pageTitle == "ProDashboard")
             this.props.navigation.navigate("ProDashboard");
         else if (this.state.pageTitle == "ProAcceptRejectJob")
@@ -426,7 +425,6 @@ class ProMapDirectionScreen extends Component {
         } = this.state;
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
                 {sourceLat && sourceLng && destinationLat && destinationLng ?
                     <MapView style={styles.map}

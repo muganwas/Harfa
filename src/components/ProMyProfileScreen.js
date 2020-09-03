@@ -98,9 +98,14 @@ class ProMyProfileScreen extends Component {
     }
 
     componentDidMount = () => {
+        const { userInfo: { providerDetails }, navigation } = this.props;
 
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-        const { userInfo: { providerDetails } } = this.props;
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
         this.setState({
             isLoading: false
         });
@@ -114,10 +119,6 @@ class ProMyProfileScreen extends Component {
         this.setState({
             services: serviceName
         });
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     handleBackButtonClick = () => {

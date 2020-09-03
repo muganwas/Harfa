@@ -256,6 +256,14 @@ class ProviderDetailsScreen extends Component {
 
   componentDidMount() {
     this.initialRender();
+    const { navigation } = this.props;
+    navigation.addListener('willFocus', async () => {
+      this.initialRender()
+      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+    });
+    navigation.addListener('willBlur', () => {
+      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    });
   }
 
   initialRender = () => {
@@ -296,7 +304,6 @@ class ProviderDetailsScreen extends Component {
       this.setState({ imageAvailable });
     });
     const onlineUsers = OnlineUsers;
-    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     const { providerId } = this.state;
     const userRef = database().ref(`users/${providerId}`);
 
@@ -324,7 +331,6 @@ class ProviderDetailsScreen extends Component {
 
   componentWillUnmount() {
     clearInterval(this.interval);
-    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
 
   handleBackButtonClick = () => {
@@ -403,11 +409,6 @@ class ProviderDetailsScreen extends Component {
     const { imageAvailable } = this.state;
     return (
       <View style={styles.container}>
-        <NavigationEvents
-          onDidFocus={() => {
-            this.initialRender();
-          }}
-        />
         <StatusBarPlaceHolder />
         <View style={styles.header}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>

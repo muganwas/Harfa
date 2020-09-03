@@ -55,12 +55,18 @@ class ChatAfterBookingDetailsScreen extends Component {
     };
 
     componentDidMount() {
-        const { fetchedNotifications } = this.props;
+        const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
         imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
             this.setState({ proImageAvailable });
         });
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     componentDidUpdate() {
@@ -71,10 +77,6 @@ class ChatAfterBookingDetailsScreen extends Component {
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[employee_id] });
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     handleBackButtonClick = () => {

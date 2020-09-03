@@ -51,18 +51,16 @@ class NotificationsScreen extends Component {
     };
 
     componentDidMount() {
-        const { fetchedNotifications } = this.props;
+        const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'generic', value: 0 });
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-
-        const { navigation } = this.props;
+        
         navigation.addListener('willFocus', async () => {
             this.getAllNotifications();
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     handleBackButtonClick = () => {

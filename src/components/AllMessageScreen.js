@@ -52,7 +52,7 @@ class AllMessageScreen extends Component {
     };
 
     componentDidMount(){
-        const { userInfo: { userDetails } } = this.props;
+        const { userInfo: { userDetails }, navigation } = this.props;
         let dbRef = database().ref('recentMessage').child(userDetails.userId);
         dbRef.once('value', snapshot => {
             const key = snapshot.key;
@@ -86,12 +86,14 @@ class AllMessageScreen extends Component {
                 })
             }
         });
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
 
     handleBackButtonClick = () => {
         // this.props.navigation.navigate("Dashboard");

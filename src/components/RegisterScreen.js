@@ -79,23 +79,19 @@ class RegisterScreen extends Component {
   }
 
   componentDidMount() {
-    BackHandler.addEventListener(
-      'hardwareBackPress',
-      this.handleBackButtonClick,
-    );
+    const { navigation } = this.props;
+    navigation.addListener('willFocus', async () => {
+      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+    });
+    navigation.addListener('willBlur', () => {
+      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    });
     /*storageRef.list().then(result => {
       // Loop over each item
       result.items.forEach(ref => {
         console.log('storage ref loop', ref.fullPath);
       });
     });*/
-  }
-
-  componentWillUnmount() {
-    BackHandler.removeEventListener(
-      'hardwareBackPress',
-      this.handleBackButtonClick,
-    );
   }
 
   handleBackButtonClick = () => {

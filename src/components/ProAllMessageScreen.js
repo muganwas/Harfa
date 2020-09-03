@@ -51,8 +51,7 @@ class ProAllMessageScreen extends Component {
     };
 
     componentDidMount() {
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-        const { userInfo: { providerDetails } } = this.props;
+        const { userInfo: { providerDetails }, navigation } = this.props;
         let dbRef = database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', snapshot => {
             //const key = snapshot.key;
@@ -84,10 +83,13 @@ class ProAllMessageScreen extends Component {
                 })
             }
         });
-    }
 
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     handleBackButtonClick = () => {

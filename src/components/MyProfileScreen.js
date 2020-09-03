@@ -85,18 +85,13 @@ class MyProfileScreen extends Component {
   }
 
   componentDidMount() {
-    BackHandler.addEventListener(
-      'hardwareBackPress',
-      this.handleBackButtonClick,
-    );
-  }
-
-  componentWillUnmount() {
-    console.log('My Profile Unmount');
-    BackHandler.removeEventListener(
-      'hardwareBackPress',
-      this.handleBackButtonClick,
-    );
+    const { navigation } = this.props;
+    navigation.addListener('willFocus', async () => {
+      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+    });
+    navigation.addListener('willBlur', () => {
+      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    });
   }
 
   handleBackButtonClick = () => {

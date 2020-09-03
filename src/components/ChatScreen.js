@@ -72,9 +72,14 @@ class ChatScreen extends Component {
     };
 
     componentDidMount() {
-        const { fetchedNotifications } = this.props;
+        const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
-        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     componentDidUpdate() {
@@ -85,10 +90,6 @@ class ChatScreen extends Component {
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced)
             this.setState({ dataChatSource: dataChatSource[employee_id], dataChatSourceSynced: true });
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     handleBackButtonClick = () => {

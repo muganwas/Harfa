@@ -95,7 +95,13 @@ class ProAcceptRejectJobScreen extends Component {
     };
 
     componentDidMount() {
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
         database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
             .on('child_added', value => {
                 this.setState(prevState => {
@@ -109,10 +115,6 @@ class ProAcceptRejectJobScreen extends Component {
         this.setState({
             isLoading: false,
         })
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     handleBackButtonClick = () => {

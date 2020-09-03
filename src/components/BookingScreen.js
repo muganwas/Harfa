@@ -47,17 +47,17 @@ class BookingScreen extends Component {
     };
 
     componentDidMount() {
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
-            this.getAllBookings();
+            this.getAllBookings();       
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
     }
     
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
-
     handleBackButtonClick = () => {
         if(Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();    

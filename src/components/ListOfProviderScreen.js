@@ -63,10 +63,9 @@ class ListOfProviderScreen extends Component {
   }
 
   componentDidMount() {
-    this.getAllProviders();
-    this.willFocus = this.props.navigation.addListener('willFocus', () => {
+    navigation.addListener('willFocus', async () => {
       const { navigation } = this.props;
-      this.setState ({
+      this.setState({
         serviceName: navigation.state.params.serviceName,
         serviceId: navigation.state.params.serviceId,
         dataSource: [],
@@ -80,11 +79,11 @@ class ListOfProviderScreen extends Component {
         reviewOrder: true
       });
       this.getAllProviders();
+      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
     });
-    BackHandler.addEventListener(
-      'hardwareBackPress',
-      this.handleBackButtonClick,
-    );
+    navigation.addListener('willBlur', () => {
+      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    });
   }
 
   getAllProviders = () => {
@@ -139,7 +138,7 @@ class ListOfProviderScreen extends Component {
         });
         this.showToast('Something went wrong, Check your internet connection');
       });
-      this.calculateDistance();
+    this.calculateDistance();
   }
 
   calculateRating = async id => {
@@ -185,13 +184,6 @@ class ListOfProviderScreen extends Component {
       });
       this.setState({ distCalculated: true, dataSource: tempDatasource });
     }
-  }
-
-  componentWillUnmount() {
-    BackHandler.removeEventListener(
-      'hardwareBackPress',
-      this.handleBackButtonClick,
-    );
   }
 
   handleBackButtonClick = () => {

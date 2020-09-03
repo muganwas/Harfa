@@ -72,8 +72,14 @@ class ProChatAcceptScreen extends Component {
 
     //get UserData
     componentDidMount() {
-        BackHandler.addEventListener('hardwareBackPress', this.backButtonClick);
-        const userId = this.props.navigation.state.params.userId;
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+        const userId = navigation.state.params.userId;
         fetch(USER_GET_PROFILE + userId, {
             method: "GET",
             headers: {
@@ -165,7 +171,6 @@ class ProChatAcceptScreen extends Component {
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
         song.stop();
         clearInterval(this.interval);
     }

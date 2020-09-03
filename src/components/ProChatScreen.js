@@ -64,7 +64,14 @@ class ProChatScreen extends Component {
     };
 
     componentDidMount() {
-        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
+            this.onRefresh();
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     componentDidUpdate() {
@@ -76,10 +83,6 @@ class ProChatScreen extends Component {
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[user_id] });
         console.log('fetched', fetched)
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     handleBackButtonClick = () => {

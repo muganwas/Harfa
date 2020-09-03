@@ -86,16 +86,19 @@ class ProDashboardScreen extends Component {
 
     //Get All Bookings
     componentDidMount = async () => {
-        this.initiateProps()
+        this.initiateProps();
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
+            this.onRefresh();
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     initiateProps = () => {
         const { navigation, jobsInfo: { dataWorkSource } } = this.props;
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
-        navigation.addListener('willFocus', async () => {
-            this.onRefresh();
-        });
-        this.onRefresh();
         this.setState({ dataWorkSource, isLoading: false, isWorkRequest: true });
     }
 
@@ -118,7 +121,6 @@ class ProDashboardScreen extends Component {
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton);
         //this.notificationOpenedListener();
     }
 

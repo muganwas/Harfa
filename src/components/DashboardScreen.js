@@ -57,12 +57,15 @@ class DashboardScreen extends Component {
 
     //Get All Services
     componentDidMount() {
-        this.onRefresh();
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton.bind(this));
-    }
-
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton.bind(this));
+        
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
+            this.onRefresh();
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     showRejectionAlert = (title, message) => {

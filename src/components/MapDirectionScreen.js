@@ -88,12 +88,17 @@ class MapDirectionScreen extends Component {
     };
 
     componentDidMount() {
-        const { generalInfo: { othersCoordinates, usersCoordinates }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
+        const { generalInfo: { othersCoordinates, usersCoordinates }, jobsInfo: { selectedJobRequest: { employee_id } }, navigation } = this.props;
         const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
         const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
-
         this.getDirections(employeeLatitude + "," + employeeLongitude, this.state.destinationLocation);
-        BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     componentDidUpdate() {
@@ -121,10 +126,6 @@ class MapDirectionScreen extends Component {
             let actualLong1 = coords[0].longitude;
             if (actualLat1 && actualLong1 && !this.state.keyReset) this.setState({ mapKey: Math.random(2), keyReset: true });
         }
-    }
-
-    componentWillUnmount() {
-        //BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     handleBackButtonClick = () => {

@@ -73,9 +73,15 @@ class ProChatAfterBookingDetailsScreen extends Component {
     };
 
     componentDidMount() {
-        const { fetchedNotifications } = this.props;
+        const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
         this.setState({
             isLoading: false
         })
@@ -93,11 +99,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
             this.setState({ dataChatSource: dataChatSource[user_id] });
     }
 
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
-
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
