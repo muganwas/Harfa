@@ -148,9 +148,6 @@ class ProDashboardScreen extends Component {
                             present = true;
                     })
                     if (!present) {
-                        let exists;
-                        imageExists(message.image).then(res => { exists = res });
-                        message.exists = exists;
                         this.setState(prevState => ({ dataSource: [...prevState.dataSource, message], isLoading: false, isRecentMessage: true }));
                     }
 
@@ -603,14 +600,14 @@ class ProDashboardScreen extends Component {
 
     renderPendingJobs = ({ item, index }) => {
         if (item) {
-            const { image, name, imageAvailable, user_id, service_name, chat_status, status, order_id } = item;
+            const { image, name, user_id, service_name, chat_status, status, order_id } = item;
             return (
                 <TouchableOpacity style={styles.pendingJobRow}
                     onPress={() => this.goToProMapDirection(chat_status, status, { currentPos: index, userType: 'provider', user_id, orderId: order_id })}>
                     <LinearGradient style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                            source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
+                            source={{ uri: image }} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
                             <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold' }}>
                                 {name}

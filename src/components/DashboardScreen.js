@@ -61,27 +61,11 @@ class DashboardScreen extends Component {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             this.onRefresh();
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButton());
         });
         navigation.addListener('willBlur', () => {
-            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+            BackHandler.removeEventListener('hardwareBackPress', () => this.handleBackButton());
         });
-    }
-
-    showRejectionAlert = (title, message) => {
-        Alert.alert(
-            title,
-            message,
-            [
-                {
-                    text: "D'accord",
-                    onPress: () => {
-                        this.props.updateActiveRequest(false);
-                        this.onRefresh()
-                    }
-                },
-            ]
-        );
     }
 
     _spring = () => {
@@ -112,11 +96,7 @@ class DashboardScreen extends Component {
     }
 
     handleBackButton = () => {
-        if (Platform.OS == 'ios')
-            this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
-        else
-            this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
-        return true
+        this.props.navigation.goBack();
     };
 
     //GridView Items
@@ -213,7 +193,7 @@ class DashboardScreen extends Component {
                         style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                            source={imageAvailable ? { uri: image } : require('../images/generic_avatar.png')} />
+                            source={{ uri: image }} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                             <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
                                 {name + " " + surName}

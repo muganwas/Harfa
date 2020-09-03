@@ -26,6 +26,7 @@ import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-community/async-storage';
 import { imageExists } from '../misc/helpers';
+import { clone } from 'lodash';
 import { Notifications } from 'react-native-notifications';
 
 const socket = Config.socket;
@@ -72,15 +73,16 @@ class Hamburger extends React.Component {
             fetchedNotifications({ type: 'generic', value: newGenericCount });
             const orderId = data.orderId;
             let pos = 0;
+
             jobRequests.map((obj, key) => {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
             });
-            
+
             if (title == "Chat Request Rejected") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+                this.showToast("Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
             }
             else if (title == "Job Accepted") {
                 var pendingJobData = {
@@ -105,17 +107,17 @@ class Hamburger extends React.Component {
                 }
                 newJobRequests[pos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
-                this.showRejectionAlert("EMPLOI ACCEPTÉ", "Votre travail a été accepté.")
+                this.showToast("Votre travail a été accepté.")
             }
             else if (title == "Job Rejected") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showRejectionAlert("EMPLOI REJETÉ", "Votre travail a été rejeté. Veuillez réessayer plus tard")
+                this.showToast("Votre travail a été rejeté. Veuillez réessayer plus tard")
             }
             else if (title == "Job Completed") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showRejectionAlert("TRAVAIL TERMINE", "Votre travail est terminé.")
+                this.showToast("Votre travail est terminé.")
             }
             else if (title == "Chat Request Accepted" && pos != null) {
                 var providerData = JSON.parse(data.ProviderData);
@@ -149,12 +151,12 @@ class Hamburger extends React.Component {
                 navigation.navigate('Dashboard');
             }
             else if (title == "Chat Request Rejected") {
-                this.showRejectionAlert("DEMANDE DE CHAT REJETÉE", "Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+                this.showToast("Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
             }
             else if ((title == "No Response" || title == "Canceled") && pos != null) {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showRejectionAlert("Pas de réponse", "Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
+                this.showToast("Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
             }
         });
 
@@ -319,22 +321,6 @@ class Hamburger extends React.Component {
             if (!online && connectivityAvailable) socket.open();
         });
         socket.open();
-    }
-
-    showRejectionAlert = (title, message) => {
-        Alert.alert(
-            title,
-            message,
-            [
-                {
-                    text: 'OK',
-                    onPress: () => {
-                        console.log("OK Press");
-                        this.props.navigation.navigate("Dashboard")
-                    },
-                },
-            ]
-        );
     }
 
     componentDidUpdate() {

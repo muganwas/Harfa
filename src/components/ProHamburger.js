@@ -24,6 +24,7 @@ import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from '@react-native-community/async-storage';
+import { clone } from 'lodash';
 import { black, white, red } from '../Constants/colors';
 
 const socket = Config.socket;
@@ -218,10 +219,10 @@ class ProHamburger extends React.Component {
     }
 
     checkForUserType = async () => {
-        await AsyncStorage.getItem('userType').then( result => {
-            if (!result) 
+        await AsyncStorage.getItem('userType').then(result => {
+            if (!result)
                 this.props.navigation.navigate('AfterSplash');
-            
+
         });
     }
 

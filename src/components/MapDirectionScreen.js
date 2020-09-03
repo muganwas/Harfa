@@ -179,29 +179,6 @@ class MapDirectionScreen extends Component {
         Linking.openURL('tel:' + this.state.providerMobile)
     }
 
-    showRejectionAlert = (title, message) => {
-        console.log("Alert Show");
-        var that = this;
-        Alert.alert(
-            title,
-            message,
-            [
-                {
-                    // text: 'Cancel',  
-                    // onPress: () => console.log('Cancel Pressed'),  
-                    // style: 'cancel',  
-                },
-                {
-                    text: 'OK',
-                    onPress: () => {
-                        console.log("OK Press");
-                        that.props.navigation.navigate("Dashboard")
-                    },
-                },
-            ]
-        );
-    }
-
     openCompleteConfirmation = () => {
         Alert.alert(
             "COMPLETED",

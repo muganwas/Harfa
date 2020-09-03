@@ -249,7 +249,6 @@ class ProAcceptRejectJobScreen extends Component {
                 serviceName: this.state.serviceName,
                 orderId: this.state.orderId,
                 type: "text",
-
             }
             updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
             updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;

@@ -382,19 +382,6 @@ class ProviderDetailsScreen extends Component {
     Linking.openURL('tel:' + this.state.mobile)
   }
 
-  showRejectionAlert = (title, message) => {
-    Alert.alert(
-      title,
-      message,
-      [
-        {
-          text: 'OK',
-          onPress: () => this.props.navigation.goBack(),
-        },
-      ]
-    );
-  }
-
   showToast = (message) => {
     Toast.show(message);
   }
