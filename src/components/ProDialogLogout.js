@@ -46,7 +46,6 @@ class ProDialogLogout extends Component {
 
     render() {
         return (
-
             <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
                 <View style={[styles.modal, { width: this.state.width - 80 }]}>
                     <View style={styles.textView}>

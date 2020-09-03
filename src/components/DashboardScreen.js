@@ -57,7 +57,7 @@ class DashboardScreen extends Component {
 
     //Get All Services
     componentDidMount() {
-        
+        this.onRefresh();
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             this.onRefresh();

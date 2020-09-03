@@ -8,7 +8,6 @@ import Config from './Config';
 import { colorBg } from '../Constants/colors';
 
 class DialogLogout extends Component {
-
     constructor(props) {
         super();
         this.state = {

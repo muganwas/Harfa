@@ -84,6 +84,7 @@ class ProMapDirectionScreen extends Component {
 
     componentDidMount() {
         const { navigation } = this.props;
+        this.onRefresh();
         navigation.addListener('willFocus', async () => {
             this.onRefresh();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());

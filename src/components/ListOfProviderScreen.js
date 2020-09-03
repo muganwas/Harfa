@@ -63,27 +63,33 @@ class ListOfProviderScreen extends Component {
   }
 
   componentDidMount() {
+    const { navigation } = this.props;
+    this.initialize();
     navigation.addListener('willFocus', async () => {
-      const { navigation } = this.props;
-      this.setState({
-        serviceName: navigation.state.params.serviceName,
-        serviceId: navigation.state.params.serviceId,
-        dataSource: [],
-        distInfo: {},
-        distCalculated: false,
-        isNoData: false,
-        isData: false,
-        isLoading: true,
-        showClasses: false,
-        distanceOrder: true,
-        reviewOrder: true
-      });
-      this.getAllProviders();
+      this.initialize();
       BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
     });
     navigation.addListener('willBlur', () => {
       BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     });
+  }
+
+  initialize = () => {
+    const { navigation } = this.props;
+    this.setState({
+      serviceName: navigation.state.params.serviceName,
+      serviceId: navigation.state.params.serviceId,
+      dataSource: [],
+      distInfo: {},
+      distCalculated: false,
+      isNoData: false,
+      isData: false,
+      isLoading: true,
+      showClasses: false,
+      distanceOrder: true,
+      reviewOrder: true
+    });
+    this.getAllProviders();
   }
 
   getAllProviders = () => {

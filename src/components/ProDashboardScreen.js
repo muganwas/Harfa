@@ -88,6 +88,7 @@ class ProDashboardScreen extends Component {
     componentDidMount = async () => {
         this.initiateProps();
         const { navigation } = this.props;
+        this.onRefresh();
         navigation.addListener('willFocus', async () => {
             this.onRefresh();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -98,7 +99,7 @@ class ProDashboardScreen extends Component {
     }
 
     initiateProps = () => {
-        const { navigation, jobsInfo: { dataWorkSource } } = this.props;
+        const { jobsInfo: { dataWorkSource } } = this.props;
         this.setState({ dataWorkSource, isLoading: false, isWorkRequest: true });
     }
 
@@ -219,7 +220,7 @@ class ProDashboardScreen extends Component {
                     }}>
                     <View style={styles.itemImageView}>
                         <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                            source={item.exists ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                            source={{ uri: item.image }} />
                     </View>
                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                         <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>

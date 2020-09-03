@@ -6,14 +6,16 @@ import RNExitApp from 'react-native-exit-app';
 import { colorYellow } from '../Constants/colors';
 
 class AfterSplashScreen extends Component {
-    async componentDidMount()
-    {
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    componentDidMount(){
+        const { navigation } = this.props;
+        navigation.addListener('willFocus', async () => {
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
     
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
 
     handleBackButtonClick = () => {
         if (Platform.OS == 'android')

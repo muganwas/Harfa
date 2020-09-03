@@ -93,9 +93,7 @@ export default class ProServiceSelectScreen extends Component {
   }
 
   checkValidation = () => {
-
     if(this.state.selectedServiceId.length > 0){
-
       this.props.navigation.state.params.onGoBack(this.state.selectedServiceId+"/"+this.state.selectedServiceName);
       this.props.navigation.goBack();
     }

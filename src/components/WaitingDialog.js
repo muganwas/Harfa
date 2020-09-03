@@ -1,29 +1,25 @@
 import React, { Component } from 'react';
-import {StyleSheet, Text, ActivityIndicator, View} from 'react-native';
+import { StyleSheet, Text, ActivityIndicator, View } from 'react-native';
 import CardView from 'react-native-cardview';
 import { white } from '../Constants/colors';
 
 export default class WaitingDialog extends Component {
-    constructor(props) {
-      super();
-    };
-
-  render() {
-    return (
-        <View style={styles.contentContainer}>
-            <CardView style={styles.modal}
-                cardElevation={5}
-                cardMaxElevation={5}
-                cornerRadius={2}>
-                <ActivityIndicator
-                    style={{ height: 50 }}
-                    color="#C00"
-                    size="large" />
-                <Text style={{ padding: 5, fontSize: 10, fontWeight: 'bold' }}>Loading...</Text>
-            </CardView>
-        </View>
-    );
-  }
+    render() {
+        return (
+            <View style={styles.contentContainer}>
+                <CardView style={styles.modal}
+                    cardElevation={5}
+                    cardMaxElevation={5}
+                    cornerRadius={2}>
+                    <ActivityIndicator
+                        style={{ height: 50 }}
+                        color="#C00"
+                        size="large" />
+                    <Text style={{ padding: 5, fontSize: 10, fontWeight: 'bold' }}>Loading...</Text>
+                </CardView>
+            </View>
+        );
+    }
 }
 
 const styles = StyleSheet.create({
@@ -50,4 +46,3 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
 });
-

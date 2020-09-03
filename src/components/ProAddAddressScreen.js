@@ -46,8 +46,13 @@ class ProAddAddressScreen extends Component {
     watchID = null;
 
     componentDidMount() {
-        const { userInfo: { providerDetails } } = this.props;
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        const { userInfo: { providerDetails }, navigation } = this.props;
+        navigation.addListener('willFocus', async () => {   
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
         if (this.state.address != '') {
             this.setState({
                 address: providerDetails.address,
@@ -67,7 +72,6 @@ class ProAddAddressScreen extends Component {
     }
 
     componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
         this.watchID != null && Geolocation.clearWatch(this.watchID);
     }
 

@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import {View, Image, TextInput, Dimensions, StyleSheet,FlatList, ActivityIndicator, Text,
-TouchableOpacity, ToastAndroid, BackHandler, StatusBar, Platform,} from 'react-native';
+import {
+  View, Image, TextInput, Dimensions, StyleSheet, FlatList, ActivityIndicator, Text,
+  TouchableOpacity, ToastAndroid, BackHandler, StatusBar, Platform,
+} from 'react-native';
 import { colorPrimary, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -11,18 +13,19 @@ const LAT_LNG_URL = "https://maps.googleapis.com/maps/api/place/details/json?key
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
-    return (
-        Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
-    );
+  return (
+    Platform.OS === 'ios' ?
+      <View style={{
+        width: "100%",
+        height: STATUS_BAR_HEIGHT,
+        backgroundColor: colorPrimaryDark
+      }}>
+        <StatusBar
+          barStyle="light-content" />
+      </View>
+      :
+      <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+  );
 }
 
 export default class SelectAddressScreen extends Component {
@@ -38,11 +41,13 @@ export default class SelectAddressScreen extends Component {
   };
 
   componentWillMount() {
-    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-  }
-
-  componentWillUnmount() {
-    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    const { navigation } = this.props;
+    navigation.addListener('willFocus', async () => {
+      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+    });
+    navigation.addListener('willBlur', () => {
+      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    });
   }
 
   handleBackButtonClick = () => {
@@ -54,13 +59,13 @@ export default class SelectAddressScreen extends Component {
     this.setState({
       isLoading: true,
     });
-    fetch(GOOGLE_ADDRESS_SERVICE+value)
+    fetch(GOOGLE_ADDRESS_SERVICE + value)
       .then((response) => response.json())
       .then((responseJson) => {
 
-        console.log("Response : "+JSON.stringify(responseJson));
+        console.log("Response : " + JSON.stringify(responseJson));
         this.setState({
-          dataSource: responseJson.predictions,  
+          dataSource: responseJson.predictions,
           isLoading: false
         })
       })
@@ -77,27 +82,27 @@ export default class SelectAddressScreen extends Component {
     this.setState({
       isLoading: true,
     });
-    fetch(LAT_LNG_URL+placeId)
-    .then((response) => response.json())
-    .then((responseJson) => {
+    fetch(LAT_LNG_URL + placeId)
+      .then((response) => response.json())
+      .then((responseJson) => {
 
-      console.log("Response : "+JSON.stringify(responseJson.result.geometry.location.lat));
-      this.setState({
-        isLoading: false,
-        address: description,
-        lat: responseJson.result.geometry.location.lat,
-        lng: responseJson.result.geometry.location.lng
-      });
-      this.props.navigation.state.params.onGoBack(this.state.address+"/"+this.state.lat+"/"+this.state.lng);
-      this.props.navigation.goBack();
-    })
-    .catch((error) => {
-      console.log(error);
-      this.setState({
-        isLoading: false
+        console.log("Response : " + JSON.stringify(responseJson.result.geometry.location.lat));
+        this.setState({
+          isLoading: false,
+          address: description,
+          lat: responseJson.result.geometry.location.lat,
+          lng: responseJson.result.geometry.location.lng
+        });
+        this.props.navigation.state.params.onGoBack(this.state.address + "/" + this.state.lat + "/" + this.state.lng);
+        this.props.navigation.goBack();
       })
-      ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
-    });
+      .catch((error) => {
+        console.log(error);
+        this.setState({
+          isLoading: false
+        })
+        ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
+      });
   }
 
   //GridView Items
@@ -117,42 +122,46 @@ export default class SelectAddressScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <StatusBarPlaceHolder/>
+        <StatusBarPlaceHolder />
         <View style={styles.header}>
           <View style={{ flex: 1, flexDirection: 'row' }}>
-            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center',}}
+            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
               onPress={() => this.props.navigation.goBack()}>
               <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                 source={require('../icons/arrow_back.png')} />
             </TouchableOpacity>
-            <Text style={{ color: 'white',fontWeight: 'bold', alignSelf: 'center', marginLeft: 1 }}>
-              
+            <Text style={{ color: 'white', fontWeight: 'bold', alignSelf: 'center', marginLeft: 1 }}>
+
             </Text>
           </View>
         </View>
-           <View style={{flexDirection: 'row', width: '100%', height: 70,  backgroundColor: colorYellow,
-                paddingLeft: 20, paddingRight: 20, paddingTop: 10, paddingBottom: 10, justifyContent: 'center',}}>
-                <View style={{ flexDirection: 'row', width: screenWidth-20, height: 50, justifyContent: 'center', 
-                    alignItems:'center', borderRadius: 5, backgroundColor: 'white', shadowColor: '#000', 
-                    shadowOffset: { width: 0, height: 0 },shadowOpacity: 0.75,shadowRadius: 5,
-                    elevation: 5,}}>
-                    <Image style={{ width: 15, height: 15, marginLeft: 20 }}
-                        source={require('../icons/search.png')}/>
-                    <TextInput style={{width: screenWidth - 60, height: 45, fontSize: 16, fontWeight: 'bold', marginLeft: 10}}
-                      onChangeText={(value) => this.getAddress(value)}
-                      placeholder='Enter your address...'>
-                    </TextInput>
-                </View>
-            </View>
-            <View style={styles.listView}>
-              <FlatList
-                numColumns={1}
-                data={this.state.dataSource}
-                renderItem={this.renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                showsVerticalScrollIndicator={false} 
-                extraData={this.state}/>
+        <View style={{
+          flexDirection: 'row', width: '100%', height: 70, backgroundColor: colorYellow,
+          paddingLeft: 20, paddingRight: 20, paddingTop: 10, paddingBottom: 10, justifyContent: 'center',
+        }}>
+          <View style={{
+            flexDirection: 'row', width: screenWidth - 20, height: 50, justifyContent: 'center',
+            alignItems: 'center', borderRadius: 5, backgroundColor: 'white', shadowColor: '#000',
+            shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5,
+            elevation: 5,
+          }}>
+            <Image style={{ width: 15, height: 15, marginLeft: 20 }}
+              source={require('../icons/search.png')} />
+            <TextInput style={{ width: screenWidth - 60, height: 45, fontSize: 16, fontWeight: 'bold', marginLeft: 10 }}
+              onChangeText={(value) => this.getAddress(value)}
+              placeholder='Enter your address...'>
+            </TextInput>
           </View>
+        </View>
+        <View style={styles.listView}>
+          <FlatList
+            numColumns={1}
+            data={this.state.dataSource}
+            renderItem={this.renderItem}
+            keyExtractor={(item, index) => index.toString()}
+            showsVerticalScrollIndicator={false}
+            extraData={this.state} />
+        </View>
 
         {this.state.isLoading && (
           <View style={styles.loaderStyle}>
@@ -163,7 +172,7 @@ export default class SelectAddressScreen extends Component {
           </View>
         )}
 
-    
+
       </View>
     );
   }
@@ -190,14 +199,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
-},
+  },
   listView: {
     flex: 1,
     backgroundColor: colorBg,
     padding: 5,
   },
   itemHeader: {
-    flex:1,
+    flex: 1,
     width: screenWidth,
     height: 50,
     flexDirection: 'row',
@@ -218,7 +227,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   itemText: {
-    width: screenWidth-50,
+    width: screenWidth - 50,
     fontSize: 14,
     color: 'black',
     textAlignVertical: 'center',

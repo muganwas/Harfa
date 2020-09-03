@@ -53,7 +53,7 @@ class NotificationsScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'generic', value: 0 });
-        
+        this.getAllNotifications();
         navigation.addListener('willFocus', async () => {
             this.getAllNotifications();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());

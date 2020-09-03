@@ -49,7 +49,6 @@ const StatusBarPlaceHolder = () => {
 }
 
 class ProMyProfileScreen extends Component {
-
     constructor(props) {
         super();
         const { userInfo: { providerDetails } } = props;
@@ -75,7 +74,6 @@ class ProMyProfileScreen extends Component {
     };
 
     selectPhoto = () => {
-
         ImagePicker.showImagePicker(options, (response) => {
             if (response.didCancel) {
                 console.log('User cancelled image picker');
@@ -99,7 +97,6 @@ class ProMyProfileScreen extends Component {
 
     componentDidMount = () => {
         const { userInfo: { providerDetails }, navigation } = this.props;
-
         navigation.addListener('willFocus', async () => {
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });

@@ -3,12 +3,15 @@ import { View, Text, StatusBar, TouchableOpacity, BackHandler } from 'react-nati
 import { colorYellow } from '../Constants/colors';
 
 export default class ProAccountTypeScreen extends Component {
-    componentDidMount(){
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
     
-    componentWillUnmount() {
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    componentDidMount(){
+        const { navigation } = this.props; 
+        navigation.addListener('willFocus', async () => {       
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
     }
 
     handleBackButtonClick = () => {
