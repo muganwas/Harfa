@@ -156,64 +156,68 @@ class ProChatScreen extends Component {
     }
 
     sendMessageTask = async () => {
+        const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, customer_FCM_id, receiverName, serviceName, orderId } = this.state;
+        this.setState({
+            inputMessage: '',
+            showButton: false,
+        });
         if (this.state.inputMessage.length > 0) {
             let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
-                senderId: this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId: this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                senderId: senderId,
+                senderImage: senderImage,
+                senderName: senderName,
+                receiverId: receiverId,
+                receiverName: receiverName,
+                receiverImage: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
             }
             let recentMessageReceiver = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: senderId,
+                name: senderName,
+                image: senderImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
             }
             let recentMessageSender = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: receiverId,
+                name: receiverName,
+                image: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
             }
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
+            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
+            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
             database().ref().update(updates);
 
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
+            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
+            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
             database().ref().update(recentUpdates);
-            this.setState({ inputMesage: '' });
 
             const notification = JSON.stringify({
-                "fcm_id": this.state.customer_FCM_id,
+                "fcm_id": customer_FCM_id,
                 "type": "Message",
                 "notification_by": "Employee",
                 "title": "Message Recieved",
-                "body": this.state.senderName + "has sent you a message",
+                "body": senderName + "has sent you a message",
             });
 
             fetch(SEND_NOTIFICATION, {
@@ -236,11 +240,6 @@ class ProChatScreen extends Component {
                 });
             return true;
         }
-
-        this.setState({
-            inputMessage: '',
-            showButton: false,
-        });
     }
 
     renderMessageItem = ({ item }) => {
