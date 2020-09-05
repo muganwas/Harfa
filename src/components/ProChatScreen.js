@@ -14,6 +14,7 @@ import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground,
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
+const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -59,17 +60,48 @@ class ProChatScreen extends Component {
             receiverImage: allJobRequestsProviders[currentPos].user_details.image,
             orderId: allJobRequestsProviders[currentPos].order_id,
             serviceName: allJobRequestsProviders[currentPos].service_details.service_name,
-            userImageAvailable: allJobRequestsProviders[currentPos].imageAvailable
+            userImageAvailable: allJobRequestsProviders[currentPos].imageAvailable,
+            customer_FCM_id: allJobRequestsProviders[currentPos].user_details.fcm_id,
         };
     };
 
     componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
+            this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+    }
+
+    reInit = () => {
+        const {
+            messagesInfo: { dataChatSource, fetched },
+            navigation: { state: { params: { currentPos } } },
+            jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } },
+            navigation,
+            userInfo: { providerDetails }
+        } = this.props;
+        this.setState({
+            showButton: false,
+            senderId: providerDetails.providerId,
+            senderName: providerDetails.name + " " + providerDetails.surname,
+            senderImage: providerDetails.imageSource,
+            inputMessage: '',
+            showButton: false,
+            dataChatSource: dataChatSource[user_id] || [],
+            isLoading: !fetched,
+            //From ProDashboardScreen && ProMapDirection
+            pageTitle: navigation.state.params.pageTitle,
+            receiverId: allJobRequestsProviders[currentPos].user_id,
+            receiverName: allJobRequestsProviders[currentPos].user_details.username,
+            receiverImage: allJobRequestsProviders[currentPos].user_details.image,
+            orderId: allJobRequestsProviders[currentPos].order_id,
+            serviceName: allJobRequestsProviders[currentPos].service_details.service_name,
+            userImageAvailable: allJobRequestsProviders[currentPos].imageAvailable,
+            customer_FCM_id: allJobRequestsProviders[currentPos].user_details.fcm_id,
         });
     }
 
@@ -91,6 +123,8 @@ class ProChatScreen extends Component {
             this.props.navigation.navigate("ProDashboard");
         else if (this.state.pageTitle === 'ProAllMessage')
             this.props.navigation.navigate("ProAllMessage");
+        else
+            this.props.navigation.goBack();
         return true;
     }
 
@@ -106,10 +140,9 @@ class ProChatScreen extends Component {
     }
 
     showHideButton = (input) => {
-
         this.setState({
             inputMessage: input,
-        })
+        });
         if (input == '') {
             this.setState({
                 showButton: false,
@@ -123,7 +156,6 @@ class ProChatScreen extends Component {
     }
 
     sendMessageTask = async () => {
-
         if (this.state.inputMessage.length > 0) {
             let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
@@ -174,8 +206,35 @@ class ProChatScreen extends Component {
             recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
             recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
             database().ref().update(recentUpdates);
-
             this.setState({ inputMesage: '' });
+
+            const notification = JSON.stringify({
+                "fcm_id": this.state.customer_FCM_id,
+                "type": "Message",
+                "notification_by": "Employee",
+                "title": "Message Recieved",
+                "body": this.state.senderName + "has sent you a message",
+            });
+
+            fetch(SEND_NOTIFICATION, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: notification
+            }).
+                then((response) => {
+                    console.log('notif respons ', response)
+                }).
+                catch(error => {
+                    console.log(error);
+                    this.setState({
+                        isLoading: false
+                    })
+                    //this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+                });
+            return true;
         }
 
         this.setState({
@@ -218,7 +277,7 @@ class ProChatScreen extends Component {
                                         {item.textMessage}
                                     </Text>
                                     <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                        { item && this.convertTime(item.time)}
+                                        {item && this.convertTime(item.time)}
                                     </Text>
                                 </View>
                             </View>

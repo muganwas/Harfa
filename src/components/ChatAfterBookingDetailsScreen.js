@@ -8,11 +8,13 @@ import {
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import database from '@react-native-firebase/database';
 import { imageExists } from '../misc/helpers';
+import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
+const SEND_NOTIFICATION = Config.baseURL + "notificcation/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -50,7 +52,8 @@ class ChatAfterBookingDetailsScreen extends Component {
             orderId: props.navigation.state.params.orderId,
             titlePage: props.navigation.state.params.pageTitle,
             isJobAccepted: props.navigation.state.params.isJobAccepted,
-            proImageAvailable: null
+            proImageAvailable: null,
+            provider_FCM_id: null,
         }
     };
 
@@ -62,10 +65,35 @@ class ChatAfterBookingDetailsScreen extends Component {
         });
 
         navigation.addListener('willFocus', async () => {
+            this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+    }
+
+    reInit = () => {
+        const props = this.props;
+        const { userInfo: { userDetails }, jobsInfo: { selectedJobRequest: { employee_id } } } = props;
+        this.setState({
+            senderId: userDetails.userId,
+            senderImage: userDetails.image,
+            senderName: userDetails.username,
+            inputMessage: '',
+            showButton: false,
+            dataChatSource: props.messagesInfo.dataChatSource[employee_id],
+            isLoading: !props.messagesInfo.fetched,
+            isUpLoading: false,
+            receiverId: props.navigation.state.params.providerId,
+            receiverName: props.navigation.state.params.providerName + " " + props.navigation.state.params.providerSurname,
+            receiverImage: props.navigation.state.params.providerImage,
+            serviceName: props.navigation.state.params.serviceName,
+            orderId: props.navigation.state.params.orderId,
+            titlePage: props.navigation.state.params.pageTitle,
+            isJobAccepted: props.navigation.state.params.isJobAccepted,
+            proImageAvailable: null,
+            provider_FCM_id: null,
         });
     }
 

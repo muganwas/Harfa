@@ -24,7 +24,7 @@ import { fetchedJobProviderInfo } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from '@react-native-community/async-storage';
-import { clone } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { black, white, red } from '../Constants/colors';
 
 const socket = Config.socket;
@@ -125,7 +125,7 @@ class ProHamburger extends React.Component {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
             });
-            let newJobRequestsProviders = [...jobRequestsProviders]
+            let newJobRequestsProviders = cloneDeep(jobRequestsProviders)
             if (title == "Booking Request") {
                 navigation.navigate("ProChatAccept", {
                     'userId': data.userId,
@@ -145,10 +145,12 @@ class ProHamburger extends React.Component {
         });
 
         database().ref('chatting').child(receiverId).on('child_changed', result => {
+            console.log('chat notifiction - result', result.val())
             const { notificationsInfo } = this.props;
             const currentMessagesCount = notificationsInfo.messages;
             const newMessagesCount = currentMessagesCount + 1;
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
+            /*
             Android ? Notifications.postLocalNotification({
                 title: "Harfa Messages",
                 body: "You have a new message!",
@@ -161,13 +163,13 @@ class ProHamburger extends React.Component {
                     silent: false,
                     category: "SOME_CATEGORY",
                     userInfo: {}
-                });
+                });*/
         });
 
         database().ref('adminChatting').child(receiverId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             const adminMessageCount = notificationsInfo.adminMessages;
-            Android ? Notifications.postLocalNotification({
+            /*Android ? Notifications.postLocalNotification({
                 title: "Harfa Messages",
                 body: "You have a new message!",
                 extra: "data"
@@ -179,7 +181,7 @@ class ProHamburger extends React.Component {
                     silent: false,
                     category: "SOME_CATEGORY",
                     userInfo: {}
-                });
+                });*/
             fetchedNotifications({ type: 'adminMessages', value: adminMessageCount + 1 });
         });
         const { updateConnectivityStatus, updateOnlineStatus } = this.props;

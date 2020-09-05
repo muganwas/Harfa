@@ -26,7 +26,7 @@ import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-community/async-storage';
 import { imageExists } from '../misc/helpers';
-import { clone } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { Notifications } from 'react-native-notifications';
 
 const socket = Config.socket;
@@ -63,13 +63,14 @@ class Hamburger extends React.Component {
         const userRef = database().ref(`liveLocation/${senderId}`);
         this.checkNoficationsAvailability();
         this.checkForUserType();
+
         messaging().onMessage(message => {
             const { notification, data } = message;
             const { title, body } = notification;
             const { fetchedNotifications, updateActiveRequest, navigation, notificationsInfo, fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
-            let newJobRequests = [...jobRequests];
+            let newJobRequests = cloneDeep(jobRequests);
             fetchedNotifications({ type: 'generic', value: newGenericCount });
             const orderId = data.orderId;
             let pos = 0;
@@ -79,7 +80,22 @@ class Hamburger extends React.Component {
                 if (orderId === currOrderId) pos = key;
             });
 
-            if (title == "Chat Request Rejected") {
+            if (title == "Message Recieved") {
+                Android ? Notifications.postLocalNotification({
+                    title,
+                    body,
+                    extra: "data"
+                }) :
+                    Notifications.postLocalNotification({
+                        body,
+                        title,
+                        sound: "chime.aiff",
+                        silent: false,
+                        category: "SOME_CATEGORY",
+                        userInfo: {}
+                    });
+            }
+            else if (title == "Chat Request Rejected") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
                 this.showToast("Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
@@ -250,20 +266,6 @@ class Hamburger extends React.Component {
 
         database().ref('chatting').child(senderId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
-            Android ? Notifications.postLocalNotification({
-                title: "Harfa Messages",
-                body: "You have a new message!",
-                extra: "data"
-            }) :
-                Notifications.postLocalNotification({
-                    body: "You have a new Message",
-                    title: "Harfa Messages",
-                    sound: "chime.aiff",
-                    silent: false,
-                    category: "SOME_CATEGORY",
-                    userInfo: {}
-                });
-
             let currentMessagesCount = notificationsInfo.messages;
             let newMessagesCount = currentMessagesCount + 1;
             fetchedNotifications({ type: 'messages', value: newMessagesCount });

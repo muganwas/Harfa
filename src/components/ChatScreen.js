@@ -17,6 +17,7 @@ const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
+const SEND_NOTIFICATION = Config.baseURL + "notificcation/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -67,6 +68,7 @@ class ChatScreen extends Component {
             serviceName: allJobRequestsClient[currRequestPos].service_details.service_name,
             orderId: allJobRequestsClient[currRequestPos].order_id,
             titlePage: navigation.state.params.titlePage,
+            provider_FCM_id: null,
             dataChatSourceSynced: false
         }
     };
@@ -75,10 +77,40 @@ class ChatScreen extends Component {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
         navigation.addListener('willFocus', async () => {
+            this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+    }
+
+    reInit = () => {
+        const { userInfo: { userDetails }, jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = this.props;
+        var currRequestPos;
+        Object.keys(allJobRequestsClient).map(key => {
+            const currEmpId = allJobRequestsClient[key].employee_id;
+            if (currEmpId === employee_id) currRequestPos = key;
+        });
+        this.setState({
+            senderId: userDetails.userId,
+            senderImage: userDetails.image,
+            senderName: userDetails.username,
+            inputMessage: '',
+            showButton: false,
+            dataChatSource: dataChatSource[employee_id] || [],
+            isLoading: !fetched,
+            isUploading: false,
+            isJobAccepted: allJobRequestsClient[currRequestPos].status === 'Accepted',
+            requestStatus: allJobRequestsClient[currRequestPos].status,
+            receiverId: allJobRequestsClient[currRequestPos].employee_id,
+            receiverName: allJobRequestsClient[currRequestPos].employee_details.username,
+            receiverImage: allJobRequestsClient[currRequestPos].employee_details.image,
+            serviceName: allJobRequestsClient[currRequestPos].service_details.service_name,
+            orderId: allJobRequestsClient[currRequestPos].order_id,
+            titlePage: navigation.state.params.titlePage,
+            provider_FCM_id: null,
+            dataChatSourceSynced: false
         });
     }
 
@@ -181,8 +213,15 @@ class ChatScreen extends Component {
             recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
             recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
             database().ref().update(recentUpdates)
-
             this.setState({ inputMesage: '' });
+
+            const notification = {
+                "fcm_id": this.state.fcm_id,
+                "type": "Review",
+                "notification_by": "Employee",
+                "title": "Given Review",
+                "body": this.state.username + " has given you a review",
+            }
         }
 
         this.setState({

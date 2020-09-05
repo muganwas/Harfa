@@ -138,7 +138,7 @@ class AllMessageScreen extends Component {
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => {
                     dispatchSelectedJobRequest({employee_id: item.id});
-                    this.props.navigation.navigate("ChatAfterBooking", {
+                    this.props.navigation.navigate("ChatAfterBookingDetails", {
                         'providerId': item.id,
                         'providerName': item.name,
                         'providerSurname': '',

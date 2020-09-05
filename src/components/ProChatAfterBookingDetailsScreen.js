@@ -21,8 +21,7 @@ const options = {
 const ios = Platform.OS === 'ios';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
-
-const GET_IMAGE_URL = Config.baseURL + "thirdpartyapi/chatupload";
+const SEND_NOTIFICATION = Config.baseURL + "notificcation/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -50,6 +49,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
             navigation,
             userInfo: { providerDetails }
         } = props;
+        console.log('pro chat after booking screen --', allJobRequestsProviders[currentPos])
         this.state = {
             showButton: false,
             senderId: providerDetails.providerId,
@@ -67,16 +67,15 @@ class ProChatAfterBookingDetailsScreen extends Component {
             orderId: navigation.state.params.orderId,
             serviceName: navigation.state.params.serviceName,
             pageTitle: navigation.state.params.pageTitle,
+            client_FCM_id: null,
         };
-
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
-
         navigation.addListener('willFocus', async () => {
+            this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
@@ -87,14 +86,41 @@ class ProChatAfterBookingDetailsScreen extends Component {
         })
     }
 
+    reInit = () => {
+        const {
+            messagesInfo: { dataChatSource, fetched },
+            navigation: { state: { params: { currentPos } } },
+            jobsInfo: { selectedJobRequest: { user_id } },
+            navigation,
+            userInfo: { providerDetails }
+        } = this.props;
+        this.setState({
+            showButton: false,
+            senderId: providerDetails.providerId,
+            senderName: providerDetails.name + " " + providerDetails.surname,
+            senderImage: providerDetails.imageSource,
+            inputMessage: '',
+            showButton: false,
+            dataChatSource: dataChatSource[user_id] || [],
+            isLoading: !fetched,
+            isUploading: false,
+
+            receiverId: navigation.state.params.receiverId,
+            receiverName: navigation.state.params.receiverName,
+            receiverImage: navigation.state.params.receiverImage,
+            orderId: navigation.state.params.orderId,
+            serviceName: navigation.state.params.serviceName,
+            pageTitle: navigation.state.params.pageTitle,
+            client_FCM_id: null,
+        });
+    }
+
     componentDidUpdate() {
         const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
         const { isLoading } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
-        console.log('local', localDataChatSource)
-        console.log('up state', dataChatSource)
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[user_id] });
     }
@@ -116,10 +142,9 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     showHideButton = (input) => {
-
         this.setState({
             inputMessage: input,
-        })
+        });
         if (input == '') {
             this.setState({
                 showButton: false,
@@ -133,7 +158,6 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     sendMessageTask = async () => {
-
         if (this.state.inputMessage.length > 0) {
             let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
             let updates = {};
