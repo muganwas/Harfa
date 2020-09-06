@@ -201,8 +201,12 @@ class ChatAfterBookingDetailsScreen extends Component {
             const notification = JSON.stringify({
                 "fcm_id": provider_FCM_id,
                 "type": "Message",
+                "user_id": senderId,
+                "employee_id": receiverId,
+                "order_id": orderId,
                 "notification_by": "Client",
                 "title": "Message Recieved",
+                "save_notification": "true",
                 "body": senderName + "has sent you a message!",
             });
 
@@ -304,7 +308,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={this.state.proImageAvailable ? { uri: providerImage } : require('../images/generic_avatar.png')} />
+                                source={{ uri: providerImage }} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                                 {this.state.receiverName + " "}{this.state.surname}
                             </Text>

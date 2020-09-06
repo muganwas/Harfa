@@ -138,30 +138,32 @@ class NotificationsScreen extends Component {
 
     //GridView Items
     renderItem = ({ item }) => {
-        return (
-            <TouchableOpacity style={{
-                flex: 1, flexDirection: 'row', margin: 5, padding: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.75, shadowRadius: 2, elevation: 2, backgroundColor: 'white', borderRadius: 2, justifyContent: 'center'
-            }}>
+        console.log('notif item', item)
+        if (item)
+            return (
+                <TouchableOpacity style={{
+                    flex: 1, flexDirection: 'row', margin: 5, padding: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.75, shadowRadius: 2, elevation: 2, backgroundColor: 'white', borderRadius: 2, justifyContent: 'center'
+                }}>
 
-                <View style={{ justifyContent: 'center', alignContent: 'center' }}>
-                    <Image style={{ width: 45, height: 45, borderRadius: 100, alignItems: 'center', }}
-                        source={{ uri: item.employee_details.image }} />
-                </View>
+                    <View style={{ justifyContent: 'center', alignContent: 'center' }}>
+                        <Image style={{ width: 45, height: 45, borderRadius: 100, alignItems: 'center', }}
+                            source={{ uri: item.employee_details.image }} />
+                    </View>
 
-                <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
-                    <Text style={{ color: 'black', fontSize: 15, marginTop: 5, fontWeight: 'bold' }}>
-                        {item.title}
-                    </Text>
-                    <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
-                        {item.message}
-                    </Text>
-                    <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
-                        {item.createdDate}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        )
+                    <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
+                        <Text style={{ color: 'black', fontSize: 15, marginTop: 5, fontWeight: 'bold' }}>
+                            {item.title}
+                        </Text>
+                        <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
+                            {item.message}
+                        </Text>
+                        <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
+                            {item.createdDate}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            )
     }
 
     changeWaitingDialogVisibility = bool => {

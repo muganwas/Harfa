@@ -247,7 +247,7 @@ class ListOfProviderScreen extends Component {
                   borderRadius: 100,
                   alignSelf: 'center',
                 }}
-                source={item.imageAvailable ? { uri: item.image } : require('../images/generic_avatar.png')}
+                source={{ uri: item.image }}
               />
 
               <View style={{ backgroundColor: 'white', marginTop: 5 }}>

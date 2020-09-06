@@ -505,7 +505,7 @@ class ProMapDirectionScreen extends Component {
                                 <View style={{ flexDirection: 'row', flex: 1 }}>
 
                                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
-                                        source={proImageAvailable ? { uri: userImage } : require('../images/generic_avatar.png')} />
+                                        source={{ uri: userImage }} />
                                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                         <Text style={{ marginRight: 200, color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
                                             numberOfLines={1}>

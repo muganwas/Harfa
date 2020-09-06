@@ -224,7 +224,11 @@ class ChatScreen extends Component {
             const notification = JSON.stringify({
                 "fcm_id": provider_FCM_id,
                 "type": "Message",
+                "user_id": senderId,
+                "employee_id": receiverId,
+                "order_id": orderId,
                 "notification_by": "Client",
+                "save_notification": "true",
                 "title": "Message Recieved",
                 "body": senderName + "has sent you a message!",
             });

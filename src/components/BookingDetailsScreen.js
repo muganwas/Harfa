@@ -36,7 +36,6 @@ const StatusBarPlaceHolder = () => {
 
 class BookingDetailsScreen extends Component {
     constructor(props) {
-        console.log(' props --- ', props)
         super();
         this.state = {
             isLoading: false,

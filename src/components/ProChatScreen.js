@@ -215,9 +215,13 @@ class ProChatScreen extends Component {
 
             const notification = JSON.stringify({
                 "fcm_id": customer_FCM_id,
+                "user_id": receiverId,
+                "employee_id": senderId,
+                "order_id": orderId,
                 "type": "Message",
                 "notification_by": "Employee",
                 "title": "Message Recieved",
+                "save_notification": "true",
                 "body": senderName + "has sent you a message",
             });
 
@@ -314,7 +318,7 @@ class ProChatScreen extends Component {
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                                source={this.state.userImageAvailable ? { uri: this.state.receiverImage } : require('../images/generic_avatar.png')} />
+                                source={{ uri: this.state.receiverImage }} />
                             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                                 {this.state.receiverName}
                             </Text>

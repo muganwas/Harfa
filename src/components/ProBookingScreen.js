@@ -180,7 +180,7 @@ class ProBookingScreen extends Component {
                 <View style={styles.itemContainer}>
                     <Image
                         style={{ height: 45, width: 45, alignSelf: 'flex-start', alignContent: 'flex-start', borderRadius: 100 }}
-                        source={userImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
+                        source={{ uri: item.user_details.image }} />
                     <View style={{ flexDirection: 'column' }}>
                         <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                             {item.user_details.username}

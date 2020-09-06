@@ -126,7 +126,7 @@ class ProAcceptRejectJobScreen extends Component {
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                        source={this.state.userImageExists ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
+                                        source={{ uri: item.senderImage }} />
                                 </View>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -259,8 +259,12 @@ class ProAcceptRejectJobScreen extends Component {
             const notification = JSON.stringify({
                 "fcm_id": receiverFcmId,
                 "type": "Message",
+                "user_id": receiverId,
+                "employee_id": senderId,
+                "order_id": orderId,
                 "notification_by": "Client",
                 "title": "Message Recieved",
+                "save_notification": "true",
                 "body": senderName + "has sent you a message!",
             });
 
@@ -507,7 +511,7 @@ class ProAcceptRejectJobScreen extends Component {
                         </TouchableOpacity>
 
                         <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                            source={this.state.userImageExists ? { uri: this.state.receiverImage } : require('../images/generic_avatar.png')} />
+                            source={{ uri: this.state.receiverImage }} />
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                             {this.state.receiverName}
                         </Text>

@@ -145,7 +145,7 @@ class AllMessageScreen extends Component {
                 }}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={exists ? { uri: item.image } : require('../images/generic_avatar.png')} />
+                        source={{ uri: item.image }} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>

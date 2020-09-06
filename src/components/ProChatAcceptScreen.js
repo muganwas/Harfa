@@ -470,7 +470,7 @@ class ProChatAcceptScreen extends Component {
 
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
                                     <Image style={{ width: 80, height: 80, borderRadius: 100, }}
-                                        source={this.state.userImage ? { uri: this.state.userImage } : require('../images/generic_avatar.png')}>
+                                        source={{ uri: this.state.userImage }}>
                                     </Image>
                                 </View>
 

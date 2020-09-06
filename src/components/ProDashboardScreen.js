@@ -276,7 +276,7 @@ class ProDashboardScreen extends Component {
                     onPress={() => this.props.navigation.navigate("ProBooking", {currentPos: index})}>
                     <View style={styles.itemImageView}>
                         <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                            source={recentUserImage ? { uri: item.user_details.image } : require('../images/generic_avatar.png')} />
+                            source={{ uri: item.user_details.image }} />
                     </View>
                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                         <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
