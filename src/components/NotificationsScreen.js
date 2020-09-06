@@ -99,7 +99,6 @@ class NotificationsScreen extends Component {
     }
 
     getAllNotifications = () => {
-
         this.setState({
             isLoading: true
         });
@@ -113,7 +112,7 @@ class NotificationsScreen extends Component {
                     this.setState({
                         dataSource: responseJson.data,
                         isLoading: false,
-                        isNoData: false
+                        isNoData: !responseJson.data || responseJson.data.length === 0
                     })
                 }
                 else {

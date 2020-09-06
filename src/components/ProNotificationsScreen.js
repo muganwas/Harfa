@@ -1,14 +1,15 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import {View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, StatusBar, Platform, Animated, BackHandler} from 'react-native';
-import RNExitApp from 'react-native-exit-app';
+import { View, StyleSheet, TouchableOpacity, Image, Text,Dimensions, FlatList, StatusBar, Platform, Animated, BackHandler } from 'react-native';
 import Notifications from './Notifications';
+import Toast from 'react-native-simple-toast';
+import Config from './Config';
 import Hamburger from './ProHamburger';
 import { colorGray, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-
+const NOTIFICATION_URL = Config.baseURL + "notification/get-employee-notification/";
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -42,7 +43,9 @@ class ProNotificationsScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({type: 'generic', value: 0});
+        this.getAllNotifications()
         navigation.addListener('willFocus', async () => {
+            this.getAllNotifications();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
@@ -51,10 +54,42 @@ class ProNotificationsScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        if (Platform.OS == 'ios')
-            this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
-        else
-            this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+        this.props.navigation.goBack();
+    }
+
+    getAllNotifications = () => {
+        this.setState({
+            isLoading: true
+        });
+
+        const { userInfo: { providerDetails } } = this.props;
+
+        fetch(NOTIFICATION_URL + providerDetails.providerId)
+            .then((response) => response.json())
+            .then((responseJson) => {
+                if (responseJson.result) {
+                    this.setState({
+                        dataSource: responseJson.data,
+                        isLoading: false,
+                        isNoData: !responseJson.data || responseJson.data.length === 0
+                    })
+                }
+                else {
+                    this.setState({
+                        isLoading: false,
+                        isNoData: true
+                    })
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+                this.setState({
+                    isLoading: false,
+                    isNoData: true
+                });
+
+                this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+            })
     }
 
     _spring = () => {
@@ -82,6 +117,10 @@ class ProNotificationsScreen extends Component {
                 this.setState({ backClickCount: 0 });
             });
         });
+    }
+
+    showToast = message => {
+        Toast.show(message);
     }
 
     //GridView Items
@@ -206,7 +245,8 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => {
     return {
-        notificationsInfo: state.notificationsInfo
+        notificationsInfo: state.notificationsInfo,
+        userInfo: state.userInfo
     }
 }
 
