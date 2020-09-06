@@ -21,7 +21,7 @@ const SERVICES_URL = Config.baseURL + 'service/getall'
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
-function StatusBarPlaceHolder() {
+const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
             <View style={{
@@ -59,8 +59,8 @@ class DashboardScreen extends Component {
     componentDidMount() {
         this.onRefresh();
         const { navigation } = this.props;
-        navigation.addListener('willFocus', async () => {
-            this.onRefresh();
+        navigation.addListener('willFocus', () => {
+            //this.onRefresh();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButton());
         });
         navigation.addListener('willBlur', () => {
@@ -165,11 +165,31 @@ class DashboardScreen extends Component {
             this.showToast("Votre demande de chat n'est pas acceptée. S'il vous plaît, attendez...")
         }
         else {
+            const { userType, status, fcm_id, image, order_id, service_name, name, employee_id, currentPos } = jobInfo;
+            const nameArr = name.split(' ');
+            const username = nameArr[0];
+            const surname = nameArr.pop();
             dispatchSelectedJobRequest(jobInfo);
-            this.props.navigation.navigate("MapDirection", {
-                currentPos: jobInfo.currentPos,
-                titlePage: "Dashboard"
-            });
+            if (jobInfo.status == 'Pending') {
+                this.props.navigation.navigate("Chat",
+                    {
+                        'providerId': employee_id,
+                        'fcmId': fcm_id,
+                        'providerName': username,
+                        'providerSurname': surname,
+                        'providerImage': image,
+                        'serviceName': service_name,
+                        'orderId': order_id,
+                        'pageTitle': "Dashboard",
+                        'isJobAccepted': status === "Accepted",
+                    });
+            }
+            else if (jobInfo.status == 'Accepted') {
+                this.props.navigation.navigate("MapDirection", {
+                    currentPos: jobInfo.currentPos,
+                    titlePage: "Dashboard"
+                });
+            }
         }
     }
 
@@ -185,10 +205,10 @@ class DashboardScreen extends Component {
 
     renderPendingJobRequests = ({ item, index }) => {
         if (item) {
-            const { image, name, employee_id, imageAvailable, surName, service_name, chat_status, status } = item;
+            const { image, name, employee_id, order_id, surName, service_name, fcm_id, chat_status, status } = item;
             return (
                 <TouchableOpacity style={styles.pendingJobRow}
-                    onPress={() => this.goToNextPage(chat_status, { userType: 'client', employee_id, currentPos: index })}>
+                    onPress={() => this.goToNextPage(chat_status, { userType: 'client', status, fcm_id, order_id, image, service_name, name, employee_id, currentPos: index })}>
                     <LinearGradient
                         style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
@@ -328,7 +348,7 @@ const mapDispatchToProps = dispatch => {
             dispatch(setSelectedJobRequest(job));
         },
         updateActiveRequest: val => {
-          dispatch(updateActiveRequest(val));
+            dispatch(updateActiveRequest(val));
         }
     }
 }

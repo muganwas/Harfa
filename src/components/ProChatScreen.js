@@ -84,6 +84,7 @@ class ProChatScreen extends Component {
             navigation,
             userInfo: { providerDetails }
         } = this.props;
+        console.log('chat --')
         this.setState({
             showButton: false,
             senderId: providerDetails.providerId,
@@ -161,8 +162,8 @@ class ProChatScreen extends Component {
             inputMessage: '',
             showButton: false,
         });
-        if (this.state.inputMessage.length > 0) {
-            let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
+        if (inputMessage.length > 0) {
+            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
@@ -233,13 +234,12 @@ class ProChatScreen extends Component {
                 }).
                 catch(error => {
                     console.log(error);
-                    this.setState({
-                        isLoading: false
-                    })
-                    //this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
                 });
-            return true;
         }
+        this.setState({
+            inputMessage: '',
+            showButton: false,
+        });
     }
 
     renderMessageItem = ({ item }) => {
@@ -253,7 +253,7 @@ class ProChatScreen extends Component {
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                        source={this.state.userImageAvailable ? { uri: item.senderImage } : require('../images/generic_avatar.png')} />
+                                        source={{ uri: item.senderImage }} />
                                 </View>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>

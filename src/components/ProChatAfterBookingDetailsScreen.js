@@ -21,7 +21,7 @@ const options = {
 const ios = Platform.OS === 'ios';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
-const SEND_NOTIFICATION = Config.baseURL + "notificcation/sendNotification";
+const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -49,7 +49,6 @@ class ProChatAfterBookingDetailsScreen extends Component {
             navigation,
             userInfo: { providerDetails }
         } = props;
-        console.log('pro chat after booking screen --', allJobRequestsProviders[currentPos])
         this.state = {
             showButton: false,
             senderId: providerDetails.providerId,
@@ -104,7 +103,6 @@ class ProChatAfterBookingDetailsScreen extends Component {
             dataChatSource: dataChatSource[user_id] || [],
             isLoading: !fetched,
             isUploading: false,
-
             receiverId: navigation.state.params.receiverId,
             receiverName: navigation.state.params.receiverName,
             receiverImage: navigation.state.params.receiverImage,
@@ -158,58 +156,84 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     sendMessageTask = async () => {
-        if (this.state.inputMessage.length > 0) {
-            let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
+        const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, customer_FCM_id, receiverName, serviceName, orderId } = this.state;
+        if (inputMessage.length > 0) {
+            this.setState({
+                inputMessage: '',
+                showButton: false,
+            });
+            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
-                senderId: this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId: this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                senderId: senderId,
+                senderImage:senderImage,
+                senderName: senderName,
+                receiverId: receiverId,
+                receiverName: receiverName,
+                receiverImage: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
             }
             let recentMessageReceiver = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: senderId,
+                name: senderName,
+                image: senderImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
             }
             let recentMessageSender = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: receiverId,
+                name: receiverName,
+                image: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
             }
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
+            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
+            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
             database().ref().update(updates);
 
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
+            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
+            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
             database().ref().update(recentUpdates);
 
-            this.setState({ inputMesage: '' });
+            const notification = JSON.stringify({
+                "fcm_id": customer_FCM_id,
+                "type": "Message",
+                "notification_by": "Employee",
+                "title": "Message Recieved",
+                "body": senderName + "has sent you a message",
+            });
+
+            fetch(SEND_NOTIFICATION, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: notification
+            }).
+                then((response) => {
+                    console.log('notif respons ', response)
+                }).
+                catch(error => {
+                    console.log(error);
+                });
         }
 
         this.setState({
@@ -230,7 +254,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                        source={senderImage ? { uri: senderImage } : require('../images/generic_avatar.png')} />
+                                        source={{ uri: senderImage }} />
                                 </View>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: black, textAlignVertical: 'center', color: black, marginLeft: 5 }}>

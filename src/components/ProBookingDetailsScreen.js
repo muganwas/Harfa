@@ -132,8 +132,6 @@ class ProBookingDetailsScreen extends Component {
             }
         }
 
-        console.log("Submitted : " + JSON.stringify(reviewData));
-
         fetch(REVIEW_RATING,
             {
                 method: 'POST',

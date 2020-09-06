@@ -14,7 +14,7 @@ import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground,
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
-const SEND_NOTIFICATION = Config.baseURL + "notificcation/sendNotification";
+const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -53,7 +53,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             titlePage: props.navigation.state.params.pageTitle,
             isJobAccepted: props.navigation.state.params.isJobAccepted,
             proImageAvailable: null,
-            provider_FCM_id: null,
+            provider_FCM_id: props.navigation.state.params.fcmId,
         }
     };
 
@@ -93,7 +93,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             titlePage: props.navigation.state.params.pageTitle,
             isJobAccepted: props.navigation.state.params.isJobAccepted,
             proImageAvailable: null,
-            provider_FCM_id: null,
+            provider_FCM_id: props.navigation.state.params.fcmId,
         });
     }
 
@@ -141,58 +141,85 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     sendMessageTask = async () => {
+        const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, provider_FCM_id, receiverName, serviceName, orderId } = this.state;
         if (this.state.inputMessage.length > 0) {
-            let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
+            this.setState({
+                inputMessage: '',
+                showButton: false,
+            });
+            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
-                senderId: this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName,
-                receiverId: this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                senderId: senderId,
+                senderImage: senderImage,
+                senderName: senderName,
+                receiverId: receiverId,
+                receiverName: receiverName,
+                receiverImage: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
             }
             let recentMessageReceiver = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.senderId,
-                name: this.state.senderName,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: senderId,
+                name: senderName,
+                image: senderImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
             }
             let recentMessageSender = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: receiverId,
+                name: receiverName,
+                image: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
             }
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
+            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
+            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
             database().ref().update(updates);
 
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
+            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
+            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
 
-            database().ref().update(recentUpdates)
-            this.setState({ inputMesage: '' });
+            database().ref().update(recentUpdates);
+
+            const notification = JSON.stringify({
+                "fcm_id": provider_FCM_id,
+                "type": "Message",
+                "notification_by": "Client",
+                "title": "Message Recieved",
+                "body": senderName + "has sent you a message!",
+            });
+
+            fetch(SEND_NOTIFICATION, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: notification
+            }).
+                then((response) => {
+                    console.log('notif respons ', response)
+                }).
+                catch(error => {
+                    console.log(error);
+                });
         }
         this.setState({
             inputMessage: '',
@@ -212,7 +239,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                        source={this.state.proImageAvailable ? { uri: senderImage } : require('../images/generic_avatar.png')} />
+                                        source={{ uri: senderImage }} />
                                 </View>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
@@ -325,14 +352,6 @@ class ChatAfterBookingDetailsScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-
-                            {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
-                                alignContent: 'center', marginRight: 25 }}
-                                onPress={this.selectPhoto.bind(this)}>
-                                <Image style={{ width: 20, height: 20 }}
-                                    source={require('../icons/camera.png')} />
-                            </TouchableOpacity>*/}
-
                             <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
                                 onPress={this.sendMessageTask}>
                                 <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>

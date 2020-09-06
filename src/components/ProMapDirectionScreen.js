@@ -5,7 +5,7 @@ import {
     Linking, PermissionsAndroid, Alert, StatusBar, Platform, Modal,
     ActivityIndicator
 } from 'react-native';
-import { NavigationEvents } from 'react-navigation';
+import { cloneDeep } from 'lodash';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import database from '@react-native-firebase/database';
@@ -265,7 +265,8 @@ class ProMapDirectionScreen extends Component {
     jobCompleteTask = () => {
         this.setState({ isLoading: true });
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
-        let newJobRequestsProviders = [...jobRequestsProviders];
+        let currentPos = navigation.getParam('currentPos', 0);
+        let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -274,8 +275,10 @@ class ProMapDirectionScreen extends Component {
                 "fcm_id": this.state.userFcmId,
                 "title": "Job Completed",
                 "body": 'Your job request has been completed by the service provder : ' + providerDetails.providerId,
+                "notification_by": "Employee",
                 "data": {
                     ProviderId: providerDetails.providerId,
+                    user_Id: newJobRequestsProviders[currentPos].user_Id,
                     image: providerDetails.imageSource,
                     fcmId: providerDetails.fcmId,
                     name: providerDetails.name,
@@ -312,7 +315,7 @@ class ProMapDirectionScreen extends Component {
                         isLoading: false,
                         isAcceptJob: true,
                     });
-                    newJobRequestsProviders.splice(this.state.currentPos, 1)
+                    newJobRequestsProviders.splice(currentPos, 1)
                     fetchedPendingJobInfo(newJobRequestsProviders);
                     this.props.navigation.navigate("ProDashboard");
                 }

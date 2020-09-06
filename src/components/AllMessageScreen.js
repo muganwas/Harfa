@@ -57,14 +57,9 @@ class AllMessageScreen extends Component {
         dbRef.once('value', snapshot => {
             const key = snapshot.key;
             const message = snapshot.val();
-
             if (message != null) {
                 dbRef.on('child_added', async val => {
-
                     let message = val.val();
-                    this.setState({
-                        isLoading: false,
-                    });
                     let exists;
                     await imageExists(message.image).then(res => {exists = res});
                     message.exists = exists;

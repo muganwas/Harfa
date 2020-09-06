@@ -215,6 +215,8 @@ class ProChatAcceptScreen extends Component {
                 "notification_by": "Employee",
                 "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
+                    user_id: '',
+                    providerId: providerDetails.id,
                     ProviderData: providerDetails,
                     serviceName: this.state.serviceName,
                     orderId: this.props.navigation.state.params.orderId,
@@ -238,6 +240,7 @@ class ProChatAcceptScreen extends Component {
         })
             .then(response => response.json())
             .then(responseJson => {
+                console.log('accept response', responseJson)
                 const { jobsInfo: { jobRequestsProviders }, fetchedPendingJobInfo, dispatchSelectedJobRequest, navigation } = this.props;
                 let newProJobsInfo = cloneDeep(jobRequestsProviders);
                 let newJobsInfoLength = newProJobsInfo.length;

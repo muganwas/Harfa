@@ -179,6 +179,32 @@ class Hamburger extends React.Component {
         allJobRequestsClient.map(obj => {
             const { employee_id } = obj;
             database().ref('chatting').
+            child(senderId).
+            child(employee_id)
+            .once('value', data => {
+                if (data) {
+                    const { dataChatSource } = this.props.messagesInfo;
+                    let newDataChatSource = Object.assign({}, dataChatSource);
+                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                    newArr.push(data.val())
+                    const newData = [...newArr];
+                    //filter out only unique messages
+                    const uniqueData = Array.from(new Set(newData.map(a => {
+                        if (a)
+                            return a.time
+                    })))
+                        .map(time => {
+                            return newData.find(a => {
+                                if (a)
+                                    a.time === time
+                            })
+                        });
+                    newDataChatSource[employee_id] = uniqueData;
+                    fetchedMessages(newDataChatSource);
+                }
+
+            });
+            database().ref('chatting').
                 child(senderId).
                 child(employee_id)
                 .on('child_added', data => {
@@ -203,32 +229,7 @@ class Hamburger extends React.Component {
                     }
 
                 });
-            database().ref('chatting').
-                child(senderId).
-                child(employee_id)
-                .once('value', data => {
-                    if (data) {
-                        const { dataChatSource } = this.props.messagesInfo;
-                        let newDataChatSource = Object.assign({}, dataChatSource);
-                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                        newArr.push(data.val())
-                        const newData = [...newArr];
-                        //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => {
-                            if (a)
-                                return a.time
-                        })))
-                            .map(time => {
-                                return newData.find(a => {
-                                    if (a)
-                                        a.time === time
-                                })
-                            });
-                        newDataChatSource[employee_id] = uniqueData;
-                        fetchedMessages(newDataChatSource);
-                    }
-
-                });
+           
         });
         /** fetch users current position and upload it to db */
         geolocation.getCurrentPosition(info => {
@@ -246,7 +247,7 @@ class Hamburger extends React.Component {
             console.log(error)
         });
 
-        /** lookout for users changing position */
+        /** lookout for users changing position start */
         geolocation.watchPosition(info => {
             const { coords: { latitude, longitude } } = info;
             const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
@@ -261,9 +262,10 @@ class Hamburger extends React.Component {
         }, error => {
             console.log(error)
         }, { enableHighAccuracy: true });
-        /** lookout for pros changing position */
-        this.fetchEmployeeLocations();
+        /** end lookout for pros changing position */
 
+        this.fetchEmployeeLocations();
+        /**Should be removed when fcm is confirmed working well */
         database().ref('chatting').child(senderId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             let currentMessagesCount = notificationsInfo.messages;
@@ -336,6 +338,8 @@ class Hamburger extends React.Component {
     componentWillUnmount() {
         const { userInfo: { userDetails } } = this.props;
         const senderId = userDetails.userId;
+
+        database().ref('adminChatting').child(senderId).off('child_added')
         database().ref('adminChatting').child(senderId).off('child_changed')
         database().ref('chatting').child(senderId).off('child_changed');
     }

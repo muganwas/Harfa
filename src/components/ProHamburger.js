@@ -41,78 +41,9 @@ class ProHamburger extends React.Component {
         const receiverId = providerDetails.providerId;
         this.fetchOthersLocations();
         this.checkForUserType();
-        allJobRequestsProviders.map(obj => {
-            const { user_id } = obj;
-            database().ref('chatting').child(receiverId).child(user_id)
-                .on('child_added', data => {
-                    if (data.val()) {
-                        const { messagesInfo: { dataChatSource } } = this.props;
-                        let newDataChatSource = Object.assign({}, dataChatSource);
-                        let newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
-                        newArr.push(data.val());
-                        const newData = [...newArr];
-                        //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                            .map(time => {
-                                return newData.find(a => a ? a.time === time : null)
-                            });
-                        newDataChatSource[user_id] = uniqueData;
-                        fetchedMessages(newDataChatSource);
-                    }
-                });
-
-            database().ref("chatting").child(receiverId).child(user_id)
-                .once('value', data => {
-                    if (data.val()) {
-                        const { messagesInfo: { dataChatSource } } = this.props;
-                        let newDataChatSource = Object.assign({}, dataChatSource);
-                        const newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
-                        const newData = [...newArr];
-                        //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                            .map(time => {
-                                return newData.find(a => a ? a.time === time : null)
-                            });
-                        newDataChatSource[user_id] = uniqueData;
-                        fetchedMessages(newDataChatSource);
-                    }
-
-                });
-        });
-        const userRef = database().ref(`liveLocation/${receiverId}`);
-        /** get pros current position and upload it to db */
-        geolocation.getCurrentPosition(info => {
-            const { coords: { latitude, longitude } } = info;
-            const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
-            fetchingCoordinates();
-            userRef.update({ latitude, longitude }).then(() => {
-                fetchedCoordinates({ latitude, longitude });
-            }).
-                catch(e => {
-                    console.log(e.message);
-                    fetchCoordinatesError(e.message);
-                });
-        }, error => {
-            console.log(error);
-        });
-
-        /** look out for pros changing position */
-        geolocation.watchPosition(info => {
-            const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
-            const { coords: { latitude, longitude } } = info;
-            fetchingCoordinates();
-            userRef.update({ latitude, longitude }).then(() => {
-                fetchedCoordinates({ latitude, longitude });
-            }).
-                catch(e => {
-                    console.log(e.message);
-                    fetchCoordinatesError(e.message);
-                });
-        }, error => {
-            console.log(error);
-        }, { enableHighAccuracy: true });
 
         messaging().onMessage(message => {
+            console.log('message --', message)
             const { notification, data } = message;
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body } = notification;
@@ -125,8 +56,23 @@ class ProHamburger extends React.Component {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
             });
-            let newJobRequestsProviders = cloneDeep(jobRequestsProviders)
-            if (title == "Booking Request") {
+            let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
+            if (title == "Message Recieved") {
+                Android ? Notifications.postLocalNotification({
+                    title,
+                    body,
+                    extra: "data"
+                }) :
+                    Notifications.postLocalNotification({
+                        body,
+                        title,
+                        sound: "chime.aiff",
+                        silent: false,
+                        category: "SOME_CATEGORY",
+                        userInfo: {}
+                    });
+            }
+            else if (title == "Booking Request") {
                 navigation.navigate("ProChatAccept", {
                     'userId': data.userId,
                     'serviceName': data.serviceName,
@@ -144,44 +90,56 @@ class ProHamburger extends React.Component {
             }
         });
 
+        allJobRequestsProviders.map(obj => {
+            const { user_id } = obj;
+            database().ref("chatting").child(receiverId).child(user_id)
+                .once('value', data => {
+                    if (data.val()) {
+                        const { messagesInfo: { dataChatSource } } = this.props;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        const newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
+                            .map(time => {
+                                return newData.find(a => a ? a.time === time : null)
+                            });
+                        newDataChatSource[user_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
+
+                });
+                
+            database().ref('chatting').child(receiverId).child(user_id)
+                .on('child_added', data => {
+                    if (data.val()) {
+                        const { messagesInfo: { dataChatSource } } = this.props;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        let newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
+                        newArr.push(data.val());
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
+                            .map(time => {
+                                return newData.find(a => a ? a.time === time : null)
+                            });
+                        newDataChatSource[user_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
+                });
+        });
+
+        /** should be removed once fcm works fine */
         database().ref('chatting').child(receiverId).on('child_changed', result => {
-            console.log('chat notifiction - result', result.val())
             const { notificationsInfo } = this.props;
             const currentMessagesCount = notificationsInfo.messages;
             const newMessagesCount = currentMessagesCount + 1;
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
-            /*
-            Android ? Notifications.postLocalNotification({
-                title: "Harfa Messages",
-                body: "You have a new message!",
-                extra: "data"
-            }) :
-                Notifications.postLocalNotification({
-                    body: "You have a new Message",
-                    title: "Harfa Messages",
-                    sound: "chime.aiff",
-                    silent: false,
-                    category: "SOME_CATEGORY",
-                    userInfo: {}
-                });*/
         });
 
         database().ref('adminChatting').child(receiverId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             const adminMessageCount = notificationsInfo.adminMessages;
-            /*Android ? Notifications.postLocalNotification({
-                title: "Harfa Messages",
-                body: "You have a new message!",
-                extra: "data"
-            }) :
-                Notifications.postLocalNotification({
-                    body: "You have a new Message",
-                    title: "Harfa Messages",
-                    sound: "chime.aiff",
-                    silent: false,
-                    category: "SOME_CATEGORY",
-                    userInfo: {}
-                });*/
             fetchedNotifications({ type: 'adminMessages', value: adminMessageCount + 1 });
         });
         const { updateConnectivityStatus, updateOnlineStatus } = this.props;
@@ -218,6 +176,39 @@ class ProHamburger extends React.Component {
             if (!online && connectivityAvailable) socket.open();
         })
         socket.open();
+
+        const userRef = database().ref(`liveLocation/${receiverId}`);
+        /** get pros current position and upload it to db */
+        geolocation.getCurrentPosition(info => {
+            const { coords: { latitude, longitude } } = info;
+            const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
+            fetchingCoordinates();
+            userRef.update({ latitude, longitude }).then(() => {
+                fetchedCoordinates({ latitude, longitude });
+            }).
+                catch(e => {
+                    console.log(e.message);
+                    fetchCoordinatesError(e.message);
+                });
+        }, error => {
+            console.log(error);
+        });
+
+        /** look out for pros changing position */
+        geolocation.watchPosition(info => {
+            const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
+            const { coords: { latitude, longitude } } = info;
+            fetchingCoordinates();
+            userRef.update({ latitude, longitude }).then(() => {
+                fetchedCoordinates({ latitude, longitude });
+            }).
+                catch(e => {
+                    console.log(e.message);
+                    fetchCoordinatesError(e.message);
+                });
+        }, error => {
+            console.log(error);
+        }, { enableHighAccuracy: true });
     }
 
     checkForUserType = async () => {
@@ -237,6 +228,7 @@ class ProHamburger extends React.Component {
     componentWillUnmount() {
         const { userInfo: { providerDetails } } = this.props;
         const senderId = providerDetails.providerId;
+        database().ref('adminChatting').child(senderId).off('child_added')
         database().ref('adminChatting').child(senderId).off('child_changed')
         database().ref('chatting').child(senderId).off('child_changed');
     }

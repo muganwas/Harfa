@@ -28,15 +28,8 @@ const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
-
+const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
-
-const options = {
-    title: 'Sélectionnez une photo',
-    takePhotoButtonTitle: 'Prendre une photo',
-    chooseFromLibraryButtonTitle: 'Choisir depuis la galerie',
-    quality: 1
-};
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -204,64 +197,87 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     sendMessageTask = () => {
+        const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, receiverFcmId, receiverName, serviceName, orderId } = this.state;
         if (this.state.inputMessage.length > 0) {
-            let msgId = database().ref('chatting').child(this.state.senderId).child(this.state.receiverId).push().key;
+            this.setState({
+                inputMessage: '',
+                showButton: false,
+            });
+            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
             let updates = {};
             let recentUpdates = {};
             let message = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
-                senderId: this.state.senderId,
-                senderImage: this.state.senderImage,
-                senderName: this.state.senderName + " " + this.state.senderSurname,
-                receiverId: this.state.receiverId,
-                receiverName: this.state.receiverName,
-                receiverImage: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                senderId: senderId,
+                senderImage: senderImage,
+                senderName: senderName + " " + senderSurname,
+                receiverId: receiverId,
+                receiverName: receiverName,
+                receiverImage: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
 
             }
 
             let recentMessageReceiver = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.senderId,
-                name: this.state.senderName + " " + this.state.senderSurname,
-                image: this.state.senderImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: senderId,
+                name: senderName + " " + senderSurname,
+                image: senderImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
 
             }
             let recentMessageSender = {
-                textMessage: this.state.inputMessage,
+                textMessage: inputMessage,
                 imageMessage: '',
                 time: database.ServerValue.TIMESTAMP,
                 date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: this.state.receiverId,
-                name: this.state.receiverName,
-                image: this.state.receiverImage,
-                serviceName: this.state.serviceName,
-                orderId: this.state.orderId,
+                id: receiverId,
+                name: receiverName,
+                image: receiverImage,
+                serviceName: serviceName,
+                orderId: orderId,
                 type: "text",
             }
-            updates['chatting/' + this.state.senderId + '/' + this.state.receiverId + '/' + msgId] = message;
-            updates['chatting/' + this.state.receiverId + '/' + this.state.senderId + '/' + msgId] = message;
+            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
+            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
             database().ref().update(updates);
 
-            recentUpdates['recentMessage/' + this.state.senderId + '/' + this.state.receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + this.state.receiverId + '/' + this.state.senderId] = recentMessageReceiver;
-            database().ref().update(recentUpdates)
+            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
+            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
+            database().ref().update(recentUpdates);
 
-            this.setState({
-                inputMessage: '',
-                showButton: false,
+            const notification = JSON.stringify({
+                "fcm_id": receiverFcmId,
+                "type": "Message",
+                "notification_by": "Client",
+                "title": "Message Recieved",
+                "body": senderName + "has sent you a message!",
             });
+
+            fetch(SEND_NOTIFICATION, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: notification
+            }).
+                then((response) => {
+                    console.log('notif respons ', response)
+                }).
+                catch(error => {
+                    console.log(error);
+                });
         }
     }
 

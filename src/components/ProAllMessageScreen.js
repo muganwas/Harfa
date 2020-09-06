@@ -39,7 +39,7 @@ class ProAllMessageScreen extends Component {
     constructor(props) {
         super();
         this.state = {
-            isLoading: false,
+            isLoading: true,
             dataSource: [],
             isRecentMessage: false,
             query: "",
@@ -59,9 +59,6 @@ class ProAllMessageScreen extends Component {
             if (message != null) {
                 dbRef.on('child_added', async val => {
                     let message = val.val();
-                    this.setState({
-                        isLoading: false,
-                    });
                     let exists;
                     await imageExists(message.image).then(res => { exists = res });
                     message.exists = exists;

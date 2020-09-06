@@ -85,12 +85,13 @@ class ProDashboardScreen extends Component {
     }
 
     //Get All Bookings
-    componentDidMount = async () => {
+    componentDidMount = () => {
         this.initiateProps();
         const { navigation } = this.props;
         this.onRefresh();
-        navigation.addListener('willFocus', async () => {
+        navigation.addListener('willFocus', () => {
             this.onRefresh();
+            this.initiateProps();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
@@ -119,10 +120,6 @@ class ProDashboardScreen extends Component {
                 availBackground: "green",
             });
         }
-    }
-
-    componentWillUnmount() {
-        //this.notificationOpenedListener();
     }
 
     //Recent Chat Message
@@ -475,13 +472,12 @@ class ProDashboardScreen extends Component {
             this.showToast("Accept Chat Request First");
         }
         else {
-            const { dispatchSelectedJobRequest } = this.props;
+            const { dispatchSelectedJobRequest } = this.props; 
+            dispatchSelectedJobRequest(jobInfo);
             if (status == 'Pending') {
-                dispatchSelectedJobRequest(jobInfo);
                 this.props.navigation.navigate("ProAcceptRejectJob", { currentPos: jobInfo.currentPos, orderId: jobInfo.orderId });
             }
             else if (status == 'Accepted') {
-                dispatchSelectedJobRequest(jobInfo);
                 this.props.navigation.navigate("ProMapDirection", {
                     currentPos: jobInfo.currentPos,
                     'pageTitle': "ProDashboard",
@@ -496,7 +492,8 @@ class ProDashboardScreen extends Component {
         const {
             id,
             user_id,
-            fcm_id, name,
+            fcm_id, 
+            name,
             service_name,
             order_id,
             image,
@@ -529,6 +526,8 @@ class ProDashboardScreen extends Component {
                 "notification_by": "Employee",
                 "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
                 "data": {
+                    user_id: '',
+                    providerId: providerDetails.id,
                     ProviderData: providerDetails,
                     serviceName: service_name,
                     orderId: order_id,

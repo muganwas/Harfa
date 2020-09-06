@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 //import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import { connect } from 'react-redux';
-import database from '@react-native-firebase/database';
+import { cloneDeep } from 'lodash';
 import simpleToast from 'react-native-simple-toast';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
@@ -51,6 +51,7 @@ class MapDirectionScreen extends Component {
         var currRequestPos = navigation.getParam('currentPos', 0);
         const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
         const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
+
         this.state = {
             sourceLocation: employeeLatitude + "," + employeeLongitude,
             sourceLat: parseFloat(employeeLatitude),
@@ -83,6 +84,7 @@ class MapDirectionScreen extends Component {
             isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
             titlePage: navigation.state.params.titlePage,
             mapKey: Math.random(2),
+            fcm_id: jobRequests[currRequestPos].fcm_id,
             employeeLocationFetched: othersCoordinates[employee_id] ? true : false
         };
     };
@@ -291,9 +293,9 @@ class MapDirectionScreen extends Component {
         this.setState({
             isLoading: true
         })
-        const { fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
+        const { fetchedPendingJobInfo, jobsInfo: { jobRequests }, userInfo: { userDetails } } = this.props;
         const { currRequestPos } = this.state;
-        var newJobRequests = [...jobRequests];
+        var newJobRequests = cloneDeep(jobRequests);
         const data = {
             main_id: jobRequests[currRequestPos].id,
             chat_status: '1',
@@ -302,8 +304,11 @@ class MapDirectionScreen extends Component {
                 "fcm_id": jobRequests[currRequestPos].fcm_id,
                 "title": "Job Completed",
                 "body": 'Your job request has been completed by ' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
+                "type": "Job Completed",
+                "notification_by": "Client",
                 "data": {
                     ProviderId: jobRequests[currRequestPos].employee_id,
+                    user_id: userDetails.userId,
                     image: jobRequests[currRequestPos].image,
                     fcmId: jobRequests[currRequestPos].fcm_id,
                     name: jobRequests[currRequestPos].name,
@@ -491,6 +496,7 @@ class MapDirectionScreen extends Component {
                                                     "providerImage": jobRequests[currRequestPos].image,
                                                     "serviceName": jobRequests[currRequestPos].service_name,
                                                     "OrderId": jobRequests[currRequestPos].order_id,
+                                                    "fcmId":  jobRequests[currRequestPos].fcm_id,
                                                     'titlePage': "MapDirection"
                                                 })}>
                                                 <Image style={styles.call}
