@@ -70,4 +70,3 @@ android/app/release/app-release.aab
 *.gradle
 android/app/build.gradle
 android/app/release/output.json
-src/components/Config.js
