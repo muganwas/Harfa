@@ -2,7 +2,9 @@ import {
     UPDATE_PROVIDER_DETAILS,
     UPDATE_USER_DETAILS,
     RESET_USER_DETAILS,
-    UPDATE_NEW_USER_INFO
+    UPDATE_NEW_USER_INFO,
+    UPDATE_USER_AUTH_TOKEN,
+    UPDATE_PROVIDER_AUTH_TOKEN
 } from '../types';
 
 const initialState = {
@@ -20,7 +22,8 @@ const initialState = {
         lat: 0,
         lang: 0,
         fcmId: '',
-        firebaseId: ''
+        firebaseId: '',
+        authToken: null
     },
     providerDetails: {
         providerId: '',
@@ -39,7 +42,8 @@ const initialState = {
         status: '',
         fcmId: '',
         accountType: '',
-        firebaseId: ''
+        firebaseId: '',
+        authToken: null
     },
     providerDetailsFetched: false,
     userDetailsFetched: false
@@ -59,6 +63,16 @@ const userReducer = (state = initialState, action) => {
                 userDetails: action.payload,
                 userDetailsFetched: true
             }
+        case UPDATE_PROVIDER_AUTH_TOKEN:
+            return {
+                ...state,
+                providerDetails: { ...state.providerDetails, authToken: action.payload }
+            }
+        case UPDATE_USER_AUTH_TOKEN:
+            return {
+                ...state,
+                userDetails: { ...state.userDetails, authToken: action.payload }
+            }
         case RESET_USER_DETAILS:
             return {
                 newUser: {},
@@ -75,7 +89,8 @@ const userReducer = (state = initialState, action) => {
                     lat: 0,
                     lang: 0,
                     fcmId: '',
-                    firebaseId: ''
+                    firebaseId: '',
+                    authToken: null
                 },
                 providerDetails: {
                     providerId: '',
@@ -94,7 +109,8 @@ const userReducer = (state = initialState, action) => {
                     status: '',
                     fcmId: '',
                     accountType: '',
-                    firebaseId: ''
+                    firebaseId: '',
+                    authToken: null
                 },
                 providerDetailsFetched: false,
                 userDetailsFetched: false

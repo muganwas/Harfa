@@ -9,16 +9,29 @@ import ShakingText from 'react-native-shaking-text';
 import AsyncStorage from '@react-native-community/async-storage';
 import 'react-native-gesture-handler';
 import messaging from '@react-native-firebase/messaging';
-import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
+import {
+    LoginManager,
+    AccessToken,
+    GraphRequest,
+    GraphRequestManager
+} from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
-import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
+import {
+    updateUserDetails,
+    updateProviderDetails,
+    updateUserAuthToken
+} from '../Redux/Actions/userActions';
 import WaitingDialog from './WaitingDialog';
 import firebaseAuth from '@react-native-firebase/auth';
 import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
-import { colorYellow, colorBg, colorPrimaryDark } from '../Constants/colors';
+import {
+    colorYellow,
+    colorBg,
+    colorPrimaryDark
+} from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
@@ -91,7 +104,9 @@ class FacebookGoogleScreen extends Component {
                 console.log("Login cancelled");
             } else {
                 AccessToken.getCurrentAccessToken().then(
-                    (data) => {
+                    data => {
+                        const { updateUserAuthToken } = this.props;
+                        updateUserAuthToken(data.accessToken)
                         const infoRequest = new GraphRequest(
                             '/me?fields=email,name,picture',
                             null,
@@ -100,7 +115,10 @@ class FacebookGoogleScreen extends Component {
                         // Start the graph request.
                         new GraphRequestManager().addRequest(infoRequest).start();
                     }
-                )
+                ).catch(err => {
+                    console.log('auth error --', err)
+                    simpleToast.show('Could not authenticate, try again later', simpleToast.SHORT);
+                })
             }
         },
             error => {
@@ -113,7 +131,8 @@ class FacebookGoogleScreen extends Component {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
-            const { user: { name, email, photo, id } } = result;
+            console.log('google sign in --', result)
+            const { user, user: { name, email, photo, id } } = result;
             this.setState({ firebaseId: id, loginType: 'google' });
             this.fbGoogleLoginCustomerTask(name, email, photo);
         }
@@ -292,7 +311,7 @@ class FacebookGoogleScreen extends Component {
                                 //Store data like sharedPreference
                                 AsyncStorage.setItem('userId', id);
                                 AsyncStorage.setItem('userType', 'User');
-                                const auth = { email: this.state.email, password: this.state.password};
+                                const auth = { email: this.state.email, password: this.state.password };
                                 AsyncStorage.setItem('auth', JSON.stringify(auth));
                                 AsyncStorage.setItem('firebaseId', uid);
                                 fetchJobRequests(this.props, id, "Home");
@@ -501,6 +520,9 @@ const mapDispatchToProps = dispatch => {
         },
         updateProviderDetails: details => {
             dispatch(updateProviderDetails(details));
+        },
+        updateUserAuthToken: authToken => {
+            dispatch(updateUserAuthToken(authToken))
         }
     }
 }

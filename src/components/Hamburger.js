@@ -179,31 +179,31 @@ class Hamburger extends React.Component {
         allJobRequestsClient.map(obj => {
             const { employee_id } = obj;
             database().ref('chatting').
-            child(senderId).
-            child(employee_id)
-            .once('value', data => {
-                if (data) {
-                    const { dataChatSource } = this.props.messagesInfo;
-                    let newDataChatSource = Object.assign({}, dataChatSource);
-                    let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                    newArr.push(data.val())
-                    const newData = [...newArr];
-                    //filter out only unique messages
-                    const uniqueData = Array.from(new Set(newData.map(a => {
-                        if (a)
-                            return a.time
-                    })))
-                        .map(time => {
-                            return newData.find(a => {
-                                if (a)
-                                    a.time === time
-                            })
-                        });
-                    newDataChatSource[employee_id] = uniqueData;
-                    fetchedMessages(newDataChatSource);
-                }
+                child(senderId).
+                child(employee_id)
+                .once('value', data => {
+                    if (data) {
+                        const { dataChatSource } = this.props.messagesInfo;
+                        let newDataChatSource = Object.assign({}, dataChatSource);
+                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
+                        newArr.push(data.val())
+                        const newData = [...newArr];
+                        //filter out only unique messages
+                        const uniqueData = Array.from(new Set(newData.map(a => {
+                            if (a)
+                                return a.time
+                        })))
+                            .map(time => {
+                                return newData.find(a => {
+                                    if (a)
+                                        a.time === time
+                                })
+                            });
+                        newDataChatSource[employee_id] = uniqueData;
+                        fetchedMessages(newDataChatSource);
+                    }
 
-            });
+                });
             database().ref('chatting').
                 child(senderId).
                 child(employee_id)
@@ -229,7 +229,7 @@ class Hamburger extends React.Component {
                     }
 
                 });
-           
+
         });
         /** fetch users current position and upload it to db */
         geolocation.getCurrentPosition(info => {
@@ -297,16 +297,30 @@ class Hamburger extends React.Component {
         NetInfo.addEventListener(status => {
             updateConnectivityStatus(status.isConnected);
         });
+
         NetInfo.fetch().then(status => {
             updateConnectivityStatus(status.isConnected);
         });
+
         socket.on('connect', () => {
             const userId = userDetails.userId;
             if (userId) {
-                socket.emit('connected', userId);
-                updateOnlineStatus(true)
+                socket.emit('authentication', {
+                    id: userId
+                });
             }
         });
+
+        socket.on('authorized', reason => {
+            console.log('reason --', reason)
+            updateOnlineStatus(true)
+        });
+
+        socket.on('unauthorized', reason => {
+            //console.log('unauthorized --', reason)
+            updateOnlineStatus(false)
+        });
+
         socket.on('user-disconnected', users => {
             console.log('user disconnected');
             updateLiveChatUsers(users);
