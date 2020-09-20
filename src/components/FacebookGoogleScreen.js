@@ -292,7 +292,7 @@ class FacebookGoogleScreen extends Component {
                                 //Store data like sharedPreference
                                 AsyncStorage.setItem('userId', id);
                                 AsyncStorage.setItem('userType', 'User');
-                                const auth = { email: this.state.email, password: this.state.password};
+                                const auth = { email: this.state.email, password: this.state.password };
                                 AsyncStorage.setItem('auth', JSON.stringify(auth));
                                 AsyncStorage.setItem('firebaseId', uid);
                                 fetchJobRequests(this.props, id, "Home");
@@ -347,6 +347,19 @@ class FacebookGoogleScreen extends Component {
                     Alert.alert(
                         null,
                         "You've not registered yet, please register first",
+                        [
+                            {
+                                text: 'Ok',
+                                onPress: () => console.log('Cancel Pressed'),
+                            }
+                        ]
+                    );
+                }
+                else if (error.code === 'auth/wrong-password') {
+                    //simpleToast.show("You've not registered yet, please register first.");
+                    Alert.alert(
+                        null,
+                        "You entered a wrong password!",
                         [
                             {
                                 text: 'Ok',
