@@ -6,22 +6,14 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator,
     KeyboardAvoidingView
 } from 'react-native';
-import database from '@react-native-firebase/database';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const options = {
-    title: 'Select a photo',
-    takePhotoButtonTitle: 'Take a photo',
-    chooseFromLibraryButtonTitle: 'Choose from gallery',
-    quality: 1
-};
-
+const socket = Config.socket;
 const ios = Platform.OS === 'ios';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
-const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -59,14 +51,13 @@ class ProChatAfterBookingDetailsScreen extends Component {
             dataChatSource: dataChatSource[user_id] || [],
             isLoading: !fetched,
             isUploading: false,
-
             receiverId: navigation.state.params.receiverId,
             receiverName: navigation.state.params.receiverName,
             receiverImage: navigation.state.params.receiverImage,
             orderId: navigation.state.params.orderId,
             serviceName: navigation.state.params.serviceName,
             pageTitle: navigation.state.params.pageTitle,
-            client_FCM_id: null,
+            client_FCM_id: navigation.state.params.fcm_id,
         };
     };
 
@@ -109,7 +100,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
             orderId: navigation.state.params.orderId,
             serviceName: navigation.state.params.serviceName,
             pageTitle: navigation.state.params.pageTitle,
-            client_FCM_id: null,
+            client_FCM_id: navigation.state.params.fcm_id,
         });
     }
 
@@ -156,94 +147,14 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     sendMessageTask = async () => {
-        const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, customer_FCM_id, receiverName, serviceName, orderId } = this.state;
-        if (inputMessage.length > 0) {
-            this.setState({
-                inputMessage: '',
-                showButton: false,
-            });
-            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                senderId: senderId,
-                senderImage:senderImage,
-                senderName: senderName,
-                receiverId: receiverId,
-                receiverName: receiverName,
-                receiverImage: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-            }
-            let recentMessageReceiver = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: senderId,
-                name: senderName,
-                image: senderImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-            }
-            let recentMessageSender = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: receiverId,
-                name: receiverName,
-                image: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-            }
-            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
-            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
-            database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
-            database().ref().update(recentUpdates);
-
-            const notification = JSON.stringify({
-                "fcm_id": customer_FCM_id,
-                "type": "Message",
-                "user_id": receiverId,
-                "employee_id": senderId,
-                "order_id": orderId,
-                "notification_by": "Employee",
-                "title": "Message Recieved",
-                "save_notification": "true",
-                "body": senderName + "has sent you a message",
-            });
-
-            fetch(SEND_NOTIFICATION, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: notification
-            }).
-                then((response) => {
-                    console.log('notif respons ', response)
-                }).
-                catch(error => {
-                    console.log(error);
-                });
-        }
-
+        const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, client_FCM_id, receiverName, serviceName, orderId } = this.state;
         this.setState({
             inputMessage: '',
             showButton: false,
         });
+        if (inputMessage.length > 0) {
+            socket.emit('sent-message', { userType: 'employee', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: client_FCM_id, receiverName, serviceName, orderId });
+        }
     }
 
     renderMessageItem = ({ item }) => {

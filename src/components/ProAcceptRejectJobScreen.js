@@ -24,11 +24,11 @@ import Config from './Config';
 import { cloneDeep } from 'lodash';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
+const socket = Config.socket;
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
-const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -198,90 +198,12 @@ class ProAcceptRejectJobScreen extends Component {
 
     sendMessageTask = () => {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, receiverFcmId, receiverName, serviceName, orderId } = this.state;
-        if (this.state.inputMessage.length > 0) {
-            this.setState({
+        this.setState({
                 inputMessage: '',
                 showButton: false,
             });
-            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                senderId: senderId,
-                senderImage: senderImage,
-                senderName: senderName + " " + senderSurname,
-                receiverId: receiverId,
-                receiverName: receiverName,
-                receiverImage: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-
-            }
-
-            let recentMessageReceiver = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: senderId,
-                name: senderName + " " + senderSurname,
-                image: senderImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-
-            }
-            let recentMessageSender = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: receiverId,
-                name: receiverName,
-                image: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-            }
-            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
-            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
-            database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
-            database().ref().update(recentUpdates);
-
-            const notification = JSON.stringify({
-                "fcm_id": receiverFcmId,
-                "type": "Message",
-                "user_id": receiverId,
-                "employee_id": senderId,
-                "order_id": orderId,
-                "notification_by": "Client",
-                "title": "Message Recieved",
-                "save_notification": "true",
-                "body": senderName + "has sent you a message!",
-            });
-
-            fetch(SEND_NOTIFICATION, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: notification
-            }).
-                then((response) => {
-                    console.log('notif respons ', response)
-                }).
-                catch(error => {
-                    console.log(error);
-                });
+        if (this.state.inputMessage.length > 0) {
+            socket.emit('sent-message', { userType: 'employee', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: receiverFcmId, receiverName, serviceName, orderId });
         }
     }
 

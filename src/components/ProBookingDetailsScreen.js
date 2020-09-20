@@ -322,6 +322,7 @@ class ProBookingDetailsScreen extends Component {
                             'orderId': this.state.bookingDetails.order_id,
                             'serviceName': this.state.bookingDetails.service_details.service_name,
                             'pageTitle': "ProBookingDetails",
+                            'fcm_id': this.state.fcm_id 
                         })
                     }
                     }>

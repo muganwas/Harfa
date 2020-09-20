@@ -154,19 +154,20 @@ class ProHamburger extends React.Component {
         socket.on('connect', () => {
             const userId = providerDetails.providerId;
             if (userId) {
-                socket.emit('connected', userId);
-                updateOnlineStatus(true)
+                socket.emit('authentication', {
+                    id: userId,
+                    userType: 'employee'
+                });
             }
-            console.log('connected');
         });
         socket.on('user-disconnected', users => {
             console.log('someone disconnected')
             updateLiveChatUsers(users);
-        })
+        });
         socket.on('user-joined', users => {
             console.log('someone connected');
             updateLiveChatUsers(users);
-        })
+        });
         socket.on('disconnect', info => {
             const { generalInfo: { online, connectivityAvailable } } = this.props;
             console.log('you disconnected')
@@ -174,7 +175,10 @@ class ProHamburger extends React.Component {
             updateLiveChatUsers({});
             updateOnlineStatus(false)
             if (!online && connectivityAvailable) socket.open();
-        })
+        });
+        socket.on("chat-message", data => {
+            console.log('message received --', data)
+        });
         socket.open();
 
         const userRef = database().ref(`liveLocation/${receiverId}`);

@@ -306,7 +306,8 @@ class Hamburger extends React.Component {
             const userId = userDetails.userId;
             if (userId) {
                 socket.emit('authentication', {
-                    id: userId
+                    id: userId,
+                    userType: 'client'
                 });
             }
         });
@@ -331,6 +332,9 @@ class Hamburger extends React.Component {
             updateLiveChatUsers(users);
             OnlineUsers.Users = users;
         })
+        socket.on("chat-message", data => {
+            console.log('message received --', data)
+        });
         socket.on('disconnect', info => {
             console.log('disconnection info --', info)
             updateLiveChatUsers({});

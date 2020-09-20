@@ -7,14 +7,13 @@ import {
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
     KeyboardAvoidingView,
 } from 'react-native';
-import database from '@react-native-firebase/database';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
+const socket = Config.socket;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
-const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -163,87 +162,8 @@ class ProChatScreen extends Component {
             showButton: false,
         });
         if (inputMessage.length > 0) {
-            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                senderId: senderId,
-                senderImage: senderImage,
-                senderName: senderName,
-                receiverId: receiverId,
-                receiverName: receiverName,
-                receiverImage: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-            }
-            let recentMessageReceiver = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: senderId,
-                name: senderName,
-                image: senderImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-            }
-            let recentMessageSender = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: receiverId,
-                name: receiverName,
-                image: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-            }
-            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
-            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
-            database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
-            database().ref().update(recentUpdates);
-
-            const notification = JSON.stringify({
-                "fcm_id": customer_FCM_id,
-                "user_id": receiverId,
-                "employee_id": senderId,
-                "order_id": orderId,
-                "type": "Message",
-                "notification_by": "Employee",
-                "title": "Message Recieved",
-                "save_notification": "true",
-                "body": senderName + "has sent you a message",
-            });
-
-            fetch(SEND_NOTIFICATION, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: notification
-            }).
-                then((response) => {
-                    console.log('notif respons ', response)
-                }).
-                catch(error => {
-                    console.log(error);
-                });
+            socket.emit('sent-message', { userType: 'employee', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: customer_FCM_id, receiverName, serviceName, orderId });
         }
-        this.setState({
-            inputMessage: '',
-            showButton: false,
-        });
     }
 
     renderMessageItem = ({ item }) => {

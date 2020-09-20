@@ -361,24 +361,14 @@ class FacebookGoogleScreen extends Component {
                 }
 
             }).catch(error => {
-                if (error.code === 'auth/user-not-found') {
-                    //simpleToast.show("You've not registered yet, please register first.");
-                    Alert.alert(
-                        null,
-                        "You've not registered yet, please register first",
-                        [
-                            {
-                                text: 'Ok',
-                                onPress: () => console.log('Cancel Pressed'),
-                            }
-                        ]
-                    );
-                }
-                else {
-                    simpleToast.show("Something went wrong, try again later", simpleToast.SHORT);
-                    console.log('login error code --', error.code)
-                }
-                this.setState({ isLoading: false })
+                let errorMessage = null;
+                if (error.code === 'auth/user-not-found') 
+                    errorMessage = 'Please create an account';
+                else if (error.code === 'auth/wrong-password')
+                    errorMessage = 'You input a wrong password';
+                else errorMessage = "Something went wrong, try again!"
+                this.setState({ isLoading: false, error: errorMessage });
+                console.log('error code --', error.code);
             });
         }
         else {

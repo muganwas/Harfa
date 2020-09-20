@@ -7,18 +7,17 @@ import {
     ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert,
     KeyboardAvoidingView, ScrollView
 } from 'react-native';
-import database from '@react-native-firebase/database';
 import Config from './Config';
 import { cloneDeep } from 'lodash';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
+const socket = Config.socket;
 //const screenHeight = Dimensions.get('window').height;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
-const SEND_NOTIFICATION = Config.baseURL + "notification/sendNotification";
 
 const StatusBarPlaceHolder = () => {
     return (
@@ -165,94 +164,13 @@ class ChatScreen extends Component {
 
     sendMessageTask = async () => {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, provider_FCM_id, receiverName, serviceName, orderId } = this.state;
-        if (this.state.inputMessage.length > 0) {
-            this.setState({
-                inputMessage: '',
-                showButton: false,
-            });
-            let msgId = database().ref('chatting').child(senderId).child(receiverId).push().key;
-            let updates = {};
-            let recentUpdates = {};
-            let message = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                senderId: senderId,
-                senderImage: senderImage,
-                senderName: senderName,
-                receiverId: receiverId,
-                receiverName: receiverName,
-                receiverImage: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-            }
-            let recentMessageReceiver = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: senderId,
-                name: senderName,
-                image: senderImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-            }
-            let recentMessageSender = {
-                textMessage: inputMessage,
-                imageMessage: '',
-                time: database.ServerValue.TIMESTAMP,
-                date: new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear(),
-                id: receiverId,
-                name: receiverName,
-                image: receiverImage,
-                serviceName: serviceName,
-                orderId: orderId,
-                type: "text",
-            }
-            updates['chatting/' + senderId + '/' + receiverId + '/' + msgId] = message;
-            updates['chatting/' + receiverId + '/' + senderId + '/' + msgId] = message;
-            database().ref().update(updates);
-
-            recentUpdates['recentMessage/' + senderId + '/' + receiverId] = recentMessageSender;
-            recentUpdates['recentMessage/' + receiverId + '/' + senderId] = recentMessageReceiver;
-
-            database().ref().update(recentUpdates);
-
-            const notification = JSON.stringify({
-                "fcm_id": provider_FCM_id,
-                "type": "Message",
-                "user_id": senderId,
-                "employee_id": receiverId,
-                "order_id": orderId,
-                "notification_by": "Client",
-                "save_notification": "true",
-                "title": "Message Recieved",
-                "body": senderName + "has sent you a message!",
-            });
-
-            fetch(SEND_NOTIFICATION, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: notification
-            }).
-                then((response) => {
-                    console.log('notif respons ', response)
-                }).
-                catch(error => {
-                    console.log(error);
-                });
-        }
-
         this.setState({
             inputMessage: '',
             showButton: false,
         });
+        if (inputMessage.length > 0) {
+            socket.emit('sent-message', { userType: 'client', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: provider_FCM_id, receiverName, serviceName, orderId });
+        }
     }
 
     jobCancelTask = () => {
@@ -444,9 +362,9 @@ class ChatScreen extends Component {
                                     ItemSeparatorComponent={this.renderSeparator}
                                     ref={(ref) => { this.myFlatListRef = ref }}
                                     onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={ () => { 
-                                        if ( this.state.dataChatSource && this.state.dataChatSource.length > 0)
-                                            this.myFlatListRef.scrollToEnd({ animated: true }) 
+                                    onLayout={() => {
+                                        if (this.state.dataChatSource && this.state.dataChatSource.length > 0)
+                                            this.myFlatListRef.scrollToEnd({ animated: true })
                                     }}
                                 />
                             </View>
