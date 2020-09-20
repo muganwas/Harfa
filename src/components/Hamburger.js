@@ -265,13 +265,6 @@ class Hamburger extends React.Component {
         /** end lookout for pros changing position */
 
         this.fetchEmployeeLocations();
-        /**Should be removed when fcm is confirmed working well */
-        database().ref('chatting').child(senderId).on('child_changed', result => {
-            const { notificationsInfo } = this.props;
-            let currentMessagesCount = notificationsInfo.messages;
-            let newMessagesCount = currentMessagesCount + 1;
-            fetchedNotifications({ type: 'messages', value: newMessagesCount });
-        });
 
         database().ref('adminChatting').child(senderId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
@@ -333,6 +326,10 @@ class Hamburger extends React.Component {
             OnlineUsers.Users = users;
         })
         socket.on("chat-message", data => {
+            const { notificationsInfo } = this.props;
+            let currentMessagesCount = notificationsInfo.messages;
+            let newMessagesCount = currentMessagesCount + 1;
+            fetchedNotifications({ type: 'messages', value: newMessagesCount });
             console.log('message received --', data)
         });
         socket.on('disconnect', info => {

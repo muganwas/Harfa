@@ -129,14 +129,6 @@ class ProHamburger extends React.Component {
                 });
         });
 
-        /** should be removed once fcm works fine */
-        database().ref('chatting').child(receiverId).on('child_changed', result => {
-            const { notificationsInfo } = this.props;
-            const currentMessagesCount = notificationsInfo.messages;
-            const newMessagesCount = currentMessagesCount + 1;
-            fetchedNotifications({ type: 'messages', value: newMessagesCount });
-        });
-
         database().ref('adminChatting').child(receiverId).on('child_changed', result => {
             const { notificationsInfo } = this.props;
             const adminMessageCount = notificationsInfo.adminMessages;
@@ -177,6 +169,10 @@ class ProHamburger extends React.Component {
             if (!online && connectivityAvailable) socket.open();
         });
         socket.on("chat-message", data => {
+            const { notificationsInfo } = this.props;
+            const currentMessagesCount = notificationsInfo.messages;
+            const newMessagesCount = currentMessagesCount + 1;
+            fetchedNotifications({ type: 'messages', value: newMessagesCount });
             console.log('message received --', data)
         });
         socket.open();
