@@ -6,7 +6,7 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { imageExists } from '../misc/helpers';
+import { imageExists, chatDate } from '../misc/helpers';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
@@ -111,17 +111,6 @@ class ChatAfterBookingDetailsScreen extends Component {
         return true;
     }
 
-    convertTime = time => {
-        let d = new Date(time);
-        let c = new Date();
-        let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
-        result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-        if (c.getDay() !== d.getDay()) {
-            result = d.getDay() + '/' + d.getMonth() + "/" + d.getFullYear() + ', ' + result;
-        }
-        return result;
-    }
-
     showHideButton = input => {
 
         this.setState({
@@ -146,7 +135,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             showButton: false,
         });
         if (inputMessage.length > 0) {
-            socket.emit('sent-message', { userType: 'client', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: provider_FCM_id, receiverName, serviceName, orderId });
+            socket.emit('sent-message', { type: 'text', userType: 'client', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: provider_FCM_id, receiverName, serviceName, orderId });
         }
     }
 
@@ -169,7 +158,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                                         {item.textMessage}
                                     </Text>
                                     <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                        {this.convertTime(item && item.time)}
+                                        {chatDate(item && item.time)}
                                     </Text>
                                 </View>
                             </View>
@@ -188,7 +177,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                                         fontSize: 8, color: 'black', textAlignVertical: 'center',
                                         color: 'white', marginRight: 5, marginTop: 4
                                     }}>
-                                        {this.convertTime(item && item.time)}
+                                        {chatDate(item && item.time)}
                                     </Text>
                                 </View>
                             </View>

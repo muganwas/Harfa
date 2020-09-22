@@ -25,7 +25,7 @@ import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-community/async-storage';
-import { imageExists } from '../misc/helpers';
+import { imageExists, sortMessages } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
 import { Notifications } from 'react-native-notifications';
 
@@ -41,13 +41,6 @@ class Hamburger extends React.Component {
             availabilityChecked: false,
             availabilityObj: {}
         }
-        Notifications.events().registerRemoteNotificationsRegistered(event => {
-            // TODO: Send the token to my server so it could send back push notifications...
-        });
-
-        Notifications.events().registerRemoteNotificationsRegistrationFailed(event => {
-            console.error(event);
-        });
 
         Notifications.registerRemoteNotifications();
     }
@@ -178,35 +171,7 @@ class Hamburger extends React.Component {
 
         allJobRequestsClient.map(obj => {
             const { employee_id } = obj;
-            database().ref('chatting').
-                child(senderId).
-                child(employee_id)
-                .once('value', data => {
-                    if (data) {
-                        const { dataChatSource } = this.props.messagesInfo;
-                        let newDataChatSource = Object.assign({}, dataChatSource);
-                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                        newArr.push(data.val())
-                        const newData = [...newArr];
-                        //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => {
-                            if (a)
-                                return a.time
-                        })))
-                            .map(time => {
-                                return newData.find(a => {
-                                    if (a)
-                                        a.time === time
-                                })
-                            });
-                        newDataChatSource[employee_id] = uniqueData;
-                        fetchedMessages(newDataChatSource);
-                    }
-
-                });
-            database().ref('chatting').
-                child(senderId).
-                child(employee_id)
+                database().ref('chatting').child(senderId).child(employee_id)
                 .on('child_added', data => {
                     if (data.val()) {
                         const { messagesInfo: { dataChatSource } } = this.props;
@@ -215,21 +180,14 @@ class Hamburger extends React.Component {
                         newArr.push(data.val());
                         const newData = [...newArr];
                         //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => {
-                            if (a)
-                                return a.time
-                        })))
+                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
                             .map(time => {
-                                return newData.find(a => {
-                                    if (a) return a.time === time
-                                })
+                                return newData.find(a => a ? a.time === time : null)
                             });
                         newDataChatSource[employee_id] = uniqueData;
                         fetchedMessages(newDataChatSource);
                     }
-
                 });
-
         });
         /** fetch users current position and upload it to db */
         geolocation.getCurrentPosition(info => {
@@ -330,7 +288,6 @@ class Hamburger extends React.Component {
             let currentMessagesCount = notificationsInfo.messages;
             let newMessagesCount = currentMessagesCount + 1;
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
-            console.log('message received --', data)
         });
         socket.on('disconnect', info => {
             console.log('disconnection info --', info)

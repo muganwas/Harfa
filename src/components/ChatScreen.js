@@ -8,6 +8,7 @@ import {
     KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import Config from './Config';
+import { chatDate } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
@@ -34,13 +35,6 @@ const StatusBarPlaceHolder = () => {
             <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
     );
 }
-
-const options = {
-    title: 'Select a photo',
-    takePhotoButtonTitle: 'Take a photo',
-    chooseFromLibraryButtonTitle: 'Choose from gallery',
-    quality: 1
-};
 
 class ChatScreen extends Component {
     constructor(props) {
@@ -134,17 +128,6 @@ class ChatScreen extends Component {
         return true;
     }
 
-    convertTime = time => {
-        let d = new Date(time);
-        let c = new Date();
-        let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
-        result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-        if (c.getDay() !== d.getDay()) {
-            result = d.getDay() + '/' + d.getMonth() + "/" + d.getFullYear() + ', ' + result;
-        }
-        return result;
-    }
-
     showHideButton = (input) => {
 
         this.setState({
@@ -169,7 +152,7 @@ class ChatScreen extends Component {
             showButton: false,
         });
         if (inputMessage.length > 0) {
-            socket.emit('sent-message', { userType: 'client', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: provider_FCM_id, receiverName, serviceName, orderId });
+            socket.emit('sent-message', { type: 'text', userType: 'client', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: provider_FCM_id, receiverName, serviceName, orderId });
         }
     }
 
@@ -271,7 +254,7 @@ class ChatScreen extends Component {
                                         {item.textMessage}
                                     </Text>
                                     <Text style={{ fontSize: 8, textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                        {this.convertTime(item && item.time)}
+                                        {chatDate(item && item.time)}
                                     </Text>
                                 </View>
                             </View>
@@ -290,7 +273,7 @@ class ChatScreen extends Component {
                                         fontSize: 8, color: 'black', textAlignVertical: 'center',
                                         color: 'white', marginRight: 5, marginTop: 4
                                     }}>
-                                        {this.convertTime(item && item.time)}
+                                        {chatDate(item && item.time)}
                                     </Text>
                                 </View>
                             </View>

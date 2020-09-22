@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import {connect} from 'react-redux';
 import database from '@react-native-firebase/database';
+import { chatDate } from '../misc/helpers';
 import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import Config from './Config';
 
@@ -97,17 +98,6 @@ class ChatWithAdminScreen extends Component {
         return true;
     }
 
-    convertTime = (time) => {
-        let d = new Date(time);
-        let c = new Date();
-        let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
-        result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-        if (c.getDay() !== d.getDay()) {
-            result = d.getDay() + '/' + d.getMonth() + "/" + d.getFullYear() + ', ' + result;
-        }
-        return result;
-    }
-
     showHideButton = (input) => {
 
         this.setState({
@@ -188,7 +178,7 @@ class ChatWithAdminScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                    {this.convertTime(item && item.time)}
+                                    {chatDate(item && item.time)}
                                 </Text>
                             </View>
                         </View>
@@ -204,7 +194,7 @@ class ChatWithAdminScreen extends Component {
                                     {item.textMessage}
                                 </Text>
                                 <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                    {this.convertTime(item && item.time)}
+                                    {chatDate(item && item.time)}
                                 </Text>
                             </View>
                         </View>

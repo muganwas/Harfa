@@ -203,7 +203,7 @@ class ProAcceptRejectJobScreen extends Component {
                 showButton: false,
             });
         if (this.state.inputMessage.length > 0) {
-            socket.emit('sent-message', { userType: 'employee', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: receiverFcmId, receiverName, serviceName, orderId });
+            socket.emit('sent-message', { userType: 'employee', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: receiverFcmId, receiverName, serviceName, orderId });
         }
     }
 

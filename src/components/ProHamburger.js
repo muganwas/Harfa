@@ -91,25 +91,7 @@ class ProHamburger extends React.Component {
         });
 
         allJobRequestsProviders.map(obj => {
-            const { user_id } = obj;
-            database().ref("chatting").child(receiverId).child(user_id)
-                .once('value', data => {
-                    if (data.val()) {
-                        const { messagesInfo: { dataChatSource } } = this.props;
-                        let newDataChatSource = Object.assign({}, dataChatSource);
-                        const newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
-                        const newData = [...newArr];
-                        //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                            .map(time => {
-                                return newData.find(a => a ? a.time === time : null)
-                            });
-                        newDataChatSource[user_id] = uniqueData;
-                        fetchedMessages(newDataChatSource);
-                    }
-
-                });
-                
+            const { user_id } = obj;   
             database().ref('chatting').child(receiverId).child(user_id)
                 .on('child_added', data => {
                     if (data.val()) {

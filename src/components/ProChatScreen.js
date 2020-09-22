@@ -7,6 +7,7 @@ import {
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
     KeyboardAvoidingView,
 } from 'react-native';
+import { chatDate } from '../misc/helpers';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
@@ -128,17 +129,6 @@ class ProChatScreen extends Component {
         return true;
     }
 
-    convertTime = (time) => {
-        let d = new Date(time);
-        let c = new Date();
-        let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
-        result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-        if (c.getDay() !== d.getDay()) {
-            result = d.getDay() + '/' + d.getMonth() + "/" + d.getFullYear() + ', ' + result;
-        }
-        return result;
-    }
-
     showHideButton = (input) => {
         this.setState({
             inputMessage: input,
@@ -162,7 +152,7 @@ class ProChatScreen extends Component {
             showButton: false,
         });
         if (inputMessage.length > 0) {
-            socket.emit('sent-message', { userType: 'employee', inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: customer_FCM_id, receiverName, serviceName, orderId });
+            socket.emit('sent-message', { type: 'text', userType: 'employee', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: customer_FCM_id, receiverName, serviceName, orderId });
         }
     }
 
@@ -184,7 +174,7 @@ class ProChatScreen extends Component {
                                         {item.textMessage}
                                     </Text>
                                     <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                        {this.convertTime(item && item.time)}
+                                        {chatDate(item && item.time)}
                                     </Text>
                                 </View>
                             </View>
@@ -200,7 +190,7 @@ class ProChatScreen extends Component {
                                         {item.textMessage}
                                     </Text>
                                     <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                        {item && this.convertTime(item.time)}
+                                        {item && chatDate(item.time)}
                                     </Text>
                                 </View>
                             </View>
