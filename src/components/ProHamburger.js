@@ -2,7 +2,12 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
+import { 
+    startFetchingMessages, 
+    messagesFetched,
+    messagesError,
+    dbMessagesFetched
+} from '../Redux/Actions/messageActions';
 import {
     updatingCoordinates,
     updateCoordinates,
@@ -26,9 +31,11 @@ import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from '@react-native-community/async-storage';
 import { cloneDeep } from 'lodash';
 import { black, white, red } from '../Constants/colors';
+import Axios from 'axios';
 
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
+const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
 
 class ProHamburger extends React.Component {
 
@@ -37,13 +44,20 @@ class ProHamburger extends React.Component {
     }
 
     componentDidMount() {
-        const { jobsInfo: { allJobRequestsProviders }, fetchedMessages, fetchedNotifications, updateLiveChatUsers, userInfo: { providerDetails } } = this.props;
+        const { 
+            jobsInfo: { allJobRequestsProviders }, 
+            fetchedMessages, 
+            fetchedNotifications,
+            dbMessagesFetched,
+            fetchingMessagesError,
+            updateLiveChatUsers, 
+            userInfo: { providerDetails } 
+        } = this.props;
         const receiverId = providerDetails.providerId;
         this.fetchOthersLocations();
         this.checkForUserType();
 
         messaging().onMessage(message => {
-            console.log('message --', message)
             const { notification, data } = message;
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body } = notification;
@@ -88,6 +102,33 @@ class ProHamburger extends React.Component {
                 newJobRequestsProviders.splice(pos, 1);
                 dispatchFetchedProJobRequests(newJobRequestsProviders);
             }
+        });
+
+        Axios.get(FETCH_MESSAGES + '?sender=' + receiverId + "&userType=client").then(results => {
+            const { data } = results;
+            let messages = {};
+            let otherUsers = {};
+            // get ids of other users this user has chatted with
+            data.map(msgObj => {
+              const { sender, recipient } = msgObj;
+              if (sender !== receiverId) otherUsers[sender] = sender;
+              else if (recipient !== receiverId) otherUsers[recipient] = recipient;
+            });
+            // if any user, seperate the different groups of messages
+            if (Object.keys(otherUsers).length > 0) {
+              Object.keys(otherUsers).map( otherUser => {
+                const thisUsersMessages = [];
+                data.map(msgObj => {
+                  const { sender, recipient } = msgObj;
+                  if (otherUser === sender || otherUser === recipient) thisUsersMessages.push(msgObj);
+                });
+                if (thisUsersMessages.length > 0) messages[otherUser] = thisUsersMessages;
+              });
+              dbMessagesFetched(messages);
+            }
+        }).catch(e => {
+            console.log('mongo messages error', e)
+            fetchingMessagesError(e.message);
         });
 
         allJobRequestsProviders.map(obj => {
@@ -335,6 +376,9 @@ const mapDispatchToProps = dispatch => {
         },
         updateLiveChatUsers: val => {
             dispatch(updateLiveChatUsers(val));
+        },
+        dbMessagesFetched: messages => {
+            dispatch(dbMessagesFetched(messages));
         }
     }
 }
