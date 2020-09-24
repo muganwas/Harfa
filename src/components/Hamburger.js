@@ -40,7 +40,7 @@ import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-community/async-storage';
-import { imageExists, sortMessages } from '../misc/helpers';
+import { imageExists } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
 import { Notifications } from 'react-native-notifications';
 import Axios from 'axios';

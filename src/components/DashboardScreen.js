@@ -58,7 +58,7 @@ class DashboardScreen extends Component {
     //Get All Services
     componentDidMount() {
         this.onRefresh();
-        const { navigation } = this.props;
+        const { navigation, messagesInfo } = this.props;
         navigation.addListener('willFocus', () => {
             //this.onRefresh();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButton());
@@ -320,7 +320,8 @@ const mapStateToProps = state => {
     return {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
-        generalInfo: state.generalInfo
+        generalInfo: state.generalInfo,
+        messagesInfo: state.messagesInfo
     }
 }
 

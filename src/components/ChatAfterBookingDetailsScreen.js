@@ -34,7 +34,7 @@ const StatusBarPlaceHolder = () => {
 class ChatAfterBookingDetailsScreen extends Component {
     constructor(props) {
         super()
-        const { userInfo: { userDetails }, jobsInfo: { selectedJobRequest: { employee_id } } } = props;
+        const { userInfo: { userDetails }, jobsInfo: { selectedJobRequest: { employee_id } }, messagesInfo: { messages } } = props;
         this.state = {
             senderId: userDetails.userId,
             senderImage: userDetails.image,
@@ -42,6 +42,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             inputMessage: '',
             showButton: false,
             dataChatSource: props.messagesInfo.dataChatSource[employee_id],
+            messages,
             isLoading: !props.messagesInfo.fetched,
             isUpLoading: false,
             receiverId: props.navigation.state.params.providerId,
@@ -62,7 +63,7 @@ class ChatAfterBookingDetailsScreen extends Component {
         imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
             this.setState({ proImageAvailable });
         });
-
+        console.log('chat after booking --')
         navigation.addListener('willFocus', async () => {
             this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -139,7 +140,47 @@ class ChatAfterBookingDetailsScreen extends Component {
         }
     }
 
+    renderMessages = () => {
+        const { userInfo: { userDetails: { userId } }, jobsInfo: { selectedJobRequest: { employee_id } }, messagesInfo: { messages } } = this.props;
+        return (
+            <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                {
+                    Object.keys(messages).map(key => {
+                        const usersMessages = messages[key];
+                        // display messages from selected user
+                        if (String(key) === String(employee_id)) {
+                            return <View key={key} style={styles.messagesSubContainer}>
+                                {
+                                    Object.keys(usersMessages).map(key => {
+                                        const sender = usersMessages[key].sender;
+                                        const message = usersMessages[key].message;
+                                        if (String(sender) === String(employee_id)) {
+                                            return (
+                                                <View key={key} style={styles.recievedContainer}>
+                                                    <Text style={styles.recievedMsg}>{message}</Text>
+                                                </View>
+                                            )
+                                        }
+                                        else if (String(sender) === String(userId)) {
+                                            return (
+                                                <View key={key} style={styles.sentContainer}>
+                                                    <Text style={styles.sentMsg}>{message}</Text>
+                                                </View>
+                                            )
+                                        }
+                                        else return;
+                                    })
+                                }
+                            </View>
+                        }
+                    })
+                }
+            </View>
+        )
+    }
+
     renderMessageItem = ({ item }) => {
+        const { userInfo: { userDetails: { userId } } } = this.props;
         if (item) {
             const senderImage = item.senderImage;
             return (
@@ -233,7 +274,7 @@ class ChatAfterBookingDetailsScreen extends Component {
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
-                                <FlatList
+                                {/*<FlatList
                                     numColumns={1}
                                     data={this.state.dataChatSource}
                                     renderItem={this.renderMessageItem}
@@ -243,7 +284,8 @@ class ChatAfterBookingDetailsScreen extends Component {
                                     ItemSeparatorComponent={this.renderSeparator}
                                     ref={(ref) => { this.myFlatListRef = ref }}
                                     onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                                onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />*/}
+                                {this.renderMessages()}
                             </View>
                         </View>
                     </ScrollView>
@@ -358,7 +400,235 @@ const styles = StyleSheet.create({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'center'
-    }
+    },
+    chatContainer: {
+        position: 'relative',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 1,
+      },
+      input: {
+        display: 'flex',
+        flex: 8,
+        padding: 3,
+        borderWidth: 1.5,
+        borderColor: '#D4D4D4',
+        borderRadius: 3,
+        height: 30,
+      },
+      userInfoContainer: {
+        position: 'relative',
+        backgroundColor: '#EDEDED',
+        zIndex: 1
+      },
+      members: {
+        position: 'relative',
+        width: '100%',
+        height: 'auto',
+      },
+      roundPic: {
+        width: 20,
+        height: 20,
+        margin: 3,
+        borderWidth: 1,
+        borderColor: '#c9c9c9',
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius:10,
+      },
+      userInfo: {
+        position: 'relative',
+        margin: 5,
+        zIndex: 1,
+      },
+      userTextInfoContainer: {
+        margin: 3,
+        position: 'relative',
+        alignContent: 'center',
+        alignItems: 'center',
+        textAlignVertical:'top',
+      },
+      closeButton: {
+        margin: 3,
+        position: 'relative',
+        alignContent: 'center',
+        alignItems: 'center',
+        textAlignVertical:'top',
+        zIndex: 1,
+      },
+      closeButtonText: {
+        textAlignVertical:'top',
+        color: '#16B5F3',
+      },
+      username: {
+        fontWeight: 'bold',
+        textAlign: 'left',
+        fontSize: 10,
+        textTransform: 'capitalize'
+      },
+      availability: {
+        textAlign: 'left',
+        fontSize: 8,
+        fontWeight: '100',
+        textTransform: 'capitalize'
+      },
+      recievedContainer: {
+        textAlign: 'left',
+        alignItems: 'flex-start',
+        alignContent: 'flex-start',
+      },
+      recievedMsg: {
+        margin: 3,
+        padding: 3,
+        borderRadius: 3,
+        alignItems: 'flex-start',
+        color: "#000",
+        textAlign: 'left',
+        backgroundColor: "#16B5F3"
+      },
+      sentContainer: {
+        flex: 1,
+        alignContent: 'flex-end',
+        alignItems: 'flex-end',
+        textAlign: 'right',
+      },
+      sentMsg: {
+        margin: 3,
+        padding: 3,
+        borderRadius: 3,
+        alignItems: 'flex-end',
+        textAlign: 'right',
+        color: "#000",
+        backgroundColor: "#16B5F3"
+      },
+      messagesContainer: {
+        height: '100%',
+        minHeight: 100,
+        padding: 10,
+        height: 200
+      },
+      messagesSubContainer: {
+        display: 'flex'
+      },
+      inputContainer: {
+        display: 'flex',
+        flexDirection: 'row'
+      },
+      button: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 3,
+        marginLeft: 10,
+        height: 30,
+        minWidth: 50,
+        backgroundColor: '#16B5F2'
+      },
+      disabledButton: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 3,
+        marginLeft: 10,
+        height: 30,
+        minWidth: 50,
+        backgroundColor: '#7F8787'
+      },
+      buttonText: {
+        textAlign: 'center',
+        color: '#fff'
+      },
+      friendActive: {
+        backgroundColor: '#EDEDED',
+        padding: 5,
+        marginTop: 5,
+        marginBottom: 5,
+        marginLeft: 0,
+        marginRight: 0,
+        zIndex: 0
+      },
+      friendHovered: {
+        backgroundColor: '#FDD906',
+        padding: 5,
+        marginTop: 5,
+        marginBottom: 5,
+        marginLeft: 0,
+        marginRight: 0,
+        zIndex: 0
+      },
+      friend: {
+        padding: 5,
+        marginTop: 5,
+        marginBottom: 5,
+        marginLeft: 0,
+        marginRight: 0,
+        zIndex: 0
+      },
+      leftCol: {
+        position: 'relative',
+      },
+      avatarContainer: {
+        width: 30,
+        height: 30,
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: '#c9c9c9',
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 15
+      },
+      avatar: {
+        position: 'relative',
+        width: 30,
+        height: 30
+      },
+      userOnline: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        borderRadius: 4,
+        backgroundColor: '#0ed43f',
+        width: 8,
+        height: 8,
+        zIndex: 1000
+      },
+      userOffline: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        borderRadius: 4,
+        backgroundColor: '#a5a5a5',
+        width: 8,
+        height: 8,
+        zIndex: 1000
+      },
+      name: {
+        textTransform: 'capitalize',
+        alignItems: 'center',
+        textAlignVertical: 'center',
+        alignContent: 'center',
+        padding: 5,
+        fontSize: 10,
+        fontWeight: '700'
+      },
+      messages: {
+        backgroundColor: '#b9b9b9',
+        padding: 3,
+        textTransform: 'lowercase',
+        fontStyle: 'italic',
+        color: '#f0f0f0'
+      },
+      conversationContainer: {
+        position: 'relative',
+        padding: 10,
+        flex: 7,
+        zIndex: 1
+      },
+      messagingCallToAction: {
+        color: '#bbbbbb',
+        textAlign: 'center'
+      }
 });
 
 const mapStateToProps = state => {

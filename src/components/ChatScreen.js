@@ -70,6 +70,7 @@ class ChatScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
+        console.log('chat --')
         navigation.addListener('willFocus', async () => {
             this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());

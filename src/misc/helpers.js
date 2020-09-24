@@ -30,7 +30,7 @@ export const chatDate = timestamp => {
     return result;
 }
 
-export const sortMessages = (array, ascending = true) => {
+export const sortByTime = (array, ascending = true) => {
     let messages = cloneDeep(array);
     if (ascending)
         messages.sort((a, b) => {
