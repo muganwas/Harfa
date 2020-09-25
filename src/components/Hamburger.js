@@ -337,10 +337,14 @@ class Hamburger extends React.Component {
             OnlineUsers.Users = users;
         })
         socket.on("chat-message", data => {
-            const { notificationsInfo } = this.props;
+            const { sender } = cloneDeep(data);
+            const { notificationsInfo, messagesInfo, dbMessagesFetched } = this.props;
+            let newMessages = cloneDeep(messagesInfo.messages);
             let currentMessagesCount = notificationsInfo.messages;
             let newMessagesCount = currentMessagesCount + 1;
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
+            newMessages[sender].push(data);
+            dbMessagesFetched(newMessages);
         });
         socket.on('disconnect', info => {
             console.log('disconnection info --', info)

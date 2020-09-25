@@ -5,10 +5,14 @@ import {
     FlatList, TextInput, Dimensions, ActivityIndicator,
     BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView, ScrollView
 } from 'react-native';
+import {
+    dbMessagesFetched
+} from '../Redux/Actions/messageActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { imageExists, chatDate } from '../misc/helpers';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { cloneDeep } from 'lodash';
 
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
@@ -131,12 +135,31 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     sendMessageTask = async () => {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, provider_FCM_id, receiverName, serviceName, orderId } = this.state;
+        const { dbMessagesFetched, messagesInfo } = this.props;
+        let newMessages = cloneDeep(messagesInfo.messages);
         this.setState({
             inputMessage: '',
             showButton: false,
         });
         if (inputMessage.length > 0) {
-            socket.emit('sent-message', { type: 'text', userType: 'client', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: provider_FCM_id, receiverName, serviceName, orderId });
+            const messageObj = {
+                type: 'text',
+                userType: 'client',
+                textMessage: inputMessage,
+                senderId,
+                senderName,
+                senderImage,
+                receiverId,
+                receiverImage,
+                fcm_id: provider_FCM_id,
+                receiverName,
+                serviceName,
+                orderId
+            };
+            newMessages[receiverId].push({message: inputMessage, recipient: receiverId, sender: senderId});
+            dbMessagesFetched(newMessages);
+            socket.emit('sent-message', messageObj);
+            this.setState({inputMessage: ''})
         }
     }
 
@@ -177,55 +200,6 @@ class ChatAfterBookingDetailsScreen extends Component {
                 }
             </View>
         )
-    }
-
-    renderMessageItem = ({ item }) => {
-        const { userInfo: { userDetails: { userId } } } = this.props;
-        if (item) {
-            const senderImage = item.senderImage;
-            return (
-                this.state.senderId != item.senderId
-                    ?
-                    item.type == 'text'
-                        ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                            <View style={styles.itemLeftChatContainer}>
-                                <View style={styles.itemChatImageView}>
-                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                        source={{ uri: senderImage }} />
-                                </View>
-                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                        {item.textMessage}
-                                    </Text>
-                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                        {chatDate(item && item.time)}
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        : null
-                    :
-                    item.type == 'text'
-                        ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                            <View style={styles.itemRightChatContainer}>
-                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
-                                        {item.textMessage}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 8, color: 'black', textAlignVertical: 'center',
-                                        color: 'white', marginRight: 5, marginTop: 4
-                                    }}>
-                                        {chatDate(item && item.time)}
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        : null
-            )
-        }
     }
 
     renderSeparator = () => {
@@ -274,17 +248,6 @@ class ChatAfterBookingDetailsScreen extends Component {
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
-                                {/*<FlatList
-                                    numColumns={1}
-                                    data={this.state.dataChatSource}
-                                    renderItem={this.renderMessageItem}
-                                    keyExtractor={(item, index) => index.toString()}
-                                    showsVerticalScrollIndicator={false}
-                                    extraData={this.state}
-                                    ItemSeparatorComponent={this.renderSeparator}
-                                    ref={(ref) => { this.myFlatListRef = ref }}
-                                    onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />*/}
                                 {this.renderMessages()}
                             </View>
                         </View>
@@ -357,31 +320,6 @@ const styles = StyleSheet.create({
         position: 'absolute', //Footer
         bottom: 0, //Footer
     },
-    itemLeftChatContainer: {
-        maxWidth: (screenWidth / 2) + 30,
-        flexDirection: 'row',
-        backgroundColor: colorGray,
-        padding: 10,
-        borderRadius: 5,
-        alignContent: 'center'
-    },
-    itemChatImageView: {
-        width: 20,
-        height: 20,
-        borderRadius: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    itemRightChatContainer: {
-        maxWidth: screenWidth / 2,
-        flexDirection: 'row',
-        backgroundColor: '#1E90FF',
-        padding: 10,
-        borderRadius: 5,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-    },
     textViewDirection: {
         flexDirection: 'row',
         width: screenWidth,
@@ -392,243 +330,44 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         marginBottom: 15,
     },
-    loaderStyle: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    chatContainer: {
-        position: 'relative',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 1,
-      },
-      input: {
-        display: 'flex',
-        flex: 8,
-        padding: 3,
-        borderWidth: 1.5,
-        borderColor: '#D4D4D4',
-        borderRadius: 3,
-        height: 30,
-      },
-      userInfoContainer: {
-        position: 'relative',
-        backgroundColor: '#EDEDED',
-        zIndex: 1
-      },
-      members: {
-        position: 'relative',
-        width: '100%',
-        height: 'auto',
-      },
-      roundPic: {
-        width: 20,
-        height: 20,
-        margin: 3,
-        borderWidth: 1,
-        borderColor: '#c9c9c9',
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius:10,
-      },
-      userInfo: {
-        position: 'relative',
-        margin: 5,
-        zIndex: 1,
-      },
-      userTextInfoContainer: {
-        margin: 3,
-        position: 'relative',
-        alignContent: 'center',
-        alignItems: 'center',
-        textAlignVertical:'top',
-      },
-      closeButton: {
-        margin: 3,
-        position: 'relative',
-        alignContent: 'center',
-        alignItems: 'center',
-        textAlignVertical:'top',
-        zIndex: 1,
-      },
-      closeButtonText: {
-        textAlignVertical:'top',
-        color: '#16B5F3',
-      },
-      username: {
-        fontWeight: 'bold',
-        textAlign: 'left',
-        fontSize: 10,
-        textTransform: 'capitalize'
-      },
-      availability: {
-        textAlign: 'left',
-        fontSize: 8,
-        fontWeight: '100',
-        textTransform: 'capitalize'
-      },
-      recievedContainer: {
-        textAlign: 'left',
-        alignItems: 'flex-start',
-        alignContent: 'flex-start',
-      },
-      recievedMsg: {
-        margin: 3,
-        padding: 3,
-        borderRadius: 3,
-        alignItems: 'flex-start',
-        color: "#000",
-        textAlign: 'left',
-        backgroundColor: "#16B5F3"
-      },
-      sentContainer: {
+    recievedContainer: {
         flex: 1,
-        alignContent: 'flex-end',
-        alignItems: 'flex-end',
-        textAlign: 'right',
-      },
-      sentMsg: {
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+    },
+    recievedMsg: {
         margin: 3,
         padding: 3,
         borderRadius: 3,
+        color: "#000",
+        textAlign: 'left',
+        backgroundColor: "#16B5F3"
+    },
+    sentContainer: {
+        flex: 1,
         alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+    },
+    sentMsg: {
+        margin: 3,
+        padding: 3,
+        borderRadius: 3,
         textAlign: 'right',
         color: "#000",
-        backgroundColor: "#16B5F3"
-      },
-      messagesContainer: {
+        backgroundColor: "#ffffff"
+    },
+    messagesContainer: {
         height: '100%',
         minHeight: 100,
         padding: 10,
         height: 200
-      },
-      messagesSubContainer: {
-        display: 'flex'
-      },
-      inputContainer: {
+    },
+    messagesSubContainer: {
         display: 'flex',
-        flexDirection: 'row'
-      },
-      button: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 3,
-        marginLeft: 10,
-        height: 30,
-        minWidth: 50,
-        backgroundColor: '#16B5F2'
-      },
-      disabledButton: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 3,
-        marginLeft: 10,
-        height: 30,
-        minWidth: 50,
-        backgroundColor: '#7F8787'
-      },
-      buttonText: {
-        textAlign: 'center',
-        color: '#fff'
-      },
-      friendActive: {
-        backgroundColor: '#EDEDED',
-        padding: 5,
-        marginTop: 5,
-        marginBottom: 5,
-        marginLeft: 0,
-        marginRight: 0,
-        zIndex: 0
-      },
-      friendHovered: {
-        backgroundColor: '#FDD906',
-        padding: 5,
-        marginTop: 5,
-        marginBottom: 5,
-        marginLeft: 0,
-        marginRight: 0,
-        zIndex: 0
-      },
-      friend: {
-        padding: 5,
-        marginTop: 5,
-        marginBottom: 5,
-        marginLeft: 0,
-        marginRight: 0,
-        zIndex: 0
-      },
-      leftCol: {
-        position: 'relative',
-      },
-      avatarContainer: {
-        width: 30,
-        height: 30,
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: '#c9c9c9',
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 15
-      },
-      avatar: {
-        position: 'relative',
-        width: 30,
-        height: 30
-      },
-      userOnline: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        borderRadius: 4,
-        backgroundColor: '#0ed43f',
-        width: 8,
-        height: 8,
-        zIndex: 1000
-      },
-      userOffline: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        borderRadius: 4,
-        backgroundColor: '#a5a5a5',
-        width: 8,
-        height: 8,
-        zIndex: 1000
-      },
-      name: {
-        textTransform: 'capitalize',
-        alignItems: 'center',
-        textAlignVertical: 'center',
-        alignContent: 'center',
-        padding: 5,
-        fontSize: 10,
-        fontWeight: '700'
-      },
-      messages: {
-        backgroundColor: '#b9b9b9',
-        padding: 3,
-        textTransform: 'lowercase',
-        fontStyle: 'italic',
-        color: '#f0f0f0'
-      },
-      conversationContainer: {
-        position: 'relative',
-        padding: 10,
-        flex: 7,
-        zIndex: 1
-      },
-      messagingCallToAction: {
-        color: '#bbbbbb',
-        textAlign: 'center'
-      }
+        width: '100%',
+        flexDirection: "column"
+    },
 });
 
 const mapStateToProps = state => {
@@ -650,6 +389,9 @@ const mapDispatchToProps = dispatch => {
         },
         fetchingNotificationsError: error => {
             dispatch(notificationError(error));
+        },
+        dbMessagesFetched: messages => {
+            dispatch(dbMessagesFetched(messages));
         }
     }
 }
