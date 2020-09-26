@@ -9,9 +9,6 @@ target 'Harfa' do
   pod 'GoogleSignIn', '~> 5.0.0'
   
   pod 'FBSDKCoreKit', :modular_headers => true
-
-  
-  pod 'RNFirebase', :path => '../node_modules/react-native-firebase/ios'
   
   pod 'react-native-geolocation', path: '../node_modules/@react-native-community/geolocation'
 
@@ -45,10 +42,7 @@ target 'Harfa' do
   pod 'DoubleConversion', :podspec => '../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec'
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
-  pod 'Firebase/Database', '~> 6.13.0'
-
-
-
+  pod 'Firebase/Database'
 
   pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo'
 
