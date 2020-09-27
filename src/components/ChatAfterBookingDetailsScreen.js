@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text,
-    FlatList, TextInput, Dimensions, ActivityIndicator,
-    BackHandler, ImageBackground, StatusBar, Platform, Alert, KeyboardAvoidingView, ScrollView
+    TextInput, Dimensions, ActivityIndicator,
+    BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import {
     dbMessagesFetched
 } from '../Redux/Actions/messageActions';
+import moment from 'moment';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { imageExists, chatDate } from '../misc/helpers';
 import Config from './Config';
@@ -112,12 +113,19 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        if (this.state.titlePage == 'MapDirection')
-            this.props.navigation.navigate("MapDirection", {
+        const { titlePage } = this.state;
+        console.log(titlePage)
+        const { navigation } = this.props;
+        if (titlePage == 'MapDirection')
+            navigation.navigate("MapDirection", {
                 titlePage: "Chat"
             });
-        else if (this.state.titlePage == 'ProviderDetails')
-            this.props.navigation.navigate("ProviderDetails");
+        else if (titlePage == 'ProviderDetails')
+            navigation.navigate("ProviderDetails");
+        else if (titlePage === "AllMessage")
+            navigation.navigate("AllMessage")
+        else
+            navigation.goBack();
         return true;
     }
 
@@ -142,6 +150,8 @@ class ChatAfterBookingDetailsScreen extends Component {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, provider_FCM_id, receiverName, serviceName, orderId } = this.state;
         const { dbMessagesFetched, messagesInfo } = this.props;
         let newMessages = cloneDeep(messagesInfo.messages);
+        const time = moment().toISOString();
+        const date = new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear();
         this.setState({
             inputMessage: '',
             showButton: false,
@@ -159,9 +169,11 @@ class ChatAfterBookingDetailsScreen extends Component {
                 fcm_id: provider_FCM_id,
                 receiverName,
                 serviceName,
-                orderId
+                orderId,
+                time,
+                date
             };
-            newMessages[receiverId].push({message: inputMessage, recipient: receiverId, sender: senderId});
+            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }
@@ -182,17 +194,24 @@ class ChatAfterBookingDetailsScreen extends Component {
                                     Object.keys(usersMessages).map(key => {
                                         const sender = usersMessages[key].sender;
                                         const message = usersMessages[key].message;
+                                        const time = usersMessages[key].time;
                                         if (String(sender) === String(receiverId)) {
                                             return (
                                                 <View key={key} style={style.recievedContainer}>
-                                                    <Text style={style.recievedMsg}>{message}</Text>
+                                                    <View style={style.recievedMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.recievedMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
                                         else if (String(sender) === String(senderId)) {
                                             return (
                                                 <View key={key} style={style.sentContainer}>
-                                                    <Text style={style.sentMsg}>{message}</Text>
+                                                    <View style={style.sentMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.sentMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
@@ -230,7 +249,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                     }}>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
-                                onPress={() => this.props.navigation.goBack()}>
+                                onPress={this.handleBackButtonClick}>
                                 <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
@@ -243,13 +262,16 @@ class ChatAfterBookingDetailsScreen extends Component {
                         </View>
                     </View>
 
-                    <ScrollView ref={ref => this.scrollView = ref}
+                    <ScrollView
+                        ref={ref => this.scrollView = ref}
                         contentContainerStyle={{
-                            justifyContent: 'center', alignItems: 'center',
+                            justifyContent: 'center',
+                            alignItems: 'center',
                             alwaysBounceVertical: true
                         }}
                         keyboardShouldPersistTaps='handled'
-                        keyboardDismissMode='on-drag'>
+                        keyboardDismissMode='on-drag'
+                    >
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>

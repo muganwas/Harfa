@@ -25,8 +25,8 @@ export const getDistance = (lat1, lon1, lat2, lon2, unit) => {
 
 export const chatDate = timestamp => {
     let result = '';
-    if (timestamp && typeof timestamp === 'number')
-        result = moment.unix(timestamp).local().format('DD-MM. HH:mm');
+    if (timestamp)
+        result = moment(timestamp).local().format('DD-MM. HH:mm');
     return result;
 }
 

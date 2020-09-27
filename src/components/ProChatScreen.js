@@ -11,6 +11,7 @@ import {
     dbMessagesFetched
 } from '../Redux/Actions/messageActions';
 import { chatDate } from '../misc/helpers';
+import moment from 'moment';
 import Config from './Config';
 import { cloneDeep } from 'lodash';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
@@ -89,7 +90,6 @@ class ProChatScreen extends Component {
             navigation,
             userInfo: { providerDetails }
         } = this.props;
-        console.log('chat --')
         this.setState({
             showButton: false,
             senderId: providerDetails.providerId,
@@ -119,12 +119,10 @@ class ProChatScreen extends Component {
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[user_id] });
-        console.log('fetched', fetched)
     }
 
     handleBackButtonClick = () => {
         const { pageTitle } = this.state;
-        console.log(pageTitle)
         if (pageTitle === "ProMapDirection")
             this.props.navigation.navigate("ProMapDirection");
         else if (pageTitle === "ProDashboard")
@@ -156,26 +154,30 @@ class ProChatScreen extends Component {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, customer_FCM_id, receiverName, serviceName, orderId } = this.state;
         const { dbMessagesFetched, messagesInfo } = this.props;
         let newMessages = cloneDeep(messagesInfo.messages);
+        const time = moment().toISOString();
+        const date = new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear();
         this.setState({
             inputMessage: '',
             showButton: false,
         });
         if (inputMessage.length > 0) {
-            const messageObj = { 
-                type: 'text', 
-                userType: 'employee', 
-                textMessage: inputMessage, 
-                senderId, 
-                senderName, 
-                senderImage, 
-                receiverId, 
-                receiverImage, 
-                fcm_id: customer_FCM_id, 
-                receiverName, 
-                serviceName, 
-                orderId 
+            const messageObj = {
+                type: 'text',
+                userType: 'employee',
+                textMessage: inputMessage,
+                senderId,
+                senderName,
+                senderImage,
+                receiverId,
+                receiverImage,
+                fcm_id: customer_FCM_id,
+                receiverName,
+                serviceName,
+                orderId,
+                time,
+                date
             };
-            newMessages[receiverId].push({message: inputMessage, recipient: receiverId, sender: senderId});
+            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }
@@ -196,17 +198,24 @@ class ProChatScreen extends Component {
                                     Object.keys(usersMessages).map(key => {
                                         const sender = usersMessages[key].sender;
                                         const message = usersMessages[key].message;
+                                        const time = usersMessages[key].time;
                                         if (String(sender) === String(receiverId)) {
                                             return (
                                                 <View key={key} style={style.recievedContainer}>
-                                                    <Text style={style.recievedMsg}>{message}</Text>
+                                                    <View style={style.recievedMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.recievedMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
                                         else if (String(sender) === String(senderId)) {
                                             return (
                                                 <View key={key} style={style.sentContainer}>
-                                                    <Text style={style.sentMsg}>{message}</Text>
+                                                    <View style={style.sentMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.sentMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
@@ -255,11 +264,16 @@ class ProChatScreen extends Component {
                         </View>
                     </View>
 
-                    <ScrollView ref={ref => this.scrollView = ref}
-                        onContentSizeChange={(contentWidth, contentHeight) => {
-                            this.scrollView.scrollToEnd({ animated: true })
+                    <ScrollView
+                        ref={ref => this.scrollView = ref}
+                        contentContainerStyle={{
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            alwaysBounceVertical: true
                         }}
-                        contentContainerStyle={{ overflow: 'hidden', }}>
+                        keyboardShouldPersistTaps='handled'
+                        keyboardDismissMode='on-drag'
+                    >
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
@@ -284,15 +298,6 @@ class ProChatScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-
-                            {/*<TouchableOpacity style={{
-                                    height: 50, justifyContent: 'center', alignItems: 'center',
-                                    alignContent: 'center', marginRight: 25
-                                }}
-                                    onPress={this.selectPhoto.bind(this)}>
-                                    <Image style={{ width: 20, height: 20 }}
-                                        source={require('../icons/camera.png')} />
-                                </TouchableOpacity>*/}
                             <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
                                 onPress={this.sendMessageTask}>
                                 <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>

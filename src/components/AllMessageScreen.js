@@ -128,7 +128,6 @@ class AllMessageScreen extends Component {
 
     renderRecentMessageItem = ({ item }) => {
         const { dispatchSelectedJobRequest } = this.props;
-        const { exists } = item;
         return (
             <TouchableOpacity style={styles.itemMainContainer}
                 onPress={() => {
@@ -140,7 +139,7 @@ class AllMessageScreen extends Component {
                         'providerImage': item.image,
                         'orderId': item.orderId,
                         'serviceName': item.serviceName,
-                        'titlePage': "AllMessage"
+                        'pageTitle': "AllMessage"
                     })
                 }}>
                 <View style={styles.itemImageView}>

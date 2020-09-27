@@ -301,13 +301,12 @@ class Hamburger extends React.Component {
             }
         });
 
-        socket.on('authorized', reason => {
-            console.log('reason --', reason)
+        socket.on('authorized', () => {
             updateOnlineStatus(true)
         });
 
         socket.on('unauthorized', reason => {
-            //console.log('unauthorized --', reason)
+            console.log('unauthorized --', reason)
             updateOnlineStatus(false)
         });
 
@@ -317,7 +316,6 @@ class Hamburger extends React.Component {
             OnlineUsers.Users = users;
         })
         socket.on('user-joined', users => {
-            console.log('user joined')
             updateLiveChatUsers(users);
             OnlineUsers.Users = users;
         })

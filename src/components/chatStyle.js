@@ -74,31 +74,61 @@ const style = StyleSheet.create({
         justifyContent: 'flex-start',
         marginBottom: 15,
     },
-     recievedContainer: {
+    recievedContainer: {
         flex: 1,
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
     },
-    recievedMsg: {
+    recievedMsgContainer: {
         margin: 3,
-        padding: 3,
-        borderRadius: 3,
-        color: "#000",
+        flexDirection: 'column',
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        borderRadius: 6,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0, 0.5)'
+    },
+    recievedMsg: {
+        flex: 1,
+        color: "#ffffff",
         textAlign: 'left',
-        backgroundColor: "#16B5F3"
+    },
+    chatTime: {
+        fontSize: 8,
+        color: '#F3F3F3',
+        fontWeight: '600'
+    },
+    chatUserIcon: { 
+        width: 30, 
+        height: 30, 
+        borderRadius: 15, 
+        alignItems: 'center' 
+    },
+    msgInfo: {
+        flexDirection: 'row',
+        width: 80,
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
     sentContainer: {
         flex: 1,
         alignItems: 'flex-end',
         justifyContent: 'flex-end',
     },
+    sentMsgContainer: {
+        margin: 2,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        backgroundColor: '#407675'
+    },
     sentMsg: {
-        margin: 3,
-        padding: 3,
-        borderRadius: 3,
+        flex: 1,
+        color: "#ffffff",
         textAlign: 'right',
-        color: "#000",
-        backgroundColor: "#ffffff"
     },
     messagesContainer: {
         height: '100%',
@@ -109,6 +139,7 @@ const style = StyleSheet.create({
     messagesSubContainer: {
         display: 'flex',
         flex: 1,
+        paddingHorizontal: 10,
         width: '100%',
         flexDirection: "column"
     },

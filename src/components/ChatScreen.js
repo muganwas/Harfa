@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError } from '../Redux/Actions/jobsActions';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, FlatList, TextInput, Dimensions,
+    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, Dimensions,
     ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert,
     KeyboardAvoidingView, ScrollView
 } from 'react-native';
@@ -11,6 +11,7 @@ import {
     dbMessagesFetched
 } from '../Redux/Actions/messageActions';
 import Config from './Config';
+import moment from 'moment';
 import { chatDate } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
 import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
@@ -18,7 +19,6 @@ import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;
 const socket = Config.socket;
-//const screenHeight = Dimensions.get('window').height;
 const ios = Platform.OS === 'ios';
 const STATUS_BAR_HEIGHT = ios ? 20 : StatusBar.currentHeight;
 
@@ -74,10 +74,9 @@ class ChatScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
-        console.log('chat --')
         navigation.addListener('willFocus', async () => {
             this.reInit();
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -124,17 +123,23 @@ class ChatScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        if (this.state.titlePage == 'MapDirection')
-            this.props.navigation.navigate("MapDirection", {
+        const { titlePage } = this.state;
+        console.log(titlePage)
+        const { navigation } = this.props;
+        if (titlePage == 'MapDirection')
+            navigation.navigate("MapDirection", {
                 titlePage: "Chat"
             });
-        else if (this.state.titlePage == 'ProviderDetails')
-            this.props.navigation.navigate("ProviderDetails");
+        else if (titlePage == 'ProviderDetails')
+            navigation.navigate("ProviderDetails");
+        else if (titlePage === "AllMessage")
+            navigation.navigate("AllMessage");
+        else
+            navigation.goBack();
         return true;
     }
 
     showHideButton = (input) => {
-
         this.setState({
             inputMessage: input,
         })
@@ -154,26 +159,30 @@ class ChatScreen extends Component {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, provider_FCM_id, receiverName, serviceName, orderId } = this.state;
         const { dbMessagesFetched, messagesInfo } = this.props;
         let newMessages = cloneDeep(messagesInfo.messages);
+        const time = moment().toISOString();
+        const date = new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear();
         this.setState({
             inputMessage: '',
             showButton: false,
         });
         if (inputMessage.length > 0) {
             const messageObj = {
-                type: 'text', 
-                userType: 'client', 
-                textMessage: inputMessage, 
-                senderId, 
-                senderName, 
-                senderImage, 
-                receiverId, 
-                receiverImage, 
-                fcm_id: provider_FCM_id, 
-                receiverName, 
-                serviceName, 
-                orderId
+                type: 'text',
+                userType: 'client',
+                textMessage: inputMessage,
+                senderId,
+                senderName,
+                senderImage,
+                receiverId,
+                receiverImage,
+                fcm_id: provider_FCM_id,
+                receiverName,
+                serviceName,
+                orderId,
+                time,
+                date
             }
-            newMessages[receiverId].push({message: inputMessage, recipient: receiverId, sender: senderId});
+            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }
@@ -273,17 +282,24 @@ class ChatScreen extends Component {
                                     Object.keys(usersMessages).map(key => {
                                         const sender = usersMessages[key].sender;
                                         const message = usersMessages[key].message;
+                                        const time = usersMessages[key].time;
                                         if (String(sender) === String(receiverId)) {
                                             return (
                                                 <View key={key} style={style.recievedContainer}>
-                                                    <Text style={style.recievedMsg}>{message}</Text>
+                                                    <View style={style.recievedMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.recievedMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
                                         else if (String(sender) === String(senderId)) {
                                             return (
-                                                <View key={key} style={style.sentContainer}>
-                                                    <Text style={style.sentMsg}>{message}</Text>
+                                                 <View key={key} style={style.sentContainer}>
+                                                    <View style={style.sentMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.sentMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
@@ -335,14 +351,16 @@ class ChatScreen extends Component {
 
                     <ScrollView style={{ marginBottom: requestStatus === 'Pending' ? 100 : 50 }} ref={ref => this.scrollView = ref}
                         contentContainerStyle={{
-                            justifyContent: 'center', alignItems: 'center',
+                            justifyContent: 'center',
+                            alignItems: 'center',
                             alwaysBounceVertical: true
                         }}
                         onContentSizeChange={(contentWidth, contentHeight) => {
                             this.scrollView.scrollToEnd({ animated: true })
                         }}
                         keyboardShouldPersistTaps='handled'
-                        keyboardDismissMode='on-drag'>
+                        keyboardDismissMode='on-drag'
+                    >
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
@@ -486,7 +504,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         marginBottom: 15,
     },
-     recievedContainer: {
+    recievedContainer: {
         flex: 1,
         alignItems: 'flex-start',
         justifyContent: 'flex-start',

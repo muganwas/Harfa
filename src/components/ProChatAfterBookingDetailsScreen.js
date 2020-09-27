@@ -2,13 +2,14 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
-    BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator,
+    View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, TextInput, Dimensions,
+    BackHandler, ImageBackground, StatusBar, Platform,
     KeyboardAvoidingView
 } from 'react-native';
 import {
     dbMessagesFetched
 } from '../Redux/Actions/messageActions';
+import moment from 'moment';
 import { chatDate } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
 import Config from './Config';
@@ -122,7 +123,6 @@ class ProChatAfterBookingDetailsScreen extends Component {
 
     handleBackButtonClick = () => {
         const { pageTitle } = this.state;
-        console.log(pageTitle)
         if (pageTitle === "ProMapDirection")
             this.props.navigation.navigate("ProMapDirection");
         else if (pageTitle === "ProDashboard")
@@ -158,22 +158,26 @@ class ProChatAfterBookingDetailsScreen extends Component {
             inputMessage: '',
             showButton: false,
         });
+        const time = moment().toISOString();
+        const date = new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear();
         if (inputMessage.length > 0) {
-            const messageObj = { 
-                type: 'text', 
-                userType: 'employee', 
-                textMessage: inputMessage, 
-                senderId, 
-                senderName, 
-                senderImage, 
-                receiverId, 
-                receiverImage, 
-                fcm_id: client_FCM_id, 
-                receiverName, 
-                serviceName, 
-                orderId 
+            const messageObj = {
+                type: 'text',
+                userType: 'employee',
+                textMessage: inputMessage,
+                senderId,
+                senderName,
+                senderImage,
+                receiverId,
+                receiverImage,
+                fcm_id: client_FCM_id,
+                receiverName,
+                serviceName,
+                orderId,
+                time,
+                date
             };
-            newMessages[receiverId].push({message: inputMessage, recipient: receiverId, sender: senderId});
+            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }
@@ -194,17 +198,24 @@ class ProChatAfterBookingDetailsScreen extends Component {
                                     Object.keys(usersMessages).map(key => {
                                         const sender = usersMessages[key].sender;
                                         const message = usersMessages[key].message;
+                                        const time = usersMessages[key].time;
                                         if (String(sender) === String(receiverId)) {
                                             return (
                                                 <View key={key} style={style.recievedContainer}>
-                                                    <Text style={style.recievedMsg}>{message}</Text>
+                                                    <View style={style.recievedMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.recievedMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
                                         else if (String(sender) === String(senderId)) {
                                             return (
                                                 <View key={key} style={style.sentContainer}>
-                                                    <Text style={style.sentMsg}>{message}</Text>
+                                                    <View style={style.sentMsgContainer}>
+                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                        <Text style={style.sentMsg}>{message}</Text>
+                                                    </View>
                                                 </View>
                                             )
                                         }
@@ -255,11 +266,16 @@ class ProChatAfterBookingDetailsScreen extends Component {
                         </View>
                     </View>
 
-                    <ScrollView ref={ref => this.scrollView = ref}
-                        onContentSizeChange={(contentWidth, contentHeight) => {
-                            this.scrollView.scrollToEnd({ animated: true })
+                    <ScrollView
+                        ref={ref => this.scrollView = ref}
+                        contentContainerStyle={{
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            alwaysBounceVertical: true
                         }}
-                        contentContainerStyle={{ overflow: 'hidden', }}>
+                        keyboardShouldPersistTaps='handled'
+                        keyboardDismissMode='on-drag'
+                    >
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
