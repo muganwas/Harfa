@@ -2,8 +2,8 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { 
-    startFetchingMessages, 
+import {
+    startFetchingMessages,
     messagesFetched,
     messagesError,
     dbMessagesFetched
@@ -32,6 +32,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { cloneDeep } from 'lodash';
 import { black, white, red } from '../Constants/colors';
 import Axios from 'axios';
+import SimpleToast from 'react-native-simple-toast';
 
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
@@ -44,14 +45,14 @@ class ProHamburger extends React.Component {
     }
 
     componentDidMount() {
-        const { 
-            jobsInfo: { allJobRequestsProviders }, 
-            fetchedMessages, 
+        const {
+            jobsInfo: { allJobRequestsProviders },
+            fetchedMessages,
             fetchedNotifications,
             dbMessagesFetched,
             fetchingMessagesError,
-            updateLiveChatUsers, 
-            userInfo: { providerDetails } 
+            updateLiveChatUsers,
+            userInfo: { providerDetails }
         } = this.props;
         const receiverId = providerDetails.providerId;
         this.fetchOthersLocations();
@@ -104,52 +105,36 @@ class ProHamburger extends React.Component {
             }
         });
 
-        Axios.get(FETCH_MESSAGES + '?sender=' + receiverId + "&userType=client").then(results => {
+        Axios.get(FETCH_MESSAGES + '?sender=' + receiverId + "&userType=employee").then(results => {
             const { data } = results;
             let messages = {};
             let otherUsers = {};
             // get ids of other users this user has chatted with
-            data.map(msgObj => {
-              const { sender, recipient } = msgObj;
-              if (sender !== receiverId) otherUsers[sender] = sender;
-              else if (recipient !== receiverId) otherUsers[recipient] = recipient;
-            });
-            // if any user, seperate the different groups of messages
-            if (Object.keys(otherUsers).length > 0) {
-              Object.keys(otherUsers).map( otherUser => {
-                const thisUsersMessages = [];
+            if (!data.message) {
                 data.map(msgObj => {
-                  const { sender, recipient } = msgObj;
-                  if (otherUser === sender || otherUser === recipient) thisUsersMessages.push(msgObj);
+                    const { sender, recipient } = msgObj;
+                    if (sender !== receiverId) otherUsers[sender] = sender;
+                    else if (recipient !== receiverId) otherUsers[recipient] = recipient;
                 });
-                if (thisUsersMessages.length > 0) messages[otherUser] = thisUsersMessages;
-              });
-              dbMessagesFetched(messages);
+                // if any user, seperate the different groups of messages
+                if (Object.keys(otherUsers).length > 0) {
+                    Object.keys(otherUsers).map(otherUser => {
+                        const thisUsersMessages = [];
+                        data.map(msgObj => {
+                            const { sender, recipient } = msgObj;
+                            if (otherUser === sender || otherUser === recipient) thisUsersMessages.push(msgObj);
+                        });
+                        if (thisUsersMessages.length > 0) messages[otherUser] = thisUsersMessages;
+                    });
+                    dbMessagesFetched(messages);
+                }
+            }
+            else {
+                SimpleToast.show('Something went wrong, please reload app');
             }
         }).catch(e => {
             console.log('mongo messages error', e)
             fetchingMessagesError(e.message);
-        });
-
-        allJobRequestsProviders.map(obj => {
-            const { user_id } = obj;   
-            database().ref('chatting').child(receiverId).child(user_id)
-                .on('child_added', data => {
-                    if (data.val()) {
-                        const { messagesInfo: { dataChatSource } } = this.props;
-                        let newDataChatSource = Object.assign({}, dataChatSource);
-                        let newArr = newDataChatSource[user_id] ? [...newDataChatSource[user_id]] : [];
-                        newArr.push(data.val());
-                        const newData = [...newArr];
-                        //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                            .map(time => {
-                                return newData.find(a => a ? a.time === time : null)
-                            });
-                        newDataChatSource[user_id] = uniqueData;
-                        fetchedMessages(newDataChatSource);
-                    }
-                });
         });
 
         database().ref('adminChatting').child(receiverId).on('child_changed', result => {
@@ -192,11 +177,14 @@ class ProHamburger extends React.Component {
             if (!online && connectivityAvailable) socket.open();
         });
         socket.on("chat-message", data => {
-            const { notificationsInfo } = this.props;
+            const { sender } = data;
+            const { notificationsInfo, messagesInfo, dbMessagesFetched } = this.props;
+            let newMessages = cloneDeep(messagesInfo.messages);
             const currentMessagesCount = notificationsInfo.messages;
             const newMessagesCount = currentMessagesCount + 1;
             fetchedNotifications({ type: 'messages', value: newMessagesCount });
-            console.log('message received --', data)
+            newMessages[sender].push(data);
+            dbMessagesFetched(newMessages);
         });
         socket.open();
 

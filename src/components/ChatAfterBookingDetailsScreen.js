@@ -13,6 +13,7 @@ import { imageExists, chatDate } from '../misc/helpers';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import { cloneDeep } from 'lodash';
+import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
@@ -67,10 +68,9 @@ class ChatAfterBookingDetailsScreen extends Component {
         imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
             this.setState({ proImageAvailable });
         });
-        console.log('chat after booking --')
         navigation.addListener('willFocus', async () => {
             this.reInit();
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -112,7 +112,12 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        this.props.navigation.goBack();
+        if (this.state.titlePage == 'MapDirection')
+            this.props.navigation.navigate("MapDirection", {
+                titlePage: "Chat"
+            });
+        else if (this.state.titlePage == 'ProviderDetails')
+            this.props.navigation.navigate("ProviderDetails");
         return true;
     }
 
@@ -159,35 +164,35 @@ class ChatAfterBookingDetailsScreen extends Component {
             newMessages[receiverId].push({message: inputMessage, recipient: receiverId, sender: senderId});
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
-            this.setState({inputMessage: ''})
         }
     }
 
     renderMessages = () => {
-        const { userInfo: { userDetails: { userId } }, jobsInfo: { selectedJobRequest: { employee_id } }, messagesInfo: { messages } } = this.props;
+        const { senderId, receiverId } = this.state;
+        const { messagesInfo: { messages } } = this.props;
         return (
             <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
                 {
                     Object.keys(messages).map(key => {
                         const usersMessages = messages[key];
                         // display messages from selected user
-                        if (String(key) === String(employee_id)) {
-                            return <View key={key} style={styles.messagesSubContainer}>
+                        if (String(key) === String(receiverId)) {
+                            return <View key={key} style={style.messagesSubContainer}>
                                 {
                                     Object.keys(usersMessages).map(key => {
                                         const sender = usersMessages[key].sender;
                                         const message = usersMessages[key].message;
-                                        if (String(sender) === String(employee_id)) {
+                                        if (String(sender) === String(receiverId)) {
                                             return (
-                                                <View key={key} style={styles.recievedContainer}>
-                                                    <Text style={styles.recievedMsg}>{message}</Text>
+                                                <View key={key} style={style.recievedContainer}>
+                                                    <Text style={style.recievedMsg}>{message}</Text>
                                                 </View>
                                             )
                                         }
-                                        else if (String(sender) === String(userId)) {
+                                        else if (String(sender) === String(senderId)) {
                                             return (
-                                                <View key={key} style={styles.sentContainer}>
-                                                    <Text style={styles.sentMsg}>{message}</Text>
+                                                <View key={key} style={style.sentContainer}>
+                                                    <Text style={style.sentMsg}>{message}</Text>
                                                 </View>
                                             )
                                         }

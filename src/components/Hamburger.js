@@ -1,10 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
-import { 
-    startFetchingNotification, 
-    notificationsFetched, 
-    notificationError 
+import {
+    startFetchingNotification,
+    notificationsFetched,
+    notificationError
 } from '../Redux/Actions/notificationActions';
 import {
     startFetchingMessages,
@@ -200,47 +200,32 @@ class Hamburger extends React.Component {
             let messages = {};
             let otherUsers = {};
             // get ids of other users this user has chatted with
-            data.map(msgObj => {
-              const { sender, recipient } = msgObj;
-              if (sender !== senderId) otherUsers[sender] = sender;
-              else if (recipient !== senderId) otherUsers[recipient] = recipient;
-            });
-            // if any user, seperate the different groups of messages
-            if (Object.keys(otherUsers).length > 0) {
-              Object.keys(otherUsers).map( otherUser => {
-                const thisUsersMessages = [];
+            if (!data.message) {
                 data.map(msgObj => {
-                  const { sender, recipient } = msgObj;
-                  if (otherUser === sender || otherUser === recipient) thisUsersMessages.push(msgObj);
+                    const { sender, recipient } = msgObj;
+                    if (sender !== senderId) otherUsers[sender] = sender;
+                    else if (recipient !== senderId) otherUsers[recipient] = recipient;
                 });
-                if (thisUsersMessages.length > 0) messages[otherUser] = thisUsersMessages;
-              });
-              dbMessagesFetched(messages);
+                // if any user, seperate the different groups of messages
+                if (Object.keys(otherUsers).length > 0) {
+                    Object.keys(otherUsers).map(otherUser => {
+                        const thisUsersMessages = [];
+                        data.map(msgObj => {
+                            const { sender, recipient } = msgObj;
+                            if (otherUser === sender || otherUser === recipient) thisUsersMessages.push(msgObj);
+                        });
+                        if (thisUsersMessages.length > 0) messages[otherUser] = thisUsersMessages;
+                    });
+                    dbMessagesFetched(messages);
+                }
             }
+            else {
+                SimpleToast.show('Something went wrong, please reload app');
+            }
+
         }).catch(e => {
             console.log('mongo messages error', e)
             fetchingMessagesError(e.message);
-        });
-
-        allJobRequestsClient.map(obj => {
-            const { employee_id } = obj;
-            database().ref('chatting').child(senderId).child(employee_id)
-                .on('child_added', data => {
-                    if (data.val()) {
-                        const { messagesInfo: { dataChatSource } } = this.props;
-                        let newDataChatSource = Object.assign({}, dataChatSource);
-                        let newArr = newDataChatSource[employee_id] ? [...newDataChatSource[employee_id]] : [];
-                        newArr.push(data.val());
-                        const newData = [...newArr];
-                        //filter out only unique messages
-                        const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                            .map(time => {
-                                return newData.find(a => a ? a.time === time : null)
-                            });
-                        newDataChatSource[employee_id] = uniqueData;
-                        fetchedMessages(newDataChatSource);
-                    }
-                });
         });
         /** fetch users current position and upload it to db */
         geolocation.getCurrentPosition(info => {

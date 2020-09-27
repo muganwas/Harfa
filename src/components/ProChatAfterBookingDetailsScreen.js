@@ -6,9 +6,14 @@ import {
     BackHandler, ImageBackground, StatusBar, Platform, Alert, ActivityIndicator,
     KeyboardAvoidingView
 } from 'react-native';
+import {
+    dbMessagesFetched
+} from '../Redux/Actions/messageActions';
 import { chatDate } from '../misc/helpers';
+import { cloneDeep } from 'lodash';
 import Config from './Config';
 import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black } from '../Constants/colors';
+import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;
 const socket = Config.socket;
@@ -116,7 +121,16 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        this.props.navigation.goBack();
+        const { pageTitle } = this.state;
+        console.log(pageTitle)
+        if (pageTitle === "ProMapDirection")
+            this.props.navigation.navigate("ProMapDirection");
+        else if (pageTitle === "ProDashboard")
+            this.props.navigation.navigate("ProDashboard");
+        else if (pageTitle === 'ProAllMessage')
+            this.props.navigation.navigate("ProAllMessage");
+        else
+            this.props.navigation.goBack();
         return true;
     }
 
@@ -138,58 +152,71 @@ class ProChatAfterBookingDetailsScreen extends Component {
 
     sendMessageTask = async () => {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, client_FCM_id, receiverName, serviceName, orderId } = this.state;
+        const { dbMessagesFetched, messagesInfo } = this.props;
+        let newMessages = cloneDeep(messagesInfo.messages);
         this.setState({
             inputMessage: '',
             showButton: false,
         });
         if (inputMessage.length > 0) {
-            socket.emit('sent-message', { type: 'text', userType: 'employee', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: client_FCM_id, receiverName, serviceName, orderId });
+            const messageObj = { 
+                type: 'text', 
+                userType: 'employee', 
+                textMessage: inputMessage, 
+                senderId, 
+                senderName, 
+                senderImage, 
+                receiverId, 
+                receiverImage, 
+                fcm_id: client_FCM_id, 
+                receiverName, 
+                serviceName, 
+                orderId 
+            };
+            newMessages[receiverId].push({message: inputMessage, recipient: receiverId, sender: senderId});
+            dbMessagesFetched(newMessages);
+            socket.emit('sent-message', messageObj);
         }
     }
 
-    renderMessageItem = ({ item }) => {
-        if (item) {
-            const senderImage = item.senderImage;
-            return (
-                this.state.senderId != item.senderId
-                    ?
-                    item.type == 'text'
-                        ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                            <View style={styles.itemLeftChatContainer}>
-                                <View style={styles.itemChatImageView}>
-                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                        source={{ uri: senderImage }} />
-                                </View>
-                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 12, color: black, textAlignVertical: 'center', color: black, marginLeft: 5 }}>
-                                        {item.textMessage}
-                                    </Text>
-                                    <Text style={{ fontSize: 8, color: black, textAlignVertical: 'center', color: black, marginLeft: 5 }}>
-                                        {chatDate(item && item.time)}
-                                    </Text>
-                                </View>
+    renderMessages = () => {
+        const { senderId, receiverId } = this.state;
+        const { messagesInfo: { messages } } = this.props;
+        return (
+            <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                {
+                    Object.keys(messages).map(key => {
+                        const usersMessages = messages[key];
+                        // display messages from selected user
+                        if (String(key) === String(receiverId)) {
+                            return <View key={key} style={style.messagesSubContainer}>
+                                {
+                                    Object.keys(usersMessages).map(key => {
+                                        const sender = usersMessages[key].sender;
+                                        const message = usersMessages[key].message;
+                                        if (String(sender) === String(receiverId)) {
+                                            return (
+                                                <View key={key} style={style.recievedContainer}>
+                                                    <Text style={style.recievedMsg}>{message}</Text>
+                                                </View>
+                                            )
+                                        }
+                                        else if (String(sender) === String(senderId)) {
+                                            return (
+                                                <View key={key} style={style.sentContainer}>
+                                                    <Text style={style.sentMsg}>{message}</Text>
+                                                </View>
+                                            )
+                                        }
+                                        else return;
+                                    })
+                                }
                             </View>
-                        </View>
-                        : null
-                    :
-                    item.type == 'text'
-                        ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                            <View style={styles.itemRightChatContainer}>
-                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 12, color: black, textAlignVertical: 'center', color: white }}>
-                                        {item.textMessage}
-                                    </Text>
-                                    <Text style={{ fontSize: 8, color: black, textAlignVertical: 'center', color: white, marginLeft: 5 }}>
-                                        {chatDate(item && item.time)}
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        : null
-            )
-        }
+                        }
+                    })
+                }
+            </View>
+        )
     }
 
     renderSeparator = () => {
@@ -236,17 +263,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
-                                <FlatList
-                                    numColumns={1}
-                                    data={this.state.dataChatSource}
-                                    renderItem={this.renderMessageItem}
-                                    keyExtractor={(item, index) => index.toString()}
-                                    showsVerticalScrollIndicator={false}
-                                    extraData={this.state}
-                                    ItemSeparatorComponent={this.renderSeparator}
-                                    ref={(ref) => { this.myFlatListRef = ref }}
-                                    onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                                {this.renderMessages()}
                             </View>
                         </View>
                     </ScrollView>
@@ -259,13 +276,6 @@ class ProChatAfterBookingDetailsScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-
-                            {/*<TouchableOpacity style={{ height: 50, justifyContent: 'center', alignItems: 'center',
-                             alignContent: 'center', marginRight: 25 }}
-                             onPress={this.selectPhoto.bind(this)}>
-                                <Image style={{ width: 20, height: 20 }}
-                                    source={require('../icons/camera.png')} />
-                            </TouchableOpacity>*/}
                             <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
                                 onPress={this.sendMessageTask}>
                                 <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
@@ -354,6 +364,9 @@ const mapDispatchToProps = dispatch => {
         },
         fetchingNotificationsError: error => {
             dispatch(notificationError(error));
+        },
+        dbMessagesFetched: messages => {
+            dispatch(dbMessagesFetched(messages));
         }
     }
 }
