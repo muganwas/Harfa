@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
+    View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, TextInput, Dimensions,
     BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView
 } from 'react-native';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import database from '@react-native-firebase/database';
 import { chatDate } from '../misc/helpers';
 import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
@@ -75,12 +75,12 @@ class ChatWithAdminScreen extends Component {
                 this.setState(prevState => {
                     //filter out only unique messages
                     let newData = [...prevState.dataChatSource];
-                    if (value.val()) 
+                    if (value.val())
                         newData.push(value.val());
                     const uniqueData = Array.from(new Set(newData.map(a => a ? a.time : null)))
-                    .map(time => {
-                        return newData.find(a => a ? a.time === time : null)
-                    });
+                        .map(time => {
+                            return newData.find(a => a ? a.time === time : null)
+                        });
                     return {
                         dataChatSource: [...uniqueData],
                         isLoading: false,
@@ -160,14 +160,14 @@ class ChatWithAdminScreen extends Component {
         });
     }
 
-    renderMessageItem = ({ item }) => {
+    renderMessageItem = (item, index) => {
         const senderImage = item.senderImage;
         return (
             this.state.senderId != item.senderId
                 ?
                 item.type == 'text'
                     ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                    <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
                         <View style={styles.itemLeftChatContainer}>
                             <View style={styles.itemChatImageView}>
                                 <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
@@ -187,7 +187,7 @@ class ChatWithAdminScreen extends Component {
                 :
                 item.type == 'text'
                     ?
-                    <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                    <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
                         <View style={styles.itemRightChatContainer}>
                             <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
@@ -248,17 +248,7 @@ class ChatWithAdminScreen extends Component {
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
-                                <FlatList
-                                    numColumns={1}
-                                    data={this.state.dataChatSource}
-                                    renderItem={this.renderMessageItem}
-                                    keyExtractor={(item, index) => index.toString()}
-                                    showsVerticalScrollIndicator={false}
-                                    extraData={this.state}
-                                    ItemSeparatorComponent={this.renderSeparator}
-                                    ref={(ref) => { this.myFlatListRef = ref }}
-                                    onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                                {this.state.dataChatSource.map(this.renderMessageItem)}
                             </View>
                         </View>
                     </ScrollView>

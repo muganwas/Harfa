@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import {
-    Text, StyleSheet, View, Image, Dimensions, FlatList, TouchableOpacity,
+    Text, StyleSheet, View, Image, Dimensions, TouchableOpacity,
     ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform
 } from 'react-native';
 import WaitingDialog from './WaitingDialog';
@@ -92,7 +92,7 @@ class ProDashboardScreen extends Component {
         navigation.addListener('willFocus', () => {
             this.onRefresh();
             this.initiateProps();
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -192,11 +192,13 @@ class ProDashboardScreen extends Component {
             });
     }
 
-    renderRecentMessageItem = ({ item, index }) => {
+    renderRecentMessageItem = (item, index) => {
         if (item) {
             const { dispatchSelectedJobRequest } = this.props;
             return (
-                <TouchableOpacity style={styles.itemMainContainer}
+                <TouchableOpacity
+                    key={index}
+                    style={styles.itemMainContainer}
                     onPress={() => {
                         dispatchSelectedJobRequest({ user_id: item.id });
                         setTimeout(() => {
@@ -239,11 +241,11 @@ class ProDashboardScreen extends Component {
         }
     }
 
-    renderWorkItem = ({ item, index }) => {
+    renderWorkItem = (item, index) => {
         const { userInfo: { providerDetails } } = this.props;
         if (item && String(item.employee_id) === String(providerDetails.providerId) && (item.status === 'Accepted' || item.status === 'Completed' || item.status === 'Canceled')) {
             return (
-                <TouchableOpacity style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
+                <TouchableOpacity key={index} style={{ width: screenWidth, flexDirection: 'row', backgroundColor: 'white' }}
                     onPress={() => this.props.navigation.navigate("ProBookingDetails", {
                         currentPos: index,
                         "bookingDetails": item
@@ -262,47 +264,6 @@ class ProDashboardScreen extends Component {
                         onPress={() => this.changeDialogVisibility(true, "", item, "", "")}>
                         <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
                     </TouchableOpacity>
-                </TouchableOpacity>
-            )
-        }
-        else return null;
-    }
-
-    renderRecentUserItem = ({ item, index }) => {
-        if (item) {
-            const recentUserImage = item.user_details.image;
-            return (
-                <TouchableOpacity style={styles.itemMainContainer}
-                    onPress={() => this.props.navigation.navigate("ProBooking", {currentPos: index})}>
-                    <View style={styles.itemImageView}>
-                        <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                            source={{ uri: item.user_details.image }} />
-                    </View>
-                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
-                            {item.user_details.username}
-                        </Text>
-                        <Text style={{
-                            width: screenWidth - 150, fontSize: 10, color: 'black',
-                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                        }}
-                            numberOfLines={1} >
-                            {item.user_details.address}
-                        </Text>
-                        <Text style={{
-                            width: screenWidth - 150, fontSize: 12, color: 'black', fontWeight: 'bold',
-                            textAlignVertical: 'center', color: 'gray', marginTop: 3,
-                        }}
-                            numberOfLines={2} >
-                            {item.service_details.service_name}
-                        </Text>
-                    </View>
-
-                    <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
-                        <Text style={{ alignSelf: 'flex-end', marginRight: 20, fontSize: 8 }}>
-                            {item.createdDate}
-                        </Text>
-                    </View>
                 </TouchableOpacity>
             )
         }
@@ -415,7 +376,7 @@ class ProDashboardScreen extends Component {
         });
     }
 
-    handleBackButton = () => {
+    handleBackButtonClick = () => {
         if (Platform.OS == 'ios')
             this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
         else
@@ -472,7 +433,7 @@ class ProDashboardScreen extends Component {
             this.showToast("Accept Chat Request First");
         }
         else {
-            const { dispatchSelectedJobRequest } = this.props; 
+            const { dispatchSelectedJobRequest } = this.props;
             dispatchSelectedJobRequest(jobInfo);
             if (status == 'Pending') {
                 this.props.navigation.navigate("ProAcceptRejectJob", { currentPos: jobInfo.currentPos, orderId: jobInfo.orderId });
@@ -492,7 +453,7 @@ class ProDashboardScreen extends Component {
         const {
             id,
             user_id,
-            fcm_id, 
+            fcm_id,
             name,
             service_name,
             order_id,
@@ -597,12 +558,15 @@ class ProDashboardScreen extends Component {
             })
     }
 
-    renderPendingJobs = ({ item, index }) => {
+    renderPendingJobs = (item, index) => {
         if (item) {
             const { image, name, user_id, service_name, chat_status, status, order_id } = item;
             return (
-                <TouchableOpacity style={styles.pendingJobRow}
-                    onPress={() => this.goToProMapDirection(chat_status, status, { currentPos: index, userType: 'provider', user_id, orderId: order_id })}>
+                <TouchableOpacity
+                    key={index}
+                    style={styles.pendingJobRow}
+                    onPress={() => this.goToProMapDirection(chat_status, status, { currentPos: index, userType: 'provider', user_id, orderId: order_id })}
+                >
                     <LinearGradient style={styles.pendingJobRow}
                         colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
@@ -636,7 +600,6 @@ class ProDashboardScreen extends Component {
                 </TouchableOpacity>
             )
         }
-
     }
 
     reviewTask = (rating, review, item) => {
@@ -772,7 +735,7 @@ class ProDashboardScreen extends Component {
     }
 
     onRefresh = () => {
-        this.setState({refreshing: true});
+        this.setState({ refreshing: true });
         const { generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails } } = this.props;
         this.setState({
             dataSource: [],
@@ -785,7 +748,7 @@ class ProDashboardScreen extends Component {
         this.getAllRecentChat();
         this.getAllRecentUser();
         this.springValue = new Animated.Value(100);
-        this.setState({refreshing: false});
+        this.setState({ refreshing: false });
     }
 
     changeWaitingDialogVisibility = bool => {
@@ -829,7 +792,8 @@ class ProDashboardScreen extends Component {
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80 }}
+                <ScrollView
+                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80 }}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
@@ -855,13 +819,9 @@ class ProDashboardScreen extends Component {
                                 </View>
 
                                 <View style={styles.listView}>
-                                    <FlatList
-                                        numColumns={1}
-                                        data={this.state.dataSource}
-                                        renderItem={this.renderRecentMessageItem}
-                                        keyExtractor={(item, index) => index.toString()}
-                                        showsVerticalScrollIndicator={false}
-                                        extraData={this.state} />
+                                    {
+                                        this.state.dataSource.map(this.renderRecentMessageItem)
+                                    }
                                 </View>
                             </View>
                         }
@@ -889,14 +849,7 @@ class ProDashboardScreen extends Component {
                                 </View>
 
                                 <View style={styles.listView}>
-                                    <FlatList
-                                        numColumns={1}
-                                        data={dataWorkSource}
-                                        renderItem={this.renderWorkItem}
-                                        keyExtractor={(item, index) => index.toString()}
-                                        showsVerticalScrollIndicator={false}
-                                        extraData={this.state}
-                                        ItemSeparatorComponent={this.renderSeparator} />
+                                    {dataWorkSource.map(this.renderWorkItem)}
                                 </View>
                             </View>
                         }
@@ -921,25 +874,15 @@ class ProDashboardScreen extends Component {
                         </View>
                     }
                 </ScrollView>
-
                 {requestsProvidersFetched && jobRequestsProviders.length > 0 ?
                     <View style={styles.pendingJobsContainer}>
-                        <FlatList
-                            keyboardShouldPersistTaps={'handled'}
-                            numColumns={1}
-                            data={jobRequestsProviders}
-                            renderItem={this.renderPendingJobs}
-                            keyExtractor={(item, index) => index}
-                            showsVerticalScrollIndicator={false}
-                        // ItemSeparatorComponent={this.renderSeparator}
-                        />
+                        {jobRequestsProviders.map(this.renderPendingJobs)}
                     </View> : null}
 
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
                     <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
                     <TouchableOpacity
@@ -1178,13 +1121,14 @@ const styles = StyleSheet.create({
     animatedView: {
         width: screenWidth,
         backgroundColor: colorPrimaryDark,
-        elevation: 2,
+        elevation: (Platform.OS === 'android') ? 50 : 0,
         position: "absolute",
         bottom: 0,
         padding: 10,
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "row",
+        zIndex: 1000,
     },
     exitTitleText: {
         textAlign: "center",
@@ -1222,6 +1166,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
+        zIndex: 10
     },
     pendingJobRow: {
         flex: 1,

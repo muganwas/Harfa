@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, FlatList, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
+    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
 } from 'react-native';
 import { withNavigation } from 'react-navigation';
 import database from '@react-native-firebase/database';
@@ -115,14 +115,14 @@ class ProAcceptRejectJobScreen extends Component {
         return true;
     }
 
-    renderMessageItem = ({ item }) => {
+    renderMessageItem = (item, index) => {
         if (item) {
             return (
                 this.state.senderId != item.senderId
                     ?
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
@@ -142,7 +142,7 @@ class ProAcceptRejectJobScreen extends Component {
                     :
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
                             <View style={styles.itemRightChatContainer}>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
@@ -444,17 +444,7 @@ class ProAcceptRejectJobScreen extends Component {
                     <View style={{ flexDirection: 'column', marginBottom: 110 }}>
                         <ImageBackground style={styles.listView}
                             source={require('../icons/bg_chat.png')}>
-                            <FlatList
-                                numColumns={1}
-                                data={this.state.dataChatSource}
-                                renderItem={this.renderMessageItem}
-                                keyExtractor={(item, index) => index.toString()}
-                                showsVerticalScrollIndicator={false}
-                                extraData={this.state}
-                                ItemSeparatorComponent={this.renderSeparator}
-                                ref={(ref) => { this.myFlatListRef = ref }}
-                                onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                                {this.state.dataChatSource.map(this.renderMessageItem)}
                         </ImageBackground>
 
                         {this.state.isAcceptJob && (

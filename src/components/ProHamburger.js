@@ -181,10 +181,15 @@ class ProHamburger extends React.Component {
             const { notificationsInfo, messagesInfo, dbMessagesFetched } = this.props;
             let newMessages = cloneDeep(messagesInfo.messages);
             const currentMessagesCount = notificationsInfo.messages;
-            const newMessagesCount = currentMessagesCount + 1;
-            fetchedNotifications({ type: 'messages', value: newMessagesCount });
-            newMessages[sender].push(data);
-            dbMessagesFetched(newMessages);
+            let prevMessages = cloneDeep(newMessages[sender]);
+            let prevMessage = prevMessages.pop();
+            if (JSON.stringify(prevMessage) === JSON.stringify(data)) console.log('repeated message')
+            else {
+                const newMessagesCount = currentMessagesCount + 1;
+                fetchedNotifications({ type: 'messages', value: newMessagesCount });
+                newMessages[sender].push(data);
+                dbMessagesFetched(newMessages);
+            }
         });
         socket.open();
 
