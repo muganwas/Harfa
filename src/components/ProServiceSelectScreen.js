@@ -1,26 +1,29 @@
 import React, { Component } from 'react';
-import {Text, StyleSheet, View, Image, FlatList, ActivityIndicator,TouchableOpacity, 
-  ToastAndroid, StatusBar, Platform} from 'react-native';
+import {
+  Text, StyleSheet, View, Image, ActivityIndicator, TouchableOpacity,
+  ToastAndroid, StatusBar, Platform
+} from 'react-native';
 import CheckBox from 'react-native-check-box';
 import Config from './Config';
 import { colorYellow, colorPrimaryDark, colorBg, colorPrimary } from '../Constants/colors';
 
-const SERVICES_URL = Config.baseURL+'service/getall';
+const SERVICES_URL = Config.baseURL + 'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
-    return (
-        Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
-            <StatusBar
-                barStyle="light-content"/>
-        </View>
-        :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
-    );
+  return (
+    Platform.OS === 'ios' ?
+      <View style={{
+        width: "100%",
+        height: STATUS_BAR_HEIGHT,
+        backgroundColor: colorPrimaryDark
+      }}>
+        <StatusBar
+          barStyle="light-content" />
+      </View>
+      :
+      <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+  );
 }
 
 export default class ProServiceSelectScreen extends Component {
@@ -38,12 +41,12 @@ export default class ProServiceSelectScreen extends Component {
     let tmpId = this.state.selectedServiceId;
     let tmpName = this.state.selectedServiceName;
 
-    if ( tmpId.includes( id ) ) {
-      tmpId.splice( tmpId.indexOf(id), 1 );
-      tmpName.splice( tmpName.indexOf(serviceName))
+    if (tmpId.includes(id)) {
+      tmpId.splice(tmpId.indexOf(id), 1);
+      tmpName.splice(tmpName.indexOf(serviceName))
     } else {
       tmpId.push(id);
-      tmpName.push( serviceName)
+      tmpName.push(serviceName)
     }
 
     this.setState({
@@ -52,10 +55,9 @@ export default class ProServiceSelectScreen extends Component {
     });
   }
 
-  //GridView Items
-  renderItem = ({ item }) => {
+  renderItem = (item, index) => {
     return (
-      <View style={styles.header}>
+      <View key={index} style={styles.header}>
         <View
           style={styles.touchaleHighlight}>
           <Image style={{ width: 25, height: 25 }}
@@ -66,9 +68,8 @@ export default class ProServiceSelectScreen extends Component {
         <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
           <CheckBox style={{ alignSelf: 'flex-end', marginRight: 20, }}
             isChecked={this.state.selectedServiceId.includes(item.id) ? true : false}
-            onClick={()=>this.onCheckBoxPress(item.id, item.service_name)}/>
+            onClick={() => this.onCheckBoxPress(item.id, item.service_name)} />
         </View>
-
       </View>
     )
   }
@@ -93,63 +94,58 @@ export default class ProServiceSelectScreen extends Component {
   }
 
   checkValidation = () => {
-    if(this.state.selectedServiceId.length > 0){
-      this.props.navigation.state.params.onGoBack(this.state.selectedServiceId+"/"+this.state.selectedServiceName);
+    if (this.state.selectedServiceId.length > 0) {
+      this.props.navigation.state.params.onGoBack(this.state.selectedServiceId + "/" + this.state.selectedServiceName);
       this.props.navigation.goBack();
     }
-    else
-    {
+    else {
       ToastAndroid.show('Select atleast one services', ToastAndroid.SHORT);
     }
   }
 
   render() {
     return (
-        <View style={styles.container}>
-          <StatusBarPlaceHolder/>
-          <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-              paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5}}>
-            <View style={{ flex: 1, flexDirection: 'row'}}>
-              <TouchableOpacity  style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center',}}
-                onPress={() => this.props.navigation.goBack()}>
-                <Image style={{ width: 20, height: 20, alignSelf: 'center'}}
-                    source={require('../icons/arrow_back.png')} />
-              </TouchableOpacity>
-    
-              <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                Services
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.gridView}>
-            <FlatList
-              numColumns={1}
-              data={this.state.dataSource}
-              renderItem={this.renderItem}
-              keyExtractor={(item, index) => index.toString()}
-              showsVerticalScrollIndicator={false} 
-              extraData={this.state}/>
-          </View>
-
-          <View style={{width:'100%', justifyContent: 'center', alignItems: 'center'}}>
-            <TouchableOpacity style={styles.buttonContainer}
-              onPress={this.checkValidation}>
-              <Text style={styles.text}>
-                Submit
-              </Text>
+      <View style={styles.container}>
+        <StatusBarPlaceHolder />
+        <View style={{
+          flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
+          paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
+        }}>
+          <View style={{ flex: 1, flexDirection: 'row' }}>
+            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
+              onPress={() => this.props.navigation.goBack()}>
+              <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                source={require('../icons/arrow_back.png')} />
             </TouchableOpacity>
-          </View>
 
-          {this.state.isLoading && (
-            <View style={styles.loaderStyle}>
-              <ActivityIndicator
-                  style={{ height: 80 }}
-                  color="#C00"
-                  size="large" />
-            </View>
-          )}
+            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
+              Services
+              </Text>
+          </View>
         </View>
+
+        <View style={styles.gridView}>
+          {this.state.dataSource.map(this.renderItem)}
+        </View>
+
+        <View style={{ width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity style={styles.buttonContainer}
+            onPress={this.checkValidation}>
+            <Text style={styles.text}>
+              Submit
+              </Text>
+          </TouchableOpacity>
+        </View>
+
+        {this.state.isLoading && (
+          <View style={styles.loaderStyle}>
+            <ActivityIndicator
+              style={{ height: 80 }}
+              color="#C00"
+              size="large" />
+          </View>
+        )}
+      </View>
     );
   }
 }
@@ -160,7 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: colorBg,
   },
   header: {
-    flex:1,
+    flex: 1,
     height: 50,
     flexDirection: 'row',
     backgroundColor: 'white',
@@ -188,7 +184,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
-  buttonContainer : {
+  buttonContainer: {
     width: 200,
     paddingTop: 10,
     backgroundColor: '#000000',
@@ -203,7 +199,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
-},
+  },
   text: {
     fontSize: 16,
     color: 'white',

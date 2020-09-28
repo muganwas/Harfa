@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
+    View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, TextInput,
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated
 } from 'react-native';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
@@ -51,7 +51,7 @@ class AllMessageScreen extends Component {
         this.springValue = new Animated.Value(100);
     };
 
-    componentDidMount(){
+    componentDidMount() {
         const { userInfo: { userDetails }, navigation } = this.props;
         let dbRef = database().ref('recentMessage').child(userDetails.userId);
         dbRef.once('value', snapshot => {
@@ -61,7 +61,7 @@ class AllMessageScreen extends Component {
                 dbRef.on('child_added', async val => {
                     let message = val.val();
                     let exists;
-                    await imageExists(message.image).then(res => {exists = res});
+                    await imageExists(message.image).then(res => { exists = res });
                     message.exists = exists;
                     this.setState((prevState) => {
                         return {
@@ -82,7 +82,7 @@ class AllMessageScreen extends Component {
             }
         });
         navigation.addListener('willFocus', async () => {
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -91,48 +91,18 @@ class AllMessageScreen extends Component {
 
 
     handleBackButtonClick = () => {
-        // this.props.navigation.navigate("Dashboard");
-        // return true;
-        if (Platform.OS == 'ios')
-            this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
-        else
-            this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+        this.props.navigation.goBack();
     }
 
-    _spring = () => {
-        this.setState({ backClickCount: 1 }, () => {
-            Animated.sequence([
-                Animated.spring(
-                    this.springValue,
-                    {
-                        toValue: -.15 * 1,
-                        friction: 5,
-                        duration: 300,
-                        useNativeDriver: true,
-                    }
-                ),
-                Animated.timing(
-                    this.springValue,
-                    {
-                        toValue: 100,
-                        duration: 300,
-                        useNativeDriver: true,
-                    }
-                ),
-
-            ]).start(() => {
-                this.setState({ backClickCount: 0 });
-            });
-        });
-    }
-
-    renderRecentMessageItem = ({ item }) => {
+    renderRecentMessageItem = (item, index) => {
         const { dispatchSelectedJobRequest } = this.props;
         const { exists } = item;
         return (
-            <TouchableOpacity style={styles.itemMainContainer}
+            <TouchableOpacity 
+            key={index} 
+            style={styles.itemMainContainer}
                 onPress={() => {
-                    dispatchSelectedJobRequest({employee_id: item.id});
+                    dispatchSelectedJobRequest({ employee_id: item.id });
                     this.props.navigation.navigate("ChatAfterBookingDetails", {
                         'providerId': item.id,
                         'providerName': item.name,
@@ -170,7 +140,6 @@ class AllMessageScreen extends Component {
     }
 
     searchTask = (textInput) => {
-
         let text = textInput.toLowerCase()
         let tracks = this.state.fullData
         let filterTracks = tracks.filter(item => {
@@ -227,13 +196,7 @@ class AllMessageScreen extends Component {
                 {this.state.dataSource.length != 0 && (
                     <ScrollView >
                         <View style={styles.listView}>
-                            <FlatList
-                                numColumns={1}
-                                data={this.state.dataSource}
-                                renderItem={this.renderRecentMessageItem}
-                                keyExtractor={(item, index) => index.toString()}
-                                showsVerticalScrollIndicator={false}
-                                extraData={this.state} />
+                            {this.state.dataSource.map(this.renderRecentMessageItem)}
                         </View>
                     </ScrollView>
                 )}
@@ -245,15 +208,6 @@ class AllMessageScreen extends Component {
                         </Text>
                     </View>
                 )}
-
-                <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                    <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
-                    <TouchableOpacity
-                        activeOpacity={0.9}
-                        onPress={() => BackHandler.exitApp()}>
-                        <Text style={styles.exitText}>Sortie</Text>
-                    </TouchableOpacity>
-                </Animated.View>
 
                 {this.state.isLoading && (
                     <View style={styles.loaderStyle}>

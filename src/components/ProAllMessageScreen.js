@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput,
+    View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, ScrollView, TextInput,
     ActivityIndicator, BackHandler, StatusBar, Platform, Animated
 } from 'react-native';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import database from '@react-native-firebase/database';
+import RNExitApp from 'react-native-exit-app';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { imageExists } from '../misc/helpers';
@@ -82,7 +83,7 @@ class ProAllMessageScreen extends Component {
         });
 
         navigation.addListener('willFocus', async () => {
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -90,51 +91,21 @@ class ProAllMessageScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        if (Platform.OS == 'ios')
-            this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
-        else
-            this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+        this.props.navigation.goBack();
     }
 
-    _spring = () => {
-        this.setState({ backClickCount: 1 }, () => {
-            Animated.sequence([
-                Animated.spring(
-                    this.springValue,
-                    {
-                        toValue: -.15 * 1,
-                        friction: 5,
-                        duration: 300,
-                        useNativeDriver: true,
-                    }
-                ),
-                Animated.timing(
-                    this.springValue,
-                    {
-                        toValue: 100,
-                        duration: 300,
-                        useNativeDriver: true,
-                    }
-                ),
-
-            ]).start(() => {
-                this.setState({ backClickCount: 0 });
-            });
-        });
-    }
-
-    renderRecentMessageItem = ({ item }) => {
+    renderRecentMessageItem = (item, index) => {
         const { dispatchSelectedJobRequest, jobsInfo: { allJobRequestsProviders } } = this.props;
-        let { exists } = item;
         let currentPos;
         allJobRequestsProviders.map((obj, key) => {
             if (obj.user_id === item.id) {
                 currentPos = key;
             }
         });
-        /** Might need to  */
         return (
-            <TouchableOpacity style={styles.itemMainContainer}
+            <TouchableOpacity
+                key={index}
+                style={styles.itemMainContainer}
                 onPress={() => {
                     dispatchSelectedJobRequest({ user_id: item.id });
                     this.props.navigation.navigate("ProChat", {
@@ -174,7 +145,6 @@ class ProAllMessageScreen extends Component {
     }
 
     searchTask = (textInput) => {
-
         let text = textInput.toLowerCase()
         let tracks = this.state.fullData
         let filterTracks = tracks.filter(item => {
@@ -233,13 +203,7 @@ class ProAllMessageScreen extends Component {
 
                 <ScrollView>
                     <View style={styles.listView}>
-                        <FlatList
-                            numColumns={1}
-                            data={this.state.dataSource}
-                            renderItem={this.renderRecentMessageItem}
-                            keyExtractor={(item, index) => index.toString()}
-                            showsVerticalScrollIndicator={false}
-                            extraData={this.state} />
+                        {this.state.dataSource.map(this.renderRecentMessageItem)}
                     </View>
                 </ScrollView>
 
@@ -250,15 +214,6 @@ class ProAllMessageScreen extends Component {
                         </Text>
                     </View>
                 )}
-
-                <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                    <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
-                    <TouchableOpacity
-                        activeOpacity={0.9}
-                        onPress={() => BackHandler.exitApp()}>
-                        <Text style={styles.exitText}>Exit</Text>
-                    </TouchableOpacity>
-                </Animated.View>
 
                 {this.state.isLoading && (
                     <View style={styles.loaderStyle}>

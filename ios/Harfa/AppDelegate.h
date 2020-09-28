@@ -9,8 +9,6 @@
 #import <UIKit/UIKit.h>
 #import <Firebase.h>
 #import <UserNotifications/UserNotifications.h>
-#import "RNFirebaseNotifications.h"
-#import "RNFirebaseMessaging.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate, RCTBridgeDelegate>
 

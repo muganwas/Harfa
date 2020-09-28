@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 import { 
   BASE_URL_CLOUD,
   BASE_URL_LOCAL,
-  WEB_CLIENT_ID,
+  //WEB_CLIENT_ID,
   BASE_URL_LOCAL_ALT,
   FIREBASE_API_KEY, 
   FIREBASE_APP_ID, 
@@ -14,7 +14,7 @@ import {
 } from 'react-native-dotenv';
 //cloud
 export default class Config {
-  static clientId = WEB_CLIENT_ID
+  //static clientId = WEB_CLIENT_ID
   static baseURL = BASE_URL_CLOUD
   static apiKey = FIREBASE_API_KEY
   static authDomain = FIREBASE_AUTH_DOMAIN

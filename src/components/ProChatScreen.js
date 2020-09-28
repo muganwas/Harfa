@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/Actions/messageActions';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, FlatList, TextInput, Dimensions,
+    View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, TextInput, Dimensions,
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
     KeyboardAvoidingView,
 } from 'react-native';

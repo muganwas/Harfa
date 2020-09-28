@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, FlatList, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text, BackHandler, StatusBar, Platform, Modal, Animated } from 'react-native';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { connect } from 'react-redux';
@@ -103,7 +103,7 @@ class ProBookingScreen extends Component {
             bookingRejectData: [],
         });
         const { userInfo } = this.props;
-        if ( userInfo && userInfo.providerDetailsFetched) {
+        if (userInfo && userInfo.providerDetailsFetched) {
             const { providerDetails } = userInfo;
             fetch(BOOKING_HISTORY + providerDetails.providerId)
                 .then((response) => response.json())
@@ -166,13 +166,15 @@ class ProBookingScreen extends Component {
         }
     };
 
-    renderBookingHistoryItem = ({ item }) => {
+    renderBookingHistoryItem = (item, index) => {
         const userImage = item.user_details.image;
         return (
-            <TouchableOpacity style={{
-                flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
-            }}
+            <TouchableOpacity
+                key={index}
+                style={{
+                    flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
+                }}
                 onPress={() => this.props.navigation.navigate("ProBookingDetails", {
                     "bookingDetails": item
                 })}>
@@ -263,13 +265,7 @@ class ProBookingScreen extends Component {
                     onPageSelected={(event) => this.onPageSelected(event)}>
                     <View key="1">
                         <View style={styles.listView}>
-                            <FlatList
-                                numColumns={1}
-                                data={this.state.bookingCompleteData}
-                                renderItem={this.renderBookingHistoryItem}
-                                keyExtractor={(item, index) => index.toString()}
-                                showsVerticalScrollIndicator={false}
-                                extraData={this.state} />
+                            {this.state.bookingCompleteData.map(this.renderBookingHistoryItem)}
                         </View>
                         {this.state.bookingCompleteData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
@@ -281,13 +277,7 @@ class ProBookingScreen extends Component {
                     </View>
                     <View key="2">
                         <View style={styles.listView}>
-                            <FlatList
-                                numColumns={1}
-                                data={this.state.bookingRejectData}
-                                renderItem={this.renderBookingHistoryItem}
-                                keyExtractor={(item, index) => index.toString()}
-                                showsVerticalScrollIndicator={false}
-                                extraData={this.state} />
+                            {this.state.bookingCompleteData.map(this.renderBookingHistoryItem)}
                         </View>
                         {this.state.bookingRejectData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>

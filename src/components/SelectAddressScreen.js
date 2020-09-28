@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  View, Image, TextInput, Dimensions, StyleSheet, FlatList, ActivityIndicator, Text,
+  View, Image, TextInput, Dimensions, StyleSheet, ActivityIndicator, Text,
   TouchableOpacity, ToastAndroid, BackHandler, StatusBar, Platform,
 } from 'react-native';
 import { colorPrimary, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
@@ -106,9 +106,9 @@ export default class SelectAddressScreen extends Component {
   }
 
   //GridView Items
-  renderItem = ({ item }) => {
+  renderItem = (item, index) => {
     return (
-      <TouchableOpacity style={styles.itemHeader}
+      <TouchableOpacity key={index} style={styles.itemHeader}
         onPress={() => this.moveToPreviousScreen(item.place_id, item.description)}>
         <View style={styles.touchaleHighlight}>
           <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
@@ -154,13 +154,7 @@ export default class SelectAddressScreen extends Component {
           </View>
         </View>
         <View style={styles.listView}>
-          <FlatList
-            numColumns={1}
-            data={this.state.dataSource}
-            renderItem={this.renderItem}
-            keyExtractor={(item, index) => index.toString()}
-            showsVerticalScrollIndicator={false}
-            extraData={this.state} />
+            {this.state.dataSource.map(this.renderItem)}
         </View>
 
         {this.state.isLoading && (

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { View, StyleSheet, TouchableOpacity, Image, Text, Dimensions, FlatList, StatusBar, Platform, Animated, BackHandler } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, Text, Dimensions, StatusBar, Platform, Animated, BackHandler } from 'react-native';
 import Notifications from './Notifications';
 import Toast from 'react-native-simple-toast';
 import Config from './Config';
@@ -125,21 +125,23 @@ class ProNotificationsScreen extends Component {
     }
 
     //GridView Items
-    renderItem = ({ item }) => {
+    renderItem = (item, index) => {
         if (item)
             return (
-                <View style={{
-                    flex: 1, flexDirection: 'row', margin: 5, padding: 10,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.75,
-                    shadowRadius: 5,
-                    elevation: 5,
-                    backgroundColor: 'white',
-                    borderRadius: 2,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
+                <View
+                    key={index}
+                    style={{
+                        flex: 1, flexDirection: 'row', margin: 5, padding: 10,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.75,
+                        shadowRadius: 5,
+                        elevation: 5,
+                        backgroundColor: 'white',
+                        borderRadius: 2,
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
                     <Image style={{ width: 45, height: 45, borderRadius: 100 }}
                         source={{ uri: item.employee_details.image }} />
                     <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
@@ -167,13 +169,7 @@ class ProNotificationsScreen extends Component {
                 </View>
                 {!this.state.isLoading && !this.state.isNoData &&
                     <View style={styles.listView}>
-                        <FlatList
-                            numColumns={1}
-                            data={this.state.dataSource}
-                            renderItem={this.renderItem}
-                            keyExtractor={(item, index) => index.toString()}
-                            showsVerticalScrollIndicator={false}
-                            extraData={this.state} />
+                        {this.state.dataSource.map(this.renderItem)}
                     </View>
                 }
 

@@ -1,9 +1,9 @@
 
 import React, { Component } from 'react';
 import {
-    Text, StyleSheet, View, Image, FlatList,
+    Text, StyleSheet, View, Image,
     TouchableOpacity, StatusBar, Dimensions,
-    Animated, BackHandler, Alert, Modal, Platform
+    Animated, BackHandler, FlatList, Modal, Platform,
 } from 'react-native';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
@@ -61,10 +61,10 @@ class DashboardScreen extends Component {
         const { navigation } = this.props;
         navigation.addListener('willFocus', () => {
             //this.onRefresh();
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButton());
+            BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
         });
         navigation.addListener('willBlur', () => {
-            BackHandler.removeEventListener('hardwareBackPress', () => this.handleBackButton());
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton);
         });
     }
 
@@ -96,25 +96,31 @@ class DashboardScreen extends Component {
     }
 
     handleBackButton = () => {
-        this.props.navigation.goBack();
+        if (Platform.OS == 'ios')
+            this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
+        else
+            this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+        return true
     };
 
     //GridView Items
-    renderItem = ({ item }) => {
+    renderItem = ({item, index}) => {
         if (item)
             return (
-                <TouchableOpacity style={{
-                    flex: 1, flexDirection: 'column', margin: 5, padding: 10,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.75,
-                    shadowRadius: 5,
-                    elevation: 5,
-                    backgroundColor: 'white',
-                    borderRadius: 2,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}
+                <TouchableOpacity
+                    key={index}
+                    style={{
+                        flex: 1, flexDirection: 'column', margin: 5, padding: 10,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.75,
+                        shadowRadius: 5,
+                        elevation: 5,
+                        backgroundColor: 'white',
+                        borderRadius: 2,
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
                     onPress={() => {
                         this.props.navigation.navigate("ListOfProviders", {
                             'serviceName': item.service_name,
@@ -130,6 +136,33 @@ class DashboardScreen extends Component {
                     </View>
                 </TouchableOpacity>
             )
+    }
+
+    _spring = () => {
+        this.setState({ backClickCount: 1 }, () => {
+            Animated.sequence([
+                Animated.spring(
+                    this.springValue,
+                    {
+                        toValue: -.15 * 1,
+                        friction: 5,
+                        duration: 300,
+                        useNativeDriver: true,
+                    }
+                ),
+                Animated.timing(
+                    this.springValue,
+                    {
+                        toValue: 100,
+                        duration: 300,
+                        useNativeDriver: true,
+                    }
+                ),
+
+            ]).start(() => {
+                this.setState({ backClickCount: 0 });
+            });
+        });
     }
 
     renderSeparator = () => {
@@ -203,11 +236,13 @@ class DashboardScreen extends Component {
         })
     }
 
-    renderPendingJobRequests = ({ item, index }) => {
+    renderPendingJobRequests = (item, index) => {
         if (item) {
             const { image, name, employee_id, order_id, surName, service_name, fcm_id, chat_status, status } = item;
             return (
-                <TouchableOpacity style={styles.pendingJobRow}
+                <TouchableOpacity
+                    key={index}
+                    style={styles.pendingJobRow}
                     onPress={() => this.goToNextPage(chat_status, { userType: 'client', status, fcm_id, order_id, image, service_name, name, employee_id, currentPos: index })}>
                     <LinearGradient
                         style={styles.pendingJobRow}
@@ -287,15 +322,7 @@ class DashboardScreen extends Component {
                 {/** show pending requests */}
                 {requestsFetched && jobRequests.length > 0 ?
                     <View style={styles.pendingJobsContainer}>
-                        <FlatList
-                            keyboardShouldPersistTaps={'handled'}
-                            numColumns={1}
-                            data={jobRequests}
-                            renderItem={this.renderPendingJobRequests}
-                            keyExtractor={(item, index) => index}
-                            showsVerticalScrollIndicator={false}
-                        // ItemSeparatorComponent={this.renderSeparator}
-                        />
+                        {jobRequests.map(this.renderPendingJobRequests)}
                     </View> : null}
 
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
@@ -423,13 +450,14 @@ const styles = StyleSheet.create({
     animatedView: {
         width: screenWidth,
         backgroundColor: colorPrimaryDark,
-        elevation: 2,
+        elevation: (Platform.OS === 'android') ? 50 : 0,
         position: "absolute",
         bottom: 0,
         padding: 10,
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "row",
+        zIndex: 10000,
     },
     exitTitleText: {
         textAlign: "center",
