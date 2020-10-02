@@ -364,15 +364,6 @@ class ProChatScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-
-                            {/*<TouchableOpacity style={{
-                                    height: 50, justifyContent: 'center', alignItems: 'center',
-                                    alignContent: 'center', marginRight: 25
-                                }}
-                                    onPress={this.selectPhoto.bind(this)}>
-                                    <Image style={{ width: 20, height: 20 }}
-                                        source={require('../icons/camera.png')} />
-                                </TouchableOpacity>*/}
                             <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
                                 onPress={this.sendMessageTask}>
                                 <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>

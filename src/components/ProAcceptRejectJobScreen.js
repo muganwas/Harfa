@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
+    View, StyleSheet, TouchableOpacity, Image, Text, FlatList, TextInput, ScrollView, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
 } from 'react-native';
 import { withNavigation } from 'react-navigation';
 import database from '@react-native-firebase/database';
