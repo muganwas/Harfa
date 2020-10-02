@@ -18,7 +18,11 @@ import WaitingDialog from './WaitingDialog';
 import firebaseAuth from '@react-native-firebase/auth';
 import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
-import { colorYellow, colorBg, colorPrimaryDark } from '../Constants/colors';
+import {
+    colorYellow,
+    colorBg,
+    colorPrimaryDark
+} from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
