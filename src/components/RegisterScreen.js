@@ -29,7 +29,7 @@ import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import WaitingDialog from './WaitingDialog';
 import { cloneDeep } from 'lodash';
-import { colorYellow, colorPrimaryDark } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black } from '../Constants/colors';
 
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
@@ -436,7 +436,7 @@ class RegisterScreen extends Component {
                   style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/ic_user_64dp.png')}></Image>
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5 }}
+                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
                   placeholder="Username"
                   onChangeText={userNameInput =>
                     this.setState({ error: '', username: userNameInput })
@@ -448,7 +448,7 @@ class RegisterScreen extends Component {
                   style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/email.png')}></Image>
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5 }}
+                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
                   placeholder="Email"
                   onChangeText={emailInput =>
                     this.emailValidate(emailInput)
@@ -460,7 +460,7 @@ class RegisterScreen extends Component {
                   style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/ic_lock_64dp.png')}></Image>
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5 }}
+                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
                   placeholder="Password"
                   secureTextEntry={true}
                   onChangeText={passwordInput =>
@@ -473,7 +473,7 @@ class RegisterScreen extends Component {
                   style={{ width: 15, height: 15, marginLeft: 5 }}
                   source={require('../icons/mobile.png')}></Image>
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5 }}
+                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
                   placeholder="Mobile"
                   maxLength={10}
                   keyboardType="numeric"

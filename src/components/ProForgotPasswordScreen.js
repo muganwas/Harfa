@@ -178,7 +178,8 @@ export default class ProForgotPasswordScreen extends Component {
                             <View style={[styles.textInputView, {marginTop: 15}]}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 5 }}
+                                <TextInput 
+                                    style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
                                     placeholder='Email'
                                     onChangeText={(emailInput) => this.setState({email: emailInput})}>
                                 </TextInput>

@@ -282,7 +282,8 @@ class ProRegisterFBScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/mobile.png')}></Image>
-                                <TextInput style={{ width: screenWidth - 85, height: 45, marginLeft: 10 }}
+                                <TextInput 
+                                    style={{ width: screenWidth - 85, height: 45, marginLeft: 10, color: black }}
                                     placeholder='Mobile'
                                     keyboardType='numeric'
                                     maxLength={10}
@@ -306,7 +307,7 @@ class ProRegisterFBScreen extends Component {
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/description.png')}></Image>
                                 <TextInput
-                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, marginLeft: 10 }}
+                                    style={{ width: screenWidth - 85, color: 'black', fontSize: 16, marginLeft: 10, color: black }}
                                     placeholder='Description'
                                     multiline={true}
                                     onChangeText={(descriptionInput) => this.setState({ error: '', description: descriptionInput })}>
