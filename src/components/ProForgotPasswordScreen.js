@@ -5,7 +5,7 @@ import {View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
 import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Config from './Config';
-import { colorYellow, colorPrimaryDark } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, dark } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const FORGOT_PASSWORD = Config.baseURL+"employee/forgot_password/email";
@@ -178,7 +178,7 @@ export default class ProForgotPasswordScreen extends Component {
                             <View style={[styles.textInputView, {marginTop: 15}]}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 5 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
                                     placeholder='Email'
                                     onChangeText={(emailInput) => this.setState({email: emailInput})}>
                                 </TextInput>
