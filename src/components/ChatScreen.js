@@ -334,7 +334,7 @@ class ChatScreen extends Component {
             });
     }
 
-    renderMessageItem = ({ item }) => {
+    renderMessageItem = ({ item, index }) => {
         if (item) {
             const senderImage = item.senderImage;
             return (
@@ -342,7 +342,7 @@ class ChatScreen extends Component {
                     ?
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
@@ -362,7 +362,7 @@ class ChatScreen extends Component {
                     :
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
                             <View style={styles.itemRightChatContainer}>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
@@ -435,10 +435,7 @@ class ChatScreen extends Component {
                                     numColumns={1}
                                     data={this.state.dataChatSource}
                                     renderItem={this.renderMessageItem}
-                                    keyExtractor={(item, index) => {
-                                        if (item)
-                                            return index.toString();
-                                    }}
+                                    keyExtractor={(item, index) => index.toString()}
                                     showsVerticalScrollIndicator={false}
                                     extraData={this.state}
                                     ItemSeparatorComponent={this.renderSeparator}
@@ -481,15 +478,6 @@ class ChatScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-
-                            {/*<TouchableOpacity style={{
-                                height: 50, justifyContent: 'center', alignItems: 'center',
-                                alignContent: 'center', marginRight: 25
-                            }}
-                                onPress={this.selectPhoto.bind(this)}>
-                                <Image style={{ width: 20, height: 20 }}
-                                    source={require('../icons/camera.png')} />
-                            </TouchableOpacity>*/}
                             <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
                                 onPress={this.sendMessageTask}>
                                 <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>

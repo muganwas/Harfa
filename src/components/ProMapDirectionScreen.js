@@ -264,7 +264,7 @@ class ProMapDirectionScreen extends Component {
 
     jobCompleteTask = () => {
         this.setState({ isLoading: true });
-        const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
+        const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails }, navigation } = this.props;
         let currentPos = navigation.getParam('currentPos', 0);
         let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
         const data = {
@@ -317,7 +317,7 @@ class ProMapDirectionScreen extends Component {
                     });
                     newJobRequestsProviders.splice(currentPos, 1)
                     fetchedPendingJobInfo(newJobRequestsProviders);
-                    this.props.navigation.navigate("ProDashboard");
+                    navigation.navigate("ProDashboard");
                 }
                 else {
                     ToastAndroid.show("Something went wrong", ToastAndroid.show);

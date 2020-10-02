@@ -5,7 +5,7 @@ import { startFetchingMessages, messagesFetched, messagesError } from '../Redux/
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, TextInput, Dimensions,
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
-    KeyboardAvoidingView,
+    KeyboardAvoidingView, FlatList
 } from 'react-native';
 import database from '@react-native-firebase/database';
 import Config from './Config';
@@ -246,14 +246,14 @@ class ProChatScreen extends Component {
         });
     }
 
-    renderMessageItem = ({ item }) => {
+    renderMessageItem = ({ item, index }) => {
         if (item) {
             return (
                 this.state.senderId != item.senderId
                     ?
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
@@ -273,7 +273,7 @@ class ProChatScreen extends Component {
                     :
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
                             <View style={styles.itemRightChatContainer}>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
@@ -343,7 +343,7 @@ class ProChatScreen extends Component {
                                     ItemSeparatorComponent={this.renderSeparator}
                                     ref={(ref) => { this.myFlatListRef = ref }}
                                     onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
-                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
+                                    onLayout={() => { if ( this.state.dataChatSource && this.state.dataChatSource.length > 0) this.myFlatListRef.scrollToEnd({ animated: true }) }} />
                             </View>
                         </View>
                     </ScrollView>
