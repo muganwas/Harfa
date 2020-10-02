@@ -21,7 +21,8 @@ import Axios from 'axios';
 import {
     colorYellow,
     colorBg,
-    colorPrimaryDark
+    colorPrimaryDark,
+    black
 } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -421,7 +422,7 @@ class FacebookGoogleScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10, color: black }}
                                     placeholder='Email'
                                     value={this.state.email}
                                     onChangeText={(emailInput) => this.setState({ email: emailInput })}>
@@ -431,7 +432,7 @@ class FacebookGoogleScreen extends Component {
                             <View style={[styles.textInputView, { marginTop: 5, }]}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_lock_64dp.png')}></Image>
-                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10, color: black }}
                                     placeholder='Mot de passe'
                                     value={this.state.password}
                                     secureTextEntry={true}
