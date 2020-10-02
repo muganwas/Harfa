@@ -17,7 +17,7 @@ import Config from './Config';
 import firebaseAuth from '@react-native-firebase/auth';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-import { colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorBg, black } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
@@ -471,7 +471,7 @@ class FacebookGoogleScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10, color: black }}
                                     placeholder='Email'
                                     value={this.state.email}
                                     onChangeText={(emailInput) => this.setState({ error: '', email: emailInput })}>
@@ -481,7 +481,7 @@ class FacebookGoogleScreen extends Component {
                             <View style={[styles.textInputView, { marginTop: 5, }]}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_lock_64dp.png')}></Image>
-                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
+                                <TextInput style={{ width: screenWidth - 85, height: 50, marginLeft: 10, color: black }}
                                     placeholder='Password'
                                     value={this.state.password}
                                     secureTextEntry={true}
