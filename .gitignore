@@ -71,4 +71,3 @@ android/app/release/app-release.aab
 android/app/build.gradle
 android/app/release/output.json
 *.apk
-android/app/release/output.json
