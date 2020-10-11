@@ -6,10 +6,10 @@ target 'Harfa' do
   
   pod 'Firebase/Core'
   pod 'Firebase/Messaging'
-  pod 'GoogleSignIn', '~> 5.0.0'
+  pod 'GoogleSignIn'
   
   pod 'FBSDKCoreKit', :modular_headers => true
-  
+ 
   pod 'react-native-geolocation', path: '../node_modules/@react-native-community/geolocation'
 
   pod 'FBLazyVector', :path => "../node_modules/react-native/Libraries/FBLazyVector"
