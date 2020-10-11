@@ -115,7 +115,7 @@ class ProAcceptRejectJobScreen extends Component {
         return true;
     }
 
-    renderMessageItem = (item, index) => {
+    renderMessageItem = ({item, index}) => {
         if (item) {
             return (
                 this.state.senderId != item.senderId
@@ -522,7 +522,17 @@ class ProAcceptRejectJobScreen extends Component {
                     <View style={{ flexDirection: 'column', marginBottom: 110 }}>
                         <ImageBackground style={styles.listView}
                             source={require('../icons/bg_chat.png')}>
-                                {this.state.dataChatSource.map(this.renderMessageItem)}
+                                <FlatList
+                                    numColumns={1}
+                                    data={this.state.dataChatSource}
+                                    renderItem={this.renderMessageItem}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    showsVerticalScrollIndicator={false}
+                                    extraData={this.state}
+                                    ItemSeparatorComponent={this.renderSeparator}
+                                    ref={(ref) => { this.myFlatListRef = ref }}
+                                    onContentSizeChange={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }}
+                                    onLayout={() => { this.myFlatListRef.scrollToEnd({ animated: true }) }} />
                         </ImageBackground>
 
                         {this.state.isAcceptJob && (

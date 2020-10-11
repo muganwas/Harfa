@@ -67,6 +67,7 @@ class ProChatScreen extends Component {
 
     componentDidMount() {
         const { navigation } = this.props;
+        console.log('pro chat screen')
         navigation.addListener('willFocus', async () => {
             this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());

@@ -73,6 +73,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
+        console.log('afterbooking details')
         navigation.addListener('willFocus', async () => {
             this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -246,7 +247,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
         });
     }
 
-    renderMessageItem = ({ item }) => {
+    renderMessageItem = ({ item, index }) => {
         if (item) {
             const senderImage = item.senderImage;
             return (
@@ -254,7 +255,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
                     ?
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
                             <View style={styles.itemLeftChatContainer}>
                                 <View style={styles.itemChatImageView}>
                                     <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
@@ -274,7 +275,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
                     :
                     item.type == 'text'
                         ?
-                        <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
+                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
                             <View style={styles.itemRightChatContainer}>
                                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                                     <Text style={{ fontSize: 12, color: black, textAlignVertical: 'center', color: white }}>
