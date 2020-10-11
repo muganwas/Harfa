@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 import { 
   BASE_URL_CLOUD,
   BASE_URL_LOCAL,
-  //WEB_CLIENT_ID,
+  WEB_CLIENT_ID,
   BASE_URL_LOCAL_ALT,
   FIREBASE_API_KEY, 
   FIREBASE_APP_ID, 
