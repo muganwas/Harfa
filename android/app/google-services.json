@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "804094658921",
+    "firebase_url": "https://kuchapa-e352c.firebaseio.com",
+    "project_id": "kuchapa-e352c",
+    "storage_bucket": "kuchapa-e352c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804094658921:android:376eff66e5899e503a15f8",
+        "android_client_info": {
+          "package_name": "com.kuchapa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "804094658921-s6aat1jnnlb2ir36gn8t40c2dcv042fa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kuchapa",
+            "certificate_hash": "27c0850be8b859a6c00ace3bc6cf81a2b169120f"
+          }
+        },
+        {
+          "client_id": "804094658921-hbm3cdkqc9v4btujqccaif78tv0sva89.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6N7UvHG3Xv9JRB0kfyU4UE8j5bUsubOk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "804094658921-hbm3cdkqc9v4btujqccaif78tv0sva89.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
