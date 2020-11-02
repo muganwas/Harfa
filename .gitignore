@@ -71,3 +71,4 @@ android/app/release/app-release.aab
 android/app/build.gradle
 android/app/release/output.json
 *.apk
+ios/kuchapa/GoogleService-Info.plist

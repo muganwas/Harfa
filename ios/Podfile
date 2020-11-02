@@ -6,6 +6,7 @@ target 'kuchapa' do
   
   pod 'Firebase/Core'
   pod 'Firebase/Messaging'
+  pod 'Firebase/Analytics'
   pod 'GoogleSignIn'
   
   pod 'FBSDKCoreKit', :modular_headers => true

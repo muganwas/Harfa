@@ -16,6 +16,7 @@
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* kuchapaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* kuchapaTests.m */; };
 		4901E08AA9A9E97F9EFFED0D /* libPods-kuchapaTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 56C55DBFD2EF7D20DE8F6A36 /* libPods-kuchapaTests.a */; };
+		6A5E5506255036790031B936 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6A5E5505255036790031B936 /* GoogleService-Info.plist */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		C9DF948F11FB4D27519974A2 /* libPods-kuchapa-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B798864D167BC6FDEE6F30E /* libPods-kuchapa-tvOS.a */; };
 		F598926E6D62AA1BD0886A06 /* libPods-kuchapa.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4993A47BB065870C33F06074 /* libPods-kuchapa.a */; };
@@ -61,6 +62,7 @@
 		4B798864D167BC6FDEE6F30E /* libPods-kuchapa-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-kuchapa-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FD95538F400BD7802FBCB82 /* Pods-kuchapa-tvOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-kuchapa-tvOS.debug.xcconfig"; path = "Target Support Files/Pods-kuchapa-tvOS/Pods-kuchapa-tvOS.debug.xcconfig"; sourceTree = "<group>"; };
 		56C55DBFD2EF7D20DE8F6A36 /* libPods-kuchapaTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-kuchapaTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A5E5505255036790031B936 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "kuchapa/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = kuchapa/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A0E80E8F34BF63F3653C9B07 /* Pods-kuchapaTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-kuchapaTests.debug.xcconfig"; path = "Target Support Files/Pods-kuchapaTests/Pods-kuchapaTests.debug.xcconfig"; sourceTree = "<group>"; };
 		B1E8CB8C41A0F501A8A7741E /* libPods-kuchapa-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-kuchapa-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -127,6 +129,7 @@
 		13B07FAE1A68108700A75B9A /* kuchapa */ = {
 			isa = PBXGroup;
 			children = (
+				6A5E5505255036790031B936 /* GoogleService-Info.plist */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
@@ -165,7 +168,6 @@
 				A0E80E8F34BF63F3653C9B07 /* Pods-kuchapaTests.debug.xcconfig */,
 				30D1791F662A4C0D87CF4A4A /* Pods-kuchapaTests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -346,6 +348,7 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				6A5E5506255036790031B936 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -662,7 +665,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.kuchapa;
 				PRODUCT_NAME = kuchapa;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -684,7 +687,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.kuchapa;
 				PRODUCT_NAME = kuchapa;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
