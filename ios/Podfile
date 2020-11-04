@@ -47,6 +47,8 @@ target 'kuchapa' do
 
   pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo'
 
+  pod 'react-native-fbsdk', :path => '../node_modules/react-native-fbsdk'
+
   target 'kuchapaTests' do
     inherit! :search_paths
     # Pods for testing
