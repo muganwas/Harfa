@@ -281,7 +281,7 @@ class DashboardScreen extends Component {
                 <View style={styles.header}>
                     <Hamburger
                         navigation={this.props.navigation}
-                        text='Harfa'
+                        text='kuchapa'
                     />
                     <TouchableOpacity style={{ width: '100%', justifyContent: 'center', alignContent: 'center' }}
                         onPress={() => this.props.navigation.navigate("AddAddress")}>

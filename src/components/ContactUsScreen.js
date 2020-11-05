@@ -53,7 +53,7 @@ export default class ContactUsScreen extends Component{
                         </TouchableOpacity>
 
                         <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
-                            Contactez-nous
+                            Contact Us
                         </Text>
                     </View>
                 </View>
@@ -66,19 +66,19 @@ export default class ContactUsScreen extends Component{
                     <View style={{ flexDirection: 'row', padding: 10, }}>
                         <Image style={{width: 20, height: 20}}
                             source={require('../icons/email.png')}></Image>
-                        <Text style={{marginLeft: 10}}>harfa2020@gmail.com</Text>        
+                        <Text style={{marginLeft: 10}}>kuchapamobileapp@gmail.com</Text>        
                     </View>
 
                     <View style={{ flexDirection: 'row', padding: 10, }}>
                         <Image style={{width: 20, height: 20}}
                             source={require('../icons/mobile.png')}></Image>
-                        <Text style={{marginLeft: 10}}>Votre numéro de contact</Text>        
+                        <Text style={{marginLeft: 10}}>Your phone number</Text>        
                     </View>
 
                     <View style={{ flexDirection: 'row', padding: 10, }}>
                         <Image style={{width: 20, height: 20}}
                             source={require('../icons/maps_location.png')}></Image>
-                        <Text style={{marginLeft: 10}}>Votre adresse de contact</Text>        
+                        <Text style={{marginLeft: 10}}>Your address</Text>        
                     </View>
                
                 </View>

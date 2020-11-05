@@ -169,8 +169,9 @@ export default class LoginPhoneScreen extends Component {
                 />
               </TouchableOpacity>
               <Image
-                style={{width: 170, height: 170}}
-                source={require('../images/harfa_logo.png')}
+                style={{width: 140, height: 140}}
+                source={require('../images/kuchapa_logo.png')}
+                resizeMode="contain"
               />
             </View>
 

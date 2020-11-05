@@ -154,7 +154,7 @@ export default class ProForgotPasswordScreen extends Component {
                             </TouchableOpacity>
                             <Image
                                 style={{ width: 170, height: 170 }}
-                                source={require('../images/harfa_logo.png')} />
+                                source={require('../images/kuchapa_logo.png')} resizeMode="contain" />
                         </View>
 
                         <View style={styles.logincontainer}>

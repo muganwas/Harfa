@@ -58,7 +58,7 @@ target 'kuchapa' do
 end
 
 target 'kuchapa-tvOS' do
-  # Pods for Harfa-tvOS
+  # Pods for Kuchapa-tvOS
 
   target 'kuchapa-tvOSTests' do
     inherit! :search_paths

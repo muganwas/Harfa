@@ -99,22 +99,22 @@ export default class AboutUsScreen extends Component{
                     <View style={styles.mainContainer}>
                         <Image style={{width: screenWidth-20, height: 200,}}
                             source={{uri: 'https://cdn.pixabay.com/photo/2014/08/15/06/16/imprint-418594_960_720.jpg'}}/>
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10, marginTop: 10}}>au sujet de Harfa</Text>        
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 10, marginTop: 10}}>About Kuchapa</Text>        
                         <View style={{width:screenWidth-20, height:1, backgroundColor: colorGray, marginTop: 10}}/>
 
                         <View style={{ flexDirection: 'row', padding: 10, }}>
-                            <Text style={{fontSize: 18, }}>It is not a legend, it is sometimes difficult to find a good plumber, electrician or mason available to do work at your place. We created this application to remove this problem from everyday life. Harfa is an application created to help people find the best Craftsman or Handyman for their masonry, plumbing, carpentry, cleaning, etc.</Text>        
+                            <Text style={{fontSize: 18, }}>It is not a legend, it is sometimes difficult to find a good plumber, electrician or mason available to do work at your place. We created this application to remove this problem from everyday life. Kuchapa is an application created to help people find the best Craftsman or Handyman for their masonry, plumbing, carpentry, cleaning, etc.</Text>        
                         </View>
                 
                     </View>
                 </ScrollView>
 
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                    <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
+                    <Text style={styles.exitTitleText}>Press again to exit the app</Text>
                     <TouchableOpacity
                         activeOpacity={0.9}
                         onPress={() => BackHandler.exitApp()}>
-                        <Text style={styles.exitText}>Sortie</Text>
+                        <Text style={styles.exitText}>Exit</Text>
                     </TouchableOpacity>
                 </Animated.View>
 

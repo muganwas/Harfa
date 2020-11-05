@@ -306,8 +306,8 @@ class SplashScreen extends Component {
                 <StatusBar barStyle='light-content' backgroundColor='#000000' />
 
                 <Image
-                    style={{ width: 250, height: 250 }}
-                    source={require('../images/harfa_logo.png')} />
+                    style={{ width: 150, height: 150 }}
+                    source={require('../images/kuchapa_logo.png')} resizeMode={'contain'} />
 
                 {this.state.isLoading && (
                     <View style={styles.loaderStyle}>

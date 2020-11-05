@@ -766,7 +766,7 @@ class ProDashboardScreen extends Component {
                     <ProHamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
-                        text='Harfa'
+                        text='kuchapa'
                     />
                     <TouchableOpacity style={{ width: '100%', justifyContent: 'center', alignContent: 'center' }}
                         onPress={() => this.props.navigation.navigate("ProAddAddress")}>

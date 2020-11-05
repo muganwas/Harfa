@@ -266,13 +266,13 @@ class Hamburger extends React.Component {
             const { notificationsInfo } = this.props;
             const adminMessageCount = notificationsInfo.adminMessages;
             Android ? Notifications.postLocalNotification({
-                title: "Harfa Messages",
+                title: "Kuchapa Messages",
                 body: "You have a new message!",
                 extra: "data"
             }) :
                 Notifications.postLocalNotification({
                     body: "You have a new Message",
-                    title: "Harfa Messages",
+                    title: "Kuchapa Messages",
                     sound: "chime.aiff",
                     silent: false,
                     category: "SOME_CATEGORY",
