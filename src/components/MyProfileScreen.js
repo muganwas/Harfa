@@ -271,7 +271,6 @@ class MyProfileScreen extends Component {
     });
     const { userInfo: { userDetails: { firebaseId } } } = this.props;
     const { fileName, path } = imageObject;
-    console.log(firebaseId)
     const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
     userDataRef.putFile(path).then(uploadRes => {
       const { state } = uploadRes;

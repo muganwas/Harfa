@@ -15,6 +15,7 @@ import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
+import storage from '@react-native-firebase/storage';
 import { colorYellow, colorPrimaryDark } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -27,7 +28,8 @@ const options = {
 };
 
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
-const PRO_IMAGE_UPDATE = Config.baseURL + "employee/upload/";
+const storageRef = storage().ref('/employees_info');
+const PRO_IMAGE_UPDATE = Config.baseURL + 'employee/upload/';
 const PRO_INFO_UPDATE = Config.baseURL + "employee/";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
@@ -97,6 +99,7 @@ class ProMyProfileScreen extends Component {
 
     componentDidMount = () => {
         const { userInfo: { providerDetails }, navigation } = this.props;
+        console.log('provider dits', providerDetails)
         navigation.addListener('willFocus', async () => {
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
@@ -106,9 +109,9 @@ class ProMyProfileScreen extends Component {
         this.setState({
             isLoading: false
         });
-        var services = JSON.parse(providerDetails.services);
-        var serviceName = '';
-
+        let services = JSON.parse(providerDetails.services);
+        let serviceName = '';
+        let i;
         for (i = 0; i < services.length; i++) {
             serviceName = serviceName + services[i].service_name + `${services.length > 1 ? ',' : ''}`;
         }
@@ -280,45 +283,59 @@ class ProMyProfileScreen extends Component {
     }
 
     //Image Update
-    updateImageTask = (providerId, imageObject) => {
-        let imageData = new FormData();
-        imageData.append('image', { type: imageObject.type, uri: imageObject.uri, name: imageObject.fileName });
-        fetch(PRO_IMAGE_UPDATE + providerId,
-            {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                    "otherHeader": "foo",
-                },
-                body: imageData
-            })
-            .then((response) => response.json())
-            .then((response) => {
-                console.log("Response" + JSON.stringify(response));
-                if (response.result) {
-                    this.setState({
-                        isLoading: false,
-                        isErrorToast: false
+    updateImageTask = (proId, imageObject) => {
+        this.setState({
+            isLoading: true,
+        });
+        const { userInfo: { providerDetails: { firebaseId } } } = this.props;
+        const { fileName, path } = imageObject;
+        const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
+        userDataRef.putFile(path).then(uploadRes => {
+            const { state } = uploadRes;
+            if (state === 'success') {
+                userDataRef.getDownloadURL().then(urlResult => {
+                    let imageData = new FormData();
+                    imageData.append('image', {
+                        type: imageObject.type,
+                        uri: urlResult,
+                        name: imageObject.fileName,
                     });
-                    this.showToast(response.message);
-                }
-                else {
-                    this.setState({
-                        isLoading: false,
-                        isErrorToast: true
-                    });
-                    this.showToast(response.message);
-                }
-            })
-            .catch((error) => {
-                console.log("Error :" + error);
-                this.setState({
-                    isLoading: false,
-                    isErrorToast: true
+                    fetch(PRO_IMAGE_UPDATE + proId, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            otherHeader: 'foo',
+                        },
+                        body: imageData,
+                    })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.result) {
+                                this.setState({
+                                    isLoading: false,
+                                    isErrorToast: false,
+                                });
+                                this.showToast(response.message);
+                            } else {
+                                this.setState({
+                                    isLoading: false,
+                                    isErrorToast: true,
+                                });
+                                this.showToast('Something went wrong');
+                            }
+                        })
+                        .catch(error => {
+                            console.log('Error :' + error);
+                            this.setState({
+                                isLoading: false,
+                            });
+                        })
+                        .done();
                 })
-                this.showToast("Something went wrong");
-            })
-            .done()
+            }
+        }).catch(error => {
+            console.log('image upload error', error.messge)
+        });
     }
 
     showToast = message => {
@@ -361,11 +378,11 @@ class ProMyProfileScreen extends Component {
                             <Image
                                 style={{ width: 100, height: 100, borderRadius: 100, marginTop: 20 }}
                                 source={
-                                    this.state.galleryCameraImage == '' ?
-                                        this.state.imageSource ?
-                                            { uri: this.state.imageSource } :
-                                            require('../images/generic_avatar.png') :
-                                        this.state.imageSource
+                                    this.state.galleryCameraImage == ''
+                                        ? this.state.imageSource
+                                            ? { uri: this.state.imageSource }
+                                            : require('../images/generic_avatar.png')
+                                        : { uri: this.state.imageSource.uri }
                                 } />
 
                             <TouchableOpacity style={{

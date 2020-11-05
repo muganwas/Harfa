@@ -20,7 +20,6 @@ import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import {
     updateUserDetails,
-    updateProviderDetails,
     updateUserAuthToken
 } from '../Redux/Actions/userActions';
 import WaitingDialog from './WaitingDialog';
@@ -132,7 +131,6 @@ class FacebookGoogleScreen extends Component {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
-            console.log('google sign in --', result)
             const { user, user: { name, email, photo, id } } = result;
             this.setState({ firebaseId: id, loginType: 'google' });
             this.fbGoogleLoginCustomerTask(name, email, photo);
@@ -451,7 +449,7 @@ class FacebookGoogleScreen extends Component {
                                     source={require('../icons/ic_lock_64dp.png')}></Image>
                                 <TextInput
                                     style={{ width: screenWidth - 85, height: 50, marginLeft: 10, color: black }}
-                                    placeholder='Mot de passe'
+                                    placeholder='Password'
                                     value={this.state.password}
                                     secureTextEntry={true}
                                     onChangeText={(passwordInput) => this.setState({ error: '', password: passwordInput })}>
@@ -461,21 +459,21 @@ class FacebookGoogleScreen extends Component {
                             <TouchableOpacity style={{ width: screenWidth - 50, marginTop: 10 }}
                                 onPress={() => this.props.navigation.navigate("ForgotPassword")}>
                                 <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
-                                    Mot de passe oublié?
+                                    Forgot password
                                 </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.buttonContainer}
                                 onPress={this.checkValidation}>
                                 <Text style={styles.text}>
-                                    Se connecter
+                                    Login
                                 </Text>
                             </TouchableOpacity>
                         </View>
 
                         <View>
                             <Text style={{ color: 'black', fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
-                                Ou connectez-vous avec
+                                or Login with
                             </Text>
                         </View>
 
@@ -506,7 +504,7 @@ class FacebookGoogleScreen extends Component {
                                 "accountType": this.state.accountType
                             })}>
                             <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
-                                Vous n'avez pas de compte? S'inscrire
+                                Don't have an account? Sign up
                         </Text>
                         </TouchableOpacity>
                     </View>
@@ -534,9 +532,6 @@ const mapDispatchToProps = dispatch => {
         },
         updateUserDetails: details => {
             dispatch(updateUserDetails(details));
-        },
-        updateProviderDetails: details => {
-            dispatch(updateProviderDetails(details));
         },
         updateUserAuthToken: authToken => {
             dispatch(updateUserAuthToken(authToken))

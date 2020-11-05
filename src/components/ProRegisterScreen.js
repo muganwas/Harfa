@@ -11,9 +11,12 @@ import Config from './Config';
 import messaging from '@react-native-firebase/messaging';
 import WaitingDialog from './WaitingDialog';
 import Axios from 'axios';
-import { updateProviderDetails } from '../Redux/Actions/userActions';
+import firebaseAuth from '@react-native-firebase/auth';
+import storage from '@react-native-firebase/storage';
+import { updateProviderDetails, updateNewUserInfo } from '../Redux/Actions/userActions';
 import { colorYellow, colorPrimaryDark, black } from '../Constants/colors';
 
+const storageRef = storage().ref('/employees_info');
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'employee/register';
 
@@ -100,7 +103,6 @@ class ProRegisterScreen extends Component {
 
     registerTask = async () => {
         const fcmToken = await messaging().getToken();
-        const { updateProviderDetails } = this.props;
         if (fcmToken) {
             const userData = {
                 "username": this.state.name,
@@ -123,85 +125,90 @@ class ProRegisterScreen extends Component {
                 isLoading: true
             });
 
-            Axios.post(REGISTER_URL, JSON.stringify(userData))
-                .then(responseJson => {
-                    // console.log("Response RegisterPro >> "+JSON.stringify(responseJson));
-                    this.setState({
-                        isLoading: false
-                    });
+            firebaseAuth()
+                .createUserWithEmailAndPassword(this.state.email, this.state.password)
+                .then(result => {
+                    const { fileName, path } = imageObject;
+                    const { updateNewUserInfo } = this.props;
+                    const { user, user: { uid } } = result;
+                    const newUser = Object.assign({ uid }, userData);
+                    const userDataRef = storageRef.child(`/${uid}/${fileName}`);
+                    updateNewUserInfo(newUser);
+                    userDataRef.putFile(path).then(uploadRes => {
+                        const { state } = uploadRes;
+                        if (state === 'success') {
+                            userDataRef.getDownloadURL().then(urlResult => {
+                                let newUserData = cloneDeep(userData);
+                                newUserData.image = urlResult;
+                                Axios.post(REGISTER_URL, { data: JSON.stringify(newUserData) })
+                                    .then(responseJson => {
+                                        if (responseJson.status === 200 && responseJson.data.createdDate) {
 
-                    if (responseJson.status === 200 && responseJson.data.createdDate) {
-                        const id = responseJson.data.id;
+                                            this.setState({
+                                                isLoading: false,
+                                                isToastShow: true,
+                                            });
 
-                        var providerData = {
-                            providerId: responseJson.data.id,
-                            name: responseJson.data.username,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            imageSource: responseJson.data.image,
-                            surname: responseJson.data.surname,
-                            mobile: responseJson.data.mobile,
-                            services: responseJson.data.services,
-                            description: responseJson.data.description,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            invoice: responseJson.data.invoice,
-                            status: responseJson.data.status,
-                            fcmId: responseJson.data.fcm_id,
-                            accountType: responseJson.data.account_type
+                                            Alert.alert(
+                                                'Successfully Registered !',
+                                                'We have send you a email verification link to your registered email id and then Login to your account',
+                                                [
+                                                    {
+                                                        text: 'Cancel',
+                                                        onPress: () => console.log('Cancel Pressed'),
+                                                    },
+                                                    {
+                                                        text: 'Ok',
+                                                        onPress: () => this.props.navigation.goBack(),
+                                                    },
+                                                ],
+                                            );
+                                        } else {
+                                            this.setState({
+                                                isLoading: false,
+                                            });
+                                            Alert.alert('OOPS !', responseJson.data.message, [
+                                                {
+                                                    text: 'Cancel',
+                                                    onPress: () => console.log('Cancel Pressed'),
+                                                },
+                                                {
+                                                    text: 'Retry',
+                                                    onPress: () =>
+                                                        this.registerTask(this.state.imageDataObject),
+                                                },
+                                            ]);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.log('Error :' + error);
+                                        this.setState({
+                                            isLoading: false,
+                                        });
+                                        Alert.alert('OOPS !', error.message, [
+                                            {
+                                                text: 'Cancel',
+                                                onPress: () => console.log('Cancel Pressed'),
+                                            },
+                                            {
+                                                text: 'Retry',
+                                                onPress: () => this.registerTask(this.state.imageDataObject),
+                                            },
+                                        ]);
+                                    })
+                                    .done();
+                            })
                         }
-                        updateProviderDetails(providerData);
-                        Alert.alert(
-                            "Successfully Registered !",
-                            "We have send you a email verification link to your registered email id and then Login to your account",
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Ok',
-                                    onPress: () => this.props.navigation.goBack(),
-                                },
-                            ]
-                        );
-                    }
-                    else {
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.data.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.registerTask(),
-                                },
-                            ]
-                        );
-                    }
-                })
-                .catch((error) => {
-                    Alert.alert(
-                        "OOPS !",
-                        error,
-                        [
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retry',
-                                onPress: () => this.registerTask(),
-                            },
-                        ]
-                    );
-                    this.setState({
-                        isLoading: false
-                    })
+                    }).catch(error => {
+                        simpleToast.show('Image upload failed', simpleToast.SHORT);
+                        console.log('image upload error', error.messge)
+                    });
+                }).catch(error => {
+                    if (error.code === 'auth/email-already-in-use')
+                        this.setState({ error: 'The email is already registerd.' });
+                    if (error.code === 'auth/invalid-email')
+                        this.setState({ error: 'That email address is invalid!' });
+                    console.log('account creation error: -', error.message);
                 });
         }
     }
@@ -272,7 +279,7 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_user_64dp.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 45, marginLeft: 10, color: black }}
                                     placeholder={this.state.currentPage == 0 ? 'Username' : "Company name"}
                                     onChangeText={(nameInput) => this.setState({ error: '', name: nameInput })}>
@@ -282,7 +289,7 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 45, marginLeft: 10, color: black }}
                                     placeholder='Email'
                                     onChangeText={(emailInput) => this.setState({ error: '', email: emailInput })}>
@@ -292,7 +299,7 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_lock_64dp.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 45, marginLeft: 10, color: black }}
                                     placeholder='Password'
                                     secureTextEntry={true}
@@ -303,7 +310,7 @@ class ProRegisterScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/mobile.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 45, marginLeft: 10, color: black }}
                                     placeholder='Mobile'
                                     keyboardType='numeric'
@@ -397,6 +404,9 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
     updateProviderDetails: details => {
         dispatch(updateProviderDetails(details));
+    },
+    updateNewUserInfo: info => {
+        dispatch(updateNewUserInfo(info));
     }
 });
 

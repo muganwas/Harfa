@@ -494,21 +494,21 @@ class FacebookGoogleScreen extends Component {
                             <TouchableOpacity style={{ width: screenWidth - 50, marginTop: 10 }}
                                 onPress={() => this.props.navigation.navigate("ProForgotPassword")}>
                                 <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
-                                    Forgot Password?
+                                    Forgot Password
                                 </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.buttonContainer}
                                 onPress={this.checkValidation}>
                                 <Text style={styles.text}>
-                                    Sign In
+                                    Login
                                 </Text>
                             </TouchableOpacity>
                         </View>
 
                         <View>
                             <Text style={{ color: 'black', fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
-                                Or Sign In With
+                                Or Login With
                             </Text>
                         </View>
 

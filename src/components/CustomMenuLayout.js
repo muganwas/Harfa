@@ -37,7 +37,7 @@ class CustomMenuLayout extends Component {
                 <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>
                     <ScrollView>
                         <View style={styles.header}>
-                            <Image source={{uri: imageSource}} style={styles.headerImage}/>
+                            <Image source={imageSource ? {uri: imageSource} : require('../images/generic_avatar.png')} style={styles.headerImage}/>
                             <Text style={[styles.textHeader, {color: 'white'}]}>{userDetails.username}</Text>
                         </View>
 

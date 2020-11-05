@@ -23,11 +23,21 @@ import ProAccountTypeScreen from './ProAccountTypeScreen';
 import ListOfProviderScreen from './ListOfProviderScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
 import AddAddressScreen from './AddAddressScreen';
-import ProDrawerNavigator from './ProDrawerNavigator' ;
+import ProDrawerNavigator from './ProDrawerNavigator';
+import RegisterScreen from './RegisterScreen';
+import ProRegisterScreen from './ProRegisterScreen';
+import ProRegisterFBScreen from './ProRegisterFBScreen';
+import ForgotPasswordScreen from './ForgotPasswordScreen';
+import ProForgotPasswordScreen from './ProForgotPasswordScreen';
 
 const MyDrawerNavigator = createDrawerNavigator({
     ProDashboard: { screen: ProDrawerNavigator },
     FacebookGoogle: { screen: FacebookGoogleScreen},
+    Register: { screen: RegisterScreen },
+    ProRegisterFB: { screen: ProRegisterFBScreen },
+    ForgotPassword: { screen: ForgotPasswordScreen },
+    ProForgotPassword: { screen: ProForgotPasswordScreen },
+    ProRegister: { screen: ProRegisterScreen },
     ProDashboard: { screen: () => <ProDrawerNavigator /> },
     MapDirection: { screen: MapDirectionScreen },
     AfterSplash: { screen: AfterSplashScreen },
