@@ -14,7 +14,6 @@ import ChatWithAdminScreen from './ChatWithAdminScreen';
 import ContactUsScreen from './ContactUsScreen';
 import ProAcceptRejectJobScreen from './ProAcceptRejectJobScreen';
 import ProMapDirectionScreen from './ProMapDirectionScreen';
-import ProAboutUsScreen from './ProAboutUsScreen';
 import ProBookingScreen from './ProBookingScreen';
 import ProBookingDetailsScreen from './ProBookingDetailsScreen';
 import ProChatScreen from './ProChatScreen';
@@ -28,7 +27,9 @@ import ProRegisterFBScreen from './ProRegisterFBScreen';
 import FacebookGoogleScreen from './FacebookGoogleScreen';
 import ProRegisterScreen from './ProRegisterScreen';
 import ProServiceSelectScreen from './ProServiceSelectScreen';
-import DrawerNavigator from './DrawerNavigator' ;
+import DrawerNavigator from './DrawerNavigator';
+import RegisterScreen from './RegisterScreen';
+import ForgotPasswordScreen from './ForgotPasswordScreen';
 
 const ProMyDrawerNavigator = createDrawerNavigator({
     FacebookGoogle: { screen: FacebookGoogleScreen },
@@ -46,7 +47,6 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     ProAllMessage: { screen: ProAllMessageScreen },
     ChatWithAdmin: { screen: ChatWithAdminScreen },
     ContactUs: { screen: ContactUsScreen },
-    AboutUs: { screen: ProAboutUsScreen },
     ProBooking: { screen: ProBookingScreen },
     ProChat: { screen: ProChatScreen },
     ProBookingDetails: { screen: ProBookingDetailsScreen },
@@ -58,6 +58,8 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     ProMapDirection: { screen: ProMapDirectionScreen },
     ProRegisterFB: { screen: ProRegisterFBScreen },
     ProRegister: { screen: ProRegisterScreen },
+    Regisger: { screen: RegisterScreen },
+    ForgotPassword: { screen: ForgotPasswordScreen },
     ProServiceSelect: { screen: ProServiceSelectScreen },
 },
     {

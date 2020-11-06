@@ -348,7 +348,7 @@ class MyProfileScreen extends Component {
           <Hamburger
             Notifications={Notifications}
             navigation={this.props.navigation}
-            text='Mon Profil'
+            text='My Profile'
           />
         </View>
 
@@ -436,7 +436,7 @@ class MyProfileScreen extends Component {
                     marginBottom: 10,
                   }}>
                   <View style={styles.buttonPrimaryDark}>
-                    <Text style={styles.text}>Type de compte</Text>
+                    <Text style={styles.text}>Account Type</Text>
                   </View>
                   <View style={styles.buttonGreen}>
                     <Text style={styles.text}>
@@ -510,7 +510,7 @@ class MyProfileScreen extends Component {
               <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={this.checkValidation}>
-                <Text style={styles.text}>Mise à jour</Text>
+                <Text style={styles.text}>Update</Text>
               </TouchableOpacity>
 
               <DateTimePicker

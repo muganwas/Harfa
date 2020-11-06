@@ -59,10 +59,6 @@ export default class ContactUsScreen extends Component{
                 </View>
 
                 <View style={styles.mainContainer}>
-
-                    <Image style={{width: screenWidth-20, height: 200,}}
-                        source={{uri: 'https://cdn.pixabay.com/photo/2017/12/02/14/38/contact-us-2993000_960_720.jpg'}}/>
-                    
                     <View style={{ flexDirection: 'row', padding: 10, }}>
                         <Image style={{width: 20, height: 20}}
                             source={require('../icons/email.png')}></Image>
@@ -72,13 +68,13 @@ export default class ContactUsScreen extends Component{
                     <View style={{ flexDirection: 'row', padding: 10, }}>
                         <Image style={{width: 20, height: 20}}
                             source={require('../icons/mobile.png')}></Image>
-                        <Text style={{marginLeft: 10}}>Your phone number</Text>        
+                        <Text style={{marginLeft: 10}}> +256789244866 </Text>        
                     </View>
 
                     <View style={{ flexDirection: 'row', padding: 10, }}>
                         <Image style={{width: 20, height: 20}}
                             source={require('../icons/maps_location.png')}></Image>
-                        <Text style={{marginLeft: 10}}>Your address</Text>        
+                        <Text style={{marginLeft: 10}}>Kuchapa location</Text>        
                     </View>
                
                 </View>

@@ -198,7 +198,7 @@ class NotificationsScreen extends Component {
                             <Image style={{ width: 50, height: 50 }}
                                 source={require('../icons/ic_notification.png')} />
                         </View>
-                        <Text style={{ fontSize: 18, marginTop: 10 }}>Notifications non trouvées</Text>
+                        <Text style={{ fontSize: 18, marginTop: 10 }}>You have no notifications</Text>
                     </View>
                 )}
                 {/* {this.state.isLoading && (
@@ -210,11 +210,11 @@ class NotificationsScreen extends Component {
                 </View>
             )} */}
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                    <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
+                    <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
                     <TouchableOpacity
                         activeOpacity={0.9}
                         onPress={() => BackHandler.exitApp()}>
-                        <Text style={styles.exitText}>Sortie</Text>
+                        <Text style={styles.exitText}>Exit</Text>
                     </TouchableOpacity>
                 </Animated.View>
 

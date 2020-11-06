@@ -179,7 +179,7 @@ class ProNotificationsScreen extends Component {
                             <Image style={{ width: 50, height: 50 }}
                                 source={require('../icons/ic_notification.png')} />
                         </View>
-                        <Text style={{ fontSize: 18, marginTop: 10 }}>Notifications Not Found</Text>
+                        <Text style={{ fontSize: 18, marginTop: 10 }}>You have no notifications</Text>
 
                     </View>
                 }

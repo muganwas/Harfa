@@ -10,7 +10,6 @@ import CustomMenuLayout from './CustomMenuLayout';
 import ChatScreen from './ChatScreen';
 import ChatWithAdminScreen from './ChatWithAdminScreen';
 import ChatAfterBookingDetailsScreen from './ChatAfterBookingDetailsScreen';
-import AboutUsScreen from './AboutUsScreen';
 import ContactUsScreen from './ContactUsScreen';
 import MyProfileScreen from './MyProfileScreen';
 import AllMessageScreen from './AllMessageScreen';
@@ -54,7 +53,6 @@ const MyDrawerNavigator = createDrawerNavigator({
     MyProfile: { screen: MyProfileScreen },
     Booking: { screen: BookingScreen },
     BookingDetails: { screen: BookingDetailsScreen },
-    AboutUs: { screen: AboutUsScreen },
     ChatWithAdmin: { screen: ChatWithAdminScreen },
     ChatAfterBookingDetails: { screen: ChatAfterBookingDetailsScreen },
     ContactUs: { screen: ContactUsScreen },

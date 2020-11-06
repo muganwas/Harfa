@@ -249,11 +249,11 @@ class ProBookingScreen extends Component {
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                         <TouchableOpacity style={this.state.currentPage == 0 ? styles.buttonGreen : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Completed")}>
-                            <Text style={styles.text}>Terminé</Text>
+                            <Text style={styles.text}>Completed</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={this.state.currentPage == 1 ? styles.buttonRed : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Rejected")}>
-                            <Text style={styles.text}>Rejeté</Text>
+                            <Text style={styles.text}>Rejected</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -269,8 +269,8 @@ class ProBookingScreen extends Component {
                         </View>
                         {this.state.bookingCompleteData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
-                                <Text style={{ color: 'black', fontSize: 20 }}>
-                                    Aucune réservation trouvée!
+                                <Text style={{ color: 'black', fontSize: 20 }}> 
+                                    No bookings found!
                                 </Text>
                             </View>
                         )}
@@ -282,7 +282,7 @@ class ProBookingScreen extends Component {
                         {this.state.bookingRejectData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
                                 <Text style={{ color: 'black', fontSize: 20 }}>
-                                    Aucune réservation trouvée!
+                                    No bookings found!
                                 </Text>
                             </View>
                         )}

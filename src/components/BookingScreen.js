@@ -138,12 +138,12 @@ class BookingScreen extends Component {
                 this.setState({
                     isLoading: false
                 })
-                this.showToast("Quelque chose s'est mal passé, vérifiez votre connexion Internet");
+                this.showToast("Something went wrong, check your internet connection");
             })
     }
 
     onPageSelected = event => {
-        currentPage = event.nativeEvent.position;
+        let currentPage = event.nativeEvent.position;
         this.setState({ currentPage });
     };
 
@@ -235,7 +235,7 @@ class BookingScreen extends Component {
                 }}>
                     <Hamburger
                         navigation={this.props.navigation}
-                        text='Réservations'
+                        text='Bookings'
                     />
                 </View>
 
@@ -246,11 +246,11 @@ class BookingScreen extends Component {
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                         <TouchableOpacity style={this.state.currentPage == 0 ? styles.buttonGreen : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Completed")}>
-                            <Text style={styles.text}>terminé</Text>
+                            <Text style={styles.text}>Completed</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={this.state.currentPage == 1 ? styles.buttonRed : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Rejected")}>
-                            <Text style={styles.text}>rejeté</Text>
+                            <Text style={styles.text}>Rejected</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -267,7 +267,7 @@ class BookingScreen extends Component {
                         {this.state.bookingCompleteData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
                                 <Text style={{ color: 'black', fontSize: 20 }}>
-                                    Aucune réservation trouvée !
+                                    No bookings found!
                                 </Text>
                             </View>
                         )}
@@ -279,18 +279,18 @@ class BookingScreen extends Component {
                         {this.state.bookingRejectData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
                                 <Text style={{ color: 'black', fontSize: 20 }}>
-                                    Aucune réservation trouvée !
+                                    No bookings found!
                                 </Text>
                             </View>
                         )}
                     </View>
                 </ViewPager>
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                    <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
+                    <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
                     <TouchableOpacity
                         activeOpacity={0.9}
                         onPress={() => BackHandler.exitApp()}>
-                        <Text style={styles.exitText}>Sortie</Text>
+                        <Text style={styles.exitText}>Exit</Text>
                     </TouchableOpacity>
                 </Animated.View>
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'

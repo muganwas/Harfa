@@ -43,17 +43,17 @@ class DialogLogout extends Component {
             <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
                 <View style={[styles.modal, { width: this.state.width - 80 }]}>
                     <View style={styles.textView}>
-                        <Text style={[styles.text, { fontSize: 20 }]}> Se déconnecter! </Text>
-                        <Text style={styles.text}> Êtes-vous sûr de vous déconnecter? </Text>
+                        <Text style={[styles.text, { fontSize: 20 }]}> Log out!</Text>
+                        <Text style={styles.text}> Are you sure you want to log out? </Text>
                     </View>
                     <View style={styles.buttonView}>
                         <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Cancel')}
                             underlayColor={colorBg}>
-                            <Text style={[styles.text, { color: 'blue' }]}> Annuler </Text>
+                            <Text style={[styles.text, { color: 'blue' }]}> Cancel </Text>
                         </TouchableHighlight>
                         <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Ok')}
                             underlayColor={colorBg}>
-                            <Text style={[styles.text, { color: 'blue' }]}> {"D'accord"} </Text>
+                            <Text style={[styles.text, { color: 'blue' }]}> Yes </Text>
                         </TouchableHighlight>
                     </View>
                 </View>

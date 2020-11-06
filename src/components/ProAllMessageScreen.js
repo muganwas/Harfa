@@ -180,7 +180,7 @@ class ProAllMessageScreen extends Component {
                     <Hamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
-                        text='Tous les messages'
+                        text='Your messages'
                     />
                 </View>
                 <View style={{
@@ -210,7 +210,7 @@ class ProAllMessageScreen extends Component {
                 {this.state.dataSource.length == 0 && !this.state.isLoading && (
                     <View style={styles.noDataStyle}>
                         <Text style={{ color: 'black', fontSize: 20 }}>
-                            Aucune correspondance de données!
+                            You have no messages!
                         </Text>
                     </View>
                 )}

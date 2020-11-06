@@ -358,7 +358,7 @@ class ProMyProfileScreen extends Component {
                     <Hamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
-                        text='Mon Profil'
+                        text='My Profile'
                     />
                 </View>
 

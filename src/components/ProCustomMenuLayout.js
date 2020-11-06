@@ -46,7 +46,7 @@ class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                 <Image source={require('../icons/ic_home_64dp.png')} style={styles.menuImage} />
-                                <Text style={styles.textMenu}>Maison</Text>
+                                <Text style={styles.textMenu}>Dashboard</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -57,7 +57,7 @@ class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                 <Image source={require('../icons/ic_user_64dp.png')} style={styles.menuImage} />
-                                <Text style={styles.textMenu}>Mon profil</Text>
+                                <Text style={styles.textMenu}>My Profile</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -68,7 +68,7 @@ class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                 <Image source={require('../icons/booking_history.png')} style={styles.menuImage} />
-                                <Text style={styles.textMenu}>Réservations</Text>
+                                <Text style={styles.textMenu}>Bookings</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -93,40 +93,22 @@ class CustomMenuLayout extends Component {
                             }}>
                             <View style={styles.row}>
                                 <Image source={require('../icons/message.png')} style={styles.menuImage} />
-                                <Text style={styles.textMenu}>Message</Text>
+                                <Text style={styles.textMenu}>Messages</Text>
                                 {notificationsInfo.messages > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.messages}</Text> : null}
                             </View>
                         </TouchableHighlight>
-
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() => {
-                                fetchedNotifications({ type: 'adminMessages', value: 0 });
-                                this.props.navigation.navigate("ChatWithAdmin")
-                                this.props.navigation.dispatch(DrawerActions.closeDrawer())
-                            }}>
+                            onPress={() => this.props.navigation.navigate("ContactUs")}>
                             <View style={styles.row}>
-                                <Image source={require('../icons/message.png')} style={styles.menuImage} />
-                                <Text style={styles.textMenu}>Chat with Admin</Text>
-                                {notificationsInfo.admin > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.admin}</Text> : null}
+                               <Image source={require('../icons/ic_contact_us_64dp.png')} style={styles.menuImage}/>
+                               <Text style={styles.textMenu}>Contact Us</Text>
                             </View>
                         </TouchableHighlight>
-
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() => {
-                                this.props.navigation.navigate("AboutUs")
-                                this.props.navigation.dispatch(DrawerActions.closeDrawer())
-                            }}>
-                            <View style={styles.row}>
-                                <Image source={require('../icons/ic_aboutus_64dp.png')} style={styles.menuImage} />
-                                <Text style={styles.textMenu}>À propos de nous</Text>
-                            </View>
-                        </TouchableHighlight>
-
                         <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
                             onPress={() => this.changeDialogVisibility(true)}>
                             <View style={styles.row}>
                                 <Image source={require('../icons/ic_logout.png')} style={styles.menuImage} />
-                                <Text style={styles.textMenu}>Déconnexion</Text>
+                                <Text style={styles.textMenu}>Log out</Text>
                             </View>
                         </TouchableHighlight>
 

@@ -130,7 +130,7 @@ class DashboardScreen extends Component {
                     <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
                         source={{ uri: item.image }} />
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
-                        <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
+                        <Text style={{ textAlign: 'center', fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
                             {item.service_name}
                         </Text>
                     </View>
@@ -301,7 +301,7 @@ class DashboardScreen extends Component {
                         flex: 1, alignItems: "center", justifyContent: 'center'
                     }}>
                         <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', }}>
-                            Prestations de service
+                            Available Services
                         </Text>
                     </View>
                 </View>
@@ -326,11 +326,11 @@ class DashboardScreen extends Component {
                     </View> : null}
 
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                    <Text style={styles.exitTitleText}>Appuyez à nouveau pour quitter l'application</Text>
+                    <Text style={styles.exitTitleText}>Press again to exit app</Text>
                     <TouchableOpacity
                         activeOpacity={0.9}
                         onPress={() => BackHandler.exitApp()}>
-                        <Text style={styles.exitText}>Sortie</Text>
+                        <Text style={styles.exitText}>Exit</Text>
                     </TouchableOpacity>
                 </Animated.View>
 

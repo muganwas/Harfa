@@ -26,14 +26,14 @@ export default class AccountTypeScreen extends Component {
                 <StatusBar barStyle='light-content' backgroundColor='#000000' />
 
                 <Text style={{color: 'white', fontSize: 20, marginBottom: 50, fontWeight: 'bold', color: 'white'}}>
-                    Sélectionnez votre type de compte 
+                    Select your account type
                 </Text>
 
                 <TouchableOpacity style={styles.buttonContainer}
                     onPress={() => this.props.navigation.navigate("FacebookGoogle", {
                         "accountType" : "Individual"})}>
                     <Text style={styles.text}>
-                        INDIVIDUEL
+                        Individual
                     </Text>
                 </TouchableOpacity>
 
@@ -41,7 +41,7 @@ export default class AccountTypeScreen extends Component {
                     onPress={() => this.props.navigation.navigate("FacebookGoogle", {
                         "accountType" : "Company"})}>
                     <Text style={styles.text}>
-                        ENTREPRISE
+                        Enterprise
                     </Text>
                 </TouchableOpacity>
 
