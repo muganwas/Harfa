@@ -465,7 +465,7 @@ export default App;
 const styles = {
     container: {
         flex: 1,
-        backgroundColor: '#000000',
+        backgroundColor: '#ffffff',
         justifyContent: 'center',
         alignItems: 'center'
     },
