@@ -1,12 +1,12 @@
 
 import React, { Component } from 'react';
-import {View, Image, Text, StatusBar, TouchableOpacity, BackHandler, Platform} from 'react-native';
+import { View, Image, Text, StatusBar, TouchableOpacity, BackHandler, Platform, StyleSheet } from 'react-native';
 import { withNavigation } from 'react-navigation';
 import RNExitApp from 'react-native-exit-app';
-import { colorYellow } from '../Constants/colors';
+import { themeRed, white } from '../Constants/colors';
 
 class AfterSplashScreen extends Component {
-    componentDidMount(){
+    componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -15,7 +15,7 @@ class AfterSplashScreen extends Component {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
     }
-    
+
 
     handleBackButtonClick = () => {
         if (Platform.OS == 'android')
@@ -26,59 +26,61 @@ class AfterSplashScreen extends Component {
 
     render() {
         return (
-            <View style = {styles.container}>
-               
-                <StatusBar barStyle='light-content' backgroundColor='#000000' />
+            <View style={styles.container}>
 
-                <Image 
-                    style ={{width: 140, height: 140, marginBottom: 30}} 
-                    source= {require('../images/kuchapa_logo.png')} 
-                    resizeMode="contain"/>
+                <StatusBar barStyle='dark-content' backgroundColor={white} />
 
-                <TouchableOpacity style = {styles.buttonContainer} 
-                    onPress ={() => this.props.navigation.navigate("AccountType")}>
+                <Image
+                    style={{ width: 140, height: 140, marginBottom: 30 }}
+                    source={require('../images/kuchapa_logo.png')}
+                    resizeMode="contain" />
+
+                <TouchableOpacity style={styles.buttonContainer}
+                    onPress={() => this.props.navigation.navigate("AccountType")}>
                     <Text style={styles.text}>
-                        CLIENT 
+                        Client
                     </Text>
                 </TouchableOpacity>
-              
-              <TouchableOpacity style = {styles.buttonContainer}
+
+                <TouchableOpacity style={styles.buttonContainer}
                     onPress={() => this.props.navigation.navigate("ProAccountType")}>
                     <Text style={styles.text}>
-                    PRESTATAIRE
+                        Service Provice
                     </Text>
-              </TouchableOpacity>
-               
-           </View>
+                </TouchableOpacity>
+
+            </View>
         )
     }
 }
 
 export default withNavigation(AfterSplashScreen);
 
-const styles = {
+const styles = StyleSheet.create({
     container: {
-        flex : 1,
-        backgroundColor : '#000000',
-        justifyContent : 'center',
-        alignItems : 'center'
+        flex: 1,
+        backgroundColor: '#ffffff',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
-    buttonContainer : {
+    buttonContainer: {
         width: 250,
         paddingTop: 10,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
-        borderWidth: 2,
+        borderWidth: 3,
+        borderColor: themeRed,
         marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
     },
     text: {
-        color: 'white',
+        color: '#000000',
         textAlign: 'center',
         justifyContent: 'center',
+        textTransform: 'uppercase',
+        fontWeight: 'bold'
     }
-}
+})

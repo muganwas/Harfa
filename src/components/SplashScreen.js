@@ -28,6 +28,7 @@ import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userA
 import messaging from '@react-native-firebase/messaging';
 import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../Redux/Actions/jobsActions';
 import SimpleToast from 'react-native-simple-toast';
+import { white } from '../Constants/colors';
 
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
 const USER_GET_PROFILE = Config.baseURL + "users/";
@@ -303,7 +304,7 @@ class SplashScreen extends Component {
         return (
             <View style={styles.container}>
 
-                <StatusBar barStyle='light-content' backgroundColor='#000000' />
+                <StatusBar barStyle='dark-content' backgroundColor={white} />
 
                 <Image
                     style={{ width: 150, height: 150 }}

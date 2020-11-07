@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { View, Text, StatusBar, TouchableOpacity, BackHandler } from 'react-native';
-import { colorYellow } from '../Constants/colors';
+import { View, Text, StatusBar, TouchableOpacity, BackHandler, Image } from 'react-native';
+import { themeRed, black, white } from '../Constants/colors';
 
 export default class ProAccountTypeScreen extends Component {
     
@@ -22,8 +22,12 @@ export default class ProAccountTypeScreen extends Component {
     render() {
         return (
             <View style={styles.container}>
-                <StatusBar barStyle='light-content' backgroundColor='#000000' />
-                <Text style={{color: 'white', fontSize: 20, marginBottom: 50, fontWeight: 'bold', color: 'white'}}>
+                <StatusBar barStyle='dark-content' backgroundColor={white} />
+                <Image
+                    style={{ width: 140, height: 140, marginBottom: 10 }}
+                    source={require('../images/kuchapa_logo.png')}
+                    resizeMode="contain" />
+                <Text style={{color: 'white', fontSize: 20, marginBottom: 50, fontWeight: 'bold', color:black}}>
                     Select your account type
                 </Text>
 
@@ -50,7 +54,7 @@ export default class ProAccountTypeScreen extends Component {
 const styles = {
     container: {
         flex: 1,
-        backgroundColor: '#000000',
+        backgroundColor: white,
         justifyContent: 'center',
         alignItems: 'center'
     },
@@ -61,15 +65,17 @@ const styles = {
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
-        borderWidth: 2,
+        borderWidth: 3,
+        borderColor: themeRed,
         marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
     },
     text: {
-        color: 'white',
+        color: black,
         textAlign: 'center',
         justifyContent: 'center',
+        textTransform: 'uppercase',
+        fontWeight: 'bold'
     }
 }

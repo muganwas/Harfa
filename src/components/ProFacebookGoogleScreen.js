@@ -17,7 +17,7 @@ import Config from './Config';
 import firebaseAuth from '@react-native-firebase/auth';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-import { colorYellow, colorPrimaryDark, colorBg, black } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorBg, black, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 20,
         backgroundColor: colorBg,
-        shadowColor: '#000',
+        shadowColor: black,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
         width: 175,
         height: 45,
-        backgroundColor: '#000000',
+        backgroundColor: black,
         paddingTop: 10,
         paddingBottom: 10,
         paddingLeft: 20,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'white',
+        color: white,
         textAlign: 'center',
         alignSelf: 'center',
         alignItems: 'center',
