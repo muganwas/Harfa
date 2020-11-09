@@ -25,7 +25,7 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorBg, colorYellow, colorPrimaryDark, colorGray } from '../Constants/colors';
+import { colorPrimary, colorBg, colorYellow, colorPrimaryDark, colorGray, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -44,13 +44,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -762,7 +762,7 @@ class ProDashboardScreen extends Component {
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
-                <View style={styles.header}>
+                <View style={[styles.header, {borderBottomWidth: 1, borderBottomColor: themeRed }]}>
                     <ProHamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
@@ -770,7 +770,7 @@ class ProDashboardScreen extends Component {
                     />
                     <TouchableOpacity style={{ width: '100%', justifyContent: 'center', alignContent: 'center' }}
                         onPress={() => this.props.navigation.navigate("ProAddAddress")}>
-                        <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
+                        <Image style={{ width: 22, tintColor: themeRed, height: 22, alignSelf: 'center', marginLeft: 45 }}
                             source={require('../icons/maps_location.png')} />
                     </TouchableOpacity>
                 </View>
@@ -793,7 +793,7 @@ class ProDashboardScreen extends Component {
                 </View>
 
                 <ScrollView
-                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80 }}
+                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80, backgroundColor: colorGray }}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
@@ -952,7 +952,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 50,
         flexDirection: 'row',
-        backgroundColor: colorPrimary,
+        backgroundColor: white,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,

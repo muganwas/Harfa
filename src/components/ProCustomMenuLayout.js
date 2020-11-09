@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { notificationsFetched } from '../Redux/Actions/notificationActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import ProDialogLogout from './ProDialogLogout';
-import { colorPrimary } from '../Constants/colors';
+import { themeRed, white } from '../Constants/colors';
 
 class CustomMenuLayout extends Component {
     constructor(props) {
@@ -150,9 +150,11 @@ const styles = StyleSheet.create({
     header: {
         width: '100%',
         height: 150,
-        backgroundColor: colorPrimary,
+        backgroundColor: white,
         alignItems: 'center',
         justifyContent: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: themeRed
     },
     headerImage: {
         width: 80,

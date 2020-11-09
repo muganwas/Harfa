@@ -16,7 +16,7 @@ import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 import storage from '@react-native-firebase/storage';
-import { colorYellow, colorPrimaryDark } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, white, themeRed, black, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -40,13 +40,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -372,7 +372,7 @@ class ProMyProfileScreen extends Component {
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 
                         <View style={{
-                            flex: 0.35, width: screenWidth, backgroundColor: colorYellow,
+                            flex: 0.35, width: screenWidth, backgroundColor: white,
                             justifyContent: 'center', alignItems: 'center',
                         }}>
                             <Image
@@ -392,7 +392,7 @@ class ProMyProfileScreen extends Component {
                             }}
                                 onPress={this.selectPhoto}>
 
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                <Image style={{ width: 20, tintColor: themeRed, height: 20, alignSelf: 'center' }}
                                     source={require('../icons/camera.png')} />
                             </TouchableOpacity>
                         </View>
@@ -405,14 +405,15 @@ class ProMyProfileScreen extends Component {
 
                             <View style={{
                                 width: screenWidth - 50, height: 50, justifyContent: 'center',
-                                marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'
+                                marginBottom: 15, backgroundColor: themeRed, alignItems: 'center', 
+                                borderRadius: 5
                             }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                                     <View style={styles.buttonPrimaryDark}>
-                                        <Text style={styles.text}>Account Type</Text>
+                                        <Text style={[styles.text, { fontWeight: 'bold' }]}>Account Type</Text>
                                     </View>
                                     <View style={styles.buttonGreen}>
-                                        <Text style={styles.text}>{this.state.accountType}</Text>
+                                        <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>{this.state.accountType}</Text>
                                     </View>
                                 </View>
                             </View>
@@ -498,18 +499,18 @@ class ProMyProfileScreen extends Component {
                                 <View style={{ flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center" }}>
                                     <TouchableOpacity style={this.state.invoice == '1' ? styles.invoiceBorder : styles.invoice}
                                         onPress={() => this.setState({ invoice: '1' })}>
-                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>Yes</Text>
+                                        <Text style={{ color: black, alignSelf: 'center', textAlignVertical: 'center', }}>Yes</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={[this.state.invoice == '0' ? styles.invoiceBorder : styles.invoice, { marginLeft: 20, }]}
                                         onPress={() => this.setState({ invoice: '0' })}>
-                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
+                                        <Text style={{ color: black, alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
 
                             <TouchableOpacity style={styles.buttonContainer}
                                 onPress={this.checkValidation}>
-                                <Text style={styles.text}>
+                                <Text style={[styles.text, { fontWeight: 'bold', color: black }]}>
                                     Update
                             </Text>
                             </TouchableOpacity>
@@ -558,7 +559,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 50,
         flexDirection: 'row',
-        backgroundColor: colorYellow,
+        backgroundColor: white,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
@@ -569,12 +570,12 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: 'green',
+        backgroundColor: white,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 1,
-        borderColor: colorPrimaryDark,
+        borderColor: white,
         borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
@@ -585,13 +586,10 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: themeRed,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
-        borderRadius: 1,
-        borderColor: colorPrimaryDark,
-        borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
         marginLeft: 5,
@@ -642,14 +640,17 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         width: 200,
-        paddingTop: 10,
-        backgroundColor: '#000000',
-        paddingBottom: 10,
+        paddingTop: 15,
+        backgroundColor: white,
+        paddingBottom: 15,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
-        borderWidth: 2,
+        shadowColor: themeRed,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 7,
         marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
@@ -701,10 +702,13 @@ const styles = StyleSheet.create({
         paddingRight: 15,
         paddingTop: 2,
         paddingBottom: 2,
-        backgroundColor: 'grey',
+        backgroundColor: white,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 1,
         borderColor: 'grey',
         borderRadius: 5,
-        borderWidth: 2,
         justifyContent: 'center',
         color: 'white'
     },
@@ -714,10 +718,15 @@ const styles = StyleSheet.create({
         paddingRight: 15,
         paddingTop: 2,
         paddingBottom: 2,
-        backgroundColor: 'grey',
-        borderColor: colorYellow,
+        backgroundColor: white,
+        borderColor: themeRed,
+        shadowColor: themeRed,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         borderRadius: 5,
-        borderWidth: 2,
+        borderWidth: 0.1,
         justifyContent: 'center',
         alignContent: 'center',
         color: 'white',

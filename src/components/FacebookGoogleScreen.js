@@ -29,29 +29,32 @@ import Axios from 'axios';
 import {
     colorYellow,
     colorBg,
+    colorFg,
     colorPrimaryDark,
-    black
+    black,
+    white,
+    themeRed
 } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
 const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate';
+const Android = Platform.OS === 'android';
 
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+const STATUS_BAR_HEIGHT = !Android ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
     return (
-        Platform.OS === 'ios' ?
+        !Android ?
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
-                <StatusBar
-                    barStyle="light-content" />
+                <StatusBar barStyle="dark-content" backgroundColor={white} />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -410,15 +413,19 @@ class FacebookGoogleScreen extends Component {
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
                 <KeyboardAwareScrollView
-                    contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
+                    contentContainerStyle={{ 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        alwaysBounceVertical: true 
+                    }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>
 
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ height: 200, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ height: 200, width: screenWidth, backgroundColor: white, justifyContent: 'center', alignItems: 'center' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15, }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center', }}
+                                <Image style={{ width: 20, tintColor: black, height: 20, alignSelf: 'center', }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
                             <Image
@@ -458,7 +465,7 @@ class FacebookGoogleScreen extends Component {
 
                             <TouchableOpacity style={{ width: screenWidth - 50, marginTop: 10 }}
                                 onPress={() => this.props.navigation.navigate("ForgotPassword")}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
+                                <Text style={{ color: white, fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
                                     Forgot password
                                 </Text>
                             </TouchableOpacity>
@@ -472,7 +479,7 @@ class FacebookGoogleScreen extends Component {
                         </View>
 
                         <View>
-                            <Text style={{ color: 'black', fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ color: black , fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
                                 or Login with
                             </Text>
                         </View>
@@ -546,7 +553,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: "#E8EEE9"
+        backgroundColor: colorBg
     },
     logincontainer: {
         width: screenWidth - 15,
@@ -555,13 +562,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 20,
         marginBottom: 20,
-        backgroundColor: colorBg,
+        backgroundColor: colorFg,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.75,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
         shadowRadius: 5,
         elevation: 5,
-        borderRadius: 2,
+        borderRadius: 4,
     },
     separator: {
         borderBottomWidth: 0.8,
@@ -587,13 +594,13 @@ const styles = StyleSheet.create({
     buttonContainer: {
         width: 175,
         height: 45,
-        backgroundColor: '#000000',
+        backgroundColor: black,
         paddingTop: 10,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
+        borderColor: white,
         borderWidth: 2,
         textAlign: 'center',
         justifyContent: 'center',
@@ -614,7 +621,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'white',
+        color: white,
         textAlign: 'center',
         alignSelf: 'center',
         alignItems: 'center',

@@ -17,27 +17,28 @@ import Config from './Config';
 import firebaseAuth from '@react-native-firebase/auth';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-import { colorYellow, colorPrimaryDark, colorBg, black, white } from '../Constants/colors';
+import { colorYellow, colorFg, colorBg, black, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
 const AUTHENTICATE_URL = Config.baseURL + "employee/authenticate";
+const Android = Platform.OS === 'android';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
     return (
-        Platform.OS === 'ios' ?
+        !Android ?
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -339,7 +340,7 @@ class FacebookGoogleScreen extends Component {
                                 //Store data like sharedPreference
                                 AsyncStorage.setItem('userId', id);
                                 AsyncStorage.setItem('userType', 'Provider');
-                                const auth = { email: this.state.email, password: this.state.password};
+                                const auth = { email: this.state.email, password: this.state.password };
                                 AsyncStorage.setItem('auth', JSON.stringify(auth));
                                 AsyncStorage.setItem('firebaseId', uid);
                                 fetchJobRequestHistory(id);
@@ -450,15 +451,15 @@ class FacebookGoogleScreen extends Component {
                     keyboardDismissMode='on-drag'>
 
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ height: 200, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ height: 200, width: screenWidth, backgroundColor: white, justifyContent: 'center', alignItems: 'center' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15, }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center', }}
+                                <Image style={{ width: 20, tintColor: black, height: 20, alignSelf: 'center', }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
                             <Image
                                 style={{ width: 140, height: 140 }}
-                                source={require('../images/kuchapa_logo.png')} 
+                                source={require('../images/kuchapa_logo.png')}
                                 resizeMode="contain" />
                         </View>
 
@@ -471,7 +472,7 @@ class FacebookGoogleScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/email.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 50, marginLeft: 10, color: black }}
                                     placeholder='Email'
                                     value={this.state.email}
@@ -482,7 +483,7 @@ class FacebookGoogleScreen extends Component {
                             <View style={[styles.textInputView, { marginTop: 5, }]}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../icons/ic_lock_64dp.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 50, marginLeft: 10, color: black }}
                                     placeholder='Password'
                                     value={this.state.password}
@@ -493,7 +494,7 @@ class FacebookGoogleScreen extends Component {
 
                             <TouchableOpacity style={{ width: screenWidth - 50, marginTop: 10 }}
                                 onPress={() => this.props.navigation.navigate("ProForgotPassword")}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
+                                <Text style={{ color: white, fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
                                     Forgot Password
                                 </Text>
                             </TouchableOpacity>
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: "#E8EEE9"
+        backgroundColor: colorBg
     },
     logincontainer: {
         width: screenWidth - 15,
@@ -600,13 +601,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 20,
         marginBottom: 20,
-        backgroundColor: colorBg,
-        shadowColor: black,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.75,
+        backgroundColor: colorFg,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
         shadowRadius: 5,
         elevation: 5,
-        borderRadius: 2,
+        borderRadius: 4,
     },
     separator: {
         borderBottomWidth: 0.8,
@@ -638,7 +639,7 @@ const styles = StyleSheet.create({
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
+        borderColor: white,
         borderWidth: 2,
         textAlign: 'center',
         justifyContent: 'center',

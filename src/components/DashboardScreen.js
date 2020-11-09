@@ -14,7 +14,7 @@ import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const SERVICES_URL = Config.baseURL + 'service/getall'
@@ -27,13 +27,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -285,12 +285,12 @@ class DashboardScreen extends Component {
                     />
                     <TouchableOpacity style={{ width: '100%', justifyContent: 'center', alignContent: 'center' }}
                         onPress={() => this.props.navigation.navigate("AddAddress")}>
-                        <Image style={{ width: 22, height: 22, alignSelf: 'center', marginLeft: 45 }}
+                        <Image style={{ width: 22, height: 22, tintColor: themeRed, alignSelf: 'center', marginLeft: 45 }}
                             source={require('../icons/maps_location.png')} />
                     </TouchableOpacity>
                 </View>
 
-                <View style={{ width: screenWidth, height: 1, backgroundColor: '#C5940E' }}></View>
+                <View style={{ width: screenWidth, height: 1, backgroundColor: '#D95E5E' }}></View>
 
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 45, backgroundColor: colorPrimary,
@@ -300,7 +300,7 @@ class DashboardScreen extends Component {
                     <View style={{
                         flex: 1, alignItems: "center", justifyContent: 'center'
                     }}>
-                        <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', }}>
+                        <Text style={{ color: themeRed, fontSize: 20, fontWeight: 'bold', }}>
                             Available Services
                         </Text>
                     </View>
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     },
     gridView: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: colorGray,
         padding: 5,
     },
     open: {

@@ -6,8 +6,7 @@ import { notificationsFetched } from '../Redux/Actions/notificationActions';
 import {DrawerActions} from 'react-navigation-drawer';
 //import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import DialogLogout from './DialogLogout';
-
-const colorPrimary = '#FFBF0F';
+import { colorGray, themeRed, white } from '../Constants/colors'
 
 class CustomMenuLayout extends Component {
 
@@ -135,14 +134,16 @@ const styles = StyleSheet.create({
     drawer: {
         flex: 1,
         width: '100%',
-        backgroundColor: 'white',
+        backgroundColor: colorGray,
     },
     header: {
         width: '100%',
         height: 150,
-        backgroundColor: colorPrimary,
+        backgroundColor: white,
         alignItems: 'center',
         justifyContent: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: themeRed
     },
     headerImage: {
         width: 80,

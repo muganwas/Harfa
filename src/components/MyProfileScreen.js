@@ -27,7 +27,7 @@ import Toast from 'react-native-simple-toast';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 import storage from '@react-native-firebase/storage';
-import { colorYellow, colorPrimaryDark, colorPrimary } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorPrimary, white, themeRed, black } from '../Constants/colors';
 
 const options = {
   title: 'Select a photo',
@@ -51,12 +51,12 @@ const StatusBarPlaceHolder = () => {
       style={{
         width: '100%',
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: white,
       }}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
     </View>
   ) : (
-      <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
+      <StatusBar barStyle="dark-content" backgroundColor={white} />
     );
 }
 
@@ -334,7 +334,7 @@ class MyProfileScreen extends Component {
             flexDirection: 'row',
             width: '100%',
             height: 50,
-            backgroundColor: colorPrimary,
+            backgroundColor: white,
             paddingLeft: 10,
             paddingRight: 20,
             paddingBottom: 5,
@@ -367,7 +367,7 @@ class MyProfileScreen extends Component {
               style={{
                 flex: 0.35,
                 width: screenWidth,
-                backgroundColor: colorYellow,
+                backgroundColor: white,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
@@ -405,7 +405,7 @@ class MyProfileScreen extends Component {
                 }}
                 onPress={this.selectPhoto}>
                 <Image
-                  style={{ width: 20, height: 20, alignSelf: 'center' }}
+                  style={{ width: 20, tintColor: themeRed, height: 20, alignSelf: 'center' }}
                   source={require('../icons/camera.png')}
                 />
               </TouchableOpacity>
@@ -424,7 +424,7 @@ class MyProfileScreen extends Component {
                   justifyContent: 'center',
                   borderRadius: 5,
                   marginBottom: 15,
-                  backgroundColor: colorPrimaryDark,
+                  backgroundColor: themeRed,
                   alignItems: 'center',
                 }}>
                 <View
@@ -436,10 +436,10 @@ class MyProfileScreen extends Component {
                     marginBottom: 10,
                   }}>
                   <View style={styles.buttonPrimaryDark}>
-                    <Text style={styles.text}>Account Type</Text>
+                    <Text style={[styles.text, { fontWeight: 'bold' }]}>Account Type</Text>
                   </View>
                   <View style={styles.buttonGreen}>
-                    <Text style={styles.text}>
+                    <Text style={[styles.text, { color: black, fontWeight: 'bold'}]}>
                       {userDetails.accountType}
                     </Text>
                   </View>
@@ -510,7 +510,7 @@ class MyProfileScreen extends Component {
               <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={this.checkValidation}>
-                <Text style={styles.text}>Update</Text>
+                <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>Update</Text>
               </TouchableOpacity>
 
               <DateTimePicker
@@ -537,12 +537,12 @@ class MyProfileScreen extends Component {
             { transform: [{ translateY: this.springValue }] },
           ]}>
           <Text style={styles.exitTitleText}>
-            Appuyez à nouveau pour quitter l'application
+            Press back again to exit the app
           </Text>
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => BackHandler.exitApp()}>
-            <Text style={styles.exitText}>Sortie</Text>
+            <Text style={styles.exitText}>Exit</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
-    backgroundColor: 'white',
+    backgroundColor: white,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
@@ -604,14 +604,18 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: 200,
-    paddingTop: 10,
-    backgroundColor: '#000000',
-    paddingBottom: 10,
+    paddingTop: 15,
+    backgroundColor: white,
+    shadowColor: themeRed,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 7,
+    paddingBottom: 15,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 5,
-    borderColor: colorYellow,
-    borderWidth: 2,
+    borderColor: themeRed,
     marginBottom: 25,
     textAlign: 'center',
     justifyContent: 'center',
@@ -660,12 +664,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     paddingTop: 10,
-    backgroundColor: 'green',
+    backgroundColor: white,
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 1,
-    borderColor: colorPrimaryDark,
+    borderColor: themeRed,
     borderWidth: 0,
     textAlign: 'center',
     justifyContent: 'center',
@@ -692,12 +696,12 @@ const styles = StyleSheet.create({
     flex: 1.5,
     height: 40,
     paddingTop: 10,
-    backgroundColor: colorPrimaryDark,
+    backgroundColor: themeRed,
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 1,
-    borderColor: colorPrimaryDark,
+    borderColor: themeRed,
     borderWidth: 0,
     textAlign: 'center',
     justifyContent: 'center',
@@ -706,7 +710,7 @@ const styles = StyleSheet.create({
   },
   animatedView: {
     width: screenWidth,
-    backgroundColor: colorPrimaryDark,
+    backgroundColor: themeRed,
     elevation: 2,
     position: 'absolute',
     bottom: 0,

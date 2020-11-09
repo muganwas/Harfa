@@ -45,7 +45,7 @@ class AfterSplashScreen extends Component {
                 <TouchableOpacity style={styles.buttonContainer}
                     onPress={() => this.props.navigation.navigate("ProAccountType")}>
                     <Text style={styles.text}>
-                        Service Provice
+                        Service Provider
                     </Text>
                 </TouchableOpacity>
 
