@@ -12,7 +12,7 @@ import Hamburger from './ProHamburger';
 import { imageExists } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, colorYellow } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, colorYellow, white, themeRed, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -25,13 +25,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -184,7 +184,7 @@ class ProAllMessageScreen extends Component {
                     />
                 </View>
                 <View style={{
-                    flexDirection: 'row', width: '100%', height: 55, backgroundColor: colorYellow,
+                    flexDirection: 'row', width: '100%', height: 55, backgroundColor: themeRed,
                     paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                 }}>
                     <View style={{
@@ -195,7 +195,7 @@ class ProAllMessageScreen extends Component {
                         <Image style={{ width: 15, height: 15, marginLeft: 20 }}
                             source={require('../icons/search.png')} />
                         <TextInput style={{ width: screenWidth - 60, height: 45, fontWeight: 'bold', marginLeft: 10 }}
-                            placeholder='Chercher...'
+                            placeholder='search...'
                             onChangeText={(inputText) => this.searchTask(inputText)}>
                         </TextInput>
                     </View>
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: colorGray,
         padding: 5,
     },
     itemMainContainer: {
@@ -299,6 +299,8 @@ const styles = StyleSheet.create({
     },
     noDataStyle: {
         height: screenHeight - 105,
+        backgroundColor: colorGray,
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'center'

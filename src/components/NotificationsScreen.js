@@ -14,7 +14,7 @@ import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
-import { colorYellow, colorPrimaryDark, colorBg, colorGray } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorBg, colorGray, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -27,13 +27,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -193,9 +193,9 @@ class NotificationsScreen extends Component {
                     </View>
                 }
                 {this.state.isNoData && (
-                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: colorBg, justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
-                            <Image style={{ width: 50, height: 50 }}
+                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: colorGray, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: themeRed, justifyContent: 'center', alignItems: 'center' }}>
+                            <Image style={{ width: 50, height: 50, tintColor: white }}
                                 source={require('../icons/ic_notification.png')} />
                         </View>
                         <Text style={{ fontSize: 18, marginTop: 10 }}>You have no notifications</Text>
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 50,
         flexDirection: 'row',
-        backgroundColor: colorYellow,
+        backgroundColor: white,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: colorGray,
         padding: 5,
     },
     animatedView: {

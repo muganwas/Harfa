@@ -27,7 +27,7 @@ import Toast from 'react-native-simple-toast';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 import storage from '@react-native-firebase/storage';
-import { colorYellow, colorPrimaryDark, colorPrimary, white, themeRed, black } from '../Constants/colors';
+import { colorPrimaryDark, white, themeRed, black } from '../Constants/colors';
 
 const options = {
   title: 'Select a photo',

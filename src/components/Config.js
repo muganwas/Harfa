@@ -14,7 +14,7 @@ import {
   FIREBASE_STORAGE_BUCKET,
   FIREBASE_MESSAGING_SENDER_ID
 } from 'react-native-dotenv';
-//cloud --
+//local --
 export default class Config {
   static clientId = WEB_CLIENT_ID
   static baseURL = BASE_URL_LOCAL_ALT

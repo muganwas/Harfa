@@ -10,8 +10,8 @@ import Toast from 'react-native-simple-toast';
 import ViewPager from "@react-native-community/viewpager";
 import Config from './Config';
 import Hamburger from './ProHamburger';
-import { colorPrimary, colorPrimaryDark, colorBg } from '../Constants/colors';
-
+import { font_size } from '../Constants/metrics';
+import { colorPrimary, colorPrimaryDark, colorBg, white, themeRed, black, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -24,13 +24,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -238,18 +238,18 @@ class ProBookingScreen extends Component {
                 }}>
                     <Hamburger
                         navigation={this.props.navigation}
-                        text='Réservations'
+                        text='Bookings'
                     />
                 </View>
 
                 <View style={{
                     width: screenWidth, height: 50, justifyContent: 'center',
-                    backgroundColor: colorPrimaryDark, alignItems: 'center'
+                    backgroundColor: themeRed, alignItems: 'center'
                 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                         <TouchableOpacity style={this.state.currentPage == 0 ? styles.buttonGreen : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Completed")}>
-                            <Text style={styles.text}>Completed</Text>
+                            <Text style={[styles.text, { color: black }]}>Completed</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={this.state.currentPage == 1 ? styles.buttonRed : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Rejected")}>
@@ -333,12 +333,12 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: 'green',
+        backgroundColor: white,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 1,
-        borderColor: colorPrimaryDark,
+        borderColor: white,
         borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 1,
-        borderColor: colorPrimaryDark,
+        borderColor: themeRed,
         borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
@@ -365,12 +365,12 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: themeRed,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 1,
-        borderColor: colorPrimaryDark,
+        borderColor: themeRed,
         borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
@@ -378,21 +378,21 @@ const styles = StyleSheet.create({
         marginRight: 5
     },
     text: {
-        fontSize: 18,
-        color: 'white',
+        fontSize: font_size.sub_header,
+        color: white,
         textAlign: 'center',
         justifyContent: 'center',
         fontWeight: 'bold',
     },
     listView: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: colorGray,
         padding: 5,
     },
     itemContainer: {
         width: screenWidth,
         flexDirection: 'row',
-        backgroundColor: 'white',
+        backgroundColor: white,
         padding: 10,
     },
     animatedView: {

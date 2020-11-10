@@ -11,7 +11,7 @@ import database from '@react-native-firebase/database';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 import { imageExists } from '../misc/helpers';
-import { colorYellow, colorBg, colorPrimaryDark, colorPrimary } from '../Constants/colors';
+import { colorGray, colorBg, colorPrimaryDark, colorPrimary, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -24,13 +24,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -172,7 +172,7 @@ class AllMessageScreen extends Component {
                 </View>
 
                 <View style={{
-                    flexDirection: 'row', width: '100%', height: 55, backgroundColor: colorYellow,
+                    flexDirection: 'row', width: '100%', height: 55, backgroundColor: themeRed,
                     paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                 }}>
                     <View style={{
@@ -186,7 +186,7 @@ class AllMessageScreen extends Component {
                         <TextInput style={{
                             width: screenWidth - 60, height: 45, fontWeight: 'bold', marginLeft: 10
                         }}
-                            placeholder='Recherche ...'
+                            placeholder='search...'
                             onChangeText={(inputText) => this.searchTask(inputText)}>
                         </TextInput>
                     </View>
@@ -279,6 +279,8 @@ const styles = StyleSheet.create({
     },
     noDataStyle: {
         height: screenHeight - 105,
+        backgroundColor: colorGray,
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'center'

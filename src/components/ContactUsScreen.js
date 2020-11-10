@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Platform, StatusBar, BackHandler} from 'react-native';
-import { colorBg, colorPrimaryDark, colorPrimary } from '../Constants/colors';
+import { black, colorBg, colorPrimary, white, themeRed, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -12,12 +12,12 @@ const StatusBarPlaceHolder = () => {
         <View style={{
             width: "100%",
             height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
+            backgroundColor: white}}>
             <StatusBar
-                barStyle="light-content"/>
+                barStyle="dark-content"/>
         </View>
         :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+        <StatusBar barStyle='dark-content' backgroundColor={white} /> 
     );
 }
 
@@ -44,15 +44,15 @@ export default class ContactUsScreen extends Component{
                 <StatusBarPlaceHolder/>
                
                 <View style={{flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                     paddingLeft: 10, paddingRight: 20, paddingBottom: 5}}>
+                     paddingLeft: 10, paddingRight: 20, paddingBottom: 5, borderBottomColor: themeRed, borderBottomWidth: 1}}>
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', }}
                             onPress={() => this.props.navigation.goBack()}>
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                            <Image style={{ width: 20, height: 20, tintColor: black, alignSelf: 'center' }}
                                 source={require('../icons/arrow_back.png')} />
                         </TouchableOpacity>
 
-                        <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
+                        <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
                             Contact Us
                         </Text>
                     </View>
@@ -87,17 +87,16 @@ export default class ContactUsScreen extends Component{
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colorBg ,
+        backgroundColor: colorGray ,
     },
     mainContainer: {
-        backgroundColor: 'white',
+        backgroundColor: white,
         margin: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
-        backgroundColor: 'white',
         borderRadius: 2,
     }
 });

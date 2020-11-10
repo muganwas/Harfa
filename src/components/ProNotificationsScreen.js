@@ -6,7 +6,7 @@ import Notifications from './Notifications';
 import Toast from 'react-native-simple-toast';
 import Config from './Config';
 import Hamburger from './ProHamburger';
-import { colorGray, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorGray, colorYellow, colorPrimaryDark, colorBg, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-employee-notification/";
@@ -18,13 +18,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -143,7 +143,7 @@ class ProNotificationsScreen extends Component {
                         justifyContent: 'center'
                     }}>
                     <Image style={{ width: 45, height: 45, borderRadius: 100 }}
-                        source={{ uri: item.employee_details.image }} />
+                        source={ item.employee_details && item.employee_details.image ? { uri: item.employee_details.image } : require('../images/generic_avatar.png')} />
                     <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
                         <Text style={{ color: 'black', fontSize: 14, marginTop: 5, alignSelf: 'center' }}>
                             {item.title}
@@ -174,9 +174,9 @@ class ProNotificationsScreen extends Component {
                 }
 
                 {this.state.isNoData &&
-                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: colorBg, justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
-                            <Image style={{ width: 50, height: 50 }}
+                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: colorGray, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: themeRed, justifyContent: 'center', alignItems: 'center' }}>
+                            <Image style={{ width: 50, height: 50, tintColor: white }}
                                 source={require('../icons/ic_notification.png')} />
                         </View>
                         <Text style={{ fontSize: 18, marginTop: 10 }}>You have no notifications</Text>
@@ -206,16 +206,16 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 50,
         flexDirection: 'row',
-        backgroundColor: colorYellow,
+        backgroundColor: white,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
     },
     listView: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: colorGray,
         padding: 5,
     },
     animatedView: {
