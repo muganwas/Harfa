@@ -29,7 +29,7 @@ import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import WaitingDialog from './WaitingDialog';
 import { cloneDeep } from 'lodash';
-import { colorYellow, colorPrimaryDark, black } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white } from '../Constants/colors';
 
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
@@ -50,12 +50,12 @@ const StatusBarPlaceHolder = () => {
       style={{
         width: '100%',
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: white,
       }}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
     </View>
   ) : (
-      <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
+      <StatusBar barStyle="dark-content" backgroundColor={white} />
     );
 }
 

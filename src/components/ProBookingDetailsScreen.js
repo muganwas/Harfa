@@ -10,7 +10,7 @@ import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
 import Config from './Config';
 import { setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -23,13 +23,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 

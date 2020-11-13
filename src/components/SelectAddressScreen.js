@@ -3,7 +3,7 @@ import {
   View, Image, TextInput, Dimensions, StyleSheet, ActivityIndicator, Text,
   TouchableOpacity, ToastAndroid, BackHandler, StatusBar, Platform,
 } from 'react-native';
-import { colorPrimary, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorPrimary, colorYellow, colorBg, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -18,13 +18,13 @@ const StatusBarPlaceHolder = () => {
       <View style={{
         width: "100%",
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: colorPrimaryDark
+        backgroundColor: white
       }}>
         <StatusBar
-          barStyle="light-content" />
+          barStyle="dark-content" />
       </View>
       :
-      <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+      <StatusBar barStyle='dark-content' backgroundColor={white} />
   );
 }
 

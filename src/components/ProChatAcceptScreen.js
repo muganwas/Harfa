@@ -11,7 +11,7 @@ import Config from './Config';
 import { getDistance } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, colorYellow } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, colorYellow, white } from '../Constants/colors';
 import SoundPlayer from 'react-native-sound';
 import { cloneDeep } from 'lodash';
 
@@ -29,13 +29,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 

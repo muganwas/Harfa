@@ -18,7 +18,7 @@ import WaitingDialog from './WaitingDialog';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorBg, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -32,12 +32,12 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View> :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 

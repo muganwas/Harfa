@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {View,StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity, 
     ScrollView, Dimensions, ActivityIndicator} from 'react-native';
 import ShakingText from 'react-native-shaking-text';
-import { colorYellow } from '../Constants/colors';
+import { colorYellow, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -85,7 +85,7 @@ export default class ProLoginPhoneScreen extends Component{
         return(
             <View style = {styles.container}>
                 
-                <StatusBar barStyle='light-content' backgroundColor='#C5940E' />
+                <StatusBar barStyle='dark-content' backgroundColor={white} />
 
                 <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center',
                             alwaysBounceVertical: true}}

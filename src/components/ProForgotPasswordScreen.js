@@ -5,7 +5,7 @@ import {View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
 import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Config from './Config';
-import { colorYellow, colorPrimaryDark, black } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const FORGOT_PASSWORD = Config.baseURL+"employee/forgot_password/email";
@@ -18,12 +18,12 @@ const StatusBarPlaceHolder = () => {
         <View style={{
             width: "100%",
             height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
+            backgroundColor: white}}>
             <StatusBar
-                barStyle="light-content"/>
+                barStyle="dark-content"/>
         </View>
         :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+        <StatusBar barStyle='dark-content' backgroundColor={white} /> 
     );
 }
 
@@ -136,10 +136,7 @@ export default class ProForgotPasswordScreen extends Component {
     render() {
         return (
             <View style={styles.container}>
-
-                {/* <StatusBar barStyle='light-content' backgroundColor='#C5940E' /> */}
                 <StatusBarPlaceHolder/>
-             
                 <KeyboardAwareScrollView contentContainerStyle={{justifyContent: 'center', alignItems: 'center',
                     alwaysBounceVertical: true}}
                     keyboardShouldPersistTaps='handled'

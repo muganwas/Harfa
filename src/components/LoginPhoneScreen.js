@@ -19,7 +19,7 @@ import {
   GraphRequest,
   GraphRequestManager,
 } from 'react-native-fbsdk';
-import { colorYellow } from '../Constants/colors';
+import { colorYellow, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -134,7 +134,7 @@ export default class LoginPhoneScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#C5940E" />
+        <StatusBar barStyle="dark-content" backgroundColor={white} />
 
         <KeyboardAwareScrollView
           contentContainerStyle={{

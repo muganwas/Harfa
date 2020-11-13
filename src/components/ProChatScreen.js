@@ -14,7 +14,7 @@ import { chatDate } from '../misc/helpers';
 import moment from 'moment';
 import Config from './Config';
 import { cloneDeep } from 'lodash';
-import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;
@@ -28,13 +28,13 @@ const StatusBarPlaceHolder = () => {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 

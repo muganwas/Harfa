@@ -20,7 +20,7 @@ import database from '@react-native-firebase/database';
 import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
 import { getDistance, imageExists } from '../misc/helpers';
-import { colorPrimaryDark, colorYellow, colorBg } from '../Constants/colors';
+import { colorPrimaryDark, colorYellow, colorBg, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -35,12 +35,12 @@ const StatusBarPlaceHolder = () => {
       style={{
         width: '100%',
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: white,
       }}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
     </View>
   ) : (
-      <StatusBar barStyle="light-content" backgroundColor={colorPrimaryDark} />
+      <StatusBar barStyle="dark-content" backgroundColor={white} />
     );
 };
 

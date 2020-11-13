@@ -12,7 +12,7 @@ import Config from './Config';
 import { updateUserDetails } from '../Redux/Actions/userActions';
 import { getPendingJobRequest } from '../Redux/Actions/jobsActions';
 import messaging from '@react-native-firebase/messaging';
-import { colorYellow, colorPrimaryDark } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const MOBILE_EXISTS_URL = Config.baseURL + 'users/check/mobile'
@@ -174,7 +174,7 @@ class VerificationScreen extends Component {
         return (
             <View style={styles.container}>
 
-                <StatusBar barStyle='light-content' backgroundColor='#C5940E' />
+                <StatusBar barStyle='dark-content' backgroundColor={white} />
 
                 <KeyboardAwareScrollView
                     contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}

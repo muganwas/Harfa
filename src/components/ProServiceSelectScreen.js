@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import CheckBox from 'react-native-check-box';
 import Config from './Config';
-import { colorYellow, colorPrimaryDark, colorBg, colorPrimary } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorBg, colorPrimary, white } from '../Constants/colors';
 
 const SERVICES_URL = Config.baseURL + 'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
@@ -16,13 +16,13 @@ const StatusBarPlaceHolder = () => {
       <View style={{
         width: "100%",
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: colorPrimaryDark
+        backgroundColor: white
       }}>
         <StatusBar
-          barStyle="light-content" />
+          barStyle="dark-content" />
       </View>
       :
-      <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+      <StatusBar barStyle='dark-content' backgroundColor={white} />
   );
 }
 

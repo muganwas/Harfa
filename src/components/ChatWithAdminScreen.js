@@ -29,13 +29,13 @@ function StatusBarPlaceHolder() {
             <View style={{
                 width: "100%",
                 height: STATUS_BAR_HEIGHT,
-                backgroundColor: colorPrimaryDark
+                backgroundColor: white
             }}>
                 <StatusBar
-                    barStyle="light-content" />
+                    barStyle="dark-content" />
             </View>
             :
-            <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 

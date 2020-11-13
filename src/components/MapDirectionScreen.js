@@ -14,12 +14,7 @@ import SlidingPanel from 'react-native-sliding-up-down-panels';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import Config from './Config';
-
-//const colorPrimary = '#FFBF0F';
-const colorPrimaryDark = '#C5940E';
-const colorYellow = '#FFBF0F';
-const colorBg = '#E8EEE9';
-//const colorGray = '#C0C0C0'
+import { white, colorYellow, colorBg } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -33,13 +28,13 @@ function StatusBarPlaceHolder() {
       <View style={{
         width: "100%",
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: colorPrimaryDark
+        backgroundColor: white
       }}>
         <StatusBar
-          barStyle="light-content" />
+          barStyle="dark-content" />
       </View>
       :
-      <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+      <StatusBar barStyle='dark-content' backgroundColor={white} />
   );
 }
 

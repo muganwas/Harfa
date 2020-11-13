@@ -276,7 +276,7 @@ class DashboardScreen extends Component {
         const { jobsInfo: { jobRequests, requestsFetched } } = this.props;
         return (
             <View style={styles.container}>
-                {/* <StatusBar barStyle='light-content' backgroundColor='#C5940E' />   */}
+                {/* <StatusBar barStyle='dark-content' backgroundColor=white />   */}
                 <StatusBarPlaceHolder />
                 <View style={styles.header}>
                     <Hamburger

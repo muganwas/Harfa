@@ -15,7 +15,7 @@ import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userA
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { cloneDeep } from 'lodash';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { colorGray, colorGreen, colorRed, colorYellow, colorPrimaryDark, colorBg } from '../Constants/colors';
+import { colorGray, colorGreen, colorRed, colorYellow, colorPrimaryDark, colorBg, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -28,13 +28,13 @@ const StatusBarPlaceHolder = () => {
       <View style={{
         width: "100%",
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: colorPrimaryDark
+        backgroundColor: white
       }}>
         <StatusBar
-          barStyle="light-content" />
+          barStyle="dark-content" />
       </View>
       :
-      <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} />
+      <StatusBar barStyle='dark-content' backgroundColor={white} />
   );
 }
 

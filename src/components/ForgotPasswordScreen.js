@@ -6,7 +6,7 @@ import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
-import { colorPrimaryDark, colorYellow, black } from '../Constants/colors';
+import { colorPrimaryDark, colorYellow, black, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const FORGOT_PASSWORD = Config.baseURL+"users/forgot_password/email";
@@ -19,12 +19,12 @@ const StatusBarPlaceHolder = () => {
         <View style={{
             width: "100%",
             height: STATUS_BAR_HEIGHT,
-            backgroundColor: colorPrimaryDark}}>
+            backgroundColor: white}}>
             <StatusBar
-                barStyle="light-content"/>
+                barStyle="dark-content"/>
         </View>
         :
-        <StatusBar barStyle='light-content' backgroundColor={colorPrimaryDark} /> 
+        <StatusBar barStyle='dark-content' backgroundColor={white} /> 
     );
 }
 
@@ -143,7 +143,7 @@ export default class ForgotPasswordScreen extends Component {
         return (
             <View style={styles.container}>
 
-                {/* <StatusBar barStyle='light-content' backgroundColor='#C5940E' /> */}
+                {/* <StatusBar barStyle='dark-content' backgroundColor='#C5940E' /> */}
                 <StatusBarPlaceHolder/>
              
                 <KeyboardAwareScrollView contentContainerStyle={{justifyContent: 'center', alignItems: 'center',

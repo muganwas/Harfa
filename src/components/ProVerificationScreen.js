@@ -11,7 +11,7 @@ import ShakingText from 'react-native-shaking-text';
 import Config from './Config';
 import messaging from '@react-native-firebase/messaging';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-import { colorYellow, colorPrimaryDark } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -147,7 +147,7 @@ class ProVerificationScreen extends Component {
         return (
             <View style={styles.container}>
 
-                <StatusBar barStyle='light-content' backgroundColor='#C5940E' />
+                <StatusBar barStyle='dark-content' backgroundColor={white} />
 
                 <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
                     keyboardShouldPersistTaps='always'>
