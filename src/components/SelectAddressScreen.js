@@ -3,12 +3,13 @@ import {
   View, Image, TextInput, Dimensions, StyleSheet, ActivityIndicator, Text,
   TouchableOpacity, ToastAndroid, BackHandler, StatusBar, Platform,
 } from 'react-native';
+import { MAPS_API_KEY } from 'react-native-dotenv';
 import { colorPrimary, colorYellow, colorBg, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
-const GOOGLE_ADDRESS_SERVICE = "https://maps.googleapis.com/maps/api/place/autocomplete/json?key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030&types=geocode&language=en&input="
-const LAT_LNG_URL = "https://maps.googleapis.com/maps/api/place/details/json?key=AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030&placeid=";
+const GOOGLE_ADDRESS_SERVICE = "https://maps.googleapis.com/maps/api/place/autocomplete/json?key=" + MAPS_API_KEY + "&types=geocode&language=en&input="
+const LAT_LNG_URL = "https://maps.googleapis.com/maps/api/place/details/json?key=" + MAPS_API_KEY + "&placeid=";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 

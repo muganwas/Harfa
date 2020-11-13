@@ -6,6 +6,7 @@ import WaitingDialog from './WaitingDialog';
 import Config from './Config';
 import {connect} from 'react-redux';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
+import { MAPS_API_KEY } from 'react-native-dotenv';
 import { colorPrimary, colorBg, colorGray, colorYellow, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -93,7 +94,7 @@ class ProAddAddressScreen extends Component {
                     });
 
                     //Update Address to Database
-                    fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + 'AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030')
+                    fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + MAPS_API_KEY)
                         .then((response) => response.json())
                         .then((responseJson) => {
                             this.setState({
@@ -179,7 +180,7 @@ class ProAddAddressScreen extends Component {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude
                         });
-                        fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + 'AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030')
+                        fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + MAPS_API_KEY)
                             .then((response) => response.json())
                             .then((responseJson) => {
                                 this.setState({
@@ -273,7 +274,7 @@ class ProAddAddressScreen extends Component {
                             longitude: position.coords.longitude
                         });
 
-                        fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + 'AIzaSyAHu_ej6SvwW0vVbhu4A30OPayIAPFV030')
+                        fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + position.coords.latitude + ',' + position.coords.longitude + '&key=' + MAPS_API_KEY)
                             .then((response) => response.json())
                             .then((responseJson) => {
 
