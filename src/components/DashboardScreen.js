@@ -14,7 +14,8 @@ import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, colorGray } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, colorGray, black } from '../Constants/colors';
+import images from '../Constants/images';
 
 const screenWidth = Dimensions.get('window').width;
 const SERVICES_URL = Config.baseURL + 'service/getall'
@@ -116,7 +117,7 @@ class DashboardScreen extends Component {
                         shadowOpacity: 0.75,
                         shadowRadius: 5,
                         elevation: 5,
-                        backgroundColor: 'white',
+                        backgroundColor: themeRed,
                         borderRadius: 2,
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -127,10 +128,13 @@ class DashboardScreen extends Component {
                             'serviceId': item.id
                         });
                     }}>
-                    <Image style={{ width: 30, height: 30, margin: 10, zIndex: 1000 }}
-                        source={{ uri: item.image }} />
+                    { item.image ? <Image style={{ width: 40, height: 40, tintColor: white, margin: 10, zIndex: 1000 }}
+                        source={images[item.image]} /> :
+                        <Image style={{ width: 40, height: 40, margin: 10, tintColor: white, zIndex: 1000 }}
+                        source={require('../images/png/picture.png')} /> 
+                         }
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
-                        <Text style={{ textAlign: 'center', fontWeight: 'bold', color: 'black', fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
+                        <Text style={{ textAlign: 'center', fontWeight: 'bold', color: white, fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
                             {item.service_name}
                         </Text>
                     </View>
