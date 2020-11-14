@@ -136,6 +136,7 @@ class SplashScreen extends Component {
     }
 
     inhouseLogin = (userId, userType, fcmToken) => {
+        console.log(userId, userType, fcmToken)
         const { fetchPendingJobProviderInfo, fetchJobRequestHistoryPro, fetchJobRequestHistoryClient, fetchPendingJobRequest, updateProviderDetails, updateUserDetails } = this.props;
         if (userType == 'Provider') {
             fetch(PRO_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
@@ -292,7 +293,9 @@ class SplashScreen extends Component {
                     });
                 }
                 else this.inhouseLogin(userId, userType, fcmToken);
-            });
+            }).catch(e => {
+                console.log('asyncstorage error', e)
+            })
         }
         else {
             console.log("No Logged User");
