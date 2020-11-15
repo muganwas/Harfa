@@ -178,6 +178,7 @@ class SplashScreen extends Component {
                             lat: responseJson.data.lat,
                             lang: responseJson.data.lang,
                             invoice: responseJson.data.invoice,
+                            firebaseId: responseJson.data.id,
                             status: status != undefined ? status : responseJson.data.status,
                             fcmId: responseJson.data.fcm_id,
                             accountType: responseJson.data.account_type
@@ -239,6 +240,7 @@ class SplashScreen extends Component {
                             address: responseJson.data.address,
                             lat: responseJson.data.lat,
                             lang: responseJson.data.lang,
+                            firebaseId: responseJson.data.id,
                             fcmId: responseJson.data.fcm_id,
                         }
                         updateUserDetails(userData);
@@ -277,14 +279,17 @@ class SplashScreen extends Component {
     }
 
     autoLogin = (userId, userType, fcmToken) => {
+        console.log('userid', userId)
         if (userId !== null) {
             this.setState({
                 isLoading: true,
             });
             AsyncStorage.getItem('auth').then(storedInfo => {
+                console.log('stored --', storedInfo)
                 if (storedInfo) {
                     const { email, password } = JSON.parse(storedInfo);
                     firebaseAuth().signInWithEmailAndPassword(email, password).then(res => {
+                        console.log('res -- ', res)
                         this.inhouseLogin(userId, userType, fcmToken);
                     }).catch(error => {
                         SimpleToast.show('Something went wrong, try closing and reopening app');

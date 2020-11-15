@@ -50,7 +50,7 @@ class ProDialogLogout extends Component {
                 <View style={[styles.modal, { width: this.state.width - 80 }]}>
                     <View style={styles.textView}>
                         <Text style={[styles.text, { fontSize: 20 }]}> Logout! </Text>
-                        <Text style={styles.text}> Are you sure to logout? </Text>
+                        <Text style={styles.text}> Are you sure you want to logout? </Text>
                     </View>
                     <View style={styles.buttonView}>
                         <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Cancel')}

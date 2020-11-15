@@ -229,7 +229,7 @@ class ProMapDirectionScreen extends Component {
     openCompleteConfirmation = () => {
         Alert.alert(
             "COMPLETED",
-            "Are you sure to complete request ?",
+            "Are you sure?",
             [
                 {
                     text: 'Cancel',

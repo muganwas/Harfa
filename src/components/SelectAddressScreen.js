@@ -4,7 +4,7 @@ import {
   TouchableOpacity, ToastAndroid, BackHandler, StatusBar, Platform,
 } from 'react-native';
 import { MAPS_API_KEY } from 'react-native-dotenv';
-import { colorPrimary, colorYellow, colorBg, white } from '../Constants/colors';
+import { colorPrimary, colorYellow, colorBg, white, themeRed, black } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -128,7 +128,7 @@ export default class SelectAddressScreen extends Component {
           <View style={{ flex: 1, flexDirection: 'row' }}>
             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
               onPress={() => this.props.navigation.goBack()}>
-              <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+              <Image style={{ width: 20, tintColor: black, height: 20, alignSelf: 'center' }}
                 source={require('../icons/arrow_back.png')} />
             </TouchableOpacity>
             <Text style={{ color: 'white', fontWeight: 'bold', alignSelf: 'center', marginLeft: 1 }}>
@@ -137,7 +137,7 @@ export default class SelectAddressScreen extends Component {
           </View>
         </View>
         <View style={{
-          flexDirection: 'row', width: '100%', height: 70, backgroundColor: colorYellow,
+          flexDirection: 'row', width: '100%', height: 70, backgroundColor: themeRed,
           paddingLeft: 20, paddingRight: 20, paddingTop: 10, paddingBottom: 10, justifyContent: 'center',
         }}>
           <View style={{

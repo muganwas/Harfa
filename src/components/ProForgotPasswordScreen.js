@@ -5,7 +5,7 @@ import {View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
 import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Config from './Config';
-import { colorYellow, colorPrimaryDark, black, white } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white, colorGray, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const FORGOT_PASSWORD = Config.baseURL+"employee/forgot_password/email";
@@ -143,10 +143,10 @@ export default class ProForgotPasswordScreen extends Component {
                     keyboardDismissMode='on-drag'>
                          
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ height: 200, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ height: 200, width: screenWidth, backgroundColor: white, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15, }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center', }}
+                                <Image style={{ width: 20, tintColor: black, height: 20, alignSelf: 'center', }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
                             <Image
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: "#E8EEE9"
+        backgroundColor: colorGray
     },
     logincontainer: {
         flex: 1,
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
+        borderColor: themeRed,
         borderWidth: 2,
         marginBottom: 10,
         textAlign: 'center',

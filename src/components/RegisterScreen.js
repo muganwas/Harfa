@@ -29,7 +29,7 @@ import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import WaitingDialog from './WaitingDialog';
 import { cloneDeep } from 'lodash';
-import { colorYellow, colorPrimaryDark, black, white } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white, themeRed } from '../Constants/colors';
 
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
@@ -283,9 +283,11 @@ class RegisterScreen extends Component {
           });
         }).catch(error => {
           if (error.code === 'auth/email-already-in-use')
-            this.setState({ error: 'The email is already registerd.' });
-          if (error.code === 'auth/invalid-email')
-            this.setState({ error: 'That email address is invalid!' });
+            this.setState({ error: 'The email is already registerd.', isLoading: false });
+          else if (error.code === 'auth/invalid-email')
+            this.setState({ error: 'Your email address is invalid!', isLoading: false });
+          else if (error.code === 'auth/weak-password')
+            this.setState({ error: 'Your password is too weak' })
           console.log('account creation error: -', error.message);
         });
     }
@@ -328,7 +330,6 @@ class RegisterScreen extends Component {
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
-
         <KeyboardAwareScrollView
           contentContainerStyle={{
             justifyContent: 'center',
@@ -366,7 +367,7 @@ class RegisterScreen extends Component {
                     }}
                     onPress={() => this.props.navigation.goBack()}>
                     <Image
-                      style={{ width: 20, height: 20, alignSelf: 'center' }}
+                      style={{ width: 20, height: 20, tintColor: black, alignSelf: 'center' }}
                       source={require('../icons/arrow_back.png')}
                     />
                   </TouchableOpacity>
@@ -391,7 +392,7 @@ class RegisterScreen extends Component {
                     }}
                     onPress={this.selectPhoto.bind(this)}>
                     <Image
-                      style={{ width: 20, height: 20, alignSelf: 'center' }}
+                      style={{ width: 20, height: 20, tintColor: themeRed, alignSelf: 'center' }}
                       source={require('../icons/camera.png')}
                     />
                   </TouchableOpacity>
@@ -411,7 +412,7 @@ class RegisterScreen extends Component {
                   height: 50,
                   justifyContent: 'center',
                   marginBottom: 15,
-                  backgroundColor: colorPrimaryDark,
+                  backgroundColor: themeRed,
                   alignItems: 'center',
                 }}>
                 <View
@@ -423,10 +424,10 @@ class RegisterScreen extends Component {
                     marginBottom: 10,
                   }}>
                   <View style={styles.buttonPrimaryDark}>
-                    <Text style={styles.text}>Account Type</Text>
+                    <Text style={[styles.text, {fontWeight: 'bold'}]}>Account Type</Text>
                   </View>
                   <View style={styles.buttonGreen}>
-                    <Text style={styles.text}>{this.state.accountType}</Text>
+                    <Text style={[styles.text, {color: black, fontWeight: 'bold'}]}>{this.state.accountType}</Text>
                   </View>
                 </View>
               </View>
@@ -515,16 +516,6 @@ class RegisterScreen extends Component {
             </View>
           </View>
         </KeyboardAwareScrollView>
-
-        {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
-
         <Modal
           transparent={true}
           visible={this.state.isLoading}
@@ -592,7 +583,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 5,
-    borderColor: colorYellow,
+    borderColor: themeRed,
     borderWidth: 2,
     marginBottom: 10,
     textAlign: 'center',
@@ -609,12 +600,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     paddingTop: 10,
-    backgroundColor: 'green',
+    backgroundColor: white,
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 1,
-    borderColor: colorPrimaryDark,
+    borderColor: white,
     borderWidth: 0,
     textAlign: 'center',
     justifyContent: 'center',
@@ -630,7 +621,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 1,
-    borderColor: colorPrimaryDark,
+    borderColor: themeRed,
     borderWidth: 0,
     textAlign: 'center',
     justifyContent: 'center',
@@ -641,12 +632,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     paddingTop: 10,
-    backgroundColor: colorPrimaryDark,
+    backgroundColor: themeRed,
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 1,
-    borderColor: colorPrimaryDark,
+    borderColor: themeRed,
     borderWidth: 0,
     textAlign: 'center',
     justifyContent: 'center',

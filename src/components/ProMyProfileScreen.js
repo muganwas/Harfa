@@ -289,53 +289,60 @@ class ProMyProfileScreen extends Component {
         });
         const { userInfo: { providerDetails: { firebaseId } } } = this.props;
         const { fileName, path } = imageObject;
-        const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
-        userDataRef.putFile(path).then(uploadRes => {
-            const { state } = uploadRes;
-            if (state === 'success') {
-                userDataRef.getDownloadURL().then(urlResult => {
-                    let imageData = new FormData();
-                    imageData.append('image', {
-                        type: imageObject.type,
-                        uri: urlResult,
-                        name: imageObject.fileName,
-                    });
-                    fetch(PRO_IMAGE_UPDATE + proId, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            otherHeader: 'foo',
-                        },
-                        body: imageData,
+        console.log('firebase id', firebaseId)
+        if (firebaseId) {
+            const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
+            userDataRef.putFile(path).then(uploadRes => {
+                const { state } = uploadRes;
+                if (state === 'success') {
+                    userDataRef.getDownloadURL().then(urlResult => {
+                        let imageData = new FormData();
+                        imageData.append('image', {
+                            type: imageObject.type,
+                            uri: urlResult,
+                            name: imageObject.fileName,
+                        });
+                        fetch(PRO_IMAGE_UPDATE + proId, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                otherHeader: 'foo',
+                            },
+                            body: imageData,
+                        })
+                            .then(response => response.json())
+                            .then(response => {
+                                console.log('response --', response)
+                                if (response.result) {
+                                    this.setState({
+                                        isLoading: false,
+                                        isErrorToast: false,
+                                    });
+                                    this.showToast(response.message);
+                                } else {
+                                    this.setState({
+                                        isLoading: false,
+                                        isErrorToast: true,
+                                    });
+                                    this.showToast('Something went wrong');
+                                }
+                            })
+                            .catch(error => {
+                                console.log('Error :' + error);
+                                this.setState({
+                                    isLoading: false,
+                                });
+                            })
+                            .done();
                     })
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.result) {
-                                this.setState({
-                                    isLoading: false,
-                                    isErrorToast: false,
-                                });
-                                this.showToast(response.message);
-                            } else {
-                                this.setState({
-                                    isLoading: false,
-                                    isErrorToast: true,
-                                });
-                                this.showToast('Something went wrong');
-                            }
-                        })
-                        .catch(error => {
-                            console.log('Error :' + error);
-                            this.setState({
-                                isLoading: false,
-                            });
-                        })
-                        .done();
-                })
-            }
-        }).catch(error => {
-            console.log('image upload error', error.messge)
-        });
+                }
+            }).catch(error => {
+                console.log('image upload error', error.messge)
+            });
+        }
+        else {
+            this.showToast('Something went wrong');
+        }
     }
 
     showToast = message => {
@@ -405,7 +412,7 @@ class ProMyProfileScreen extends Component {
 
                             <View style={{
                                 width: screenWidth - 50, height: 50, justifyContent: 'center',
-                                marginBottom: 15, backgroundColor: themeRed, alignItems: 'center', 
+                                marginBottom: 15, backgroundColor: themeRed, alignItems: 'center',
                                 borderRadius: 5
                             }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
@@ -710,7 +717,7 @@ const styles = StyleSheet.create({
         borderColor: 'grey',
         borderRadius: 5,
         justifyContent: 'center',
-        color: 'white'
+        color: white
     },
     invoiceBorder: {
         height: 30,
@@ -729,7 +736,7 @@ const styles = StyleSheet.create({
         borderWidth: 0.1,
         justifyContent: 'center',
         alignContent: 'center',
-        color: 'white',
+        color: white,
     },
     animatedView: {
         width: screenWidth,

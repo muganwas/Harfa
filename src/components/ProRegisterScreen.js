@@ -14,7 +14,7 @@ import Axios from 'axios';
 import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import { updateProviderDetails, updateNewUserInfo } from '../Redux/Actions/userActions';
-import { colorYellow, colorPrimaryDark, black, white } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white, themeRed, colorGray } from '../Constants/colors';
 
 const storageRef = storage().ref('/employees_info');
 const screenWidth = Dimensions.get('window').width;
@@ -205,9 +205,11 @@ class ProRegisterScreen extends Component {
                     });
                 }).catch(error => {
                     if (error.code === 'auth/email-already-in-use')
-                        this.setState({ error: 'The email is already registerd.' });
-                    if (error.code === 'auth/invalid-email')
-                        this.setState({ error: 'That email address is invalid!' });
+                        this.setState({ error: 'The email is already registerd.', isLoading: false });
+                    else if (error.code === 'auth/invalid-email')
+                        this.setState({ error: 'Your email address is invalid!', isLoading: false });
+                    else if (error.code === 'auth/weak-password')
+                        this.setState({ error: 'Your password is too weak' })
                     console.log('account creation error: -', error.message);
                 });
         }
@@ -245,10 +247,10 @@ class ProRegisterScreen extends Component {
                     keyboardDismissMode='on-drag'>
 
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ flex: 0.25, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center', }}>
+                        <View style={{ flex: 0.25, width: screenWidth, backgroundColor: white, justifyContent: 'center', alignItems: 'center', }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 5, }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                <Image style={{ width: 20, height: 20, tintColor: black, alignSelf: 'center' }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
                             <Image
@@ -264,14 +266,14 @@ class ProRegisterScreen extends Component {
 
                             <View style={{
                                 width: screenWidth - 50, height: 50, justifyContent: 'center',
-                                marginBottom: 15, backgroundColor: colorPrimaryDark, alignItems: 'center'
+                                marginBottom: 15, backgroundColor: themeRed, alignItems: 'center'
                             }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                                     <View style={styles.buttonPrimaryDark}>
-                                        <Text style={styles.text}>Account Type</Text>
+                                        <Text style={[styles.text, { fontWeight: 'bold' }]}>Account Type</Text>
                                     </View>
                                     <View style={styles.buttonGreen}>
-                                        <Text style={styles.text}>{this.state.account_type}</Text>
+                                        <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>{this.state.account_type}</Text>
                                     </View>
                                 </View>
                             </View>
@@ -360,11 +362,11 @@ class ProRegisterScreen extends Component {
                                 <View style={{ flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center" }}>
                                     <TouchableOpacity style={this.state.invoice == 1 ? styles.invoiceBorder : styles.invoice}
                                         onPress={() => this.setState({ invoice: 1 })}>
-                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>Yes</Text>
+                                        <Text style={{ color: black, alignSelf: 'center', textAlignVertical: 'center', }}>Yes</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={[this.state.invoice == 0 ? styles.invoiceBorder : styles.invoice, { marginLeft: 20, }]}
                                         onPress={() => this.setState({ invoice: 0 })}>
-                                        <Text style={{ color: 'white', alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
+                                        <Text style={{ color: black, alignSelf: 'center', textAlignVertical: 'center', }}>No</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -378,16 +380,6 @@ class ProRegisterScreen extends Component {
                         </View>
                     </View>
                 </KeyboardAwareScrollView>
-
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
-
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -417,7 +409,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: "#E8EEE9"
+        backgroundColor: colorGray
     },
     logincontainer: {
         flex: .65,
@@ -430,12 +422,12 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: 'green',
+        backgroundColor: white,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 1,
-        borderColor: colorPrimaryDark,
+        borderColor: white,
         borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
@@ -446,12 +438,12 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: 'red',
+        backgroundColor: themeRed,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 1,
-        borderColor: colorPrimaryDark,
+        borderColor: themeRed,
         borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
@@ -462,12 +454,12 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: themeRed,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 1,
-        borderColor: colorPrimaryDark,
+        borderColor: themeRed,
         borderWidth: 0,
         textAlign: 'center',
         justifyContent: 'center',
@@ -557,7 +549,7 @@ const styles = StyleSheet.create({
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
+        borderColor: themeRed,
         borderWidth: 2,
         marginBottom: 25,
         textAlign: 'center',
@@ -566,7 +558,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 16,
-        color: 'white',
+        color: white,
         textAlign: 'center',
         justifyContent: 'center',
     },
@@ -576,12 +568,15 @@ const styles = StyleSheet.create({
         paddingRight: 15,
         paddingTop: 2,
         paddingBottom: 2,
-        backgroundColor: 'grey',
+        backgroundColor: white,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 1,
         borderColor: 'grey',
         borderRadius: 5,
-        borderWidth: 2,
         justifyContent: 'center',
-        color: 'white'
+        color: white
     },
     invoiceBorder: {
         height: 30,
@@ -589,13 +584,18 @@ const styles = StyleSheet.create({
         paddingRight: 15,
         paddingTop: 2,
         paddingBottom: 2,
-        backgroundColor: 'grey',
-        borderColor: colorYellow,
+        backgroundColor: white,
+        borderColor: themeRed,
+        shadowColor: themeRed,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         borderRadius: 5,
-        borderWidth: 2,
+        borderWidth: 0.1,
         justifyContent: 'center',
         alignContent: 'center',
-        color: 'white',
+        color: white,
     },
     loaderStyle: {
         position: 'absolute',

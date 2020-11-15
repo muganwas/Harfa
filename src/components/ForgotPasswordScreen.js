@@ -6,7 +6,7 @@ import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Config from './Config';
 import WaitingDialog from './WaitingDialog';
-import { colorPrimaryDark, colorYellow, black, white } from '../Constants/colors';
+import { colorPrimaryDark, colorYellow, black, white, themeRed, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const FORGOT_PASSWORD = Config.baseURL+"users/forgot_password/email";
@@ -152,10 +152,10 @@ export default class ForgotPasswordScreen extends Component {
                     keyboardDismissMode='on-drag'>
                          
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ height: 200, width: screenWidth, backgroundColor: colorYellow, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ height: 200, width: screenWidth, backgroundColor: white, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15, }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center', }}
+                                <Image style={{ width: 20, tintColor: black, height: 20, alignSelf: 'center', }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
                             <Image
@@ -172,13 +172,13 @@ export default class ForgotPasswordScreen extends Component {
 
                             <View style={{ padding: 5, }}>
                                 <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 17, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
-                                    Récupérez votre mot de passe
+                                    Recover Your Password
                                 </Text>
                             </View>
 
                             <View style={{ padding: 5, width: screenWidth-50,  }}>
                                 <Text style={{ color: 'black', fontSize: 13, marginBottom: 5, textAlign:'center' }}>
-                                    Veuillez saisir votre adresse e-mail enregistrée pour accéder à votre compte PIN
+                                    Please enter your registered Email address to access your pin account
                                 </Text>
                             </View>
 
@@ -195,7 +195,7 @@ export default class ForgotPasswordScreen extends Component {
                             <TouchableOpacity style={styles.buttonContainer}
                                 onPress={this.checkValidation}>
                                 <Text style={styles.text}>
-                                    Soumettre
+                                    Submit
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: "#E8EEE9"
+        backgroundColor: colorGray
     },
     logincontainer: {
         flex: 1,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
+        borderColor: themeRed,
         borderWidth: 2,
         marginBottom: 10,
         textAlign: 'center',
