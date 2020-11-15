@@ -125,7 +125,8 @@ class DashboardScreen extends Component {
                     onPress={() => {
                         this.props.navigation.navigate("ListOfProviders", {
                             'serviceName': item.service_name,
-                            'serviceId': item.id
+                            'serviceId': item.id,
+                            'image': item.image
                         });
                     }}>
                     { item.image ? <Image style={{ width: 40, height: 40, tintColor: white, margin: 10, zIndex: 1000 }}

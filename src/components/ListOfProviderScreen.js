@@ -20,7 +20,8 @@ import database from '@react-native-firebase/database';
 import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
 import { getDistance, imageExists } from '../misc/helpers';
-import { colorPrimaryDark, colorYellow, colorBg, white } from '../Constants/colors';
+import images from '../Constants/images';
+import { colorYellow, colorBg, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -247,7 +248,7 @@ class ListOfProviderScreen extends Component {
                   borderRadius: 100,
                   alignSelf: 'center',
                 }}
-                source={{ uri: item.image }}
+                source={item.image ? { uri: item.image } : require('../images/generic_avatar.png')}
               />
 
               <View style={{ backgroundColor: 'white', marginTop: 5 }}>
@@ -288,7 +289,7 @@ class ListOfProviderScreen extends Component {
                     fontSize: 14,
                   }}>
                   {' '}
-                    loin de vous
+                    From you
                 </Text>
               </Text>
             </View>
@@ -347,10 +348,10 @@ class ListOfProviderScreen extends Component {
 
   render() {
     const { showClasses } = this.state;
+    const categoryImage = this.props.navigation.getParam('image', null);
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
-
         <View style={styles.header}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity
@@ -418,28 +419,23 @@ class ListOfProviderScreen extends Component {
                 width: 100,
                 height: 100,
                 borderRadius: 100,
-                backgroundColor: colorYellow,
+                backgroundColor: themeRed,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Image
+              { categoryImage ? <Image
+                style={{ width: 50, height: 50, tintColor: white }}
+                source={images[categoryImage]}
+              /> : <Image
                 style={{ width: 50, height: 50 }}
                 source={require('../icons/service_provider_tool.png')}
-              />
+              /> }
             </View>
             <Text style={{ fontSize: 18, marginTop: 10 }}>
-              Aucun fournisseur trouvé
+              No provider found
             </Text>
           </View>
         )}
-        {/* {this.state.isLoading && (
-                <View style={styles.loaderStyle}>
-                    <ActivityIndicator
-                        style={{ height: 80 }}
-                        color="#C00"
-                        size="large" />
-                </View>
-            )} */}
         <Modal
           transparent={true}
           visible={this.state.isLoading}
@@ -464,7 +460,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     flexDirection: 'row',
-    backgroundColor: colorYellow,
+    backgroundColor: themeRed,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
