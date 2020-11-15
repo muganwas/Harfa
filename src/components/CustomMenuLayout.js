@@ -3,8 +3,7 @@ import React, { Component } from 'react';
 import { StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
 import { connect } from 'react-redux';
 import { notificationsFetched } from '../Redux/Actions/notificationActions';
-import {DrawerActions} from 'react-navigation-drawer';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { DrawerActions } from 'react-navigation-drawer';
 import DialogLogout from './DialogLogout';
 import { colorGray, themeRed, white } from '../Constants/colors'
 
@@ -14,9 +13,9 @@ class CustomMenuLayout extends Component {
         super();
         const { userInfo: { userDetails } } = props;
         this.state = {
-           image: userDetails.image,
-           name: userDetails.username,
-           isDialogLogoutVisible: false,
+            image: userDetails.image,
+            name: userDetails.username,
+            isDialogLogoutVisible: false,
         };
     };
 
@@ -29,87 +28,101 @@ class CustomMenuLayout extends Component {
 
     render() {
         const { userInfo: { userDetails } } = this.props;
-        const imageSource = userDetails.image; 
+        const imageSource = userDetails.image;
         const { notificationsInfo, fetchedNotifications } = this.props;
         return (
-            <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
-                <TouchableOpacity activeOpacity={1} style={styles.drawer} disabled={false}>
+            <View activeOpacity={1} style={styles.drawerTransparent}>
+                <View activeOpacity={1} style={styles.drawer} >
                     <ScrollView>
                         <View style={styles.header}>
-                            <Image source={imageSource ? {uri: imageSource} : require('../images/generic_avatar.png')} style={styles.headerImage}/>
-                            <Text style={[styles.textHeader, {color: 'white'}]}>{userDetails.username}</Text>
+                            <Image source={imageSource ? { uri: imageSource } : require('../images/generic_avatar.png')} style={styles.headerImage} />
+                            <Text style={[styles.textHeader, { color: 'white' }]}>{userDetails.username}</Text>
                         </View>
 
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() => { 
+                        <TouchableHighlight
+                            underlayColor={'rgba(0,0,0,0.2)'}
+                            style={styles.menuButton}
+                            onPress={() => {
                                 this.props.navigation.navigate("Dashboard")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                             }}>
                             <View style={styles.row}>
-                               <Image source={require('../icons/ic_home_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Dashboard</Text>
+                                <Image source={require('../icons/ic_home_64dp.png')} style={styles.menuImage} />
+                                <Text style={styles.textMenu}>Dashboard</Text>
                             </View>
                         </TouchableHighlight>
 
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
+                        <TouchableHighlight
+                            underlayColor={'rgba(0,0,0,0.2)'}
+                            style={styles.menuButton}
                             onPress={() => {
                                 this.props.navigation.navigate("MyProfile")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                             }}>
                             <View style={styles.row}>
-                               <Image source={require('../icons/ic_user_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>My Profile</Text>
+                                <Image source={require('../icons/ic_user_64dp.png')} style={styles.menuImage} />
+                                <Text style={styles.textMenu}>My Profile</Text>
                             </View>
                         </TouchableHighlight>
 
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
-                            onPress={() => { 
+                        <TouchableHighlight
+                            underlayColor={'rgba(0,0,0,0.2)'}
+                            style={styles.menuButton}
+                            onPress={() => {
                                 this.props.navigation.navigate("Booking")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
                             }}>
                             <View style={styles.row}>
-                               <Image source={require('../icons/booking_history.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Bookings</Text>
+                                <Image source={require('../icons/booking_history.png')} style={styles.menuImage} />
+                                <Text style={styles.textMenu}>Bookings</Text>
                             </View>
                         </TouchableHighlight>
 
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
+                        <TouchableHighlight
+                            underlayColor={'rgba(0,0,0,0.2)'}
+                            style={styles.menuButton}
                             onPress={() => {
-                                fetchedNotifications({type: 'generic', value: 0});
+                                fetchedNotifications({ type: 'generic', value: 0 });
                                 this.props.navigation.navigate("Notifications")
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
-                                }}>
+                            }}>
                             <View style={styles.row}>
-                               <Image source={require('../icons/ic_notification.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Notifications</Text>
-                                { notificationsInfo.generic > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.generic}</Text> : null }
+                                <Image source={require('../icons/ic_notification.png')} style={styles.menuImage} />
+                                <Text style={styles.textMenu}>Notifications</Text>
+                                {notificationsInfo.generic > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.generic}</Text> : null}
                             </View>
                         </TouchableHighlight>
 
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
+                        <TouchableHighlight
+                            underlayColor={'rgba(0,0,0,0.2)'}
+                            style={styles.menuButton}
                             onPress={() => {
-                                fetchedNotifications({type: 'messages', value: 0});
+                                fetchedNotifications({ type: 'messages', value: 0 });
                                 this.props.navigation.navigate('AllMessage')
                                 this.props.navigation.dispatch(DrawerActions.closeDrawer())
-                                }}>
+                            }}>
                             <View style={styles.row}>
-                               <Image source={require('../icons/message.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Messages</Text>
-                                { notificationsInfo.messages > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.messages}</Text> : null }
+                                <Image source={require('../icons/message.png')} style={styles.menuImage} />
+                                <Text style={styles.textMenu}>Messages</Text>
+                                {notificationsInfo.messages > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.messages}</Text> : null}
                             </View>
                         </TouchableHighlight>
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
+                        <TouchableHighlight
+                            underlayColor={'rgba(0,0,0,0.2)'}
+                            style={styles.menuButton}
                             onPress={() => this.props.navigation.navigate("ContactUs")}>
                             <View style={styles.row}>
-                               <Image source={require('../icons/ic_contact_us_64dp.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Contact Us</Text>
+                                <Image source={require('../icons/ic_contact_us_64dp.png')} style={styles.menuImage} />
+                                <Text style={styles.textMenu}>Contact Us</Text>
                             </View>
                         </TouchableHighlight>
-                        <TouchableHighlight underlayColor={'rgba(0,0,0,0.2)'}
+                        <TouchableHighlight
+                            underlayColor={'rgba(0,0,0,0.2)'}
+                            style={styles.menuButton}
                             onPress={() => this.changeDialogVisibility(true)}>
                             <View style={styles.row}>
-                               <Image source={require('../icons/ic_logout.png')} style={styles.menuImage}/>
-                               <Text style={styles.textMenu}>Log out</Text>
+                                <Image source={require('../icons/ic_logout.png')} style={styles.menuImage} />
+                                <Text style={styles.textMenu}>Log out</Text>
                             </View>
                         </TouchableHighlight>
 
@@ -119,9 +132,9 @@ class CustomMenuLayout extends Component {
                         </Modal>
 
                     </ScrollView>
-                </TouchableOpacity>
-            </TouchableOpacity>
-        );   
+                </View>
+            </View>
+        );
     }
 }
 
@@ -172,16 +185,26 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 5,
     },
-    menuImage:{
+    menuImage: {
         width: 20,
         height: 20,
+        tintColor: white,
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: 5,
     },
+    menuButton: {
+        backgroundColor: themeRed, 
+        marginVertical: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
+    },
     textMenu: {
         fontSize: 16,
-        color: '#111',
+        color: white,
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: 10,
@@ -189,7 +212,7 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: 'row',
         paddingVertical: 15,
-        paddingLeft: 10, 
+        paddingLeft: 10,
     },
     line: {
         width: '90%',
