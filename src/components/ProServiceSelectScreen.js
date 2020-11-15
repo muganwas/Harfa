@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import {
-  Text, StyleSheet, View, Image, ActivityIndicator, TouchableOpacity,
+  Text, StyleSheet, View, ScrollView, Image, ActivityIndicator, TouchableOpacity,
   ToastAndroid, StatusBar, Platform
 } from 'react-native';
 import CheckBox from 'react-native-check-box';
 import Config from './Config';
-import { colorYellow, colorPrimaryDark, colorBg, colorPrimary, white } from '../Constants/colors';
+import images from '../Constants/images'
+import { colorBg, colorPrimary, white, themeRed, black, colorGray } from '../Constants/colors';
 
 const SERVICES_URL = Config.baseURL + 'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
@@ -57,17 +58,17 @@ export default class ProServiceSelectScreen extends Component {
 
   renderItem = (item, index) => {
     return (
-      <View key={index} style={styles.header}>
+      <View key={index} style={[styles.header, { alignItems: 'center', marginVertical: 1.5, backgroundColor: themeRed }]}>
         <View
-          style={styles.touchaleHighlight}>
-          <Image style={{ width: 25, height: 25 }}
-            source={{ uri: item.image }} />
+          style={[styles.touchaleHighlight, { justifyContent: 'center', alignItems: 'center'}]}>
+          <Image style={{ width: 25, tintColor: white, height: 25 }}
+            source={images[item.image]} />
         </View>
         <Text style={styles.textHeader}> {item.service_name}</Text>
-
         <View style={{ flex: 1, justifyContent: 'center', alignContent: 'center' }}>
           <CheckBox style={{ alignSelf: 'flex-end', marginRight: 20, }}
             isChecked={this.state.selectedServiceId.includes(item.id) ? true : false}
+            checkBoxColor={white}
             onClick={() => this.onCheckBoxPress(item.id, item.service_name)} />
         </View>
       </View>
@@ -114,19 +115,19 @@ export default class ProServiceSelectScreen extends Component {
           <View style={{ flex: 1, flexDirection: 'row' }}>
             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
               onPress={() => this.props.navigation.goBack()}>
-              <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+              <Image style={{ width: 20, height: 20, tintColor: black, alignSelf: 'center' }}
                 source={require('../icons/arrow_back.png')} />
             </TouchableOpacity>
 
-            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
+            <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
               Services
               </Text>
           </View>
         </View>
 
-        <View style={styles.gridView}>
+        <ScrollView style={styles.gridView}>
           {this.state.dataSource.map(this.renderItem)}
-        </View>
+        </ScrollView>
 
         <View style={{ width: '100%', justifyContent: 'center', alignItems: 'center' }}>
           <TouchableOpacity style={styles.buttonContainer}
@@ -160,23 +161,24 @@ const styles = StyleSheet.create({
     height: 50,
     flexDirection: 'row',
     backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowColor: colorGray,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
   },
   touchaleHighlight: {
-    width: 50,
-    height: 50,
-    borderRadius: 50,
+    width: 40,
+    height: 40,
+    borderRadius: 35,
     alignItems: 'flex-start',
     justifyContent: 'center',
     marginLeft: 15,
   },
   textHeader: {
     fontSize: 14,
-    color: 'black',
+    color: white,
+    fontWeight: 'bold',
     textAlignVertical: 'center',
     alignSelf: 'center',
   },
@@ -192,7 +194,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 5,
-    borderColor: colorYellow,
+    borderColor: themeRed,
     borderWidth: 2,
     marginBottom: 10,
     textAlign: 'center',

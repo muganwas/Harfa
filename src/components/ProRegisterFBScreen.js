@@ -237,7 +237,6 @@ class ProRegisterFBScreen extends Component {
                                 <Image style={{ width: 20, tintColor: black, height: 20 }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
-
                             <Image
                                 style={{ width: 170, height: 170 }}
                                 source={require('../images/kuchapa_logo.png')} resizeMode="contain" />
