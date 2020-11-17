@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { colorYellow, colorGray } from '../Constants/colors';
+import { colorYellow, lightGray } from '../Constants/colors';
 const screenWidth = Dimensions.get('window').width;
 
 const style = StyleSheet.create({
@@ -42,7 +42,7 @@ const style = StyleSheet.create({
     itemLeftChatContainer: {
         maxWidth: (screenWidth / 2) + 30,
         flexDirection: 'row',
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 10,
         borderRadius: 5,
         alignContent: 'center'

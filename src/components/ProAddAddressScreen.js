@@ -7,7 +7,7 @@ import Config from './Config';
 import {connect} from 'react-redux';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 import { MAPS_API_KEY } from 'react-native-dotenv';
-import { colorPrimary, colorBg, colorGray, colorYellow, white } from '../Constants/colors';
+import { colorPrimary, colorBg, lightGray, colorYellow, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -408,7 +408,7 @@ class ProAddAddressScreen extends Component {
                         width: screenWidth - 40, flexDirection: 'row', backgroundColor: 'white',
                         alignContent: 'center', padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, marginTop: 15}}>
-                        <Text style={{ color: colorGray, fontWeight: 'bold', fontSize: 16 }}>
+                        <Text style={{ color: lightGray, fontWeight: 'bold', fontSize: 16 }}>
                             {this.state.address}
                         </Text>
                     </View>

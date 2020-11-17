@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { notificationsFetched } from '../Redux/Actions/notificationActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import ProDialogLogout from './ProDialogLogout';
-import { colorGray, themeRed, white } from '../Constants/colors';
+import { lightGray, themeRed, white } from '../Constants/colors';
 
 class CustomMenuLayout extends Component {
     constructor(props) {
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     drawer: {
         flex: 1,
         width: '100%',
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
     },
     menuNotifications: {
         position: 'absolute',

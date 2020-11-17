@@ -14,7 +14,7 @@ import Config from './Config';
 import moment from 'moment';
 import { chatDate } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
-import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorYellow, lightGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;
@@ -377,7 +377,7 @@ class ChatScreen extends Component {
                         </View>
                     )}
                     <View style={[styles.footer, { minHeight: requestStatus === 'Pending' ? 120 : 50 }]}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                         {requestStatus === 'Pending' ? <View style={{
                             flex: 1, width: screenWidth, justifyContent: 'center',
                             backgroundColor: 'white', alignItems: 'center'
@@ -409,7 +409,7 @@ class ChatScreen extends Component {
                                 flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
                                 borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
                             }}>
-                                <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                                <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                                 <TouchableOpacity style={styles.textViewDirection}
                                     onPress={() => this.props.navigation.navigate("MapDirection", {
                                         "titlePage": "ProviderDetails"
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     itemLeftChatContainer: {
         maxWidth: (screenWidth / 2) + 30,
         flexDirection: 'row',
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 10,
         borderRadius: 5,
         alignContent: 'center'

@@ -15,7 +15,7 @@ import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userA
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { cloneDeep } from 'lodash';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { colorGray, colorGreen, colorRed, colorYellow, colorPrimaryDark, colorBg, white } from '../Constants/colors';
+import { lightGray, colorGreen, colorRed, colorYellow, colorPrimaryDark, colorBg, white } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -462,7 +462,7 @@ class ProviderDetailsScreen extends Component {
             <Text>
               {this.state.address}
             </Text>
-            <Text style={{ borderRadius: 5, borderColor: colorGray, borderWidth: 1, padding: 5, marginTop: 5 }}>{this.state.description}</Text>
+            <Text style={{ borderRadius: 5, borderColor: lightGray, borderWidth: 1, padding: 5, marginTop: 5 }}>{this.state.description}</Text>
           </View>
         </View>
 
@@ -498,7 +498,7 @@ class ProviderDetailsScreen extends Component {
                 flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
                 borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
               }}>
-                <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                 <TouchableOpacity style={styles.textViewDirection}
                   onPress={this.goToMapDirection}>
                   <Image style={{ width: 20, height: 20, marginLeft: 20 }}

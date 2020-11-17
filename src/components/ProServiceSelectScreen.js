@@ -6,7 +6,7 @@ import {
 import CheckBox from 'react-native-check-box';
 import Config from './Config';
 import images from '../Constants/images'
-import { colorBg, colorPrimary, white, themeRed, black, colorGray } from '../Constants/colors';
+import { colorBg, colorPrimary, white, themeRed, black, lightGray } from '../Constants/colors';
 
 const SERVICES_URL = Config.baseURL + 'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     height: 50,
     flexDirection: 'row',
     backgroundColor: 'white',
-    shadowColor: colorGray,
+    shadowColor: lightGray,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
     shadowRadius: 5,

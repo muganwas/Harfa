@@ -13,7 +13,7 @@ import moment from 'moment';
 import { chatDate } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
 import Config from './Config';
-import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black } from '../Constants/colors';
 import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;
@@ -284,7 +284,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
                         </View>
                     </ScrollView>
                     <View style={styles.footer}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
                                 placeholder='Type a message'
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     itemLeftChatContainer: {
         maxWidth: (screenWidth / 2) + 30,
         flexDirection: 'row',
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 10,
         borderRadius: 5,
         alignContent: 'center'

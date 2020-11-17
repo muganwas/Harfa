@@ -6,7 +6,7 @@ import Notifications from './Notifications';
 import Toast from 'react-native-simple-toast';
 import Config from './Config';
 import Hamburger from './ProHamburger';
-import { colorGray, colorYellow, colorPrimaryDark, colorBg, white, themeRed } from '../Constants/colors';
+import { lightGray, colorYellow, colorPrimaryDark, colorBg, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-employee-notification/";
@@ -148,7 +148,7 @@ class ProNotificationsScreen extends Component {
                         <Text style={{ color: 'black', fontSize: 14, marginTop: 5, alignSelf: 'center' }}>
                             {item.title}
                         </Text>
-                        <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 5, }}>
+                        <Text style={{ fontWeight: 'bold', color: lightGray, fontSize: 10, marginTop: 5, }}>
                             {item.date}
                         </Text>
                     </View>
@@ -174,7 +174,7 @@ class ProNotificationsScreen extends Component {
                 }
 
                 {this.state.isNoData &&
-                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: colorGray, justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: lightGray, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: themeRed, justifyContent: 'center', alignItems: 'center' }}>
                             <Image style={{ width: 50, height: 50, tintColor: white }}
                                 source={require('../icons/ic_notification.png')} />
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 5,
     },
     animatedView: {

@@ -14,7 +14,7 @@ import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, colorGray, black } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, lightGray, black } from '../Constants/colors';
 import images from '../Constants/images';
 
 const screenWidth = Dimensions.get('window').width;
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     },
     gridView: {
         flex: 1,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 5,
     },
     open: {

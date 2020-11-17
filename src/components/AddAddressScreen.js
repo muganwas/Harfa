@@ -5,7 +5,7 @@ import Geolocation from 'react-native-geolocation-service';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import { updateUserDetails } from '../Redux/Actions/userActions';
-import { colorPrimary, colorBg, colorGray, colorYellow, white } from '../Constants/colors';
+import { colorPrimary, colorBg, lightGray, colorYellow, white } from '../Constants/colors';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import Config from './Config';
 
@@ -418,7 +418,7 @@ class AddAddressScreen extends Component {
                         width: screenWidth - 40, flexDirection: 'row', backgroundColor: 'white',
                         alignContent: 'center', padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, marginTop: 15}}>
-                        <Text style={{ color: colorGray, fontWeight: 'bold', fontSize: 16 }}>
+                        <Text style={{ color: lightGray, fontWeight: 'bold', fontSize: 16 }}>
                             {this.state.address}
                         </Text>
                     </View>

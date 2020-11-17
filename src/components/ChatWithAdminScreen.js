@@ -6,7 +6,7 @@ import {
 import { connect } from 'react-redux';
 import database from '@react-native-firebase/database';
 import { chatDate } from '../misc/helpers';
-import { colorPrimary, colorPrimaryDark, colorBg, colorGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, lightGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import Config from './Config';
 
 const screenWidth = Dimensions.get('window').width;
@@ -254,7 +254,7 @@ class ChatWithAdminScreen extends Component {
                     </ScrollView>
 
                     <View style={styles.footer}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
                                 placeholder='Type a message'
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     itemLeftChatContainer: {
         maxWidth: (screenWidth / 2) + 30,
         flexDirection: 'row',
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 10,
         borderRadius: 5,
         alignContent: 'center'

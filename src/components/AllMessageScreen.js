@@ -11,7 +11,7 @@ import database from '@react-native-firebase/database';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 import { imageExists } from '../misc/helpers';
-import { colorGray, colorBg, colorPrimaryDark, colorPrimary, white, themeRed } from '../Constants/colors';
+import { lightGray, colorBg, colorPrimaryDark, colorPrimary, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     },
     noDataStyle: {
         height: screenHeight - 105,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',

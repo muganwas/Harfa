@@ -17,7 +17,7 @@ import Hamburger from './ProHamburger';
 import axios from 'axios';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 import storage from '@react-native-firebase/storage';
-import { colorPrimaryDark, white, themeRed, black, colorGray } from '../Constants/colors';
+import { colorPrimaryDark, white, themeRed, black, lightGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 

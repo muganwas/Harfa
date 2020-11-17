@@ -12,7 +12,7 @@ import moment from 'moment';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { imageExists, chatDate } from '../misc/helpers';
 import Config from './Config';
-import { colorPrimary, colorPrimaryDark, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import { cloneDeep } from 'lodash';
 import style from './chatStyle';
 
@@ -288,7 +288,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                         </View>
                     )}
                     <View style={styles.footer}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                        <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
                                 placeholder='Tapez un message'
@@ -308,7 +308,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                                 flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
                                 borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
                             }}>
-                                <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                                <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                                 <TouchableOpacity style={styles.textViewDirection}
                                     onPress={() => this.props.navigation.navigate("MapDirection")}>
                                     <Image style={{ width: 20, height: 20, marginLeft: 20 }}

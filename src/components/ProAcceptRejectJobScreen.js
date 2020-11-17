@@ -22,7 +22,7 @@ import {
 } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import { cloneDeep } from 'lodash';
-import { colorPrimary, colorPrimaryDark, colorYellow, colorGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorYellow, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 
 const socket = Config.socket;
 const screenWidth = Dimensions.get('window').width;
@@ -480,7 +480,7 @@ class ProAcceptRejectJobScreen extends Component {
                             </View>
                         </View>
                     }
-                    <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                    <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                     <View style={{ flex: 1, flexDirection: 'row' }}>
                         <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
                             placeholder='Tapez un message'
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     itemLeftChatContainer: {
         maxWidth: (screenWidth / 2) + 30,
         flexDirection: 'row',
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 10,
         borderRadius: 5,
         alignContent: 'center'

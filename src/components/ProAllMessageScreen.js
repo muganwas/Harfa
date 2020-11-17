@@ -12,7 +12,7 @@ import Hamburger from './ProHamburger';
 import { imageExists } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, colorYellow, white, themeRed, colorGray } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, colorYellow, white, themeRed, lightGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 5,
     },
     itemMainContainer: {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     },
     noDataStyle: {
         height: screenHeight - 105,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',

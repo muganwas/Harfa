@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Platform, StatusBar, BackHandler} from 'react-native';
-import { black, colorPrimary, white, themeRed, colorGray } from '../Constants/colors';
+import { black, colorPrimary, white, themeRed, lightGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -87,7 +87,7 @@ export default class ContactUsScreen extends Component{
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colorGray ,
+        backgroundColor: lightGray ,
     },
     mainContainer: {
         backgroundColor: white,

@@ -5,7 +5,7 @@ import {View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
 import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
 import Config from './Config';
-import { colorYellow, colorPrimaryDark, black, white, colorGray, themeRed } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white, lightGray, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const FORGOT_PASSWORD = Config.baseURL+"employee/forgot_password/email";
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colorGray
+        backgroundColor: lightGray
     },
     logincontainer: {
         flex: 1,

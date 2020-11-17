@@ -14,7 +14,7 @@ import Axios from 'axios';
 import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import { updateProviderDetails, updateNewUserInfo } from '../Redux/Actions/userActions';
-import { colorYellow, colorPrimaryDark, black, white, themeRed, colorGray } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white, themeRed, lightGray } from '../Constants/colors';
 
 const storageRef = storage().ref('/employees_info');
 const screenWidth = Dimensions.get('window').width;
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colorGray
+        backgroundColor: lightGray
     },
     logincontainer: {
         flex: .65,

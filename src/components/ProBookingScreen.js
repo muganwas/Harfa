@@ -11,7 +11,7 @@ import ViewPager from "@react-native-community/viewpager";
 import Config from './Config';
 import Hamburger from './ProHamburger';
 import { font_size } from '../Constants/metrics';
-import { colorPrimary, colorPrimaryDark, colorBg, white, themeRed, black, colorGray } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, white, themeRed, black, lightGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 5,
     },
     itemContainer: {

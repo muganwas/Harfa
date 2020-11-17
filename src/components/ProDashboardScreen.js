@@ -25,7 +25,7 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorBg, colorYellow, colorPrimaryDark, colorGray, white, themeRed } from '../Constants/colors';
+import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -793,7 +793,7 @@ class ProDashboardScreen extends Component {
                 </View>
 
                 <ScrollView
-                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80, backgroundColor: colorGray }}
+                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80, backgroundColor: lightGray }}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
@@ -840,7 +840,7 @@ class ProDashboardScreen extends Component {
                                         </TouchableOpacity>
                                     }
                                 </View>
-                                <View style={{ width: screenWidth, height: 1, backgroundColor: colorGray }}></View>
+                                <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                                 <View style={{ flexDirection: 'row', padding: 10, justifyContent: 'center' }}>
                                     <Text style={{ flex: 1, fontSize: 12, fontWeight: 'bold', textAlign: 'center' }}>Job's Name</Text>
                                     <Text style={{ flex: 1, fontSize: 12, fontWeight: 'bold', textAlign: 'center' }}>Status</Text>
@@ -849,7 +849,10 @@ class ProDashboardScreen extends Component {
                                 </View>
 
                                 <View style={styles.listView}>
-                                    {dataWorkSource.map(this.renderWorkItem)}
+                                    { dataWorkSource && dataWorkSource.length > 0 ? dataWorkSource.map(this.renderWorkItem) :
+                                    <View style={{padding: 15}}>
+                                        <Text style={{fontStyle: 'italic', color: darkGray}}>You haven't completed any jobs yet.</Text>
+                                    </View> }
                                 </View>
                             </View>
                         }

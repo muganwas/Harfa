@@ -14,7 +14,7 @@ import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
-import { colorYellow, colorPrimaryDark, colorBg, colorGray, white, themeRed } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, colorBg, lightGray, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -159,7 +159,7 @@ class NotificationsScreen extends Component {
                         <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
                             {item.message}
                         </Text>
-                        <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
+                        <Text style={{ fontWeight: 'bold', color: lightGray, fontSize: 10, marginTop: 2, }}>
                             {item.createdDate}
                         </Text>
                     </View>
@@ -193,7 +193,7 @@ class NotificationsScreen extends Component {
                     </View>
                 }
                 {this.state.isNoData && (
-                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: colorGray, justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: lightGray, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: themeRed, justifyContent: 'center', alignItems: 'center' }}>
                             <Image style={{ width: 50, height: 50, tintColor: white }}
                                 source={require('../icons/ic_notification.png')} />
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 5,
     },
     animatedView: {

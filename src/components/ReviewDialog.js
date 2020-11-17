@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {StyleSheet, Text, View, Dimensions, TouchableOpacity, TouchableHighlight, Image, TextInput} from 'react-native'
 import { AirbnbRating } from 'react-native-ratings';
-import { colorGray, colorYellow, colorBg } from '../Constants/colors';
+import { lightGray, colorYellow, colorBg } from '../Constants/colors';
 
 
 export default class DialogReview extends Component {
@@ -45,7 +45,7 @@ export default class DialogReview extends Component {
             <View style={[styles.modal, {width: this.state.width - 80}]}>
                 <View style={styles.textView}>
                     <Text style={[styles.text, {fontSize: 20}]}> Review </Text>
-                    <View style={{width: this.state.width-100, height: 1, backgroundColor: colorGray}}></View>
+                    <View style={{width: this.state.width-100, height: 1, backgroundColor: lightGray}}></View>
                     
                     <Image style={{width: 45, height: 45, borderRadius: 100, marginTop: 15}}
                         source={{uri: this.state.data.user_details.image}}>

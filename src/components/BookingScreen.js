@@ -11,7 +11,7 @@ import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
 import { font_size } from '../Constants/metrics';
-import { colorBg, colorPrimaryDark, colorPrimary, white, themeRed, black, colorGray } from '../Constants/colors';
+import { colorBg, colorPrimaryDark, colorPrimary, white, themeRed, black, lightGray } from '../Constants/colors';
 
 
 const screenWidth = Dimensions.get('window').width;
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     },
     viewPager: {
         flex: 1,
-        backgroundColor: colorGray
+        backgroundColor: lightGray
     },
     pageStyle: {
         alignItems: 'center',
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
-        backgroundColor: colorGray,
+        backgroundColor: lightGray,
         padding: 5,
     },
     itemContainer: {

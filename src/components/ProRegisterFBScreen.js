@@ -10,7 +10,7 @@ import WaitingDialog from './WaitingDialog';
 import messaging from '@react-native-firebase/messaging';
 import Axios from 'axios';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
-import { colorYellow, colorPrimaryDark, black, white, colorGray, themeRed } from '../Constants/colors';
+import { colorYellow, colorPrimaryDark, black, white, lightGray, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colorGray
+        backgroundColor: lightGray
     },
     logincontainer: {
         flex: .65,
