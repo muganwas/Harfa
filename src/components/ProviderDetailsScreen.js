@@ -5,7 +5,6 @@ import {
   Linking, Alert, BackHandler, StatusBar, Platform
 } from 'react-native';
 import { AirbnbRating } from 'react-native-ratings';
-import { NavigationEvents } from 'react-navigation';
 import Toast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
 import Config from './Config';
@@ -15,7 +14,7 @@ import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userA
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { cloneDeep } from 'lodash';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { lightGray, colorGreen, colorRed, colorYellow, colorPrimaryDark, colorBg, white } from '../Constants/colors';
+import { lightGray, colorGreen, colorRed, colorYellow, themeRed, colorBg, white, black, darkGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -269,7 +268,6 @@ class ProviderDetailsScreen extends Component {
   initialRender = () => {
     const { navigation, generalInfo: { OnlineUsers } } = this.props;
     const liveChatStatus = OnlineUsers[navigation.state.params.providerId] ? OnlineUsers[navigation.state.params.providerId].status : "0";
-    console.log('distance -- ', navigation.state.params.distance)
     this.setState({
       providerId: navigation.state.params.providerId,
       name: navigation.state.params.name,
@@ -281,8 +279,8 @@ class ProviderDetailsScreen extends Component {
       distance: navigation.state.params.distance,
       address: navigation.state.params.address,
       description: navigation.state.params.description,
-      status: navigation.state.params.status,
-      online: navigation.state.params.status === "1" && liveChatStatus === "1",
+      status: navigation.state.params && navigation.state.params.status,
+      online: navigation.state.params && navigation.state.params.status === "1" && liveChatStatus === "1",
       liveChatStatus,
       fcmId: navigation.state.params.fcmId,
       accountType: navigation.state.params.accountType,
@@ -309,7 +307,7 @@ class ProviderDetailsScreen extends Component {
 
     userRef.on('child_changed', result => {
       if (result && result.key === "status" && providerId) {
-        if (onlineUsers[providerId] && result.val() === '1') this.setState({ status: onlineUsers[providerId].status });
+        if (onlineUsers[providerId] && result.val() === '1') this.setState({ status: onlineUsers[providerId] && onlineUsers[providerId].status });
         else this.setState({ status: result.val() });
       } else console.log('provider id unavailable')
     });
@@ -319,7 +317,7 @@ class ProviderDetailsScreen extends Component {
         const { status } = data.val();
         if (providerId) {
           if (onlineUsers[providerId]) {
-            if (status === onlineUsers[providerId].status) this.setState({ status: onlineUsers[providerId].status });
+            if (onlineUsers[providerId] && status === onlineUsers[providerId].status) this.setState({ status: onlineUsers[providerId] && onlineUsers[providerId].status });
             else {
               this.setState({ status: status });
             }
@@ -359,7 +357,7 @@ class ProviderDetailsScreen extends Component {
       lang: providerData.lang,
       service_name: this.state.serviceName,
       chat_status: data.chat_status,
-      status: data.status,
+      status: data && data.status,
       delivery_address: userDetails.address,
       delivery_lat: userDetails.lat,
       delivery_lang: userDetails.lang,
@@ -404,35 +402,32 @@ class ProviderDetailsScreen extends Component {
               <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
                 source={require('../icons/arrow_back.png')} />
             </TouchableOpacity>
-
-            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
+            <Text style={{ color: white, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
               Provider Details
               </Text>
           </View>
         </View>
 
         <View style={{
-          width: '100%', height: 50, flexDirection: 'row', backgroundColor: colorYellow, shadowColor: '#000',
+          width: '100%', height: 50, flexDirection: 'row', backgroundColor: white, shadowColor: '#000',
           shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
         }}>
-
           <View style={styles.textView}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white', textAlignVertical: 'center' }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: black, textAlignVertical: 'center' }}>
               {this.state.name}
             </Text>
           </View>
-
           <View style={styles.onlineOfflineView}>
-            <View style={[styles.onlineOfflineText, { backgroundColor: this.state.online ? colorGreen : colorRed }]}>
-              <Text style={{ color: 'white', fontWeight: 'bold', }}>
-                {this.state.online ? "ONLINE" : "OFFLINE"}</Text>
-            </View>
+            <View style={[styles.onlineOfflineDisplay, { backgroundColor: this.state.online ? colorGreen : colorRed }]} />
+            <Text style={{ color: black, }}>
+              {this.state.online ? "Online" : "Offline"}
+            </Text>
           </View>
         </View>
 
         <View style={{
           width: screenWidth, flexDirection: 'row', backgroundColor: 'white', alignContent: 'center',
-          paddingTop: 25, paddingBottom: 25, paddingLeft: 5, paddingRight: 5
+          paddingTop: 10, paddingBottom: 25, paddingLeft: 5, paddingRight: 5
         }}>
 
           <View style={{ flexDirection: 'column', marginLeft: 10 }}>
@@ -450,19 +445,23 @@ class ProviderDetailsScreen extends Component {
                 onFinishRating={this.ratingCompleted} />
             </View>
           </View>
-
-          <View style={{ width: screenWidth - 120, flexDirection: 'column', marginLeft: 10, }}>
+          <View style={{ flexDirection: 'column', marginLeft: 20 }}>
             <Text>
-              Account Type : {this.state.accountType}
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>Account Type: </Text>
+              <Text>{this.state.accountType}</Text>
             </Text>
             <Text>
-              <Text style={{ fontWeight: 'bold' }}>{this.state.distance + " Km"}</Text>
-              <Text> away from you</Text>
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>Distance from you: </Text>
+              <Text>{this.state.distance + " Km"}</Text>
             </Text>
             <Text>
-              {this.state.address}
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>Address: </Text>
+              <Text>{this.state.address}</Text>
             </Text>
-            <Text style={{ borderRadius: 5, borderColor: lightGray, borderWidth: 1, padding: 5, marginTop: 5 }}>{this.state.description}</Text>
+            <Text>
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>Self Description: </Text>
+              <Text>{this.state.description}</Text>
+            </Text>
           </View>
         </View>
 
@@ -470,8 +469,8 @@ class ProviderDetailsScreen extends Component {
           <View style={styles.bottomView}>
             <TouchableOpacity style={styles.buttonContainer}
               onPress={this.requestForBooking}>
-              <Text style={styles.text}>
-                Request
+                <Text style={styles.text}>
+                  Send Request
                 </Text>
             </TouchableOpacity>
           </View>
@@ -505,7 +504,7 @@ class ProviderDetailsScreen extends Component {
                     source={require('../icons/mobile_gps.png')} />
                   <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
                     Track Service Provider
-              </Text>
+                  </Text>
                   <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
                     source={require('../icons/right_arrow.png')} />
                 </TouchableOpacity>
@@ -597,7 +596,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     flexDirection: 'row',
-    backgroundColor: colorYellow,
+    backgroundColor: themeRed,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.75,
@@ -630,23 +629,23 @@ const styles = StyleSheet.create({
 
   onlineOfflineView: {
     flex: 1,
-    height: 50,
+    flexDirection: 'row',
     textAlignVertical: 'center',
-    color: 'white',
-    alignContent: 'center',
-    justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 10
   },
-  onlineOfflineText: {
-    width: 90,
-    textAlignVertical: 'center',
+  onlineOfflineDisplay: {
+    width: 20,
+    height: 20,
     textAlign: 'center',
-    alignSelf: 'flex-end',
-    paddingLeft: 15,
-    paddingRight: 15,
-    paddingTop: 8,
-    paddingBottom: 8,
-    borderRadius: 100,
-    marginRight: 20,
+    shadowColor: themeRed,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 10,
+    marginRight: 10,
+    borderRadius: 20,
   },
   timerView: {
     flex: 1,
@@ -695,7 +694,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 5,
-    borderColor: colorYellow,
+    borderColor: themeRed,
     borderWidth: 2,
     marginBottom: 10,
     textAlign: 'center',

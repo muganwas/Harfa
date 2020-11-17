@@ -1,8 +1,19 @@
 
 import React, { Component } from 'react';
 import {
-    Text, StyleSheet, View, Image, Dimensions, TouchableOpacity,
-    ScrollView, Modal, Animated, BackHandler, RefreshControl, StatusBar, Platform
+    Text, StyleSheet,
+    View,
+    Image,
+    Dimensions,
+    TouchableOpacity,
+    ScrollView,
+    Modal,
+    Animated,
+    BackHandler,
+    RefreshControl,
+    StatusBar,
+    Platform,
+    Switch
 } from 'react-native';
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
@@ -25,7 +36,7 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
-import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray } from '../Constants/colors';
+import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray, black, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -759,10 +770,11 @@ class ProDashboardScreen extends Component {
 
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
+        const { status } = this.state;
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
-                <View style={[styles.header, {borderBottomWidth: 1, borderBottomColor: themeRed }]}>
+                <View style={[styles.header, { borderBottomWidth: 1, borderBottomColor: themeRed }]}>
                     <ProHamburger
                         Notifications={Notifications}
                         navigation={this.props.navigation}
@@ -782,14 +794,18 @@ class ProDashboardScreen extends Component {
                         Availability
                     </Text>
 
-                    <TouchableOpacity style={styles.onlineOfflineView}
-                        onPress={this.changeAvailabilityStaus}>
-                        <View style={[styles.onlineOfflineText, { backgroundColor: this.state.availBackground }]}>
-                            <Text style={{ color: 'white', fontWeight: 'bold', alignSelf: 'center' }}>
-                                {this.state.status}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
+                    <View style={styles.onlineOfflineView}>
+                        <Switch
+                            trackColor={{ false: "#767577", true: this.state.availBackground }}
+                            thumbColor={this.state.status.toLocaleLowerCase() === 'online' ? white : "#f4f3f4"}
+                            ios_backgroundColor={this.state.availBackground}
+                            onValueChange={this.changeAvailabilityStaus}
+                            value={this.state.status.toLowerCase() === 'online'}
+                        />
+                        <Text style={{ color: black, textTransform: 'capitalize', alignSelf: 'center' }}>
+                            {this.state.status}
+                        </Text>
+                    </View>
                 </View>
 
                 <ScrollView
@@ -849,10 +865,10 @@ class ProDashboardScreen extends Component {
                                 </View>
 
                                 <View style={styles.listView}>
-                                    { dataWorkSource && dataWorkSource.length > 0 ? dataWorkSource.map(this.renderWorkItem) :
-                                    <View style={{padding: 15}}>
-                                        <Text style={{fontStyle: 'italic', color: darkGray}}>You haven't completed any jobs yet.</Text>
-                                    </View> }
+                                    {dataWorkSource && dataWorkSource.length > 0 ? dataWorkSource.map(this.renderWorkItem) :
+                                        <View style={{ padding: 15 }}>
+                                            <Text style={{ fontStyle: 'italic', color: darkGray }}>You haven't completed any jobs yet.</Text>
+                                        </View>}
                                 </View>
                             </View>
                         }
@@ -976,8 +992,11 @@ const styles = StyleSheet.create({
     },
     onlineOfflineView: {
         flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
         textAlignVertical: 'center',
-        color: 'white',
+        marginRight: 10
     },
     onlineOfflineText: {
         width: 90,
