@@ -7,10 +7,10 @@ import {
   Dimensions,
   TextInput,
   Text,
-  ActivityIndicator,
   StatusBar,
   Platform,
   BackHandler,
+  Modal,
   Animated,
 } from 'react-native';
 //import {NavigationActions} from 'react-navigation';
@@ -25,8 +25,10 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import Toast from 'react-native-simple-toast';
 import Notifications from './Notifications';
+import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
-import storage from '@react-native-firebase/storage';
+import axios from 'axios';
+; import storage from '@react-native-firebase/storage';
 import { colorPrimaryDark, white, themeRed, black } from '../Constants/colors';
 
 const options = {
@@ -276,44 +278,30 @@ class MyProfileScreen extends Component {
       const { state } = uploadRes;
       if (state === 'success') {
         userDataRef.getDownloadURL().then(urlResult => {
-          let imageData = new FormData();
-          imageData.append('image', {
+          axios.post(USER_IMAGE_UPDATE + userId, {
             type: imageObject.type,
             uri: urlResult,
             name: imageObject.fileName,
+          }).then(res => {
+            this.setState({
+              isLoading: false,
+              isErrorToast: false,
+            });
+            if (res && res.data.result) {
+              this.showToast(res.data.message);
+            }
+
+          }).catch(error => {
+            console.log('Error :' + error);
+            this.setState({
+              isLoading: false,
+            });
+            this.showToast('Something went wrong');
           });
-          fetch(USER_IMAGE_UPDATE + userId, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              otherHeader: 'foo',
-            },
-            body: imageData,
-          })
-            .then(response => response.json())
-            .then(response => {
-              if (response.result) {
-                this.setState({
-                  isLoading: false,
-                  isErrorToast: false,
-                });
-                this.showToast(response.message);
-              } else {
-                this.setState({
-                  isLoading: false,
-                  isErrorToast: true,
-                });
-                this.showToast('Something went wrong');
-              }
-            })
-            .catch(error => {
-              console.log('Error :' + error);
-              this.setState({
-                isLoading: false,
-              });
-            })
-            .done();
         })
+      }
+      else {
+        this.showToast('Upload failed, try again please.')
       }
     }).catch(error => {
       console.log('image upload error', error.messge)
@@ -323,6 +311,12 @@ class MyProfileScreen extends Component {
   showToast = message => {
     Toast.show(message);
   };
+
+  changeWaitingDialogVisibility = bool => {
+    this.setState({
+      isLoading: bool
+    })
+  }
 
   render() {
     const { userInfo: { userDetails } } = this.props;
@@ -439,7 +433,7 @@ class MyProfileScreen extends Component {
                     <Text style={[styles.text, { fontWeight: 'bold' }]}>Account Type</Text>
                   </View>
                   <View style={styles.buttonGreen}>
-                    <Text style={[styles.text, { color: black, fontWeight: 'bold'}]}>
+                    <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>
                       {userDetails.accountType}
                     </Text>
                   </View>
@@ -520,17 +514,11 @@ class MyProfileScreen extends Component {
               />
             </View>
           </View>
-          {this.state.isLoading && (
-            <View style={styles.loaderStyle}>
-              <ActivityIndicator
-                style={{ height: 80 }}
-                color="#C00"
-                size="large"
-              />
-            </View>
-          )}
         </KeyboardAwareScrollView>
-
+        <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+          onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
+          <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
+        </Modal>
         <Animated.View
           style={[
             styles.animatedView,
@@ -736,6 +724,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
+    zIndex: 10000,
     alignItems: 'center',
     justifyContent: 'center',
   },

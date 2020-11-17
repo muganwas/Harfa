@@ -14,9 +14,10 @@ import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './ProHamburger';
+import axios from 'axios';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 import storage from '@react-native-firebase/storage';
-import { colorYellow, colorPrimaryDark, white, themeRed, black, colorGray } from '../Constants/colors';
+import { colorPrimaryDark, white, themeRed, black, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -99,7 +100,6 @@ class ProMyProfileScreen extends Component {
 
     componentDidMount = () => {
         const { userInfo: { providerDetails }, navigation } = this.props;
-        console.log('provider dits', providerDetails)
         navigation.addListener('willFocus', async () => {
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
@@ -289,52 +289,36 @@ class ProMyProfileScreen extends Component {
         });
         const { userInfo: { providerDetails: { firebaseId } } } = this.props;
         const { fileName, path } = imageObject;
-        console.log('firebase id', firebaseId)
         if (firebaseId) {
             const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
             userDataRef.putFile(path).then(uploadRes => {
                 const { state } = uploadRes;
                 if (state === 'success') {
                     userDataRef.getDownloadURL().then(urlResult => {
-                        let imageData = new FormData();
-                        imageData.append('image', {
+                        axios.post(PRO_IMAGE_UPDATE + proId, {
                             type: imageObject.type,
                             uri: urlResult,
                             name: imageObject.fileName,
+                        }).then(res => {
+                            this.setState({
+                                isLoading: false,
+                                isErrorToast: false,
+                            });
+                            if (res && res.data.result) {
+                                this.showToast(res.data.message);
+                            }
+
+                        }).catch(error => {
+                            console.log('Error :' + error);
+                            this.setState({
+                                isLoading: false,
+                            });
+                            this.showToast('Something went wrong');
                         });
-                        fetch(PRO_IMAGE_UPDATE + proId, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'multipart/form-data',
-                                otherHeader: 'foo',
-                            },
-                            body: imageData,
-                        })
-                            .then(response => response.json())
-                            .then(response => {
-                                console.log('response --', response)
-                                if (response.result) {
-                                    this.setState({
-                                        isLoading: false,
-                                        isErrorToast: false,
-                                    });
-                                    this.showToast(response.message);
-                                } else {
-                                    this.setState({
-                                        isLoading: false,
-                                        isErrorToast: true,
-                                    });
-                                    this.showToast('Something went wrong');
-                                }
-                            })
-                            .catch(error => {
-                                console.log('Error :' + error);
-                                this.setState({
-                                    isLoading: false,
-                                });
-                            })
-                            .done();
-                    })
+                    });
+                }
+                else {
+                    this.showToast('Upload failed, try again please.')
                 }
             }).catch(error => {
                 console.log('image upload error', error.messge)
@@ -494,15 +478,7 @@ class ProMyProfileScreen extends Component {
                             <View style={styles.textView}>
                                 <Text style={{ color: 'black', fontSize: 16, textAlign: 'center', textAlignVertical: 'center', marginTop: 5 }}>
                                     Can you provide invoice
-                            </Text>
-                                {/* <View style={{flex: 1, flexDirection: 'row', marginTop: 10}}>
-                                <Text style={[styles.invoice, {backgroundColor: 'grey',  
-                                    borderColor: this.state.invoice == '1'  ? colorYellow : 'grey'}]}
-                                    onPress={() => this.setState({invoice: '1'})}>Yes</Text>
-                                <Text style={[styles.invoice, {marginLeft: 20, backgroundColor: 'grey', 
-                                    borderColor: this.state.invoice == '0' ? colorYellow : 'grey'}]}
-                                    onPress={() => this.setState({invoice: '0'})}>No</Text>
-                            </View> */}
+                                </Text>
                                 <View style={{ flex: 1, flexDirection: 'row', marginTop: 10, justifyContent: "center" }}>
                                     <TouchableOpacity style={this.state.invoice == '1' ? styles.invoiceBorder : styles.invoice}
                                         onPress={() => this.setState({ invoice: '1' })}>

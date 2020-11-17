@@ -23,8 +23,8 @@ class ProDialogLogout extends Component {
     };
 
     closeDialogLogout = async action => {
+        const { resetUserDetails, navigation, changeDialogVisibility } = this.props;
         if (action == 'Ok') {
-            const { resetUserDetails, navigation, changeDialogVisibility } = this.props;
             if (firebaseAuth().currentUser) firebaseAuth().signOut();
             await AsyncStorage.removeItem('userId');
             await AsyncStorage.removeItem('auth');
