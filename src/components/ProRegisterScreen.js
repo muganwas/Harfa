@@ -209,8 +209,9 @@ class ProRegisterScreen extends Component {
                     else if (error.code === 'auth/invalid-email')
                         this.setState({ error: 'Your email address is invalid!', isLoading: false });
                     else if (error.code === 'auth/weak-password')
-                        this.setState({ error: 'Your password is too weak' })
-                    console.log('account creation error: -', error.message);
+                        this.setState({ error: 'Your password is too weak', isLoading: false  });
+                    else 
+                        this.setState({ error: error.message, isLoading: false});
                 });
         }
     }
