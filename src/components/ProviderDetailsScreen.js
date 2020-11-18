@@ -517,7 +517,7 @@ class ProviderDetailsScreen extends Component {
           <View style={styles.loaderStyle}>
             <ActivityIndicator
               style={{ height: 55, width: 55, alignSelf: 'flex-start', alignContent: 'flex-start', marginLeft: 10 }}
-              color={colorYellow}
+              color={themeRed}
               size="large" />
 
             <Text style={{ color: 'black', fontSize: 15, fontWeight: 'bold', textAlignVertical: 'center', alignSelf: 'center' }}>

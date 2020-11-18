@@ -36,7 +36,7 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
-import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray, black, colorGray } from '../Constants/colors';
+import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray, black, colorGray, darkRed, lightRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -579,7 +579,7 @@ class ProDashboardScreen extends Component {
                     onPress={() => this.goToProMapDirection(chat_status, status, { currentPos: index, userType: 'provider', user_id, orderId: order_id })}
                 >
                     <LinearGradient style={styles.pendingJobRow}
-                        colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+                        colors={['#000000','#3C3C3C', '#4F4F50']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
                             source={{ uri: image }} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
@@ -589,7 +589,7 @@ class ProDashboardScreen extends Component {
                             <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
                                 {"Request for " + service_name}
                             </Text>
-                            <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                            <Text style={{ color: white, fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
                                 {chat_status == "0" ? "New Job Request" : status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
                             </Text>
                         </View>
@@ -1066,7 +1066,7 @@ const styles = StyleSheet.create({
         paddingTop: 5,
         paddingBottom: 5,
         backgroundColor: 'white',
-        borderColor: colorYellow,
+        borderColor: themeRed,
         borderWidth: 2,
         borderRadius: 5,
         marginRight: 20,
