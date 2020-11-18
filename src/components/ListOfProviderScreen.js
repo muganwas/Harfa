@@ -21,7 +21,7 @@ import axios from 'axios';
 import WaitingDialog from './WaitingDialog';
 import { getDistance, imageExists } from '../misc/helpers';
 import images from '../Constants/images';
-import { colorYellow, colorBg, white, themeRed } from '../Constants/colors';
+import { colorBg, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -274,22 +274,24 @@ class ListOfProviderScreen extends Component {
               <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 16 }}>
                 {item.username + ' ' + item.surname}
               </Text>
-              <Text
-                style={{ width: screenWidth - 120, color: 'black', fontSize: 12 }}>
-                {item.address}
+              <Text>
+                <Text style={{fontWeight: 'bold'}}>Address: </Text>
+                <Text
+                  style={{ width: screenWidth - 120, color: 'black', fontSize: 12 }}>
+                  {item.address}
+                </Text>
               </Text>
+
               <Text style={{ marginTop: 5 }}>
                 <Text style={{ fontWeight: 'bold', color: 'black', fontSize: 14 }}>
-                  {'Position:' + item.hash + ' Km'}
-                </Text>
+                  Distance from you: </Text>
                 <Text
                   style={{
                     color: 'black',
                     width: screenWidth - 120,
                     fontSize: 14,
                   }}>
-                  {' '}
-                    From you
+                  {`${item.hash} Km`}
                 </Text>
               </Text>
             </View>
@@ -423,13 +425,13 @@ class ListOfProviderScreen extends Component {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              { categoryImage ? <Image
+              {categoryImage ? <Image
                 style={{ width: 50, height: 50, tintColor: white }}
                 source={images[categoryImage]}
               /> : <Image
-                style={{ width: 50, height: 50 }}
-                source={require('../icons/service_provider_tool.png')}
-              /> }
+                  style={{ width: 50, height: 50 }}
+                  source={require('../icons/service_provider_tool.png')}
+                />}
             </View>
             <Text style={{ fontSize: 18, marginTop: 10 }}>
               No provider found

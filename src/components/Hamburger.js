@@ -34,7 +34,6 @@ import { DrawerActions } from 'react-navigation-drawer';
 import { NavigationEvents } from 'react-navigation';
 import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
-import OnlineUsers from './OnlineUsers';
 import NetInfo from "@react-native-community/netinfo";
 import Config from './Config';
 import geolocation from '@react-native-community/geolocation';
@@ -64,8 +63,6 @@ class Hamburger extends React.Component {
     componentDidMount() {
         const {
             fetchedNotifications,
-            fetchedMessages,
-            jobsInfo: { allJobRequestsClient },
             updateLiveChatUsers,
             userInfo: { userDetails },
             dbMessagesFetched,
@@ -301,7 +298,8 @@ class Hamburger extends React.Component {
             }
         });
 
-        socket.on('authorized', () => {
+        socket.on('authorized', response => {
+            console.log(response.message)
             updateOnlineStatus(true)
         });
 
@@ -311,13 +309,12 @@ class Hamburger extends React.Component {
         });
 
         socket.on('user-disconnected', users => {
-            console.log('user disconnected');
+            console.log('user disconnected..');
             updateLiveChatUsers(users);
-            OnlineUsers.Users = users;
         })
         socket.on('user-joined', users => {
+            console.log('user joined..')
             updateLiveChatUsers(users);
-            OnlineUsers.Users = users;
         })
         socket.on("chat-message", data => {
             const { sender } = cloneDeep(data);
@@ -347,8 +344,10 @@ class Hamburger extends React.Component {
 
     componentDidUpdate() {
         const {
-            jobsInfo: { jobRequests }
+            jobsInfo: { jobRequests },
+            generalInfo
         } = this.props;
+        //console.log('gen info', generalInfo)
         if (jobRequests && !this.state.employeesLocationsFetched)
             this.fetchEmployeeLocations();
     }
