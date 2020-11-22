@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { notificationsFetched } from '../Redux/Actions/notificationActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import DialogLogout from './DialogLogout';
-import { lightGray, themeRed, white } from '../Constants/colors'
+import { black, lightGray, themeRed, white } from '../Constants/colors'
 
 class CustomMenuLayout extends Component {
 
@@ -36,7 +36,11 @@ class CustomMenuLayout extends Component {
                     <ScrollView>
                         <View style={styles.header}>
                             <Image source={imageSource ? { uri: imageSource } : require('../images/generic_avatar.png')} style={styles.headerImage} />
-                            <Text style={[styles.textHeader, { color: 'white' }]}>{userDetails.username}</Text>
+                            <Text style={{
+                                fontSize: 12, color: black,
+                                alignItems: 'center', justifyContent: 'center', marginTop: 5,
+                            }}>Welcome</Text>
+                            <Text style={[styles.textHeader, { color: black }]}>{userDetails.username}</Text>
                         </View>
 
                         <TouchableHighlight

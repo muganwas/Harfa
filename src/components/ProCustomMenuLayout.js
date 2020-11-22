@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { notificationsFetched } from '../Redux/Actions/notificationActions';
 import { DrawerActions } from 'react-navigation-drawer';
 import ProDialogLogout from './ProDialogLogout';
-import { lightGray, themeRed, white } from '../Constants/colors';
+import { black, lightGray, themeRed, white } from '../Constants/colors';
 
 class CustomMenuLayout extends Component {
     constructor(props) {
@@ -32,10 +32,10 @@ class CustomMenuLayout extends Component {
                         <View style={styles.header}>
                             <Image source={imageSource ? { uri: imageSource } : require('../images/generic_avatar.png')} style={styles.headerImage} />
                             <Text style={{
-                                fontSize: 12, color: 'white',
+                                fontSize: 12, color: black,
                                 alignItems: 'center', justifyContent: 'center', marginTop: 5,
                             }}>Welcome</Text>
-                            <Text style={[styles.textHeader, { color: 'white' }]}>{providerDetails.name + " " + providerDetails.surname}</Text>
+                            <Text style={[styles.textHeader, { color: black }]}>{providerDetails.name + " " + providerDetails.surname}</Text>
                         </View>
 
                         <TouchableHighlight

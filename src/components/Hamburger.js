@@ -74,8 +74,8 @@ class Hamburger extends React.Component {
         this.checkForUserType();
 
         messaging().onMessage(message => {
-            const { notification, data } = message;
-            const { title, body } = notification;
+            const { data } = message;
+            const { title, body } = data;
             const {
                 fetchedNotifications,
                 updateActiveRequest,

@@ -57,11 +57,12 @@ class ProHamburger extends React.Component {
         const receiverId = providerDetails.providerId;
         this.fetchOthersLocations();
         this.checkForUserType();
-
+        
         messaging().onMessage(message => {
-            const { notification, data } = message;
+            console.log('pro message', message)
+            const { data } = message;
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
-            const { title, body } = notification;
+            const { title, body } = data;
             const currentGenericCount = notificationsInfo.generic;
             const newGenericCount = currentGenericCount + 1;
             fetchedNotifications({ type: 'generic', value: newGenericCount });
