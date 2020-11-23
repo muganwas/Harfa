@@ -31,8 +31,8 @@ class CustomMenuLayout extends Component {
         const imageSource = userDetails.image;
         const { notificationsInfo, fetchedNotifications } = this.props;
         return (
-            <View activeOpacity={1} style={styles.drawerTransparent}>
-                <View activeOpacity={1} style={styles.drawer} >
+            <TouchableOpacity activeOpacity={1} style={styles.drawerTransparent}>
+                <TouchableOpacity activeOpacity={1} style={styles.drawer} >
                     <ScrollView>
                         <View style={styles.header}>
                             <Image source={imageSource ? { uri: imageSource } : require('../images/generic_avatar.png')} style={styles.headerImage} />
@@ -136,8 +136,8 @@ class CustomMenuLayout extends Component {
                         </Modal>
 
                     </ScrollView>
-                </View>
-            </View>
+                </TouchableOpacity>
+            </TouchableOpacity>
         );
     }
 }
