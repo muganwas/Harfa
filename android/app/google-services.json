@@ -15,27 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "804094658921-u2tdjgm7nc23193g1vsof3foojahqg6g.apps.googleusercontent.com",
+          "client_id": "804094658921-s6aat1jnnlb2ir36gn8t40c2dcv042fa.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.kuchapa",
-            "certificate_hash": "339a742f77f203ee739019ed2f0c33c8408a8320"
-          }
-        },
-        {
-          "client_id": "804094658921-4ingmtff32rug92263ish6cvplcq3el6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.kuchapa",
-            "certificate_hash": "7c2c9e068239fd0c5d286e9c0d24d1d7d00176b3"
-          }
-        },
-        {
-          "client_id": "804094658921-v44tqp539sbf2f26ek1gnk05ocmpvugs.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.kuchapa",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+            "certificate_hash": "27c0850be8b859a6c00ace3bc6cf81a2b169120f"
           }
         },
         {
@@ -54,13 +38,6 @@
             {
               "client_id": "804094658921-hbm3cdkqc9v4btujqccaif78tv0sva89.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "804094658921-b8i46cqc8vjkn0k26h5kmcugqki56jma.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.kuchapa"
-              }
             }
           ]
         }
