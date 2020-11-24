@@ -496,6 +496,7 @@ class ProDashboardScreen extends Component {
                 "title": "Chat Request Accepted",
                 "type": "ChatAcceptance",
                 "notification_by": "Employee",
+                "save_notification": true,
                 "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
                 "data": {
                     user_id: '',
@@ -628,6 +629,9 @@ class ProDashboardScreen extends Component {
                 "type": "Review",
                 "notification_by": "Employee",
                 "title": "Given Review",
+                "save_notification": true,
+                "senderName": providerDetails.name,
+                "senderId": providerDetails.providerId,
                 "body": providerDetails.name + " " + providerDetails.surname + " has given you a review",
             }
         }
@@ -686,6 +690,7 @@ class ProDashboardScreen extends Component {
                     "type": "ReviewRequest",
                     "notification_by": "Employee",
                     "title": "Ask For Review",
+                    "save_notification": true,
                     "body": providerDetails.name + " " + providerDetails.surname + " waiting for your feedback",
                 }
             }

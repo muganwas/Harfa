@@ -313,6 +313,7 @@ class ProAcceptRejectJobScreen extends Component {
                 "title": "Job Rejected",
                 "type": "JobRejection",
                 "notification_by": "Employee",
+                "save_notification": true,
                 "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,

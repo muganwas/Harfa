@@ -115,7 +115,7 @@ class BookingDetailsScreen extends Component {
             customer_rating: rating,
             customer_review: review,
         });
-
+        const { userDetails }  = this.props.userInfo;
         const reviewData = {
             "main_id": this.state.mainId,
             "type": "Customer",
@@ -126,6 +126,9 @@ class BookingDetailsScreen extends Component {
                 "type": "Review",
                 "notification_by": "Customer",
                 "title": "Given Review",
+                "save_notification": true,
+                "senderName": userDetails.username,
+                "senderId": userDetails.userId,
                 "body": this.state.username + " has given you a review",
             }
         }

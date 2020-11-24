@@ -227,6 +227,7 @@ class MapDirectionScreen extends Component {
         "title": "Job Canceled",
         "type": "JobCancellation",
         "notification_by": "Customer",
+        "save_notification": true,
         "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
         "data": {
           ProviderId: jobRequests[currRequestPos].employee_id,
@@ -302,6 +303,7 @@ class MapDirectionScreen extends Component {
         "body": 'Your job request has been completed by ' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
         "type": "Job Completed",
         "notification_by": "Client",
+        "save_notification": true,
         "data": {
           ProviderId: jobRequests[currRequestPos].employee_id,
           user_id: userDetails.userId,

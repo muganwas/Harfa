@@ -117,7 +117,7 @@ class ProBookingDetailsScreen extends Component {
             employee_rating: rating,
             employee_review: review,
         });
-
+        const { providerDetails } = this.props.userInfo;
         const reviewData = {
             "main_id": this.state.mainId,
             "type": "Employee",
@@ -128,6 +128,9 @@ class ProBookingDetailsScreen extends Component {
                 "type": "Review",
                 "notification_by": "Employee",
                 "title": "Given Review",
+                "save_notification": true,
+                "senderName": providerDetails.name,
+                "senderId": providerDetails.providerId,
                 "body": this.state.username + " has given you a review",
             }
         }
@@ -355,7 +358,8 @@ class ProBookingDetailsScreen extends Component {
 }
 
 const mapStateToProps = state => ({
-    jobsInfo: state.jobsInfo
+    jobsInfo: state.jobsInfo,
+    userInfo: state.userInfo,
 });
 
 const mapDispatchToProps = dispatch => ({

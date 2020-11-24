@@ -14,7 +14,7 @@ import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
-import { colorYellow, colorPrimaryDark, colorBg, lightGray, white, themeRed } from '../Constants/colors';
+import { colorPrimaryDark, lightGray, white, themeRed } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 

@@ -210,6 +210,7 @@ class ChatScreen extends Component {
                 "type": "JobCancellation",
                 "notification_by": "Customer",
                 "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
+                "save_notification": true,
                 "data": {
                     ProviderId: jobRequests[currRequestPos].employee_id,
                     image: jobRequests[currRequestPos].image,

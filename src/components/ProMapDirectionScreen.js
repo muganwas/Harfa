@@ -275,6 +275,7 @@ class ProMapDirectionScreen extends Component {
                 "fcm_id": this.state.userFcmId,
                 "title": "Job Completed",
                 "body": 'Your job request has been completed by the service provder : ' + providerDetails.providerId,
+                "save_notification": true,
                 "notification_by": "Employee",
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -348,6 +349,7 @@ class ProMapDirectionScreen extends Component {
                 "title": "Job Canceled",
                 "type": "JobCancellation",
                 "notification_by": "Employee",
+                "save_notification": true,
                 "body": 'Your job request has been canceled by the service provder : ' + providerDetails.providerId,
                 "data": {
                     ProviderId: providerDetails.providerId,

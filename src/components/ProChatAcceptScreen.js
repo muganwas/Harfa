@@ -213,6 +213,7 @@ class ProChatAcceptScreen extends Component {
                 "title": "Chat Request Accepted",
                 "type": "ChatAcceptance",
                 "notification_by": "Employee",
+                "save_notification": true,
                 "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
                     user_id: '',
@@ -306,6 +307,7 @@ class ProChatAcceptScreen extends Component {
                 "title": "Chat Request Rejected",
                 "type": "JobRejection",
                 "notification_by": "Employee",
+                "save_notification": true,
                 "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -365,6 +367,7 @@ class ProChatAcceptScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "No Response",
+                "save_notification": true,
                 "body": providerDetails.name + " is not responding to your request" + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
