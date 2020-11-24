@@ -173,7 +173,7 @@ class DashboardScreen extends Component {
     renderSeparator = () => {
         return (
             <View
-                style={{ height: 1, width: '100%', backgroundColor: 'black' }}>
+                style={{ height: 1, width: '100%', backgroundColor: black }}>
             </View>
         );
     }
@@ -281,7 +281,6 @@ class DashboardScreen extends Component {
         const { jobsInfo: { jobRequests, requestsFetched } } = this.props;
         return (
             <View style={styles.container}>
-                {/* <StatusBar barStyle='dark-content' backgroundColor=white />   */}
                 <StatusBarPlaceHolder />
                 <View style={styles.header}>
                     <Hamburger
@@ -299,7 +298,7 @@ class DashboardScreen extends Component {
 
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 45, backgroundColor: colorPrimary,
-                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5, shadowColor: '#000',
+                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5, shadowColor: black,
                     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
                 }}>
                     <View style={{
