@@ -433,7 +433,7 @@ class ProviderDetailsScreen extends Component {
 
           <View style={{ flexDirection: 'column', marginLeft: 10 }}>
             <Image style={{ width: 60, height: 60, borderRadius: 100, alignSelf: 'center' }}
-              source={{ uri: this.state.image }} />
+              source={ this.state.image ? { uri: this.state.image } : require('../images/generic_avatar.png')} />
 
             <View style={{ backgroundColor: 'white', marginTop: 5 }}>
               <AirbnbRating

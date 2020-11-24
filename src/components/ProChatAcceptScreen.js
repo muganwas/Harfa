@@ -11,7 +11,7 @@ import Config from './Config';
 import { getDistance } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, colorYellow, white } from '../Constants/colors';
+import { colorPrimary, black, colorBg, colorYellow, white, themeRed } from '../Constants/colors';
 import SoundPlayer from 'react-native-sound';
 import { cloneDeep } from 'lodash';
 
@@ -445,12 +445,12 @@ class ProChatAcceptScreen extends Component {
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                             <TouchableOpacity style={{ width: 35, justifyContent: 'center' }}
                                 onPress={this.handleBackButtonClick}>
-                                <Image style={{ width: 20, height: 20 }}
+                                <Image style={{ width: 20, height: 20, tintColor: black }}
                                     resizeMode={'contain'}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
-                            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>
-                                Demande
+                            <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>
+                                Request
                         </Text>
                         </View>
                     </View>
@@ -463,12 +463,8 @@ class ProChatAcceptScreen extends Component {
                                 </View>
 
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, }}>
-                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>salut,</Text>
+                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hello,</Text>
                                     <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
-                                </View>
-
-                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginLeft: 20, marginRight: 20 }}>
-                                    <Text style={{ color: 'black', fontSize: 18, marginTop: 5, }}>Vous avez une demande de {this.state.serviceName}</Text>
                                 </View>
 
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
@@ -479,7 +475,7 @@ class ProChatAcceptScreen extends Component {
 
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15, }}>
                                     <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
-                                        {this.state.userName + " veux te parler!"}
+                                        {this.state.userName + " is looking for a " + this.state.serviceName}
                                     </Text>
                                 </View>
 
@@ -487,12 +483,12 @@ class ProChatAcceptScreen extends Component {
 
                                     <TouchableOpacity style={styles.buttonContainer}
                                         onPress={this.rejectJob}>
-                                        <Text style={styles.text}>Rejeter</Text>
+                                        <Text style={styles.text}>Busy</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity style={styles.buttonContainer}
                                         onPress={this.acceptJob}>
-                                        <Text style={styles.text}>Accepter le chat</Text>
+                                        <Text style={styles.text}>Accept</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -500,20 +496,20 @@ class ProChatAcceptScreen extends Component {
                                 <View style={styles.containerSlide}>
                                     <View style={styles.mainContainerSlide}>
 
-                                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 15 }}>{this.state.userName}</Text>
+                                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 15, color: white }}>{this.state.userName}</Text>
 
-                                        <Text style={{ fontSize: 14, alignItems: 'center', textAlign: 'center', marginTop: 5 }}>{this.state.userAddress}</Text>
+                                        <Text style={{ fontSize: 14, alignItems: 'center', textAlign: 'center', marginTop: 5, color: white }}>{this.state.userAddress}</Text>
 
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                                            <Image style={{ width: 15, height: 15 }}
+                                            <Image style={{ width: 15, height: 15, tintColor: white }}
                                                 source={require('../icons/mobile.png')} />
-                                            <Text style={{ fontSize: 14, marginLeft: 10 }}>{this.state.userMobile}</Text>
+                                            <Text style={{ fontSize: 14, marginLeft: 10, color:white }}>{this.state.userMobile}</Text>
                                         </View>
 
                                         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-                                            <Image style={{ width: 15, height: 15 }}
+                                            <Image style={{ width: 15, height: 15, tintColor: white }}
                                                 source={require('../icons/maps_location.png')} />
-                                            <Text style={{ fontSize: 14, marginLeft: 10 }}>{`${this.state.distance} Km loin de vous`}</Text>
+                                            <Text style={{ fontSize: 14, marginLeft: 10, color: white }}>{`${this.state.distance} Kms from you`}</Text>
                                         </View>
 
                                     </View>
@@ -589,7 +585,7 @@ const styles = StyleSheet.create({
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
+        borderColor: themeRed,
         borderWidth: 2,
         marginBottom: 25,
         textAlign: 'center',
@@ -666,8 +662,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: colorYellow,
-        backgroundColor: colorYellow,
+        backgroundColor: themeRed,
         borderRadius: 2,
 
     },
