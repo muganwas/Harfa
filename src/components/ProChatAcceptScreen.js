@@ -379,6 +379,7 @@ class ProChatAcceptScreen extends Component {
                 "user_id": userId,
                 "employee_id": providerDetails.providerId,
                 "order_id": orderId,
+                "notification_by": 'Employee',
                 "body": providerDetails.name + " is not responding to your request" + ' Request Id : ' + orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,

@@ -115,6 +115,7 @@ class ProviderDetailsScreen extends Component {
           "save_notification": true,
           "user_id": userDetails.userId,
           "employee_id": this.state.providerId,
+          "notification_by": 'Customer',
           "data": {
             userId: userDetails.userId,
             serviceName: this.state.serviceName,

@@ -6,7 +6,7 @@ import Notifications from './Notifications';
 import Toast from 'react-native-simple-toast';
 import Config from './Config';
 import Hamburger from './ProHamburger';
-import { lightGray, colorYellow, colorPrimaryDark, colorBg, white, themeRed } from '../Constants/colors';
+import { lightGray, colorPrimaryDark, white, themeRed, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-employee-notification/";
@@ -44,7 +44,7 @@ class ProNotificationsScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'generic', value: 0 });
-        this.getAllNotifications()
+        this.getAllNotifications();
         navigation.addListener('willFocus', async () => {
             this.getAllNotifications();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -131,7 +131,9 @@ class ProNotificationsScreen extends Component {
                 <View
                     key={index}
                     style={{
-                        flex: 1, flexDirection: 'row', margin: 5, padding: 10,
+                        flexDirection: 'row', 
+                        margin: 5, 
+                        padding: 10,
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.75,
@@ -143,13 +145,16 @@ class ProNotificationsScreen extends Component {
                         justifyContent: 'center'
                     }}>
                     <Image style={{ width: 45, height: 45, borderRadius: 100 }}
-                        source={ item.employee_details && item.employee_details.image ? { uri: item.employee_details.image } : require('../images/generic_avatar.png')} />
-                    <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
-                        <Text style={{ color: 'black', fontSize: 14, marginTop: 5, alignSelf: 'center' }}>
+                        source={ item.customer_details && item.customer_details.image ? { uri: item.customer_details.image } : require('../images/generic_avatar.png')} />
+                    <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginLeft: 10 }}>
+                        <Text style={{ color: 'black', fontSize: 14, marginTop: 5 }}>
                             {item.title}
                         </Text>
-                        <Text style={{ fontWeight: 'bold', color: lightGray, fontSize: 10, marginTop: 5, }}>
-                            {item.date}
+                        <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
+                            {item.message}
+                        </Text>
+                        <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
+                            {item.createdDate}
                         </Text>
                     </View>
                 </View>
@@ -215,6 +220,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
+        flexDirection: 'column',
         backgroundColor: lightGray,
         padding: 5,
     },

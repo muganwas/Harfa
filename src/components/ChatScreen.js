@@ -213,7 +213,7 @@ class ChatScreen extends Component {
                 "user_id": this.state.senderId,
                 "employee_id": employee_id,
                 "order_id": jobRequests[currRequestPos].order_id,
-                "notification_by": "Client",
+                "notification_by": "Customer",
                 "data": {
                     ProviderId: jobRequests[currRequestPos].employee_id,
                     image: jobRequests[currRequestPos].image,

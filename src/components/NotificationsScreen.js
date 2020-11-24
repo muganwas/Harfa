@@ -14,7 +14,7 @@ import Config from './Config';
 import WaitingDialog from './WaitingDialog';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
-import { colorPrimaryDark, lightGray, white, themeRed } from '../Constants/colors';
+import { colorPrimaryDark, lightGray, white, themeRed, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -108,6 +108,7 @@ class NotificationsScreen extends Component {
         fetch(NOTIFICATION_URL + userDetails.userId)
             .then((response) => response.json())
             .then((responseJson) => {
+                //console.log('notification', responseJson)
                 if (responseJson.result) {
                     this.setState({
                         dataSource: responseJson.data,
@@ -143,13 +144,22 @@ class NotificationsScreen extends Component {
                 <TouchableOpacity
                     key={index}
                     style={{
-                        flex: 1, flexDirection: 'row', margin: 5, padding: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.75, shadowRadius: 2, elevation: 2, backgroundColor: 'white', borderRadius: 2, justifyContent: 'center'
+                        flexDirection: 'row', 
+                        margin: 5, 
+                        padding: 10, 
+                        shadowColor: '#000', 
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.75, 
+                        shadowRadius: 2, 
+                        elevation: 2, 
+                        backgroundColor: white, 
+                        borderRadius: 2, 
+                        justifyContent: 'center'
                     }}>
 
                     <View style={{ justifyContent: 'center', alignContent: 'center' }}>
                         <Image style={{ width: 45, height: 45, borderRadius: 100, alignItems: 'center', }}
-                            source={{ uri: item.employee_details.image }} />
+                            source={item.employee_details && item.employee_details.image ? { uri: item.employee_details.image } : require('../images/generic_avatar.png')} />
                     </View>
 
                     <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
@@ -159,7 +169,7 @@ class NotificationsScreen extends Component {
                         <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
                             {item.message}
                         </Text>
-                        <Text style={{ fontWeight: 'bold', color: lightGray, fontSize: 10, marginTop: 2, }}>
+                        <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
                             {item.createdDate}
                         </Text>
                     </View>
@@ -245,6 +255,7 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
+        flexDirection: 'column',
         backgroundColor: lightGray,
         padding: 5,
     },
