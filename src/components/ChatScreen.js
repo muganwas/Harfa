@@ -208,9 +208,12 @@ class ChatScreen extends Component {
                 "fcm_id": jobRequests[currRequestPos].fcm_id,
                 "title": "Job Canceled",
                 "type": "JobCancellation",
-                "notification_by": "Customer",
                 "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
                 "save_notification": true,
+                "user_id": this.state.senderId,
+                "employee_id": employee_id,
+                "order_id": jobRequests[currRequestPos].order_id,
+                "notification_by": "Client",
                 "data": {
                     ProviderId: jobRequests[currRequestPos].employee_id,
                     image: jobRequests[currRequestPos].image,

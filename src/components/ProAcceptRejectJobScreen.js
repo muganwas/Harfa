@@ -8,15 +8,15 @@ import database from '@react-native-firebase/database';
 import WaitingDialog from './WaitingDialog';
 import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
-import { 
-    startFetchingNotification, 
-    notificationsFetched, 
-    notificationError 
+import {
+    startFetchingNotification,
+    notificationsFetched,
+    notificationError
 } from '../Redux/Actions/notificationActions';
-import { 
+import {
     fetchedJobProviderInfo,
-    startFetchingJobProvider, 
-    fetchProviderJobInfoError, 
+    startFetchingJobProvider,
+    fetchProviderJobInfoError,
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
@@ -199,9 +199,9 @@ class ProAcceptRejectJobScreen extends Component {
     sendMessageTask = () => {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, receiverFcmId, receiverName, serviceName, orderId } = this.state;
         this.setState({
-                inputMessage: '',
-                showButton: false,
-            });
+            inputMessage: '',
+            showButton: false,
+        });
         if (this.state.inputMessage.length > 0) {
             socket.emit('sent-message', { userType: 'employee', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: receiverFcmId, receiverName, serviceName, orderId });
         }
@@ -212,6 +212,7 @@ class ProAcceptRejectJobScreen extends Component {
             isLoading: true
         });
         const { userInfo: { providerDetails } } = this.props;
+        const { receiverId } = this.state;
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -221,6 +222,10 @@ class ProAcceptRejectJobScreen extends Component {
                 "title": "Job Accepted",
                 "type": "JobAcceptence",
                 "Notification_by": "Employee",
+                "user_id": receiverId,
+                "employee_id": providerDetails.providerId,
+                "order_id": this.state.orderId,
+                "save_notification": true,
                 "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -263,7 +268,7 @@ class ProAcceptRejectJobScreen extends Component {
                         isLoading: false,
                         isAcceptJob: true,
                     });
-     
+
                     newjobRequestsProviders[currRequestPos].chat_status = responseJson.data.chat_status;
                     newjobRequestsProviders[currRequestPos].status = responseJson.data.status;
                     fetchedPendingJobInfo(newjobRequestsProviders);
@@ -304,6 +309,7 @@ class ProAcceptRejectJobScreen extends Component {
             isLoading: true
         });
         const { userInfo: { providerDetails } } = this.props;
+        const { receiverId, orderId } = this.state;
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -314,6 +320,9 @@ class ProAcceptRejectJobScreen extends Component {
                 "type": "JobRejection",
                 "notification_by": "Employee",
                 "save_notification": true,
+                "user_id": receiverId,
+                "employee_id": providerDetails.providerId,
+                "order_id": orderId,
                 "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -445,7 +454,7 @@ class ProAcceptRejectJobScreen extends Component {
                     <View style={{ flexDirection: 'column', marginBottom: 110 }}>
                         <ImageBackground style={styles.listView}
                             source={require('../icons/bg_chat.png')}>
-                                {this.state.dataChatSource.map(this.renderMessageItem)}
+                            {this.state.dataChatSource.map(this.renderMessageItem)}
                         </ImageBackground>
 
                         {this.state.isAcceptJob && (

@@ -265,6 +265,7 @@ class ProMapDirectionScreen extends Component {
     jobCompleteTask = () => {
         this.setState({ isLoading: true });
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
+        const { orderId, userId } = this.state;
         let currentPos = navigation.getParam('currentPos', 0);
         let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
         const data = {
@@ -276,6 +277,9 @@ class ProMapDirectionScreen extends Component {
                 "title": "Job Completed",
                 "body": 'Your job request has been completed by the service provder : ' + providerDetails.providerId,
                 "save_notification": true,
+                "user_id": userId,
+                "employee_id": providerDetails.providerId,
+                "order_id": orderId,
                 "notification_by": "Employee",
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -339,7 +343,7 @@ class ProMapDirectionScreen extends Component {
         this.setState({ isLoading: true });
         const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
         let newJobRequestsProviders = [...jobRequestsProviders];
-
+        const { orderId, userId } = this.state;
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
@@ -350,6 +354,9 @@ class ProMapDirectionScreen extends Component {
                 "type": "JobCancellation",
                 "notification_by": "Employee",
                 "save_notification": true,
+                "user_id": userId,
+                "employee_id": providerDetails.providerId,
+                "order_id": orderId,
                 "body": 'Your job request has been canceled by the service provder : ' + providerDetails.providerId,
                 "data": {
                     ProviderId: providerDetails.providerId,

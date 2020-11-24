@@ -497,6 +497,9 @@ class ProDashboardScreen extends Component {
                 "type": "ChatAcceptance",
                 "notification_by": "Employee",
                 "save_notification": true,
+                "user_id": user_id,
+                "employee_id": providerDetails.providerId,
+                "order_id": order_id,
                 "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
                 "data": {
                     user_id: '',
@@ -580,7 +583,7 @@ class ProDashboardScreen extends Component {
                     onPress={() => this.goToProMapDirection(chat_status, status, { currentPos: index, userType: 'provider', user_id, orderId: order_id })}
                 >
                     <LinearGradient style={styles.pendingJobRow}
-                        colors={['#000000','#3C3C3C', '#4F4F50']}>
+                        colors={['#000000', '#3C3C3C', '#4F4F50']}>
                         <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
                             source={{ uri: image }} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
@@ -691,6 +694,9 @@ class ProDashboardScreen extends Component {
                     "notification_by": "Employee",
                     "title": "Ask For Review",
                     "save_notification": true,
+                    "user_id": item.user_id,
+                    "employee_id": providerDetails.providerId,
+                    "order_id": item._id,
                     "body": providerDetails.name + " " + providerDetails.surname + " waiting for your feedback",
                 }
             }

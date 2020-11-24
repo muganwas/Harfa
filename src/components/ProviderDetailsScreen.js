@@ -113,6 +113,8 @@ class ProviderDetailsScreen extends Component {
           "title": "Booking Request",
           "body": 'A booking request from ' + userDetails.username,
           "save_notification": true,
+          "user_id": userDetails.userId,
+          "employee_id": this.state.providerId,
           "data": {
             userId: userDetails.userId,
             serviceName: this.state.serviceName,
@@ -433,7 +435,7 @@ class ProviderDetailsScreen extends Component {
 
           <View style={{ flexDirection: 'column', marginLeft: 10 }}>
             <Image style={{ width: 60, height: 60, borderRadius: 100, alignSelf: 'center' }}
-              source={ this.state.image ? { uri: this.state.image } : require('../images/generic_avatar.png')} />
+              source={this.state.image ? { uri: this.state.image } : require('../images/generic_avatar.png')} />
 
             <View style={{ backgroundColor: 'white', marginTop: 5 }}>
               <AirbnbRating
@@ -448,19 +450,19 @@ class ProviderDetailsScreen extends Component {
           </View>
           <View style={{ flexDirection: 'column', marginLeft: 20 }}>
             <Text>
-              <Text style={{color: darkGray, fontWeight: 'bold'}}>Account Type: </Text>
+              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Account Type: </Text>
               <Text>{this.state.accountType}</Text>
             </Text>
             <Text>
-              <Text style={{color: darkGray, fontWeight: 'bold'}}>Distance from you: </Text>
+              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Distance from you: </Text>
               <Text>{this.state.distance + " Km"}</Text>
             </Text>
             <Text>
-              <Text style={{color: darkGray, fontWeight: 'bold'}}>Address: </Text>
+              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Address: </Text>
               <Text>{this.state.address}</Text>
             </Text>
             <Text>
-              <Text style={{color: darkGray, fontWeight: 'bold'}}>Self Description: </Text>
+              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Self Description: </Text>
               <Text>{this.state.description}</Text>
             </Text>
           </View>
@@ -470,8 +472,8 @@ class ProviderDetailsScreen extends Component {
           <View style={styles.bottomView}>
             <TouchableOpacity style={styles.buttonContainer}
               onPress={this.requestForBooking}>
-                <Text style={styles.text}>
-                  Send Request
+              <Text style={styles.text}>
+                Send Request
                 </Text>
             </TouchableOpacity>
           </View>

@@ -56,7 +56,6 @@ class MapDirectionScreen extends Component {
       destinationLng: parseFloat(usersCoordinates.longitude),
       coords: [],
       isLoading: true,
-
       senderId: userDetails.userId,
       senderImage: userDetails.image,
       senderName: userDetails.username,
@@ -215,7 +214,7 @@ class MapDirectionScreen extends Component {
 
   jobCancelTask = () => {
     this.setState({ isLoading: true });
-    const { fetchedPendingJobInfo, jobsInfo: { jobRequests } } = this.props;
+    const { fetchedPendingJobInfo, jobsInfo: { jobRequests }, userInfo: { userDetails } } = this.props;
     const { currRequestPos } = this.state;
     var newJobRequests = [...jobRequests];
     const data = {
@@ -226,7 +225,10 @@ class MapDirectionScreen extends Component {
         "fcm_id": jobRequests[currRequestPos].fcm_id,
         "title": "Job Canceled",
         "type": "JobCancellation",
-        "notification_by": "Customer",
+        "user_id": userDetails.userId,
+        "employee_id": jobRequests[currRequestPos].employee_id,
+        "order_id": jobRequests[currRequestPos].order_id,
+        "notification_by": "Client",
         "save_notification": true,
         "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
         "data": {
@@ -302,6 +304,9 @@ class MapDirectionScreen extends Component {
         "title": "Job Completed",
         "body": 'Your job request has been completed by ' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
         "type": "Job Completed",
+        "user_id": userDetails.userId,
+        "employee_id": jobRequests[currRequestPos].employee_id,
+        "order_id": jobRequests[currRequestPos].order_id,
         "notification_by": "Client",
         "save_notification": true,
         "data": {

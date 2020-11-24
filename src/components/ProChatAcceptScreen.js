@@ -200,6 +200,7 @@ class ProChatAcceptScreen extends Component {
         clearInterval(this.interval);
         song.stop(() => { });
         const { userInfo: { providerDetails } } = this.props;
+        const { userId, orderId } = this.state;
         this.setState({
             isLoading: true,
         });
@@ -214,10 +215,13 @@ class ProChatAcceptScreen extends Component {
                 "type": "ChatAcceptance",
                 "notification_by": "Employee",
                 "save_notification": true,
-                "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
+                "user_id": userId,
+                "employee_id": providerDetails.providerId,
+                "order_id": orderId,
+                "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + orderId,
                 "data": {
                     user_id: '',
-                    providerId: providerDetails.id,
+                    providerId: providerDetails.providerId,
                     ProviderData: providerDetails,
                     serviceName: this.state.serviceName,
                     orderId: this.props.navigation.state.params.orderId,
@@ -241,7 +245,6 @@ class ProChatAcceptScreen extends Component {
         })
             .then(response => response.json())
             .then(responseJson => {
-                console.log('accept response', responseJson)
                 const { jobsInfo: { jobRequestsProviders }, fetchedPendingJobInfo, dispatchSelectedJobRequest, navigation } = this.props;
                 let newProJobsInfo = cloneDeep(jobRequestsProviders);
                 let newJobsInfoLength = newProJobsInfo.length;
@@ -298,6 +301,7 @@ class ProChatAcceptScreen extends Component {
 
     rejectJob = () => {
         const { userInfo: { providerDetails } } = this.props;
+        const { orderId, userId } = this.state;
         const data = {
             main_id: this.props.navigation.state.params.mainId,
             chat_status: '0',
@@ -308,6 +312,9 @@ class ProChatAcceptScreen extends Component {
                 "type": "JobRejection",
                 "notification_by": "Employee",
                 "save_notification": true,
+                "user_id": userId,
+                "employee_id": providerDetails.providerId,
+                "order_id": orderId,
                 "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.props.navigation.state.params.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
@@ -360,6 +367,7 @@ class ProChatAcceptScreen extends Component {
 
     rejectedAfterNoResponse = () => {
         const { userInfo: { providerDetails } } = this.props;
+        const { userId, orderId } = this.state;
         const data = {
             main_id: this.props.navigation.state.params.mainId,
             chat_status: '0',
@@ -368,7 +376,10 @@ class ProChatAcceptScreen extends Component {
                 "fcm_id": this.state.userFcmId,
                 "title": "No Response",
                 "save_notification": true,
-                "body": providerDetails.name + " is not responding to your request" + ' Request Id : ' + this.props.navigation.state.params.orderId,
+                "user_id": userId,
+                "employee_id": providerDetails.providerId,
+                "order_id": orderId,
+                "body": providerDetails.name + " is not responding to your request" + ' Request Id : ' + orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
                     serviceName: this.state.serviceName,
