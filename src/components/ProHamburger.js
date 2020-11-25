@@ -59,7 +59,6 @@ class ProHamburger extends React.Component {
         this.checkForUserType();
         
         messaging().onMessage(message => {
-            console.log('pro message', message)
             const { data } = message;
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body } = data;

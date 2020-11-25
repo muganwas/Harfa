@@ -14,7 +14,7 @@ import Config from './Config';
 import moment from 'moment';
 import { chatDate } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
-import { colorPrimary, colorPrimaryDark, colorYellow, lightGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorYellow, lightGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
 import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;

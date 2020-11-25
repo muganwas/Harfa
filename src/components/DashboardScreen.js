@@ -59,9 +59,9 @@ class DashboardScreen extends Component {
     //Get All Services
     componentDidMount() {
         this.onRefresh();
-        const { navigation, messagesInfo } = this.props;
+        const { navigation } = this.props;
         navigation.addListener('willFocus', () => {
-            //this.onRefresh();
+            this.onRefresh();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
         });
         navigation.addListener('willBlur', () => {
@@ -105,7 +105,7 @@ class DashboardScreen extends Component {
     };
 
     //GridView Items
-    renderItem = ({item, index}) => {
+    renderItem = ({ item, index }) => {
         if (item)
             return (
                 <TouchableOpacity
@@ -132,8 +132,8 @@ class DashboardScreen extends Component {
                     { item.image ? <Image style={{ width: 40, height: 40, tintColor: white, margin: 10, zIndex: 1000 }}
                         source={images[item.image]} /> :
                         <Image style={{ width: 40, height: 40, margin: 10, tintColor: white, zIndex: 1000 }}
-                        source={require('../images/png/picture.png')} /> 
-                         }
+                            source={require('../images/png/picture.png')} />
+                    }
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 5, alignItems: 'center' }}>
                         <Text style={{ textAlign: 'center', fontWeight: 'bold', color: white, fontSize: 12, marginTop: 5, alignSelf: 'center' }}>
                             {item.service_name}
@@ -179,21 +179,29 @@ class DashboardScreen extends Component {
     }
 
     onRefresh = () => {
-        fetch(SERVICES_URL).
-            then((response) => response.json()).
-            then(responseJson => {
-                this.setState({
-                    dataSource: responseJson.data,  //data is key
-                    isLoading: false
-                })
-            }).
-            catch(error => {
-                console.log(error);
-                this.setState({
-                    isLoading: false
-                })
-                this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+        if (!this.state.dataSource || (this.state.dataSource && this.state.dataSource.length === 0)) {
+            fetch(SERVICES_URL).
+                then((response) => response.json()).
+                then(responseJson => {
+                    console.log('loaded...')
+                    this.setState({
+                        dataSource: responseJson.data,
+                        isLoading: false
+                    })
+                }).
+                catch(error => {
+                    console.log(error);
+                    this.setState({
+                        isLoading: false
+                    })
+                    this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+                });
+        }
+        else {
+            this.setState({
+                isLoading: false
             });
+        }
         return true;
     }
 
@@ -279,6 +287,8 @@ class DashboardScreen extends Component {
 
     render() {
         const { jobsInfo: { jobRequests, requestsFetched } } = this.props;
+        const { isLoading } = this.state;
+        console.log('is loading...', isLoading)
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
@@ -338,7 +348,7 @@ class DashboardScreen extends Component {
                     </TouchableOpacity>
                 </Animated.View>
 
-                <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+                <Modal transparent={true} visible={isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>

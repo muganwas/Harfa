@@ -12,10 +12,9 @@ import { getDistance } from '../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../Redux/Actions/jobsActions';
 import { colorPrimary, black, colorBg, colorYellow, white, themeRed } from '../Constants/colors';
-import SoundPlayer from 'react-native-sound';
+//import SoundPlayer from 'react-native-sound';
 import { cloneDeep } from 'lodash';
 
-let song = null;
 const screenWidth = Dimensions.get('window').width;
 
 const USER_GET_PROFILE = Config.baseURL + "users/"
@@ -64,8 +63,6 @@ class ProChatAcceptScreen extends Component {
             delivery_address: navigation.state.params.delivery_address,
             delivery_lat: navigation.state.params.delivery_lat,
             delivery_lang: navigation.state.params.delivery_lang,
-            minutes_Counter: '04',
-            seconds_Counter: '59',
             secondTimeLoader: ''
         }
     };
@@ -113,25 +110,11 @@ class ProChatAcceptScreen extends Component {
                         catch(e => {
                             console.log(e.message);
                         });
-                    this.interval = setInterval(() => {
-                        var num = (Number(this.state.seconds_Counter) - 1).toString(),
-                            count = this.state.minutes_Counter;
-                        if (Number(this.state.seconds_Counter) == 0) {
-                            count = (Number(this.state.minutes_Counter) - 1).toString();
-                            num = '59';
-                        }
-
-                        this.setState({
-                            minutes_Counter: count.length == 1 ? '0' + count : count,
-                            seconds_Counter: num.length == 1 ? '0' + num : num
-                        });
-                    }, 1000);
                 }
                 else {
                     this.setState({
                         isErrorToast: true,
-                    })
-                    // ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+                    });
                     this.showToast("Quelque chose a mal tourné")
                 }
             })
@@ -144,61 +127,12 @@ class ProChatAcceptScreen extends Component {
             });
     }
 
-    componentWillMount() {
-        song = new SoundPlayer('ringtone.mp3', SoundPlayer.MAIN_BUNDLE, (error) => {
-            if (error) {
-                // ToastAndroid.show("Error when init SoundPlayer", ToastAndroid.SHORT);
-            }
-            else {
-                song.play((success) => {
-                    if (!success) {
-                        // ToastAndroid.show("Error when play SoundPlayer", ToastAndroid.SHORT);
-                    }
-                })
-            }
-        });
-
-        if (song != null) {
-            song.play((success) => {
-                if (!success) {
-                    // ToastAndroid.show("Error when init SoundPlayer", ToastAndroid.SHORT);
-                }
-            });
-        }
-        else {
-            Toast.show("Songs not found");
-        }
-    }
-
-    componentWillUnmount() {
-        song.stop();
-        clearInterval(this.interval);
-    }
-
-    componentDidUpdate() {
-        if (this.state.minutes_Counter == '00') {
-            if (this.state.seconds_Counter == '00') {
-                clearInterval(this.interval);
-                song.stop();
-                this.setState({
-                    minutes_Counter: '04',
-                    seconds_Counter: '59',
-                    requestStatus: 'No Response',
-                });
-                this.rejectedAfterNoResponse();
-            }
-        }
-    }
-
     handleBackButtonClick = () => {
-        song.stop();
         this.props.navigation.navigate("ProDashboard");
         return true;
     }
 
     acceptJob = () => {
-        clearInterval(this.interval);
-        song.stop(() => { });
         const { userInfo: { providerDetails } } = this.props;
         const { userId, orderId } = this.state;
         this.setState({
@@ -470,10 +404,6 @@ class ProChatAcceptScreen extends Component {
                     {!this.state.isLoading && this.state.secondTimeLoader != "" &&
                         <View style={styles.headerLayoutStyle}>
                             <View style={styles.mainContainer}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, marginLeft: 10, marginRight: 10 }}>
-                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.minutes_Counter} : {this.state.seconds_Counter}</Text>
-                                </View>
-
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, }}>
                                     <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hello,</Text>
                                     <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>

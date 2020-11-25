@@ -14,7 +14,7 @@ import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userA
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { cloneDeep } from 'lodash';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { lightGray, colorGreen, colorRed, colorYellow, themeRed, colorBg, white, black, darkGray } from '../Constants/colors';
+import { lightGray, colorGreen, colorRed, themeRed, colorBg, white, black, darkGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -63,8 +63,6 @@ class ProviderDetailsScreen extends Component {
       isErrorToast: false,
       isLoading: true,
       timer: null,
-      minutes_Counter: '04',
-      seconds_Counter: '59',
       title: '',
       body: '',
       data: '',
@@ -137,26 +135,11 @@ class ProviderDetailsScreen extends Component {
         .then((response) => response.json())
         .then((responseJson) => {
           if (responseJson.result) {
-            this.interval = setInterval(() => {
-
-              var num = (Number(this.state.seconds_Counter) - 1).toString(),
-                count = this.state.minutes_Counter;
-
-              if (Number(this.state.seconds_Counter) == 0) {
-                count = (Number(this.state.minutes_Counter) - 1).toString();
-                num = '59';
-              }
-
-              this.setState({
-                minutes_Counter: count.length == 1 ? '0' + count : count,
-                seconds_Counter: num.length == 1 ? '0' + num : num
-              });
-            }, 1000);
             this.props.updateActiveRequest(true);
             this.setState({
               requestStatus: "Waiting for acceptance...",
               isLoading: false,
-            })
+            });
           }
           else {
             if (responseJson.message == 'Already Exist') {
@@ -166,7 +149,7 @@ class ProviderDetailsScreen extends Component {
                 [
                   {
                     text: 'OK',
-                    onPress: () => this.props.navigation.goBack(),
+                    onPress: this.goBack,
                   },
                 ]
               );
@@ -178,7 +161,7 @@ class ProviderDetailsScreen extends Component {
                 [
                   {
                     text: 'OK',
-                    onPress: () => this.props.navigation.goBack(),
+                    onPress: this.goBack,
                   },
                 ]
               );
@@ -190,7 +173,7 @@ class ProviderDetailsScreen extends Component {
                 [
                   {
                     text: 'OK',
-                    onPress: () => this.props.navigation.goBack(),
+                    onPress: this.goBack,
                   },
                 ]
               );
@@ -202,7 +185,7 @@ class ProviderDetailsScreen extends Component {
                 [
                   {
                     text: 'OK',
-                    onPress: () => this.props.navigation.goBack(),
+                    onPress: this.goBack,
                   },
                 ]
               );
@@ -211,17 +194,9 @@ class ProviderDetailsScreen extends Component {
               //ToastAndroid.show("Something went wrong", ToastAndroid.SHORT);
               this.showToast('Something went wrong');
             }
-            clearInterval(this.interval);
-            this.setState({
-              isLoading: false,
-              minutes_Counter: '04',
-              seconds_Counter: '59',
-              requestStatus: 'No Response',
-            });
           }
         })
         .catch((error) => {
-          console.log("Error >>> " + error);
           this.setState({
             timer: null,
             requestStatus: 'No Response',
@@ -233,19 +208,14 @@ class ProviderDetailsScreen extends Component {
     }
   }
 
+  goBack = () => {
+    this.setState({isLoading:false});
+    this.props.navigation.goBack();
+  }
+
   componentDidUpdate() {
     const { jobsInfo: { activeRequest }, generalInfo: { OnlineUsers } } = this.props;
     const { requestStatus, liveChatStatus } = this.state;
-    if (this.state.minutes_Counter == '00') {
-      if (this.state.seconds_Counter == '00') {
-        clearInterval(this.interval);
-        this.setState({
-          minutes_Counter: '04',
-          seconds_Counter: '59',
-          requestStatus: 'No Response',
-        });
-      }
-    }
     if (!activeRequest && requestStatus == 'Waiting for acceptance...')
       this.setState({ requestStatus: '' });
     const currentliveChatStatus = OnlineUsers[this.state.providerId] ? OnlineUsers[this.state.providerId].status : "0";
@@ -295,8 +265,6 @@ class ProviderDetailsScreen extends Component {
       isErrorToast: false,
       isLoading: false,
       timer: null,
-      minutes_Counter: '04',
-      seconds_Counter: '59',
       title: '',
       body: '',
       data: '',
@@ -329,10 +297,6 @@ class ProviderDetailsScreen extends Component {
         }
       }
     });
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.interval);
   }
 
   handleBackButtonClick = () => {
@@ -530,8 +494,7 @@ class ProviderDetailsScreen extends Component {
 
             <View style={styles.timerView}>
               <View style={[styles.timerTextView, { backgroundColor: colorGreen }]}>
-                <Text style={[styles.timerText]}>
-                  {this.state.minutes_Counter} : {this.state.seconds_Counter}</Text>
+                <Text style={[styles.timerText]}>linding...</Text>
               </View>
             </View>
           </View>
