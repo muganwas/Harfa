@@ -46,8 +46,6 @@ class ProHamburger extends React.Component {
 
     componentDidMount() {
         const {
-            jobsInfo: { allJobRequestsProviders },
-            fetchedMessages,
             fetchedNotifications,
             dbMessagesFetched,
             fetchingMessagesError,

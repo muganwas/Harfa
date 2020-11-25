@@ -14,7 +14,7 @@ import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, lightGray, black } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, lightGray, darkGray, black, colorGray } from '../Constants/colors';
 import images from '../Constants/images';
 
 const screenWidth = Dimensions.get('window').width;
@@ -183,7 +183,6 @@ class DashboardScreen extends Component {
             fetch(SERVICES_URL).
                 then((response) => response.json()).
                 then(responseJson => {
-                    console.log('loaded...')
                     this.setState({
                         dataSource: responseJson.data,
                         isLoading: false
@@ -194,7 +193,7 @@ class DashboardScreen extends Component {
                     this.setState({
                         isLoading: false
                     })
-                    this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+                    this.showToast("An error has occurred, check your internet connection");
                 });
         }
         else {
@@ -255,21 +254,30 @@ class DashboardScreen extends Component {
             return (
                 <TouchableOpacity
                     key={index}
-                    style={styles.pendingJobRow}
+                    style={[styles.pendingJobRow, {
+                        paddingVertical: 0,
+                        shadowColor: '#000',
+                        borderWidth: 0.5,
+                        borderColor: lightGray,
+                        backgroundColor: themeRed,
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.75,
+                        shadowRadius: 5,
+                        elevation: 5,
+                    }]}
                     onPress={() => this.goToNextPage(chat_status, { userType: 'client', status, fcm_id, order_id, image, service_name, name, employee_id, currentPos: index })}>
-                    <LinearGradient
-                        style={styles.pendingJobRow}
-                        colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
-                        <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                            source={{ uri: image }} />
+                    <View
+                        style={[styles.pendingJobRow]}>
+                        <Image style={{ height: 30, width: 30, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
+                            source={image ? { uri: image } : require('../images/generic_avatar.png')} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                            <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
+                            <Text style={{ color: white, fontSize: 12, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center' }}>
                                 {name + " " + surName}
                             </Text>
-                            <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                            <Text style={{ color: white, fontSize: 11, marginLeft: 10, textAlignVertical: 'center' }}>
                                 {service_name}
                             </Text>
-                            <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                            <Text style={{ color: white, fontSize: 11, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
                                 {chat_status == "0" ? "New job application"
                                     : status == "Pending" ? "Chat request accepted"
                                         : "Accepted work"}
@@ -279,7 +287,7 @@ class DashboardScreen extends Component {
                             <Image style={styles.arrow}
                                 source={require('../icons/arrow_right_animated.gif')} />
                         </View>
-                    </LinearGradient>
+                    </View>
                 </TouchableOpacity>
             )
         }
@@ -288,7 +296,6 @@ class DashboardScreen extends Component {
     render() {
         const { jobsInfo: { jobRequests, requestsFetched } } = this.props;
         const { isLoading } = this.state;
-        console.log('is loading...', isLoading)
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
@@ -320,7 +327,7 @@ class DashboardScreen extends Component {
                     </View>
                 </View>
 
-                <View style={[styles.gridView, { marginBottom: jobRequests.length === 0 ? 0 : 75 }]}>
+                <View style={[styles.gridView, { marginBottom: jobRequests.length === 0 ? 0 : 45 }]}>
                     <FlatList
                         keyboardShouldPersistTaps={'handled'}
                         numColumns={3}
@@ -515,7 +522,7 @@ const styles = StyleSheet.create({
         flex: 1,
         display: 'flex',
         flexDirection: 'row',
-        height: 75,
+        height: 55,
     },
     linearGradient: {
         flex: 1,
@@ -533,15 +540,15 @@ const styles = StyleSheet.create({
     },
     arrowView: {
         flex: 1,
-        height: 75,
-        color: 'white',
+        height: 55,
         alignContent: 'center',
         justifyContent: 'center',
     },
     arrow: {
-        width: 35,
-        height: 35,
+        width: 20,
+        height: 20,
+        tintColor: white,
         alignSelf: 'flex-end',
-        marginRight: 30,
+        marginRight: 10,
     },
 });

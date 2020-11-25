@@ -379,7 +379,6 @@ class Hamburger extends React.Component {
                         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
                         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
                     if (enabled) {
-                        console.log('Notificationd enabled');
                         messaging()
                             .getInitialNotification()
                             .then(remoteMessage => {

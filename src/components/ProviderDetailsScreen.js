@@ -13,7 +13,14 @@ import { imageExists } from '../misc/helpers';
 import { updateUserDetails, updateProviderDetails } from '../Redux/Actions/userActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import { cloneDeep } from 'lodash';
-import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError, setSelectedJobRequest, updateActiveRequest } from '../Redux/Actions/jobsActions';
+import {
+  startFetchingJobCustomer,
+  fetchedJobCustomerInfo,
+  fetchCustomerJobInfoError,
+  setSelectedJobRequest,
+  updateActiveRequest,
+  getPendingJobRequest
+} from '../Redux/Actions/jobsActions';
 import { lightGray, colorGreen, colorRed, themeRed, colorBg, white, black, darkGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -209,7 +216,7 @@ class ProviderDetailsScreen extends Component {
   }
 
   goBack = () => {
-    this.setState({isLoading:false});
+    this.setState({ isLoading: false });
     this.props.navigation.goBack();
   }
 
@@ -236,6 +243,8 @@ class ProviderDetailsScreen extends Component {
     });
     navigation.addListener('willBlur', () => {
       BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+      const { userInfo: { userDetails }, getPendingJobRequest } = this.props;
+      getPendingJobRequest(this.props, userDetails.userId);
     });
   }
 
@@ -358,8 +367,12 @@ class ProviderDetailsScreen extends Component {
     })
   }
 
+  componentWillUnmount() {
+    const { userInfo: { userDetails }, getPendingJobRequest } = this.props;
+    getPendingJobRequest(this.props, userDetails.userId);
+  }
+
   render() {
-    const { imageAvailable } = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -548,6 +561,9 @@ const mapDispatchToProps = dispatch => {
     },
     updateProviderDetails: details => {
       dispatch(updateProviderDetails(details));
+    },
+    getPendingJobRequest: (props, userId, goTo) => {
+      dispatch(getPendingJobRequest(props,userId,goTo));
     }
   }
 }

@@ -36,7 +36,7 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../Redux/Actions/jobsActions';
-import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray, black, colorGray, darkRed, lightRed } from '../Constants/colors';
+import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray, black } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -579,21 +579,30 @@ class ProDashboardScreen extends Component {
             return (
                 <TouchableOpacity
                     key={index}
-                    style={styles.pendingJobRow}
+                    style={[styles.pendingJobRow, {
+                        paddingVertical: 0,
+                        shadowColor: '#000',
+                        borderWidth: 0.5,
+                        borderColor: lightGray,
+                        backgroundColor: themeRed,
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.75,
+                        shadowRadius: 5,
+                        elevation: 5,
+                    }]}
                     onPress={() => this.goToProMapDirection(chat_status, status, { currentPos: index, userType: 'provider', user_id, orderId: order_id })}
                 >
-                    <LinearGradient style={styles.pendingJobRow}
-                        colors={['#000000', '#3C3C3C', '#4F4F50']}>
-                        <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
+                    <View style={styles.pendingJobRow}>
+                        <Image style={{ height: 30, width: 30, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
                             source={{ uri: image }} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
-                            <Text style={{ color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold' }}>
+                            <Text style={{ color: 'white', fontSize: 12, marginLeft: 10, fontWeight: 'bold' }}>
                                 {name}
                             </Text>
-                            <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                            <Text style={{ color: 'white', fontSize: 11, marginLeft: 10, textAlignVertical: 'center' }}>
                                 {"Request for " + service_name}
                             </Text>
-                            <Text style={{ color: white, fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                            <Text style={{ color: white, fontSize: 11, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
                                 {chat_status == "0" ? "New Job Request" : status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
                             </Text>
                         </View>
@@ -611,7 +620,7 @@ class ProDashboardScreen extends Component {
                                 </View>
                             </TouchableOpacity>
                         }
-                    </LinearGradient>
+                    </View>
                 </TouchableOpacity>
             )
         }
@@ -820,7 +829,7 @@ class ProDashboardScreen extends Component {
                 </View>
 
                 <ScrollView
-                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 80, backgroundColor: lightGray }}
+                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 45, backgroundColor: lightGray }}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}
@@ -1076,9 +1085,12 @@ const styles = StyleSheet.create({
         paddingRight: 10,
         paddingTop: 5,
         paddingBottom: 5,
-        backgroundColor: 'white',
-        borderColor: themeRed,
-        borderWidth: 2,
+        backgroundColor: white,
+        shadowColor: darkGray,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         borderRadius: 5,
         marginRight: 20,
     },
@@ -1205,7 +1217,7 @@ const styles = StyleSheet.create({
         flex: 1,
         display: 'flex',
         flexDirection: 'row',
-        height: 75,
+        height: 55,
     },
     linearGradient: {
         flex: 1,
@@ -1223,16 +1235,17 @@ const styles = StyleSheet.create({
     },
     arrowView: {
         flex: 1,
-        height: 80,
+        height: 55,
         color: 'white',
         alignContent: 'center',
         justifyContent: 'center',
     },
     arrow: {
-        width: 35,
-        height: 35,
+        width: 20,
+        height: 20,
+        tintColor: white,
         alignSelf: 'flex-end',
-        marginRight: 30,
+        marginRight: 10,
     },
     contentContainer: {
         flex: 1,
