@@ -2,23 +2,23 @@
 import React, { Component } from 'react';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, Dimensions,
-    ActivityIndicator, BackHandler, StatusBar, Platform, Modal, Animated
+    ActivityIndicator, BackHandler, StatusBar, Platform, Animated
 } from 'react-native';
-//import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import Toast from 'react-native-simple-toast';
-//import { DrawerActions } from 'react-navigation-drawer';
 import RNExitApp from 'react-native-exit-app';
+import { cloneDeep } from 'lodash';
 import Config from './Config';
-import WaitingDialog from './WaitingDialog';
+import SwipeableButton from './SwipeableBtn';
 import Notifications from './Notifications';
 import Hamburger from './Hamburger';
 import { colorPrimaryDark, lightGray, white, themeRed, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-
 const NOTIFICATION_URL = Config.baseURL + "notification/get-customer-notification/";
+const READ_NOTIFICATION_URL = Config.baseURL + "notification/read-notification/";
+const DELETE_NOTIFICATION_URL = Config.baseURL + "notification/delete-notification/";
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -98,6 +98,52 @@ class NotificationsScreen extends Component {
         });
     }
 
+    readNotification = id => {
+        const { dataSource } = this.state;
+        let altDataSource = cloneDeep(dataSource);
+        fetch(READ_NOTIFICATION_URL + id, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json())
+            .then(responseJson => {
+                if (responseJson) {
+                    const { data: { _id, status } } = responseJson;
+                    dataSource.map((notification, index) => {
+                        if (_id === notification._id)
+                            altDataSource[index].status = status;
+                    });
+                    this.setState({ dataSource: altDataSource });
+                }
+            });
+    }
+
+    deleteNotification = id => {
+        const { dataSource } = this.state;
+        let altDataSource = cloneDeep(dataSource);
+        fetch(DELETE_NOTIFICATION_URL + id, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json())
+            .then(responseJson => {
+                if (responseJson) {
+                    const { data: { _id } } = responseJson;
+                    dataSource.map((notification, index) => {
+                        if (_id === notification._id)
+                            altDataSource.splice(index, 1);
+                    });
+                    this.setState({ dataSource: altDataSource });
+                }
+            });
+    }
+
     getAllNotifications = () => {
         this.setState({
             isLoading: true
@@ -106,8 +152,8 @@ class NotificationsScreen extends Component {
         const { userInfo: { userDetails } } = this.props;
 
         fetch(NOTIFICATION_URL + userDetails.userId)
-            .then((response) => response.json())
-            .then((responseJson) => {
+            .then(response => response.json())
+            .then(responseJson => {
                 //console.log('notification', responseJson)
                 if (responseJson.result) {
                     this.setState({
@@ -129,7 +175,7 @@ class NotificationsScreen extends Component {
                     isLoading: false,
                     isNoData: true
                 })
-                this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet")
+                this.showToast("An error has occurred, check your internet connection")
             })
     }
 
@@ -139,42 +185,55 @@ class NotificationsScreen extends Component {
 
     //GridView Items
     renderItem = (item, index) => {
-        if (item)
+        if (item) {
+            const { status, _id } = item;
             return (
-                <TouchableOpacity
+                <SwipeableButton
                     key={index}
-                    style={{
-                        flexDirection: 'row', 
-                        margin: 5, 
-                        padding: 10, 
-                        shadowColor: '#000', 
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.75, 
-                        shadowRadius: 2, 
-                        elevation: 2, 
-                        backgroundColor: white, 
-                        borderRadius: 2, 
-                        justifyContent: 'center'
-                    }}>
+                    onSwipeableLeftOpen={() => this.readNotification(_id)}
+                    onSwipeableRightOpen={() => this.deleteNotification(_id)}
+                >
+                    <TouchableOpacity
+                        key={index}
+                        onPress={() => {
+                            if (status === '0')
+                                this.readNotification(_id);
+                        }}
+                        style={{
+                            flexDirection: 'row',
+                            margin: 5,
+                            padding: 10,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 3 },
+                            shadowOpacity: 0.75,
+                            shadowRadius: 5,
+                            elevation: 5,
+                            backgroundColor: status === '0' ? lightGray : white,
+                            borderRadius: 2,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
 
-                    <View style={{ justifyContent: 'center', alignContent: 'center' }}>
-                        <Image style={{ width: 45, height: 45, borderRadius: 100, alignItems: 'center', }}
-                            source={item.employee_details && item.employee_details.image ? { uri: item.employee_details.image } : require('../images/generic_avatar.png')} />
-                    </View>
+                        <View style={{ justifyContent: 'center', alignContent: 'center' }}>
+                            <Image style={{ width: 45, height: 45, borderRadius: 100, alignItems: 'center', }}
+                                source={item.employee_details && item.employee_details.image ? { uri: item.employee_details.image } : require('../images/generic_avatar.png')} />
+                        </View>
 
-                    <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
-                        <Text style={{ color: 'black', fontSize: 15, marginTop: 5, fontWeight: 'bold' }}>
-                            {item.title}
-                        </Text>
-                        <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
-                            {item.message}
-                        </Text>
-                        <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
-                            {item.createdDate}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
+                        <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', marginLeft: 10 }}>
+                            <Text style={{ color: 'black', fontSize: 15, marginTop: 5, fontWeight: 'bold' }}>
+                                {item.title}
+                            </Text>
+                            <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
+                                {item.message}
+                            </Text>
+                            <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
+                                {item.createdDate}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                </SwipeableButton>
             )
+        }
     }
 
     changeWaitingDialogVisibility = bool => {
@@ -185,11 +244,8 @@ class NotificationsScreen extends Component {
 
     render() {
         return (
-
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
                 <View style={styles.header} >
                     <Hamburger
                         Notifications={Notifications}
@@ -197,12 +253,15 @@ class NotificationsScreen extends Component {
                         text='Notifications'
                     />
                 </View>
+                {this.state.isLoading && <View style={{ height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size={'large'} color={colorGray} />
+                </View>}
                 {!this.state.isLoading && !this.state.isNoData &&
                     <View style={styles.listView}>
                         {this.state.dataSource.map(this.renderItem)}
                     </View>
                 }
-                {this.state.isNoData && (
+                {!this.state.isLoading && (this.state.isNoData || (this.state.dataSource && this.state.dataSource.length === 0)) && (
                     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: lightGray, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: themeRed, justifyContent: 'center', alignItems: 'center' }}>
                             <Image style={{ width: 50, height: 50, tintColor: white }}
@@ -211,14 +270,6 @@ class NotificationsScreen extends Component {
                         <Text style={{ fontSize: 18, marginTop: 10 }}>You have no notifications</Text>
                     </View>
                 )}
-                {/* {this.state.isLoading && (
-                <View style={styles.loaderStyle}>
-                    <ActivityIndicator
-                        style={{ height: 80 }}
-                        color="#C00"
-                        size="large" />
-                </View>
-            )} */}
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
                     <Text style={styles.exitTitleText}>Press back again to exit the app</Text>
                     <TouchableOpacity
@@ -227,11 +278,6 @@ class NotificationsScreen extends Component {
                         <Text style={styles.exitText}>Exit</Text>
                     </TouchableOpacity>
                 </Animated.View>
-
-                <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
-                    onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
-                    <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
-                </Modal>
             </View>
         );
     }

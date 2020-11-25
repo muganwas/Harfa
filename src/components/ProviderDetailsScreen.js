@@ -111,7 +111,7 @@ class ProviderDetailsScreen extends Component {
         'notification': {
           "fcm_id": this.props.navigation.state.params.fcmId,
           "title": "Booking Request",
-          "body": 'A booking request from ' + userDetails.username,
+          "body": 'You have a booking request from ' + userDetails.username,
           "save_notification": true,
           "user_id": userDetails.userId,
           "employee_id": this.state.providerId,

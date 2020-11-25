@@ -55,4 +55,5 @@ export { default as ContactUsScreen } from './ContactUsScreen';
 export { default as ChatWithAdminScreen } from './ChatWithAdminScreen';
 export { default as BookingScreen } from './BookingScreen';
 export { default as AllMessageScreen } from './AllMessageScreen';
+export { default as SwipeableButton } from './SwipeableBtn';
 export { default as Config } from './Config';

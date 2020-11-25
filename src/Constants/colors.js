@@ -19,5 +19,5 @@ module.exports = {
     inactiveText: '#F3F3F3',
     buttonPrimary: '#1E90FF',
     colorRed: '#EA4335',
-    colorGreen: 'green'
+    colorGreen: '#88B501'
 }

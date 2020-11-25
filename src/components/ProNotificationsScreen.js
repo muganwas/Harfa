@@ -1,15 +1,35 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
-import { View, StyleSheet, TouchableOpacity, Image, Text, Dimensions, StatusBar, Platform, Animated, BackHandler } from 'react-native';
+import {
+    startFetchingNotification,
+    notificationsFetched,
+    notificationError
+} from '../Redux/Actions/notificationActions';
+import {
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    Image,
+    Text,
+    Dimensions,
+    StatusBar,
+    Platform,
+    Animated,
+    BackHandler,
+    ActivityIndicator
+} from 'react-native';
 import Notifications from './Notifications';
 import Toast from 'react-native-simple-toast';
+import { cloneDeep } from 'lodash';
 import Config from './Config';
 import Hamburger from './ProHamburger';
+import SwipeableButton from './SwipeableBtn';
 import { lightGray, colorPrimaryDark, white, themeRed, colorGray } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-employee-notification/";
+const READ_NOTIFICATION_URL = Config.baseURL + "notification/read-notification/";
+const DELETE_NOTIFICATION_URL = Config.baseURL + "notification/delete-notification/";
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -58,6 +78,52 @@ class ProNotificationsScreen extends Component {
         this.props.navigation.goBack();
     }
 
+    readNotification = id => {
+        const { dataSource } = this.state;
+        let altDataSource = cloneDeep(dataSource);
+        fetch(READ_NOTIFICATION_URL + id, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json())
+            .then(responseJson => {
+                if (responseJson) {
+                    const { data: { _id, status } } = responseJson;
+                    dataSource.map((notification, index) => {
+                        if (_id === notification._id)
+                            altDataSource[index].status = status;
+                    });
+                    this.setState({ dataSource: altDataSource });
+                }
+            });
+    }
+
+    deleteNotification = id => {
+        const { dataSource } = this.state;
+        let altDataSource = cloneDeep(dataSource);
+        fetch(DELETE_NOTIFICATION_URL + id, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json())
+            .then(responseJson => {
+                if (responseJson) {
+                    const { data: { _id } } = responseJson;
+                    dataSource.map((notification, index) => {
+                        if (_id === notification._id)
+                            altDataSource.splice(index, 1);
+                    });
+                    this.setState({ dataSource: altDataSource });
+                }
+            });
+    }
+
     getAllNotifications = () => {
         this.setState({
             isLoading: true
@@ -89,7 +155,7 @@ class ProNotificationsScreen extends Component {
                     isNoData: true
                 });
 
-                this.showToast("Une erreur s'est produite, vérifiez votre connexion Internet");
+                this.showToast("An error has occurred, check your internet connection!");
             })
     }
 
@@ -126,39 +192,51 @@ class ProNotificationsScreen extends Component {
 
     //GridView Items
     renderItem = (item, index) => {
-        if (item)
+        if (item) {
+            const { status, _id } = item;
             return (
-                <View
+                <SwipeableButton
                     key={index}
-                    style={{
-                        flexDirection: 'row', 
-                        margin: 5, 
-                        padding: 10,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.75,
-                        shadowRadius: 5,
-                        elevation: 5,
-                        backgroundColor: 'white',
-                        borderRadius: 2,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                    <Image style={{ width: 45, height: 45, borderRadius: 100 }}
-                        source={ item.customer_details && item.customer_details.image ? { uri: item.customer_details.image } : require('../images/generic_avatar.png')} />
-                    <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginLeft: 10 }}>
-                        <Text style={{ color: 'black', fontSize: 14, marginTop: 5 }}>
-                            {item.title}
-                        </Text>
-                        <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
-                            {item.message}
-                        </Text>
-                        <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
-                            {item.createdDate}
-                        </Text>
-                    </View>
-                </View>
+                    onSwipeableLeftOpen={() => this.readNotification(_id)}
+                    onSwipeableRightOpen={() => this.deleteNotification(_id)}
+                >
+                    <TouchableOpacity
+                        key={index}
+                        onPress={() => {
+                            if (status === '0')
+                                this.readNotification(_id);
+                        }}
+                        style={{
+                            flexDirection: 'row',
+                            margin: 5,
+                            padding: 10,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 3 },
+                            shadowOpacity: 0.75,
+                            shadowRadius: 5,
+                            elevation: 5,
+                            backgroundColor: status === '0' ? lightGray : white,
+                            borderRadius: 2,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                        <Image style={{ width: 45, height: 45, borderRadius: 100 }}
+                            source={item.customer_details && item.customer_details.image ? { uri: item.customer_details.image } : require('../images/generic_avatar.png')} />
+                        <View style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginLeft: 10 }}>
+                            <Text style={{ color: 'black', fontSize: 14, marginTop: 5 }}>
+                                {item.title}
+                            </Text>
+                            <Text style={{ color: 'grey', fontSize: 13, marginTop: 2, }}>
+                                {item.message}
+                            </Text>
+                            <Text style={{ fontWeight: 'bold', color: colorGray, fontSize: 10, marginTop: 2, }}>
+                                {item.createdDate}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                </SwipeableButton>
             )
+        }
     }
 
     render() {
@@ -172,13 +250,16 @@ class ProNotificationsScreen extends Component {
                         text='Notifications'
                     />
                 </View>
+                { this.state.isLoading && <View style={{ height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size={'large'} color={colorGray} />
+                </View>}
                 {!this.state.isLoading && !this.state.isNoData &&
                     <View style={styles.listView}>
                         {this.state.dataSource.map(this.renderItem)}
                     </View>
                 }
 
-                {this.state.isNoData &&
+                { !this.state.isLoading && (this.state.isNoData || (this.state.dataSource && this.state.dataSource.length === 0)) &&
                     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: lightGray, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: themeRed, justifyContent: 'center', alignItems: 'center' }}>
                             <Image style={{ width: 50, height: 50, tintColor: white }}
