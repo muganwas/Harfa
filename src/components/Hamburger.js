@@ -114,7 +114,7 @@ class Hamburger extends React.Component {
             else if (title == "Chat Request Rejected") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+                this.showToast("The service provider rejected your request. please try again later")
             }
             else if (title == "Job Accepted") {
                 var pendingJobData = {
@@ -183,12 +183,12 @@ class Hamburger extends React.Component {
                 navigation.navigate('Dashboard');
             }
             else if (title == "Chat Request Rejected") {
-                this.showToast("Le fournisseur de services a rejeté votre demande. Veuillez réessayer plus tard")
+                this.showToast("The service provider rejected your request. please try again later")
             }
             else if ((title == "No Response" || title == "Canceled") && pos != null) {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Le fournisseur de services n'a pas répondu à votre demande. Veuillez réessayer plus tard")
+                this.showToast("The service provider has not responded. please try again later")
             }
         });
 

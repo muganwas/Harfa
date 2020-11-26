@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Platform, Dimensions, TouchableOpacity, TouchableHighlight, BackHandler } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TouchableOpacity, TouchableHighlight } from 'react-native';
 import { connect } from 'react-redux';
+import RNExitApp from 'react-native-exit-app';
 import firebaseAuth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-community/async-storage';
 import { resetUserDetails } from '../Redux/Actions/userActions';
@@ -19,7 +20,7 @@ class DialogLogout extends Component {
     };
 
     closeDialogLogout = async action => {
-        const { resetUserDetails, navigation, changeDialogVisibility } = this.props;
+        const { resetUserDetails, changeDialogVisibility } = this.props;
         if (action == 'Ok') {
             if (firebaseAuth().currentUser) firebaseAuth().signOut();
             await AsyncStorage.removeItem('userId');
@@ -30,7 +31,7 @@ class DialogLogout extends Component {
             resetUserDetails();
             Config.socket.close();
             changeDialogVisibility(false);
-            navigation.navigate('AfterSplash');
+            RNExitApp.exitApp();
         }
         else if (action == 'Cancel') {
             console.log("Logout Cancel");

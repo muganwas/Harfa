@@ -148,20 +148,14 @@ class ProAllMessageScreen extends Component {
         let text = textInput.toLowerCase()
         let tracks = this.state.fullData
         let filterTracks = tracks.filter(item => {
-
-            console.log("Pro >> " + text + " == " + item.name.toLowerCase());
             if (item.name.toLowerCase().match(text)) {
-                console.log("Pro Message Search >> " + text + " == " + item.name.toLowerCase());
                 this.setState({
                     isDataMatch: true,
                 })
                 return item
             }
             else {
-                console.log("False")
-                // this.setState({
-                //     isDataMatch: false,
-                // })
+                console.log("False");
             }
         })
         this.setState({ dataSource: filterTracks })

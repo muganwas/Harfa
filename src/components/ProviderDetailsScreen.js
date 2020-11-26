@@ -505,11 +505,11 @@ class ProviderDetailsScreen extends Component {
               {this.state.requestStatus}
             </Text>
 
-            <View style={styles.timerView}>
+            {/*<View style={styles.timerView}>
               <View style={[styles.timerTextView, { backgroundColor: colorGreen }]}>
                 <Text style={[styles.timerText]}>linding...</Text>
               </View>
-            </View>
+            </View>*/}
           </View>
         }
         <Modal transparent={true} visible={this.state.isLoading} animationType='fade'

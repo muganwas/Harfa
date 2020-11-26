@@ -101,7 +101,7 @@ class ProDashboardScreen extends Component {
         const { navigation } = this.props;
         this.onRefresh();
         navigation.addListener('willFocus', () => {
-            this.onRefresh();
+            //this.onRefresh();
             this.initiateProps();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
@@ -134,7 +134,7 @@ class ProDashboardScreen extends Component {
     }
 
     //Recent Chat Message
-    getAllRecentChat = () => {
+    getAllRecentChat = async () => {
         const { userInfo: { providerDetails } } = this.props;
         let dbRef = database().ref('recentMessage').child(providerDetails.providerId);
         dbRef.once('value', (snapshot) => {
@@ -170,12 +170,12 @@ class ProDashboardScreen extends Component {
         })
     }
 
-    getAllRecentUser = () => {
+    getAllRecentUser = async () => {
         this.setState({
             isLoading: true
         });
         const { userInfo: { providerDetails } } = this.props;
-        fetch(RECENT_USER + providerDetails.providerId)
+        await fetch(RECENT_USER + providerDetails.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
                 if (responseJson.result) {
@@ -276,6 +276,12 @@ class ProDashboardScreen extends Component {
                         <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
+            )
+        } else {
+            return (
+                <View style={{ padding: 15 }}>
+                    <Text style={{ fontStyle: 'italic', color: darkGray }}>You haven't completed any jobs yet.</Text>
+                </View>
             )
         }
     }
@@ -458,7 +464,7 @@ class ProDashboardScreen extends Component {
         }
     }
 
-    acceptChatRequest = pos => {
+    acceptChatRequest = async pos => {
         const { fetchedPendingJobInfo, userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders }, dispatchSelectedJobRequest } = this.props;
         var newjobRequestsProviders = [...jobRequestsProviders];
         const {
@@ -514,7 +520,7 @@ class ProDashboardScreen extends Component {
             }
         }
 
-        fetch(REJECT_ACCEPT_REQUEST, {
+        await fetch(REJECT_ACCEPT_REQUEST, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -626,7 +632,7 @@ class ProDashboardScreen extends Component {
         }
     }
 
-    reviewTask = (rating, review, item) => {
+    reviewTask = async (rating, review, item) => {
         const { userInfo: { providerDetails } } = this.props;
         this.setState({
             isLoading: true,
@@ -648,7 +654,7 @@ class ProDashboardScreen extends Component {
             }
         }
 
-        fetch(REVIEW_RATING,
+        await fetch(REVIEW_RATING,
             {
                 method: 'POST',
                 headers: {
@@ -686,7 +692,7 @@ class ProDashboardScreen extends Component {
             .done()
     }
 
-    askForReview = item => {
+    askForReview = async item => {
         const { fetchJobRequestHistory, userInfo: { providerDetails } } = this.props;
         if (item.customer_review != "Requested" && item.customer_rating == "") {
             this.setState({
@@ -710,7 +716,7 @@ class ProDashboardScreen extends Component {
                 }
             }
 
-            fetch(ASK_FOR_REVIEW,
+            await fetch(ASK_FOR_REVIEW,
                 {
                     method: 'POST',
                     headers: {
@@ -765,7 +771,7 @@ class ProDashboardScreen extends Component {
         Toast.show(message);
     }
 
-    onRefresh = () => {
+    onRefresh = async () => {
         this.setState({ refreshing: true });
         const { generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails } } = this.props;
         this.setState({
@@ -776,8 +782,8 @@ class ProDashboardScreen extends Component {
             isJobRequest: false,
             isRecentUser: false,
         });
-        this.getAllRecentChat();
-        this.getAllRecentUser();
+        await this.getAllRecentChat();
+        await this.getAllRecentUser();
         this.springValue = new Animated.Value(100);
         this.setState({ refreshing: false });
     }

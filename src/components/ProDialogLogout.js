@@ -7,6 +7,7 @@ import { connect } from 'react-redux';
 import AsyncStorage from '@react-native-community/async-storage';
 import firebaseAuth from '@react-native-firebase/auth';
 import { resetUserDetails } from '../Redux/Actions/userActions';
+import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
 import { colorBg } from '../Constants/colors';
 
@@ -23,7 +24,7 @@ class ProDialogLogout extends Component {
     };
 
     closeDialogLogout = async action => {
-        const { resetUserDetails, navigation, changeDialogVisibility } = this.props;
+        const { resetUserDetails, changeDialogVisibility } = this.props;
         if (action == 'Ok') {
             if (firebaseAuth().currentUser) firebaseAuth().signOut();
             await AsyncStorage.removeItem('userId');
@@ -34,8 +35,7 @@ class ProDialogLogout extends Component {
             resetUserDetails();
             Config.socket.close();
             changeDialogVisibility(false);
-            navigation.navigate('AfterSplash');
-            console.log("Logout");
+            RNExitApp.exitApp();
         }
         else if (action == 'Cancel') {
             console.log("Logout Cancel");

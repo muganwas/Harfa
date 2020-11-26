@@ -78,10 +78,10 @@ class ProNotificationsScreen extends Component {
         this.props.navigation.goBack();
     }
 
-    readNotification = id => {
+    readNotification = async id => {
         const { dataSource } = this.state;
         let altDataSource = cloneDeep(dataSource);
-        fetch(READ_NOTIFICATION_URL + id, {
+        await fetch(READ_NOTIFICATION_URL + id, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -101,10 +101,10 @@ class ProNotificationsScreen extends Component {
             });
     }
 
-    deleteNotification = id => {
+    deleteNotification = async id => {
         const { dataSource } = this.state;
         let altDataSource = cloneDeep(dataSource);
-        fetch(DELETE_NOTIFICATION_URL + id, {
+        await fetch(DELETE_NOTIFICATION_URL + id, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -124,14 +124,12 @@ class ProNotificationsScreen extends Component {
             });
     }
 
-    getAllNotifications = () => {
+    getAllNotifications = async () => {
         this.setState({
             isLoading: true
         });
-
         const { userInfo: { providerDetails } } = this.props;
-
-        fetch(NOTIFICATION_URL + providerDetails.providerId)
+        await fetch(NOTIFICATION_URL + providerDetails.providerId)
             .then((response) => response.json())
             .then((responseJson) => {
                 if (responseJson.result) {

@@ -49,7 +49,6 @@ class ProBookingDetailsScreen extends Component {
             employee_rating: props.navigation.state.params.bookingDetails.employee_rating,
             employee_review: props.navigation.state.params.bookingDetails.employee_review
         };
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     };
 
     componentDidMount() {
@@ -62,13 +61,13 @@ class ProBookingDetailsScreen extends Component {
         });
     }
 
-    handleBackButtonClick() {
+    handleBackButtonClick = () => {
         this.props.navigation.goBack();
         return true;
     }
 
     //Call also from ReviewDialog
-    changeDialogVisibility = (bool, text, bookingDetails, rating, review) => {
+    changeDialogVisibility = async (bool, text, bookingDetails, rating, review) => {
 
         if (this.state.bookingDetails.employee_rating == '') {
             if (rating != '') {
@@ -89,7 +88,7 @@ class ProBookingDetailsScreen extends Component {
                         this.setState({
                             isDialogLogoutVisible: bool,
                         })
-                        this.reviewTask(rating, review);
+                        await this.reviewTask(rating, review);
                     }
                 }
             }
@@ -104,13 +103,13 @@ class ProBookingDetailsScreen extends Component {
                     this.setState({
                         isDialogLogoutVisible: bool,
                     })
-                    this.reviewTask(rating, review);
+                    await this.reviewTask(rating, review);
                 }
             }
         }
     }
 
-    reviewTask(rating, review) {
+    reviewTask = async (rating, review) => {
         this.setState({
             isLoading: true,
             isErrorToast: false,
@@ -135,7 +134,7 @@ class ProBookingDetailsScreen extends Component {
             }
         }
 
-        fetch(REVIEW_RATING,
+        await fetch(REVIEW_RATING,
             {
                 method: 'POST',
                 headers: {
@@ -175,11 +174,11 @@ class ProBookingDetailsScreen extends Component {
             .done()
     }
 
-    showToast = (message) => {
+    showToast = message => {
         Toast.show(message);
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
@@ -203,14 +202,14 @@ class ProBookingDetailsScreen extends Component {
                                 source={require('../icons/arrow_back.png')} />
                         </TouchableOpacity>
                         <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 10 }}>
-                            Les détails de réservation
+                            Booking details
                     </Text>
                     </View>
                 </View>
 
                 <View style={styles.mainContainer}>
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                        <Text style={{ color: 'grey', fontWeight: 'bold', fontSize: 14 }}>numéro de commande - {this.state.bookingDetails.order_id.replace("\"", "")}</Text>
+                        <Text style={{ color: 'grey', fontWeight: 'bold', fontSize: 14 }}>Order number - {this.state.bookingDetails.order_id.replace("\"", "")}</Text>
                     </View>
 
                     <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
@@ -253,7 +252,7 @@ class ProBookingDetailsScreen extends Component {
 
                     <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Statut de l'évaluation du client</Text>
+                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Customer review status</Text>
                     </View>
                     <View style={{ backgroundColor: 'white', marginTop: 10, marginBottom: 10, }}>
                         <AirbnbRating
@@ -271,7 +270,7 @@ class ProBookingDetailsScreen extends Component {
                         <View>
                             <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Commentaires des clients</Text>
+                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Customer feedback</Text>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 10, marginLeft: 10 }}>
                                 <Text style={{ color: 'grey', fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.customer_review}</Text>
@@ -281,7 +280,7 @@ class ProBookingDetailsScreen extends Component {
 
                     <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Statut de l'évaluation du fournisseur</Text>
+                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Service provider assessment status</Text>
                     </View>
                     <View style={{ backgroundColor: 'white', marginTop: 10, marginBottom: 10, }}>
                         <AirbnbRating
@@ -305,7 +304,7 @@ class ProBookingDetailsScreen extends Component {
                         <View>
                             <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Commentaires du fournisseur</Text>
+                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Service providers comments</Text>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 10, marginLeft: 10 }}>
                                 <Text style={{ color: 'grey', fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.employee_review}</Text>
@@ -332,7 +331,7 @@ class ProBookingDetailsScreen extends Component {
                     <Image style={{ width: 20, height: 20, marginLeft: 20 }}
                         source={require('../icons/chatting.png')} />
                     <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                        Historique du chat
+                        Chat history
                 </Text>
                     <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
                         source={require('../icons/right_arrow.png')} />

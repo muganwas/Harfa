@@ -207,7 +207,7 @@ class DashboardScreen extends Component {
     goToNextPage = (chat_status, jobInfo) => {
         const { dispatchSelectedJobRequest } = this.props;
         if (chat_status == '0') {
-            this.showToast("Votre demande de chat n'est pas acceptée. S'il vous plaît, attendez...")
+            this.showToast("Your chat request has been accepted yet. Please wait...")
         }
         else {
             const { userType, status, fcm_id, image, order_id, service_name, name, employee_id, currentPos } = jobInfo;

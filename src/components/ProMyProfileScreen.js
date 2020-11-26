@@ -17,7 +17,7 @@ import Hamburger from './ProHamburger';
 import axios from 'axios';
 import { updateProviderDetails } from '../Redux/Actions/userActions';
 import storage from '@react-native-firebase/storage';
-import { colorPrimaryDark, white, themeRed, black, lightGray } from '../Constants/colors';
+import { colorPrimaryDark, white, themeRed, black } from '../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -155,55 +155,6 @@ class ProMyProfileScreen extends Component {
         });
     }
 
-    getProfile = providerId => {
-        if (providerId !== null) {
-            this.setState({
-                isLoading: true
-            })
-            fetch(PRO_GET_PROFILE + providerId, {
-                method: "GET",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            })
-                .then((response) => response.json())
-                .then((responseJson) => {
-
-                    console.log(JSON.stringify(responseJson));
-
-                    if (responseJson.result) {
-                        this.setState({
-                            providerId: responseJson.data.id,
-                            imageSource: responseJson.data.image,
-                            name: responseJson.data.username,
-                            surname: responseJson.data.surname,
-                            mobile: responseJson.data.mobile,
-                            services: responseJson.data.services,
-                            description: responseJson.data.description,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            invoice: responseJson.data.invoice,
-                            isLoading: false
-                        })
-                    }
-                    else {
-                        ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
-                        this.setState({
-                            isLoading: false
-                        })
-                    }
-                })
-                .catch((error) => {
-                    alert("Error " + error);
-                    this.setState({
-                        isLoading: false
-                    })
-                });
-        }
-    }
-
     getDataFromServiceScreen = data => {
         var data = data.split("/")
         this.setState({
@@ -226,11 +177,11 @@ class ProMyProfileScreen extends Component {
             isLoading: true,
         });
         AsyncStorage.getItem('userId')
-            .then((providerId) => this.updateInformation(providerId))
+            .then(async providerId => await this.updateInformation(providerId))
     }
 
     //Information Update
-    updateInformation = providerId => {
+    updateInformation = async providerId => {
         const userData = {
             "username": this.state.name,
             "surname": '',
@@ -243,7 +194,7 @@ class ProMyProfileScreen extends Component {
             "invoice": this.state.invoice,
         }
 
-        fetch(PRO_INFO_UPDATE + providerId,
+        await fetch(PRO_INFO_UPDATE + providerId,
             {
                 method: 'POST',
                 headers: {
