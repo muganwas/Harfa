@@ -216,7 +216,7 @@ class ChatScreen extends Component {
                 "notification_by": "Customer",
                 "data": {
                     ProviderId: jobRequests[currRequestPos].employee_id,
-                    image: jobRequests[currRequestPos].image,
+                    image: jobRequests[currRequestPos].image ? jobRequests[currRequestPos].image : 'null',
                     fcmId: jobRequests[currRequestPos].fcm_id,
                     name: jobRequests[currRequestPos].name,
                     surname: jobRequests[currRequestPos].surname,

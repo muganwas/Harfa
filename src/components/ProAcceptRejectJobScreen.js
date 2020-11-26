@@ -229,7 +229,7 @@ class ProAcceptRejectJobScreen extends Component {
                 "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
-                    image: providerDetails.imageSource,
+                    image: providerDetails.imageSource ? providerDetails.imageSource : 'null',
                     fcmId: providerDetails.fcmId,
                     name: providerDetails.name,
                     surname: providerDetails.surname,
@@ -326,7 +326,7 @@ class ProAcceptRejectJobScreen extends Component {
                 "body": 'Your request has been rejected by ' + providerDetails.name + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
-                    image: providerDetails.imageSource,
+                    image: providerDetails.imageSource ? providerDetails.imageSource : 'null',
                     fcmId: providerDetails.fcmId,
                     name: providerDetails.name,
                     surname: providerDetails.surname,

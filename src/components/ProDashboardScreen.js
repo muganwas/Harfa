@@ -509,7 +509,7 @@ class ProDashboardScreen extends Component {
                 "data": {
                     user_id: '',
                     providerId: providerDetails.id,
-                    ProviderData: providerDetails,
+                    ProviderData: JSON.stringify(providerDetails),
                     serviceName: service_name,
                     orderId: order_id,
                     mainId: id,

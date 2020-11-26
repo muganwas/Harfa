@@ -164,7 +164,7 @@ class ProChatAcceptScreen extends Component {
                 "data": {
                     user_id: '',
                     providerId: providerDetails.providerId,
-                    ProviderData: providerDetails,
+                    ProviderData: JSON.stringify(providerDetails),
                     serviceName: this.state.serviceName,
                     orderId: this.props.navigation.state.params.orderId,
                     mainId: this.props.navigation.state.params.mainId,

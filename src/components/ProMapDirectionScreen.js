@@ -284,7 +284,7 @@ class ProMapDirectionScreen extends Component {
                 "data": {
                     ProviderId: providerDetails.providerId,
                     user_Id: newJobRequestsProviders[currentPos].user_Id,
-                    image: providerDetails.imageSource,
+                    image: providerDetails.imageSource ? providerDetails.imageSource : 'null',
                     fcmId: providerDetails.fcmId,
                     name: providerDetails.name,
                     surname: providerDetails.surname,
@@ -360,7 +360,7 @@ class ProMapDirectionScreen extends Component {
                 "body": 'Your job request has been canceled by the service provder : ' + providerDetails.providerId,
                 "data": {
                     ProviderId: providerDetails.providerId,
-                    image: providerDetails.imageSource,
+                    image: providerDetails.imageSource ? providerDetails.imageSource : 'null',
                     fcmId: providerDetails.fcmId,
                     name: providerDetails.name,
                     surname: providerDetails.surname,

@@ -233,7 +233,7 @@ class MapDirectionScreen extends Component {
         "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
         "data": {
           ProviderId: jobRequests[currRequestPos].employee_id,
-          image: jobRequests[currRequestPos].image,
+          image: jobRequests[currRequestPos].image ? jobRequests[currRequestPos].image : 'null',
           fcmId: jobRequests[currRequestPos].fcm_id,
           name: jobRequests[currRequestPos].name,
           surname: jobRequests[currRequestPos].surname,
@@ -312,7 +312,7 @@ class MapDirectionScreen extends Component {
         "data": {
           ProviderId: jobRequests[currRequestPos].employee_id,
           user_id: userDetails.userId,
-          image: jobRequests[currRequestPos].image,
+          image: jobRequests[currRequestPos].image ? jobRequests[currRequestPos].image : 'null',
           fcmId: jobRequests[currRequestPos].fcm_id,
           name: jobRequests[currRequestPos].name,
           surname: jobRequests[currRequestPos].surname,
