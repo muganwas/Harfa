@@ -497,19 +497,13 @@ class ProviderDetailsScreen extends Component {
         {this.state.requestStatus == 'Request Sending...' || this.state.requestStatus == 'Waiting for acceptance...' &&
           <View style={styles.loaderStyle}>
             <ActivityIndicator
-              style={{ height: 55, width: 55, alignSelf: 'flex-start', alignContent: 'flex-start', marginLeft: 10 }}
+              style={{ height: 30, width: 30, alignContent: 'flex-start', marginHorizontal: 20 }}
               color={themeRed}
               size="large" />
 
             <Text style={{ color: 'black', fontSize: 15, fontWeight: 'bold', textAlignVertical: 'center', alignSelf: 'center' }}>
               {this.state.requestStatus}
             </Text>
-
-            {/*<View style={styles.timerView}>
-              <View style={[styles.timerTextView, { backgroundColor: colorGreen }]}>
-                <Text style={[styles.timerText]}>linding...</Text>
-              </View>
-            </View>*/}
           </View>
         }
         <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
@@ -687,6 +681,8 @@ const styles = StyleSheet.create({
   },
   loaderStyle: {
     width: screenWidth,
+    flexDirection: "row",
+    alignItems: 'center',
     height: 65,
     flexDirection: 'row',
     backgroundColor: 'white',

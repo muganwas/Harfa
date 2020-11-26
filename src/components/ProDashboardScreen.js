@@ -18,7 +18,6 @@ import {
 import WaitingDialog from './WaitingDialog';
 import RNExitApp from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
-import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-simple-toast';
 import ReviewDialog from './ReviewDialog';
 import Config from './Config';
@@ -528,8 +527,12 @@ class ProDashboardScreen extends Component {
             },
             body: JSON.stringify(data)
         })
-            .then(response => response.json())
+            .then(response => {
+                console.log('non json response', response)
+                return response.json()
+            })
             .then(responseJson => {
+                console.log('accept response', responseJson)
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
@@ -602,10 +605,10 @@ class ProDashboardScreen extends Component {
                         <Image style={{ height: 30, width: 30, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
                             source={{ uri: image }} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
-                            <Text style={{ color: 'white', fontSize: 12, marginLeft: 10, fontWeight: 'bold' }}>
+                            <Text style={{ color: white, fontSize: 12, marginLeft: 10, fontWeight: 'bold' }}>
                                 {name}
                             </Text>
-                            <Text style={{ color: 'white', fontSize: 11, marginLeft: 10, textAlignVertical: 'center' }}>
+                            <Text style={{ color: white, fontSize: 11, marginLeft: 10, textAlignVertical: 'center' }}>
                                 {"Request for " + service_name}
                             </Text>
                             <Text style={{ color: white, fontSize: 11, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
@@ -796,7 +799,6 @@ class ProDashboardScreen extends Component {
 
     render() {
         const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
-        const { status } = this.state;
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
@@ -833,9 +835,8 @@ class ProDashboardScreen extends Component {
                         </Text>
                     </View>
                 </View>
-
                 <ScrollView
-                    style={{ marginBottom: jobRequestsProviders.length === 0 ? 0 : 45, backgroundColor: lightGray }}
+                    style={{ marginBottom: jobRequestsProviders && jobRequestsProviders.length === 0 ? 0 : 45, backgroundColor: lightGray }}
                     refreshControl={
                         <RefreshControl
                             refreshing={this.state.refreshing}

@@ -44,7 +44,7 @@ class ProHamburger extends React.Component {
         fetchedOthersLocations: false
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         const {
             fetchedNotifications,
             dbMessagesFetched,
@@ -53,10 +53,10 @@ class ProHamburger extends React.Component {
             userInfo: { providerDetails }
         } = this.props;
         const receiverId = providerDetails.providerId;
-        this.fetchOthersLocations();
-        this.checkForUserType();
+        await this.fetchOthersLocations();
+        await this.checkForUserType();
         
-        messaging().onMessage(message => {
+        messaging().onMessage( async message => {
             const { data } = message;
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body } = data;
@@ -65,7 +65,7 @@ class ProHamburger extends React.Component {
             fetchedNotifications({ type: 'generic', value: newGenericCount });
             const orderId = data.order_id;
             let pos = 0;
-            jobRequestsProviders.map((obj, key) => {
+            await jobRequestsProviders.map((obj, key) => {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
             });
@@ -103,13 +103,13 @@ class ProHamburger extends React.Component {
             }
         });
 
-        Axios.get(FETCH_MESSAGES + '?sender=' + receiverId + "&userType=employee").then(results => {
+        await Axios.get(FETCH_MESSAGES + '?sender=' + receiverId + "&userType=employee").then(async results => {
             const { data } = results;
             let messages = {};
             let otherUsers = {};
             // get ids of other users this user has chatted with
             if (!data.message) {
-                data.map(msgObj => {
+                await data.map(msgObj => {
                     const { sender, recipient } = msgObj;
                     if (sender !== receiverId) otherUsers[sender] = sender;
                     else if (recipient !== receiverId) otherUsers[recipient] = recipient;
@@ -158,6 +158,17 @@ class ProHamburger extends React.Component {
                 });
             }
         });
+        
+        socket.on('authorized', response => {
+            console.log(response.message)
+            updateOnlineStatus(true)
+        });
+
+        socket.on('unauthorized', reason => {
+            console.log('unauthorized --', reason)
+            updateOnlineStatus(false)
+        });
+
         socket.on('user-disconnected', users => {
             console.log('someone disconnected')
             updateLiveChatUsers(users);
@@ -172,7 +183,10 @@ class ProHamburger extends React.Component {
             // console.log(info);
             updateLiveChatUsers({});
             updateOnlineStatus(false)
-            if (!online && connectivityAvailable) socket.open();
+            if (!online && connectivityAvailable) {
+                console.log('reconnecting...')
+                socket.open();
+            }
         });
         socket.on("chat-message", data => {
             const { sender } = data;
@@ -233,23 +247,22 @@ class ProHamburger extends React.Component {
         });
     }
 
-    componentDidUpdate() {
-        const { jobsInfo: { allJobRequestsProviders, jobRequestsProviders } } = this.props;
+    async componentDidUpdate() {
+        const { jobsInfo: { jobRequestsProviders } } = this.props;
         if (jobRequestsProviders.length && !this.state.fetchedOthersLocations)
-            this.fetchOthersLocations();
+            await this.fetchOthersLocations();
     }
 
     componentWillUnmount() {
         const { userInfo: { providerDetails } } = this.props;
         const senderId = providerDetails.providerId;
-        database().ref('adminChatting').child(senderId).off('child_added')
-        database().ref('adminChatting').child(senderId).off('child_changed')
-        database().ref('chatting').child(senderId).off('child_changed');
+        database().ref('adminChatting').child(senderId).off('child_added');
+        database().ref('adminChatting').child(senderId).off('child_changed');
     }
 
-    fetchOthersLocations = () => {
+    fetchOthersLocations = async () => {
         const { jobsInfo: { jobRequestsProviders }, fetchingOthersCoordinates, fetchedOthersCoordinates, fetchOthersCoordinatesError } = this.props;
-        jobRequestsProviders.map(obj => {
+        await jobRequestsProviders.map(async obj => {
             const { user_id } = obj;
             /** lookout for users changed position */
             database().ref(`liveLocation/${user_id}`).on('child_changed', () => {
@@ -289,7 +302,7 @@ class ProHamburger extends React.Component {
         return (
             <>
                 <NavigationEvents
-                    onDidFocus={() => this.checkForUserType()}
+                    onDidFocus={async () => await this.checkForUserType()}
                 />
                 <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
                     style={styles.touchableHighlight}>

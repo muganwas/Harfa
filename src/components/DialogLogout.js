@@ -6,7 +6,7 @@ import firebaseAuth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-community/async-storage';
 import { resetUserDetails } from '../Redux/Actions/userActions';
 import Config from './Config';
-import { colorBg } from '../Constants/colors';
+import { black, colorBg, colorGreen, themeRed, white } from '../Constants/colors';
 
 class DialogLogout extends Component {
     constructor(props) {
@@ -44,18 +44,18 @@ class DialogLogout extends Component {
             <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
                 <View style={[styles.modal, { width: this.state.width - 80 }]}>
                     <View style={styles.textView}>
-                        <Text style={[styles.text, { fontSize: 20 }]}> Log out!</Text>
-                        <Text style={styles.text}> Are you sure you want to log out? </Text>
+                        <Text style={[styles.text, { fontSize: 20, color: white }]}> Logout!</Text>
+                        <Text style={[styles.text, { color: white }]}> Are you sure you want to log out? </Text>
                     </View>
                     <View style={styles.buttonView}>
-                        <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Cancel')}
+                        <TouchableOpacity style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Cancel')}
                             underlayColor={colorBg}>
-                            <Text style={[styles.text, { color: 'blue' }]}> Cancel </Text>
-                        </TouchableHighlight>
-                        <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Ok')}
+                            <Text style={[styles.text, { color: colorGreen }]}> Cancel </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Ok')}
                             underlayColor={colorBg}>
-                            <Text style={[styles.text, { color: 'blue' }]}> Yes </Text>
-                        </TouchableHighlight>
+                            <Text style={[styles.text, { color: themeRed }]}> Yes </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -75,12 +75,11 @@ const mapDispatchToProps = dispatch => ({
 export default connect(mapStateToProps, mapDispatchToProps)(DialogLogout);
 
 const styles = StyleSheet.create({
-
     contentContainer: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
+        shadowColor: black,
         backgroundColor: 'rgba(0,0,0,0.5)'
     },
     modal: {
@@ -89,10 +88,10 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         alignItems: 'center',
         textAlign: 'center',
-        backgroundColor: colorBg,
+        backgroundColor: themeRed,
         borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
@@ -105,8 +104,13 @@ const styles = StyleSheet.create({
     touchableHighlight: {
         flex: 1,
         backgroundColor: colorBg,
+        borderRadius: 10,
+        shadowColor: black,
+        margin: 5,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
         paddingVertical: 10,
-        alignSelf: 'stretch',
         alignItems: 'center',
         borderRadius: 10,
     },

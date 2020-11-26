@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-    StyleSheet, Text, View, Dimensions, TouchableOpacity, TouchableHighlight, BackHandler,
+    StyleSheet, Text, View, Dimensions, TouchableOpacity,
     ActivityIndicator
 } from 'react-native';
 import { connect } from 'react-redux';
@@ -9,7 +9,7 @@ import firebaseAuth from '@react-native-firebase/auth';
 import { resetUserDetails } from '../Redux/Actions/userActions';
 import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
-import { colorBg } from '../Constants/colors';
+import { colorBg, themeRed, colorGreen, black, white } from '../Constants/colors';
 
 class ProDialogLogout extends Component {
     constructor(props) {
@@ -46,21 +46,21 @@ class ProDialogLogout extends Component {
 
     render() {
         return (
-            <TouchableOpacity activeOpacity={1} disabled={true} style={styles.contentContainer}>
+            <TouchableOpacity activeOpacity={0} disabled={true} style={styles.contentContainer}>
                 <View style={[styles.modal, { width: this.state.width - 80 }]}>
                     <View style={styles.textView}>
-                        <Text style={[styles.text, { fontSize: 20 }]}> Logout! </Text>
-                        <Text style={styles.text}> Are you sure you want to logout? </Text>
+                        <Text style={[styles.text, { fontSize: 20, color: white }]}> Logout! </Text>
+                        <Text style={[styles.text, { color: white}]}> Are you sure you want to log out? </Text>
                     </View>
                     <View style={styles.buttonView}>
-                        <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Cancel')}
+                        <TouchableOpacity style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Cancel')}
                             underlayColor={colorBg}>
-                            <Text style={[styles.text, { color: 'blue' }]}> Cancel </Text>
-                        </TouchableHighlight>
-                        <TouchableHighlight style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Ok')}
+                            <Text style={[styles.text, { color: colorGreen }]}> Cancel </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.touchableHighlight} onPress={() => this.closeDialogLogout('Ok')}
                             underlayColor={colorBg}>
-                            <Text style={[styles.text, { color: 'blue' }]}> Ok </Text>
-                        </TouchableHighlight>
+                            <Text style={[styles.text, { color: themeRed }]}> Ok </Text>
+                        </TouchableOpacity>
                     </View>
 
                     {this.state.isLoading && (
@@ -103,10 +103,10 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         alignItems: 'center',
         textAlign: 'center',
-        backgroundColor: colorBg,
+        backgroundColor: themeRed,
         borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
@@ -117,10 +117,15 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     touchableHighlight: {
-        flex: 1,
+         flex: 1,
         backgroundColor: colorBg,
+        borderRadius: 10,
+        shadowColor: black,
+        margin: 5,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
         paddingVertical: 10,
-        alignSelf: 'stretch',
         alignItems: 'center',
         borderRadius: 10,
     },
