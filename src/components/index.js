@@ -43,7 +43,6 @@ export { default as ProDrawerNavigator } from './ProDrawerNavigator';
 export { default as ProDialogLogout } from './ProDialogLogout';
 export { default as ProDashboardScreen } from './ProDashboardScreen';
 export { default as ProCustomMenuLayout } from './ProCustomMenuLayout';
-export { default as ProCheckProfileScreen } from './ProCheckProfileScreen';
 export { default as ProAddAddressScreen } from './ProAddAddressScreen';
 export { default as MyProfileScreen } from './MyProfileScreen';
 export { default as LoginPhoneScreen } from './LoginPhoneScreen';
