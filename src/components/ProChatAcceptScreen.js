@@ -435,7 +435,6 @@ class ProChatAcceptScreen extends Component {
                                 </View>
 
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
-
                                     <TouchableOpacity style={styles.buttonContainer}
                                         onPress={this.rejectJob}>
                                         <Text style={styles.text}>Busy</Text>
@@ -524,7 +523,7 @@ const styles = StyleSheet.create({
         width: screenWidth,
         backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,

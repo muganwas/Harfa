@@ -601,6 +601,7 @@ const styles = StyleSheet.create({
         flex: 4,
         backgroundColor: lightGray,
         borderRadius: 25,
+        height: 50,
         paddingHorizontal: 10,
         fontSize: 16,
         marginHorizontal: 5,

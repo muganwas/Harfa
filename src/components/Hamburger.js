@@ -197,6 +197,7 @@ class Hamburger extends React.Component {
             let messages = {};
             let otherUsers = {};
             // get ids of other users this user has chatted with
+            console.log('chat', results)
             if (!data.message) {
                 data.map(msgObj => {
                     const { sender, recipient } = msgObj;

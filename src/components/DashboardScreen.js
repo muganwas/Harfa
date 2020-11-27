@@ -4,12 +4,12 @@ import {
     Text, StyleSheet, View, Image,
     TouchableOpacity, StatusBar, Dimensions,
     Animated, BackHandler, FlatList, Modal, Platform,
+    ScrollView, YellowBox
 } from 'react-native';
 import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../Redux/Actions/notificationActions';
 import RNExitApp from 'react-native-exit-app';
 import Config from './Config';
-import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from './WaitingDialog';
 import Hamburger from './Hamburger';
@@ -18,7 +18,8 @@ import { colorPrimary, colorPrimaryDark, colorBg, themeRed, white, lightGray, da
 import images from '../Constants/images';
 
 const screenWidth = Dimensions.get('window').width;
-const SERVICES_URL = Config.baseURL + 'service/getall'
+const SERVICES_URL = Config.baseURL + 'service/getall';
+YellowBox.ignoreWarnings([""]);
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -327,19 +328,21 @@ class DashboardScreen extends Component {
                     </View>
                 </View>
 
-                <View style={[styles.gridView, { marginBottom: jobRequests.length === 0 ? 0 : 45 }]}>
-                    <FlatList
-                        keyboardShouldPersistTaps={'handled'}
-                        numColumns={3}
-                        data={this.state.dataSource}
-                        renderItem={this.renderItem}
-                        keyExtractor={(item, index) => index}
-                        showsVerticalScrollIndicator={false}
-                        onRefresh={this.onRefresh}
-                        refreshing={this.state.isLoading}
-                    // ItemSeparatorComponent={this.renderSeparator}
-                    />
-                </View>
+                <ScrollView style={[styles.gridView, { flex: 1, marginBottom: jobRequests.length === 0 ? 0 : 45 }]}>
+                    <View style={{height: '100%'}}>
+                        <FlatList
+                            keyboardShouldPersistTaps={'handled'}
+                            numColumns={3}
+                            data={this.state.dataSource}
+                            renderItem={this.renderItem}
+                            keyExtractor={(item, index) => index}
+                            showsVerticalScrollIndicator={false}
+                            onRefresh={this.onRefresh}
+                            refreshing={this.state.isLoading}
+                            style={{paddingBottom: 20}}
+                        />
+                    </View>
+                </ScrollView>
                 {/** show pending requests */}
                 {requestsFetched && jobRequests.length > 0 ?
                     <View style={styles.pendingJobsContainer}>

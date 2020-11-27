@@ -14,7 +14,7 @@ import Config from './Config';
 import moment from 'moment';
 import { chatDate } from '../misc/helpers';
 import { cloneDeep } from 'lodash';
-import { colorPrimary, colorYellow, lightGray, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorBg, lightGray, darkGray, white, black, themeRed } from '../Constants/colors';
 import style from './chatStyle';
 
 const screenWidth = Dimensions.get('window').width;
@@ -299,7 +299,7 @@ class ChatScreen extends Component {
                                         }
                                         else if (String(sender) === String(senderId)) {
                                             return (
-                                                 <View key={key} style={style.sentContainer}>
+                                                <View key={key} style={style.sentContainer}>
                                                     <View style={style.sentMsgContainer}>
                                                         <Text style={style.chatTime}>{chatDate(time)}</Text>
                                                         <Text style={style.sentMsg}>{message}</Text>
@@ -333,7 +333,6 @@ class ChatScreen extends Component {
                 <StatusBarPlaceHolder />
                 <ImageBackground style={styles.container}
                     source={require('../icons/bg_chat.png')}>
-
                     <View style={{
                         flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                         paddingLeft: 10, paddingRight: 20, paddingBottom: 5
@@ -341,13 +340,13 @@ class ChatScreen extends Component {
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center' }}
                                 onPress={() => this.props.navigation.goBack()}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                                <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
                                     source={require('../icons/arrow_back.png')} />
                             </TouchableOpacity>
 
                             <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={{ uri: this.state.receiverImage }} />
-                            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
+                                source={this.state.receiverImage ? { uri: this.state.receiverImage } : require('../images/generic_avatar.png')} />
+                            <Text style={{ color: black, fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                                 {this.state.receiverName + " "}{this.state.surname}
                             </Text>
                         </View>
@@ -384,29 +383,29 @@ class ChatScreen extends Component {
                         <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
                         {requestStatus === 'Pending' ? <View style={{
                             flex: 1, width: screenWidth, justifyContent: 'center',
-                            backgroundColor: 'white', alignItems: 'center'
+                            backgroundColor: themeRed, alignItems: 'center'
                         }}>
                             <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center' }}>
                                 <TouchableOpacity style={styles.buttonContainer}
                                     onPress={this.jobCancelTask}>
-                                    <Text style={styles.text}>Cancel Request</Text>
+                                    <Text style={[styles.text, { color: themeRed, fontWeight: 'bold' }]}>Cancel Request</Text>
                                 </TouchableOpacity>
                             </View>
-                        </View> :
-                            null}
-                        <View style={{ flex: 1, flexDirection: 'row', }}>
-                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                                placeholder='Tapez un message'
+                        </View> : null}
+                        <View style={styles.textInputContainer}>
+                            <TextInput style={styles.textInput}
+                                placeholder='Type message'
                                 value={this.state.inputMessage}
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
+                            { showButton && <TouchableOpacity
+                                style={styles.sendButton}
                                 onPress={this.sendMessageTask}>
-                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    ENVOYER
-                                </Text>
-                            </TouchableOpacity>
+                                <Image style={styles.sendButtonImg}
+                                    source={require('../images/png/paper-plane-thicc.png')}
+                                />
+                            </TouchableOpacity> }
                         </View>
                         {this.state.isJobAccepted && (
                             <View style={{
@@ -421,7 +420,7 @@ class ChatScreen extends Component {
                                     <Image style={{ width: 20, height: 20, marginLeft: 20 }}
                                         source={require('../icons/mobile_gps.png')} />
                                     <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                        Fournisseur de services de suivi
+                                        Tracking service provider
                                 </Text>
                                     <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
                                         source={require('../icons/right_arrow.png')} />
@@ -444,25 +443,20 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 5,
     },
-    footer: {
-        width: screenWidth,
-        flexDirection: 'column',
-        backgroundColor: 'white',
-        justifyContent: 'center',
-        position: 'absolute', //Footer
-        bottom: 0, //Footer
-    },
     buttonContainer: {
         flex: 1,
         paddingTop: 10,
-        backgroundColor: '#000000',
+        flexDirection: 'row',
+        backgroundColor: colorBg,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
-        borderWidth: 2,
-        textAlign: 'center',
         justifyContent: 'center',
         marginLeft: 10,
         marginRight: 10,
@@ -480,6 +474,28 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 5,
         alignContent: 'center'
+    },
+    sendButtonImg: {
+        width: 50,
+        height: 30,
+        tintColor: darkGray,
+        resizeMode: 'contain',
+    },
+    sendButton: {
+        height: 50,
+        flexDirection: 'row',
+        backgroundColor: lightGray,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 7 },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 10,
+        borderRadius: 25,
+        marginRight: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignContent: 'center',
+        flex: 1
     },
     itemChatImageView: {
         width: 20,
@@ -520,6 +536,30 @@ const styles = StyleSheet.create({
         color: "#000",
         textAlign: 'left',
         backgroundColor: "#16B5F3"
+    },
+     textInput: {
+        flex: 4,
+        backgroundColor: lightGray,
+        borderRadius: 25,
+        paddingHorizontal: 10,
+        fontSize: 16,
+        height: 50,
+        marginHorizontal: 5,
+    },
+    textInputContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        paddingVertical: 2,
+        marginVertical: 5
+    },
+    footer: {
+        width: screenWidth,
+        minHeight: 50,
+        flexDirection: 'column',
+        backgroundColor: 'transparent',
+        justifyContent: 'center',
+        position: 'absolute',
+        bottom: 0,
     },
     sentContainer: {
         flex: 1,
