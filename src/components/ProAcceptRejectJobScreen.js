@@ -22,7 +22,7 @@ import {
 } from '../Redux/Actions/jobsActions';
 import Config from './Config';
 import { cloneDeep } from 'lodash';
-import { colorPrimary, colorPrimaryDark, colorYellow, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorYellow, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black, themeRed, colorGreen, darkGray } from '../Constants/colors';
 
 const socket = Config.socket;
 const screenWidth = Dimensions.get('window').width;
@@ -420,7 +420,7 @@ class ProAcceptRejectJobScreen extends Component {
         Toast.show(message);
     }
 
-    changeWaitingDialogVisibility = (bool) => {
+    changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
         })
@@ -438,74 +438,77 @@ class ProAcceptRejectJobScreen extends Component {
                     <View style={{ flex: 1, flexDirection: 'row' }}>
                         <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'center' }}
                             onPress={this.handleBackButtonClick}>
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                            <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
                                 source={require('../icons/arrow_back.png')} />
                         </TouchableOpacity>
 
                         <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
                             source={{ uri: this.state.receiverImage }} />
-                        <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
+                        <Text style={{ color: black, fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                             {this.state.receiverName}
                         </Text>
                     </View>
                 </View>
+                <ImageBackground style={{ flex: 1 }}
+                    source={require('../icons/bg_chat.png')}>
+                    <ScrollView style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'column', marginBottom: 110 }}>
 
-                <ScrollView style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'column', marginBottom: 110 }}>
-                        <ImageBackground style={styles.listView}
-                            source={require('../icons/bg_chat.png')}>
-                            {this.state.dataChatSource.map(this.renderMessageItem)}
-                        </ImageBackground>
-
-                        {this.state.isAcceptJob && (
-                            <TouchableOpacity style={styles.textViewDirection}
-                                onPress={this.goToMapDirection}>
-                                <Image style={{ width: 20, height: 20, marginLeft: 20 }}
-                                    source={require('../icons/mobile_gps.png')} />
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                    Direction
-                            </Text>
-                                <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
-                                    source={require('../icons/right_arrow.png')} />
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                </ScrollView>
-
-                <View style={styles.footer}>
-                    {(!this.state.isAcceptJob && !this.state.isRejectJob) &&
-                        <View style={{
-                            flex: 1, width: screenWidth, justifyContent: 'center',
-                            backgroundColor: 'white', alignItems: 'center'
-                        }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
-                                <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.acceptJobTask}>
-                                    <Text style={styles.text}>Accepter l'emploi</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.rejectJobTask}>
-                                    <Text style={styles.text}>Refuser le travail</Text>
-                                </TouchableOpacity>
+                            <View style={styles.listView}>
+                                {this.state.dataChatSource.map(this.renderMessageItem)}
                             </View>
+
+                            {this.state.isAcceptJob && (
+                                <TouchableOpacity style={styles.textViewDirection}
+                                    onPress={this.goToMapDirection}>
+                                    <Image style={{ width: 20, height: 20, marginLeft: 20 }}
+                                        source={require('../icons/mobile_gps.png')} />
+                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
+                                        Direction
+                            </Text>
+                                    <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
+                                        source={require('../icons/right_arrow.png')} />
+                                </TouchableOpacity>
+                            )}
                         </View>
-                    }
-                    <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                            placeholder='Tapez un message'
-                            value={this.state.inputMessage}
-                            multiline={true}
-                            onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                        </TextInput>
-                        <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
-                            onPress={this.sendMessageTask}>
-                            <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                ENVOYER
-                                    </Text>
-                        </TouchableOpacity>
+                    </ScrollView>
+
+                    <View style={styles.footer}>
+                        {(!this.state.isAcceptJob && !this.state.isRejectJob) &&
+                            <View style={{
+                                flex: 1, width: screenWidth, justifyContent: 'center',
+                                backgroundColor: themeRed, alignItems: 'center'
+                            }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
+                                    <TouchableOpacity style={styles.buttonContainer}
+                                        onPress={this.acceptJobTask}>
+                                        <Text style={[styles.text, { color: colorGreen, fontWeight: 'bold' }]}>Accept job</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.buttonContainer}
+                                        onPress={this.rejectJobTask}>
+                                        <Text style={[styles.text, { color: themeRed, fontWeight: 'bold' }]}>Reject job</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        }
+                        <View style={styles.textInputContainer}>
+                            <TextInput style={styles.textInput}
+                                placeholder='Type message'
+                                value={this.state.inputMessage}
+                                multiline={true}
+                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
+                            </TextInput>
+                            { showButton && <TouchableOpacity
+                                style={styles.sendButton}
+                                onPress={this.sendMessageTask}>
+                                <Image style={styles.sendButtonImg}
+                                    source={require('../images/png/paper-plane-thicc.png')}
+                                />
+                            </TouchableOpacity> }
+                        </View>
+
                     </View>
-                </View>
+                </ImageBackground>
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -552,43 +555,81 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flex: 1,
         paddingTop: 10,
-        backgroundColor: '#000000',
+        flexDirection: 'row',
+        backgroundColor: colorBg,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
-        borderWidth: 2,
-        textAlign: 'center',
         justifyContent: 'center',
         marginLeft: 10,
         marginRight: 10,
     },
+    sendButtonImg: {
+        width: 50,
+        height: 30,
+        tintColor: darkGray,
+        resizeMode: 'contain',
+    },
+    sendButton: {
+        height: 50,
+        flexDirection: 'row',
+        backgroundColor: lightGray,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 7 },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 10,
+        borderRadius: 25,
+        marginRight: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignContent: 'center',
+        flex: 1
+    },
     text: {
         fontSize: 14,
-        color: 'white',
         textAlign: 'center',
         justifyContent: 'center',
+    },
+    textInput: {
+        flex: 4,
+        backgroundColor: lightGray,
+        borderRadius: 25,
+        paddingHorizontal: 10,
+        fontSize: 16,
+        marginHorizontal: 5,
+    },
+    textInputContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        paddingVertical: 2,
+        marginVertical: 5
     },
     footer: {
         width: screenWidth,
         minHeight: 50,
         flexDirection: 'column',
-        backgroundColor: 'white',
+        backgroundColor: 'transparent',
         justifyContent: 'center',
-        position: 'absolute', //Footer
-        bottom: 0, //Footer
+        position: 'absolute',
+        bottom: 0,
     },
     textViewDirection: {
         flexDirection: 'row',
         width: screenWidth,
         height: 50,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
-        backgroundColor: 'white',
+        backgroundColor: white,
         borderRadius: 2,
         alignItems: 'center',
         justifyContent: 'flex-start',
