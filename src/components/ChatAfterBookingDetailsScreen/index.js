@@ -14,7 +14,7 @@ import { imageExists, chatDate } from '../../misc/helpers';
 import Config from '../Config';
 import { colorPrimary, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../../Constants/colors';
 import { cloneDeep } from 'lodash';
-import style from '../chatStyle';
+import style from './styles';
 
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';

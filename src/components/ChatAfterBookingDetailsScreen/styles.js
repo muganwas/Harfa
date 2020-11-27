@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { colorYellow, lightGray } from '../Constants/colors';
+import { colorYellow, lightGray } from '../../Constants/colors';
 const screenWidth = Dimensions.get('window').width;
 
 const style = StyleSheet.create({
@@ -15,8 +15,8 @@ const style = StyleSheet.create({
         flexDirection: 'column',
         backgroundColor: 'white',
         justifyContent: 'center',
-        position: 'absolute', //Footer
-        bottom: 0, //Footer
+        position: 'absolute',
+        bottom: 0,
     },
     buttonContainer: {
         flex: 1,
