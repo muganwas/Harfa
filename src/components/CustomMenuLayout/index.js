@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableHighlight, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
 import { connect } from 'react-redux';
 import { notificationsFetched } from '../../Redux/Actions/notificationActions';
 import { DrawerActions } from 'react-navigation-drawer';
@@ -47,8 +47,7 @@ class CustomMenuLayout extends Component {
                             }}>Welcome</Text>
                             <Text style={[styles.textHeader, { color: black }]}>{userDetails.username}</Text>
                         </View>
-
-                        <TouchableHighlight
+                        <TouchableOpacity
                             underlayColor={'rgba(0,0,0,0.2)'}
                             style={styles.menuButton}
                             onPress={() => {
@@ -59,9 +58,8 @@ class CustomMenuLayout extends Component {
                                 <Image source={require('../../icons/ic_home_64dp.png')} style={styles.menuImage} />
                                 <Text style={styles.textMenu}>Dashboard</Text>
                             </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             underlayColor={'rgba(0,0,0,0.2)'}
                             style={styles.menuButton}
                             onPress={() => {
@@ -72,9 +70,8 @@ class CustomMenuLayout extends Component {
                                 <Image source={require('../../icons/ic_user_64dp.png')} style={styles.menuImage} />
                                 <Text style={styles.textMenu}>My Profile</Text>
                             </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             underlayColor={'rgba(0,0,0,0.2)'}
                             style={styles.menuButton}
                             onPress={() => {
@@ -85,9 +82,8 @@ class CustomMenuLayout extends Component {
                                 <Image source={require('../../icons/booking_history.png')} style={styles.menuImage} />
                                 <Text style={styles.textMenu}>Bookings</Text>
                             </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             underlayColor={'rgba(0,0,0,0.2)'}
                             style={styles.menuButton}
                             onPress={() => {
@@ -100,9 +96,8 @@ class CustomMenuLayout extends Component {
                                 <Text style={styles.textMenu}>Notifications</Text>
                                 {notificationsInfo.generic > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.generic}</Text> : null}
                             </View>
-                        </TouchableHighlight>
-
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             underlayColor={'rgba(0,0,0,0.2)'}
                             style={styles.menuButton}
                             onPress={() => {
@@ -115,8 +110,8 @@ class CustomMenuLayout extends Component {
                                 <Text style={styles.textMenu}>Messages</Text>
                                 {notificationsInfo.messages > 0 ? <Text style={styles.menuNotifications}>{notificationsInfo.messages}</Text> : null}
                             </View>
-                        </TouchableHighlight>
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             underlayColor={'rgba(0,0,0,0.2)'}
                             style={styles.menuButton}
                             onPress={() => this.props.navigation.navigate("ContactUs")}>
@@ -124,8 +119,8 @@ class CustomMenuLayout extends Component {
                                 <Image source={require('../../icons/ic_contact_us_64dp.png')} style={styles.menuImage} />
                                 <Text style={styles.textMenu}>Contact Us</Text>
                             </View>
-                        </TouchableHighlight>
-                        <TouchableHighlight
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             underlayColor={'rgba(0,0,0,0.2)'}
                             style={styles.menuButton}
                             onPress={() => this.changeDialogVisibility(true)}>
@@ -133,13 +128,11 @@ class CustomMenuLayout extends Component {
                                 <Image source={require('../../icons/ic_logout.png')} style={styles.menuImage} />
                                 <Text style={styles.textMenu}>Log out</Text>
                             </View>
-                        </TouchableHighlight>
-
+                        </TouchableOpacity>
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false)}>
                             <DialogLogout navigation={this.props.navigation} changeDialogVisibility={this.changeDialogVisibility} />
                         </Modal>
-
                     </ScrollView>
                 </TouchableOpacity>
             </TouchableOpacity>
