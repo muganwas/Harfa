@@ -60,7 +60,7 @@ class Hamburger extends React.Component {
 
         Notifications.registerRemoteNotifications();
     }
-    componentDidMount() {
+    async componentDidMount() {
         const {
             fetchedNotifications,
             updateLiveChatUsers,
@@ -70,10 +70,10 @@ class Hamburger extends React.Component {
         } = this.props;
         const senderId = userDetails.userId;
         const userRef = database().ref(`liveLocation/${senderId}`);
-        this.checkNoficationsAvailability();
-        this.checkForUserType();
+        await this.checkNoficationsAvailability();
+        await this.checkForUserType();
 
-        messaging().onMessage(message => {
+        messaging().onMessage(async message => {
             const { data } = message;
             const { title, body } = data;
             const {
@@ -91,7 +91,7 @@ class Hamburger extends React.Component {
             const orderId = data.orderId;
             let pos = 0;
 
-            jobRequests.map((obj, key) => {
+            await jobRequests.map((obj, key) => {
                 const currOrderId = obj.order_Id;
                 if (orderId === currOrderId) pos = key;
             });
@@ -192,30 +192,29 @@ class Hamburger extends React.Component {
             }
         });
 
-        Axios.get(FETCH_MESSAGES + '?sender=' + senderId + "&userType=client").then(results => {
+        await Axios.get(FETCH_MESSAGES + '?sender=' + senderId + "&userType=client").then( async results => {
             const { data } = results;
             let messages = {};
             let otherUsers = {};
             // get ids of other users this user has chatted with
-            console.log('chat', results)
             if (!data.message) {
-                data.map(msgObj => {
+                await data.map(msgObj => {
                     const { sender, recipient } = msgObj;
                     if (sender !== senderId) otherUsers[sender] = sender;
                     else if (recipient !== senderId) otherUsers[recipient] = recipient;
                 });
                 // if any user, seperate the different groups of messages
                 if (Object.keys(otherUsers).length > 0) {
-                    Object.keys(otherUsers).map(otherUser => {
+                    Object.keys(otherUsers).map(async otherUser => {
                         const thisUsersMessages = [];
-                        data.map(msgObj => {
+                        await data.map(msgObj => {
                             const { sender, recipient } = msgObj;
                             if (otherUser === sender || otherUser === recipient) thisUsersMessages.push(msgObj);
                         });
                         if (thisUsersMessages.length > 0) messages[otherUser] = thisUsersMessages;
                     });
-                    dbMessagesFetched(messages);
                 }
+                dbMessagesFetched(messages);
             }
             else {
                 SimpleToast.show('Something went wrong, please reload app');

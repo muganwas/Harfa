@@ -116,16 +116,16 @@ class ProHamburger extends React.Component {
                 });
                 // if any user, seperate the different groups of messages
                 if (Object.keys(otherUsers).length > 0) {
-                    Object.keys(otherUsers).map(otherUser => {
+                    Object.keys(otherUsers).map(async otherUser => {
                         const thisUsersMessages = [];
-                        data.map(msgObj => {
+                        await data.map(msgObj => {
                             const { sender, recipient } = msgObj;
                             if (otherUser === sender || otherUser === recipient) thisUsersMessages.push(msgObj);
                         });
                         if (thisUsersMessages.length > 0) messages[otherUser] = thisUsersMessages;
                     });
-                    dbMessagesFetched(messages);
                 }
+                dbMessagesFetched(messages);
             }
             else {
                 SimpleToast.show('Something went wrong, please reload app');
