@@ -1,4 +1,5 @@
 export { default as HomeScreen } from './HomeScreen';
+export { default as AvailabilityComponent } from './AvailabilityComponent';
 export { default as DashboardScreen } from './DashboardScreen';
 export { default as AfterSplashScreen } from './AfterSplashScreen';
 export { default as AccountTypeScreen } from './AccountTypeScreen';

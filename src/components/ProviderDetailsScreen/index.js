@@ -21,7 +21,8 @@ import WaitingDialog from '../WaitingDialog';
 import { imageExists } from '../../misc/helpers';
 import { updateUserDetails, updateProviderDetails } from '../../Redux/Actions/userActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
-import { lightGray, colorGreen, colorRed, themeRed, colorBg, white, black, darkGray } from '../../Constants/colors';
+import { lightGray, themeRed, colorBg, white, black, darkGray } from '../../Constants/colors';
+import Availability from '../AvailabilityComponent';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -398,12 +399,7 @@ class ProviderDetailsScreen extends Component {
               {this.state.name}
             </Text>
           </View>
-          <View style={styles.onlineOfflineView}>
-            <View style={[styles.onlineOfflineDisplay, { backgroundColor: this.state.online ? colorGreen : colorRed }]} />
-            <Text style={{ color: black, }}>
-              {this.state.online ? "Online" : "Offline"}
-            </Text>
-          </View>
+          <Availability styles={styles} online={this.state.online} />
         </View>
 
         <View style={{
