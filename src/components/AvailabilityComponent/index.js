@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import PropTypes from 'prop-types';
-import { colorRed, colorGreen, black } from '../../Constants/colors'
-
-const AvailabilityComponent = ({ styles, online }) => {
+import { colorRed, colorGreen, black } from '../../Constants/colors';
+import styles from './styles';
+const AvailabilityComponent = ({ online }) => {
     return (
         <View style={styles.onlineOfflineView}>
             <View style={[styles.onlineOfflineDisplay, { backgroundColor: online ? colorGreen : colorRed }]} />

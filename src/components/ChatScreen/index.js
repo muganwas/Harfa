@@ -13,7 +13,9 @@ import {
 import Config from '../Config';
 import moment from 'moment';
 import { chatDate } from '../../misc/helpers';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, clone } from 'lodash';
+import database from '@react-native-firebase/database';
+import Availability from '../AvailabilityComponent';
 import { colorPrimary, colorBg, lightGray, darkGray, white, black, themeRed } from '../../Constants/colors';
 import style from './styles';
 
@@ -67,13 +69,17 @@ class ChatScreen extends Component {
             orderId: allJobRequestsClient[currRequestPos].order_id,
             titlePage: navigation.state.params.titlePage,
             provider_FCM_id: allJobRequestsClient[currRequestPos].employee_details.fcm_id,
-            dataChatSourceSynced: false
+            dataChatSourceSynced: false,
+            selectedStatus: '0',
+            liveChatStatus: '0',
+            online: '0'
         }
     };
 
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
+        this.reInit();
         navigation.addListener('willFocus', async () => {
             this.reInit();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
@@ -84,7 +90,15 @@ class ChatScreen extends Component {
     }
 
     reInit = () => {
-        const { userInfo: { userDetails }, jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = this.props;
+        const {
+            userInfo: { userDetails },
+            jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } },
+            messagesInfo: { dataChatSource, fetched },
+            generalInfo: { OnlineUsers },
+            navigation
+        } = this.props;
+        let onlineUsers = clone(OnlineUsers);
+        let providerId = navigation.getParam('providerId', null) || allJobRequestsClient[currRequestPos].employee_id;
         var currRequestPos;
         Object.keys(allJobRequestsClient).map(key => {
             const currEmpId = allJobRequestsClient[key].employee_id;
@@ -108,18 +122,58 @@ class ChatScreen extends Component {
             orderId: allJobRequestsClient[currRequestPos].order_id,
             titlePage: navigation.state.params.titlePage,
             provider_FCM_id: allJobRequestsClient[currRequestPos].employee_details.fcm_id,
-            dataChatSourceSynced: false
+            dataChatSourceSynced: false,
+            liveChatStatus: OnlineUsers[providerId] ? OnlineUsers[providerId].status : '0'
+        });
+        const userRef = database().ref(`users/${providerId}`);
+        userRef.on('child_changed', result => {
+            if (result && result.key === "status" && providerId) {
+                if (onlineUsers[providerId] && result.val() === '1') this.setState({ selectedStatus: result.val(), online: onlineUsers[providerId] && onlineUsers[providerId].status === '1' });
+                else this.setState({ online: result.val() === '1', selectedStatus: result.val() });
+            } else console.log('provider id unavailable')
+        });
+
+        userRef.once('value', data => {
+            if (data) {
+                const { status } = data.val();
+                if (providerId) {
+                    if (onlineUsers[providerId]) {
+                        if (onlineUsers[providerId] && status === '1') this.setState({ selectedStatus: status, online: onlineUsers[providerId] && onlineUsers[providerId].status === '1' });
+                        else {
+                            this.setState({ online: status === '1', selectedStatus: status, });
+                        }
+                    }
+                }
+            }
         });
     }
 
     componentDidUpdate() {
-        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
-        const { isLoading, dataChatSourceSynced } = this.state;
+        const { 
+            messagesInfo: { fetched, dataChatSource }, 
+            jobsInfo: { selectedJobRequest: { employee_id }, allJobRequestsClient },
+            generalInfo: { OnlineUsers },
+            navigation
+        } = this.props;
+        let currRequestPos;
+        Object.keys(allJobRequestsClient).map(key => {
+            const currEmpId = allJobRequestsClient[key].employee_id;
+            if (currEmpId === employee_id) currRequestPos = key;
+        });
+        const providerId = navigation.getParam('providerId', null) || allJobRequestsClient[currRequestPos].employee_id;
+        const { isLoading, dataChatSourceSynced, liveChatStatus, selectedStatus } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
+
         if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced)
             this.setState({ dataChatSource: dataChatSource[employee_id], dataChatSourceSynced: true });
+        
+        console.log(liveChatStatus)
+        console.log(OnlineUsers[providerId])
+        if (OnlineUsers[providerId] && liveChatStatus !== OnlineUsers[providerId].status) {
+            this.setState({online: OnlineUsers[providerId].status === '1' && selectedStatus === '1', liveChatStatus: OnlineUsers[providerId].status})
+        }
     }
 
     handleBackButtonClick = () => {
@@ -327,7 +381,7 @@ class ChatScreen extends Component {
     }
 
     render() {
-        const { requestStatus, showButton } = this.state;
+        const { requestStatus, showButton, online } = this.state;
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
@@ -350,8 +404,8 @@ class ChatScreen extends Component {
                                 {this.state.receiverName + " "}{this.state.surname}
                             </Text>
                         </View>
+                        <Availability online={online} />
                     </View>
-
                     <ScrollView style={{ marginBottom: requestStatus === 'Pending' ? 100 : 50 }} ref={ref => this.scrollView = ref}
                         contentContainerStyle={{
                             justifyContent: 'center',
@@ -399,13 +453,13 @@ class ChatScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-                            { showButton && <TouchableOpacity
+                            {showButton && <TouchableOpacity
                                 style={styles.sendButton}
                                 onPress={this.sendMessageTask}>
                                 <Image style={styles.sendButtonImg}
                                     source={require('../../images/png/paper-plane-thicc.png')}
                                 />
-                            </TouchableOpacity> }
+                            </TouchableOpacity>}
                         </View>
                         {this.state.isJobAccepted && (
                             <View style={{
@@ -537,7 +591,7 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         backgroundColor: "#16B5F3"
     },
-     textInput: {
+    textInput: {
         flex: 4,
         backgroundColor: lightGray,
         borderRadius: 25,

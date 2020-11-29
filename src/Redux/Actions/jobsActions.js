@@ -149,6 +149,7 @@ export const getPendingJobRequest = (props, userId, navTo) => {
                             lat: job.employee_details.lat,
                             lang: job.employee_details.lang,
                             service_name: job.service_details.service_name,
+                            employee_details: job.employee_details
                         }
                         //PendingJobRequest.Request = jobData;
                         //check if image is reachable
@@ -264,6 +265,7 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
         })
             .then(response => response.json())
             .then(responseJson => {
+                console.log('pending info', responseJson)
                 if (responseJson.result) {
                     //const id = responseJson.data.id;
                     responseJson.data.map((job, index) => {
@@ -285,6 +287,7 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
                             delivery_address: job.delivery_address,
                             delivery_lat: job.delivery_lat,
                             delivery_lang: job.delivery_lang,
+                            customer_details: job.customer_details
                         }
                         //check if image is reachable
                         imageExists(job.customer_details.image).then(res => {

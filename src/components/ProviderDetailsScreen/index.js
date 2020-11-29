@@ -18,6 +18,7 @@ import {
 } from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
+import { clone } from 'lodash';
 import { imageExists } from '../../misc/helpers';
 import { updateUserDetails, updateProviderDetails } from '../../Redux/Actions/userActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
@@ -61,6 +62,7 @@ class ProviderDetailsScreen extends Component {
       description: null,
       status: null,
       online: '0',
+      selectedStatus: '0',
       liveChatStatus: '0',
       fcmId: null,
       accountType: null,
@@ -229,7 +231,7 @@ class ProviderDetailsScreen extends Component {
     const currentliveChatStatus = OnlineUsers[this.state.providerId] ? OnlineUsers[this.state.providerId].status : "0";
     if (liveChatStatus !== currentliveChatStatus) {
       this.setState({
-        online: this.state.status === "1" && currentliveChatStatus === "1",
+        online: this.state.selectedStatus === "1" && currentliveChatStatus === "1",
         liveChatStatus: currentliveChatStatus,
       });
     }
@@ -283,14 +285,14 @@ class ProviderDetailsScreen extends Component {
     imageExists(image).then(imageAvailable => {
       this.setState({ imageAvailable });
     });
-    const onlineUsers = OnlineUsers;
+    const onlineUsers = clone(OnlineUsers);
     const { providerId } = this.state;
     const userRef = database().ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {
       if (result && result.key === "status" && providerId) {
-        if (onlineUsers[providerId] && result.val() === '1') this.setState({ status: onlineUsers[providerId] && onlineUsers[providerId].status });
-        else this.setState({ status: result.val() });
+        if (onlineUsers[providerId] && result.val() === '1') this.setState({ selectedStatus: result.val(), online: onlineUsers[providerId] && onlineUsers[providerId].status === '1' });
+        else this.setState({ online: result.val() === '1', selectedStatus: result.val() });
       } else console.log('provider id unavailable')
     });
 
@@ -299,9 +301,9 @@ class ProviderDetailsScreen extends Component {
         const { status } = data.val();
         if (providerId) {
           if (onlineUsers[providerId]) {
-            if (onlineUsers[providerId] && status === onlineUsers[providerId].status) this.setState({ status: onlineUsers[providerId] && onlineUsers[providerId].status });
+            if (onlineUsers[providerId] && status === '1') this.setState({ selectedStatus: status, online: onlineUsers[providerId] && onlineUsers[providerId].status === '1' });
             else {
-              this.setState({ status: status });
+              this.setState({ online: status === '1', selectedStatus: status, });
             }
           }
         }
@@ -399,7 +401,7 @@ class ProviderDetailsScreen extends Component {
               {this.state.name}
             </Text>
           </View>
-          <Availability styles={styles} online={this.state.online} />
+          <Availability online={this.state.online} />
         </View>
 
         <View style={{
@@ -599,7 +601,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 20,
   },
-
   onlineOfflineView: {
     flex: 1,
     flexDirection: 'row',
