@@ -143,7 +143,15 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     handleBackButtonClick = () => {
-        this.props.navigation.navigate("ProDashboard");
+        const { pageTitle } = this.state;
+        if (pageTitle === "ProMapDirection")
+            this.props.navigation.navigate("ProMapDirection");
+        else if (pageTitle === "ProDashboard")
+            this.props.navigation.navigate("ProDashboard");
+        else if (pageTitle === 'ProAllMessage')
+            this.props.navigation.navigate("ProAllMessage");
+        else
+            this.props.navigation.goBack();
         return true;
     }
 

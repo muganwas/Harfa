@@ -240,7 +240,7 @@ class ProChatScreen extends Component {
                     online={online}
                     receiverImage={this.state.receiverImage}
                     receiverName={this.state.receiverName}
-                    handleBackButtonClick={() => this.state.pageTitle == 'ProMapDirection' ? this.props.navigation.navigate("ProMapDirection") : this.props.navigation.navigate("ProDashboard")}
+                    handleBackButtonClick={this.handleBackButtonClick}
                 />
                 <ImageBackground style={styles.subContainer}
                     source={require('../../icons/bg_chat.png')}>
