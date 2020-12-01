@@ -8,7 +8,7 @@ import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../ProHamburger';
 import { font_size } from '../../Constants/metrics';
-import { colorPrimary, colorPrimaryDark, colorBg, white, themeRed, black, lightGray } from '../../Constants/colors';
+import { colorPrimary, colorPrimaryDark, colorBg, white, themeRed, black, darkGray, lightGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/'
@@ -244,11 +244,11 @@ class ProBookingScreen extends Component {
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                         <TouchableOpacity style={this.state.currentPage == 0 ? styles.buttonGreen : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Completed")}>
-                            <Text style={[styles.text, { color: black }]}>Completed</Text>
+                            <Text style={[styles.text, { color: this.state.currentPage == 0 ? black : white }]}>Completed</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={this.state.currentPage == 1 ? styles.buttonRed : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Rejected")}>
-                            <Text style={styles.text}>Rejected</Text>
+                            <Text style={[styles.text, { color: this.state.currentPage == 1 ? black : white, fontWeight: 'bold'}]}>Rejected</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -264,8 +264,8 @@ class ProBookingScreen extends Component {
                         </View>
                         {this.state.bookingCompleteData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
-                                <Text style={{ color: 'black', fontSize: 20 }}> 
-                                    No bookings found!
+                                <Text style={{ color: darkGray, fontSize: 16, fontStyle: 'italic' }}> 
+                                    No completed bookings found!
                                 </Text>
                             </View>
                         )}
@@ -276,8 +276,8 @@ class ProBookingScreen extends Component {
                         </View>
                         {this.state.bookingRejectData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
-                                <Text style={{ color: 'black', fontSize: 20 }}>
-                                    No bookings found!
+                                <Text style={{ color: darkGray, fontSize: 16, fontStyle: 'italic' }}>
+                                    No rejected bookings found!
                                 </Text>
                             </View>
                         )}
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 40,
         paddingTop: 10,
-        backgroundColor: 'red',
+        backgroundColor: white,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
