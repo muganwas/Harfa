@@ -9,7 +9,7 @@ import Hamburger from '../ProHamburger';
 import { imageExists } from '../../misc/helpers';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../../Redux/Actions/jobsActions';
-import { colorPrimary, colorPrimaryDark, colorBg, white, themeRed, lightGray } from '../../Constants/colors';
+import { colorBg, white, themeRed, lightGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -163,7 +163,7 @@ class ProAllMessageScreen extends Component {
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
                 <View style={{
-                    flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
+                    flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorBg,
                     paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                 }}>
                     <Hamburger
@@ -189,7 +189,13 @@ class ProAllMessageScreen extends Component {
                     </View>
                 </View>
 
-                <ScrollView>
+                <ScrollView
+                    contentContainerStyle={{
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        alwaysBounceVertical: true
+                    }}
+                >
                     <View style={styles.listView}>
                         {this.state.dataSource.map(this.renderRecentMessageItem)}
                     </View>
@@ -257,23 +263,23 @@ export default connect(mapStateToProps, mapDispatchToProps)(ProAllMessageScreen)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: lightGray,
     },
     listView: {
         flex: 1,
+        width: screenWidth,
         backgroundColor: lightGray,
         padding: 5,
     },
     itemMainContainer: {
-        width: screenWidth,
-        flex: 1,
         height: 70,
         flexDirection: 'row',
         backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
+        borderRadius: 5,
         elevation: 5,
         padding: 5,
     },
@@ -295,7 +301,7 @@ const styles = StyleSheet.create({
     },
     animatedView: {
         width: screenWidth,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: colorBg,
         elevation: 2,
         position: "absolute",
         bottom: 0,

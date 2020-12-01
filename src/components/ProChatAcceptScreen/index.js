@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     slidingPanelLayoutStyle: {
         width: screenWidth,
         height: 400,
-        backgroundColor: colorYellow,
+        backgroundColor: colorBg,
         justifyContent: 'center',
         alignItems: 'center',
     },

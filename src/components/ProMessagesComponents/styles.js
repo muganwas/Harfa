@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { colorYellow, lightGray } from '../../Constants/colors';
+import { colorYellow, lightGray, darkGray } from '../../Constants/colors';
 const screenWidth = Dimensions.get('window').width;
 
 const style = StyleSheet.create({
@@ -20,9 +20,60 @@ const style = StyleSheet.create({
     },
     text: {
         fontSize: 14,
-        color: 'white',
         textAlign: 'center',
         justifyContent: 'center',
+    },
+    textInput: {
+        flex: 4,
+        backgroundColor: lightGray,
+        borderRadius: 25,
+        height: 50,
+        paddingHorizontal: 10,
+        fontSize: 16,
+        marginHorizontal: 5,
+    },
+    textInputContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        paddingVertical: 2,
+        marginVertical: 5
+    },
+     sendButtonImg: {
+        width: 50,
+        height: 30,
+        tintColor: darkGray,
+        resizeMode: 'contain',
+    },
+    sendButton: {
+        height: 50,
+        flexDirection: 'row',
+        backgroundColor: lightGray,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 7 },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 10,
+        borderRadius: 25,
+        marginRight: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignContent: 'center',
+        flex: 1
+    },
+    buttonContainer: {
+        flex: 1,
+        paddingTop: 10,
+        backgroundColor: '#000000',
+        paddingBottom: 10,
+        paddingLeft: 20,
+        paddingRight: 20,
+        borderRadius: 5,
+        borderColor: colorYellow,
+        borderWidth: 2,
+        textAlign: 'center',
+        justifyContent: 'center',
+        marginLeft: 10,
+        marginRight: 10,
     },
     itemLeftChatContainer: {
         maxWidth: (screenWidth / 2) + 30,

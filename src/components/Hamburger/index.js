@@ -260,13 +260,6 @@ class Hamburger extends React.Component {
 
         this.fetchEmployeeLocations();
 
-        userRef.once('value', data => {
-            console.log('data', data)
-            if (data) {
-                console.log('data --', data.val())
-            }
-        });
-
         const { updateOnlineStatus, updateConnectivityStatus } = this.props
 
         NetInfo.addEventListener(status => {

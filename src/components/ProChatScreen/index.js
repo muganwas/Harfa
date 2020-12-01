@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, ScrollView, TextInput, Dimensions,
+    View, StyleSheet, TouchableOpacity, Text, ScrollView, TextInput, Dimensions,
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
     KeyboardAvoidingView,
 } from 'react-native';
@@ -11,12 +11,11 @@ import {
     dbMessagesFetched
 } from '../../Redux/Actions/messageActions';
 import database from '@react-native-firebase/database';
-import { chatDate } from '../../misc/helpers';
 import Config from '../Config';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { startFetchingMessages, messagesFetched, messagesError } from '../../Redux/Actions/messageActions';
-import { colorPrimary, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../../Constants/colors';
-import style from './styles';
+import { lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../../Constants/colors';
+import { MessagesView, MessagesHeader, MessagesFooter } from '../ProMessagesComponents';
 
 const screenWidth = Dimensions.get('window').width;
 const socket = Config.socket;
@@ -75,12 +74,12 @@ class ProChatScreen extends Component {
     };
 
     componentDidMount() {
-        const { 
-            navigation, 
+        const {
+            navigation,
             jobsInfo: { selectedJobRequest: { user_id } },
             generalInfo: { OnlineUsers }
         } = this.props;
-        
+
         navigation.addListener('willFocus', async () => {
             this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -97,10 +96,8 @@ class ProChatScreen extends Component {
         });
 
         userRef.once('value', data => {
-            console.log('data', data)
             if (data) {
                 const { status } = data.val();
-                console.log('status', status)
                 if (user_id) {
                     if (OnlineUsers[user_id]) {
                         if (OnlineUsers[user_id] && status === '1') this.setState({ selectedStatus: status, online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1' });
@@ -143,13 +140,11 @@ class ProChatScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { 
-            messagesInfo: { fetched, dataChatSource }, 
+        const {
+            messagesInfo: { fetched, dataChatSource },
             jobsInfo: { selectedJobRequest: { user_id } },
             generalInfo: { OnlineUsers },
         } = this.props;
-        console.log('online users', OnlineUsers)
-        console.log('user id', user_id)
         const { isLoading, liveChatStatus, selectedStatus } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
@@ -223,53 +218,6 @@ class ProChatScreen extends Component {
         }
     }
 
-    renderMessages = () => {
-        const { senderId, receiverId } = this.state;
-        const { messagesInfo: { messages } } = this.props;
-        return (
-            <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                {
-                    Object.keys(messages).map(key => {
-                        const usersMessages = messages[key];
-                        // display messages from selected user
-                        if (String(key) === String(receiverId)) {
-                            return <View key={key} style={style.messagesSubContainer}>
-                                {
-                                    Object.keys(usersMessages).map(key => {
-                                        const sender = usersMessages[key].sender;
-                                        const message = usersMessages[key].message;
-                                        const time = usersMessages[key].time;
-                                        if (String(sender) === String(receiverId)) {
-                                            return (
-                                                <View key={key} style={style.recievedContainer}>
-                                                    <View style={style.recievedMsgContainer}>
-                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
-                                                        <Text style={style.recievedMsg}>{message}</Text>
-                                                    </View>
-                                                </View>
-                                            )
-                                        }
-                                        else if (String(sender) === String(senderId)) {
-                                            return (
-                                                <View key={key} style={style.sentContainer}>
-                                                    <View style={style.sentMsgContainer}>
-                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
-                                                        <Text style={style.sentMsg}>{message}</Text>
-                                                    </View>
-                                                </View>
-                                            )
-                                        }
-                                        else return;
-                                    })
-                                }
-                            </View>
-                        }
-                    })
-                }
-            </View>
-        )
-    }
-
     renderSeparator = () => {
         return (
             <View
@@ -279,32 +227,22 @@ class ProChatScreen extends Component {
     }
 
     render() {
-        let { showButton, online } = this.state;
-        console.log('online', online)
+        let {
+            showButton,
+            online,
+            senderId,
+            receiverId
+        } = this.state;
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
+                <MessagesHeader
+                    receiverImage={this.state.receiverImage}
+                    receiverName={this.state.receiverName}
+                    handleBackButtonClick={() => this.state.pageTitle == 'ProMapDirection' ? this.props.navigation.navigate("ProMapDirection") : this.props.navigation.navigate("ProDashboard")}
+                />
                 <ImageBackground style={styles.subContainer}
                     source={require('../../icons/bg_chat.png')}>
-                    <View style={{
-                        flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                        paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
-                    }}>
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                onPress={() => this.state.pageTitle == 'ProMapDirection' ? this.props.navigation.navigate("ProMapDirection") : this.props.navigation.navigate("ProDashboard")}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                    source={require('../../icons/arrow_back.png')} />
-                            </TouchableOpacity>
-
-                            <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                                source={{ uri: this.state.receiverImage }} />
-                            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-                                {this.state.receiverName}
-                            </Text>
-                        </View>
-                    </View>
-
                     <ScrollView
                         ref={ref => this.scrollView = ref}
                         contentContainerStyle={{
@@ -317,9 +255,7 @@ class ProChatScreen extends Component {
                     >
 
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
-                            <View style={styles.listView}>
-                                {this.renderMessages()}
-                            </View>
+                            <MessagesView senderId={senderId} receiverId={receiverId} />
                         </View>
                     </ScrollView>
                     {this.state.isLoading && (
@@ -330,22 +266,14 @@ class ProChatScreen extends Component {
                                 size="large" />
                         </View>
                     )}
-                    <View style={styles.footer}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                                placeholder='Type a message'
-                                value={this.state.inputMessage}
-                                multiline={true}
-                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                            </TextInput>
-                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
-                                onPress={this.sendMessageTask}>
-                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    ENVOYER
-                                    </Text>
-                            </TouchableOpacity>
-                        </View>
+                    <View style={styles.footerContainer}>
+                        {/*<View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>*/}
+                        <MessagesFooter
+                            inputMesage={this.state.inputMessage}
+                            textChangeAction={inputMesage => this.showHideButton(inputMesage)}
+                            sendMessageTask={this.sendMessageTask}
+                            showButton={showButton}
+                        />
                     </View>
                 </ImageBackground>
             </KeyboardAvoidingView>
@@ -359,18 +287,17 @@ const styles = StyleSheet.create({
         backgroundColor: colorBg,
     },
     subContainer: {
-        backgroundColor: 'yellow',
+        backgroundColor: colorBg,
         flex: 1
     },
     listView: {
         flex: 1,
         padding: 5,
     },
-    footer: {
+    footerContainer: {
         width: screenWidth,
         minHeight: 50,
         flexDirection: 'column',
-        backgroundColor: 'white',
         justifyContent: 'center',
         position: 'absolute', //Footer
         marginBottom: 0,

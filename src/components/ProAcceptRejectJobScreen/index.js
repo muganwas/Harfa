@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, ScrollView, Dimensions, BackHandler, ImageBackground, StatusBar, Platform, Modal
+    View, StyleSheet, TouchableOpacity, Image,
+    Text, TextInput, ScrollView, Dimensions, BackHandler,
+    ImageBackground, StatusBar, Platform, Modal,
+    KeyboardAvoidingView
 } from 'react-native';
 import { withNavigation } from 'react-navigation';
 import database from '@react-native-firebase/database';
@@ -20,15 +23,14 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../../Redux/Actions/jobsActions';
-import { chatDate } from '../../misc/helpers';
+import { MessagesView, MessagesHeader, MessagesFooter } from '../ProMessagesComponents';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
-import { colorPrimary, lightGray, colorBg, white, black, themeRed, colorGreen, darkGray } from '../../Constants/colors';
-import style from './styles'
+import { lightGray, colorBg, white, themeRed, colorGreen, darkGray } from '../../Constants/colors';
 
 const socket = Config.socket;
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+const ios = Platform.OS === 'ios';
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
@@ -143,56 +145,6 @@ class ProAcceptRejectJobScreen extends Component {
     handleBackButtonClick = () => {
         this.props.navigation.navigate("ProDashboard");
         return true;
-    }
-
-    renderMessages = () => {
-        const { senderId, receiverId } = this.state;
-        const { messagesInfo: { messages } } = this.props;
-        if (senderId && receiverId) {
-            return (
-                <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                    {
-                        Object.keys(messages).map(key => {
-                            const usersMessages = messages[key];
-                            // display messages from selected user
-                            if (String(key) === String(receiverId)) {
-                                return <View key={key} style={style.messagesSubContainer}>
-                                    {
-                                        Object.keys(usersMessages).map(key => {
-                                            const sender = usersMessages[key].sender;
-                                            const message = usersMessages[key].message;
-                                            const time = usersMessages[key].time;
-                                            if (String(sender) === String(receiverId)) {
-                                                return (
-                                                    <View key={key} style={style.recievedContainer}>
-                                                        <View style={style.recievedMsgContainer}>
-                                                            <Text style={style.chatTime}>{chatDate(time)}</Text>
-                                                            <Text style={style.recievedMsg}>{message}</Text>
-                                                        </View>
-                                                    </View>
-                                                )
-                                            }
-                                            else if (String(sender) === String(senderId)) {
-                                                return (
-                                                    <View key={key} style={style.sentContainer}>
-                                                        <View style={style.sentMsgContainer}>
-                                                            <Text style={style.chatTime}>{chatDate(time)}</Text>
-                                                            <Text style={style.sentMsg}>{message}</Text>
-                                                        </View>
-                                                    </View>
-                                                )
-                                            }
-                                            else return;
-                                        })
-                                    }
-                                </View>
-                            }
-                        })
-                    }
-                </View>
-            )
-        }
-
     }
 
     renderSeparator = () => {
@@ -462,28 +414,15 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     render() {
-        const { showButton } = this.state;
+        const { showButton, senderId, receiverId } = this.state;
         return (
-            <View style={styles.container}>
+            <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
-                <View style={{
-                    flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                    paddingLeft: 20, paddingRight: 20, paddingTop: 5, paddingBottom: 5
-                }}>
-                    <View style={{ flex: 1, flexDirection: 'row' }}>
-                        <TouchableOpacity style={{ width: 20, height: 20, alignSelf: 'center' }}
-                            onPress={this.handleBackButtonClick}>
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
-                                source={require('../../icons/arrow_back.png')} />
-                        </TouchableOpacity>
-
-                        <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 20 }}
-                            source={{ uri: this.state.receiverImage }} />
-                        <Text style={{ color: black, fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-                            {this.state.receiverName}
-                        </Text>
-                    </View>
-                </View>
+                <MessagesHeader
+                    receiverImage={this.state.receiverImage}
+                    receiverName={this.state.receiverName}
+                    handleBackButtonClick={this.handleBackButtonClick}
+                />
                 <ImageBackground style={{ flex: 1 }}
                     source={require('../../icons/bg_chat.png')}>
                     <ScrollView
@@ -501,9 +440,7 @@ class ProAcceptRejectJobScreen extends Component {
                         keyboardDismissMode='on-drag'
                     >
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
-                            <View style={[styles.listView]}>
-                                {this.renderMessages()}
-                            </View>
+                            <MessagesView senderId={senderId} receiverId={receiverId} />
                             {this.state.isAcceptJob && (
                                 <TouchableOpacity style={styles.textViewDirection}
                                     onPress={this.goToMapDirection}>
@@ -519,7 +456,7 @@ class ProAcceptRejectJobScreen extends Component {
                         </View>
                     </ScrollView>
 
-                    <View style={styles.footer}>
+                    <View style={styles.footerContainer}>
                         {(!this.state.isAcceptJob && !this.state.isRejectJob) &&
                             <View style={{
                                 flex: 1, width: screenWidth, justifyContent: 'center',
@@ -537,29 +474,19 @@ class ProAcceptRejectJobScreen extends Component {
                                 </View>
                             </View>
                         }
-                        <View style={styles.textInputContainer}>
-                            <TextInput style={styles.textInput}
-                                placeholder='Type message'
-                                value={this.state.inputMessage}
-                                multiline={true}
-                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                            </TextInput>
-                            {showButton && <TouchableOpacity
-                                style={styles.sendButton}
-                                onPress={this.sendMessageTask}>
-                                <Image style={styles.sendButtonImg}
-                                    source={require('../../images/png/paper-plane-thicc.png')}
-                                />
-                            </TouchableOpacity>}
-                        </View>
-
+                        <MessagesFooter
+                            inputMesage={this.state.inputMessage}
+                            textChangeAction={inputMesage => this.showHideButton(inputMesage)}
+                            sendMessageTask={this.sendMessageTask}
+                            showButton={this.state.showButton}
+                        />
                     </View>
                 </ImageBackground>
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
                 </Modal>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 }
@@ -658,7 +585,7 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         marginVertical: 5
     },
-    footer: {
+    footerContainer: {
         width: screenWidth,
         minHeight: 50,
         flexDirection: 'column',
