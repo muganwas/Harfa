@@ -237,6 +237,7 @@ class ProChatScreen extends Component {
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
                 <MessagesHeader
+                    online={online}
                     receiverImage={this.state.receiverImage}
                     receiverName={this.state.receiverName}
                     handleBackButtonClick={() => this.state.pageTitle == 'ProMapDirection' ? this.props.navigation.navigate("ProMapDirection") : this.props.navigation.navigate("ProDashboard")}

@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import PropTypes from 'prop-types';
+import Availability from '../AvailabilityComponent';
 import { colorPrimary, black } from '../../Constants/colors';
 
-const MessagesHeader = ({ receiverImage, receiverName, handleBackButtonClick }) => {
+const MessagesHeader = ({ receiverImage, receiverName, handleBackButtonClick, online=false }) => {
     return (
         <View style={{
             flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
@@ -22,6 +23,7 @@ const MessagesHeader = ({ receiverImage, receiverName, handleBackButtonClick }) 
                     {receiverName}
                 </Text>
             </View>
+            <Availability online={online} />
         </View>
     )
 }
@@ -29,7 +31,8 @@ const MessagesHeader = ({ receiverImage, receiverName, handleBackButtonClick }) 
 MessagesHeader.propTypes = {
     handleBackButtonClick: PropTypes.func.isRequired,
     receiverName: PropTypes.string.isRequired,
-    receiverImage: PropTypes.string
+    receiverImage: PropTypes.string,
+    online: PropTypes.bool.isRequired
 }
 
 export default MessagesHeader;

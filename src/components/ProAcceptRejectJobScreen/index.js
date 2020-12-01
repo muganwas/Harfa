@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
     View, StyleSheet, TouchableOpacity, Image,
-    Text, TextInput, ScrollView, Dimensions, BackHandler,
+    Text, ScrollView, Dimensions, BackHandler,
     ImageBackground, StatusBar, Platform, Modal,
     KeyboardAvoidingView
 } from 'react-native';
@@ -414,11 +414,12 @@ class ProAcceptRejectJobScreen extends Component {
     }
 
     render() {
-        const { showButton, senderId, receiverId } = this.state;
+        const { online, senderId, receiverId } = this.state;
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
                 <MessagesHeader
+                    online={online}
                     receiverImage={this.state.receiverImage}
                     receiverName={this.state.receiverName}
                     handleBackButtonClick={this.handleBackButtonClick}
