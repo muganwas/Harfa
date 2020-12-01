@@ -136,7 +136,7 @@ class ProAcceptRejectJobScreen extends Component {
 
     componentDidUpdate() {
         const { generalInfo: { OnlineUsers }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
-        const { liveChatStatus } = this.state;
+        const { liveChatStatus, selectedStatus } = this.state;
         if (OnlineUsers[user_id] && liveChatStatus !== OnlineUsers[user_id].status) {
             this.setState({ online: OnlineUsers[user_id].status === '1' && selectedStatus === '1', liveChatStatus: OnlineUsers[user_id].status })
         }

@@ -2,10 +2,13 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text,
-    TextInput, Dimensions, ActivityIndicator,
-    BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView, ScrollView
+    Dimensions, ActivityIndicator,
+    BackHandler, ImageBackground, 
+    StatusBar, Platform, KeyboardAvoidingView, 
+    ScrollView
 } from 'react-native';
 import { cloneDeep } from 'lodash';
+import database from '@react-native-firebase/database';
 import {
     dbMessagesFetched
 } from '../../Redux/Actions/messageActions';
@@ -13,7 +16,7 @@ import moment from 'moment';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { imageExists, chatDate } from '../../misc/helpers';
 import Config from '../Config';
-import { colorPrimary, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../../Constants/colors';
+import { lightGray, colorBg, white } from '../../Constants/colors';
 import { MessagesFooter, MessagesHeader, MessagesView } from '../MessagesComponents';
 import style from './styles';
 
@@ -61,11 +64,19 @@ class ChatAfterBookingDetailsScreen extends Component {
             isJobAccepted: props.navigation.state.params.isJobAccepted,
             proImageAvailable: null,
             provider_FCM_id: props.navigation.state.params.fcmId,
+            selectedStatus: '0',
+            liveChatStatus: '0',
+            online: false
         }
     };
 
     componentDidMount() {
-        const { fetchedNotifications, navigation } = this.props;
+        const { 
+            fetchedNotifications, navigation, 
+            jobsInfo: { selectedJobRequest: { employee_id } },
+            generalInfo: { OnlineUsers }
+        } = this.props;
+        const providerId = employee_id;
         fetchedNotifications({ type: 'messages', value: 0 });
         imageExists(this.props.navigation.state.params.providerImage).then(proImageAvailable => {
             this.setState({ proImageAvailable });
@@ -76,6 +87,27 @@ class ChatAfterBookingDetailsScreen extends Component {
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+        const userRef = database().ref(`users/${providerId}`);
+        userRef.on('child_changed', result => {
+            if (result && result.key === "status" && providerId) {
+                if (OnlineUsers[providerId] && result.val() === '1') this.setState({ selectedStatus: result.val(), online: OnlineUsers[providerId] && OnlineUsers[providerId].status === '1' });
+                else this.setState({ online: result.val() === '1', selectedStatus: result.val() });
+            } else console.log('provider id unavailable');
+        });
+
+        userRef.once('value', data => {
+            if (data) {
+                const { status } = data.val();
+                if (providerId) {
+                    if (OnlineUsers[providerId]) {
+                        if (OnlineUsers[providerId] && status === '1') this.setState({ selectedStatus: status, online: OnlineUsers[providerId] && OnlineUsers[providerId].status === '1' });
+                        else {
+                            this.setState({ online: status === '1', selectedStatus: status, });
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -104,13 +136,18 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
-        const { isLoading } = this.state;
+        const { 
+            messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } }, generalInfo: { OnlineUsers } } = this.props;
+        const { isLoading, liveChatStatus, selectedStatus } = this.state;
+        const providerId = employee_id;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[employee_id] });
+        if (OnlineUsers[providerId] && liveChatStatus !== OnlineUsers[providerId].status) {
+            this.setState({ online: OnlineUsers[providerId].status === '1' && selectedStatus === '1', liveChatStatus: OnlineUsers[providerId].status })
+        }
     }
 
     handleBackButtonClick = () => {
