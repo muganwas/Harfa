@@ -72,7 +72,7 @@ class ChatScreen extends Component {
             dataChatSourceSynced: false,
             selectedStatus: '0',
             liveChatStatus: '0',
-            online: '0'
+            online: false
         }
     };
 
@@ -130,7 +130,7 @@ class ChatScreen extends Component {
             if (result && result.key === "status" && providerId) {
                 if (onlineUsers[providerId] && result.val() === '1') this.setState({ selectedStatus: result.val(), online: onlineUsers[providerId] && onlineUsers[providerId].status === '1' });
                 else this.setState({ online: result.val() === '1', selectedStatus: result.val() });
-            } else console.log('provider id unavailable')
+            } else console.log('provider id unavailable');
         });
 
         userRef.once('value', data => {
@@ -149,8 +149,8 @@ class ChatScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { 
-            messagesInfo: { fetched, dataChatSource }, 
+        const {
+            messagesInfo: { fetched, dataChatSource },
             jobsInfo: { selectedJobRequest: { employee_id }, allJobRequestsClient },
             generalInfo: { OnlineUsers },
             navigation
@@ -168,17 +168,13 @@ class ChatScreen extends Component {
 
         if (JSON.stringify(dataChatSource[employee_id]) !== JSON.stringify(localDataChatSource) && !dataChatSourceSynced)
             this.setState({ dataChatSource: dataChatSource[employee_id], dataChatSourceSynced: true });
-        
-        console.log(liveChatStatus)
-        console.log(OnlineUsers[providerId])
         if (OnlineUsers[providerId] && liveChatStatus !== OnlineUsers[providerId].status) {
-            this.setState({online: OnlineUsers[providerId].status === '1' && selectedStatus === '1', liveChatStatus: OnlineUsers[providerId].status})
+            this.setState({ online: OnlineUsers[providerId].status === '1' && selectedStatus === '1', liveChatStatus: OnlineUsers[providerId].status })
         }
     }
 
     handleBackButtonClick = () => {
         const { titlePage } = this.state;
-        console.log(titlePage)
         const { navigation } = this.props;
         if (titlePage == 'MapDirection')
             navigation.navigate("MapDirection", {
@@ -406,7 +402,9 @@ class ChatScreen extends Component {
                         </View>
                         <Availability online={online} />
                     </View>
-                    <ScrollView style={{ marginBottom: requestStatus === 'Pending' ? 100 : 50 }} ref={ref => this.scrollView = ref}
+                    <ScrollView
+                        style={{ marginBottom: requestStatus === 'Pending' ? 100 : 50 }}
+                        ref={ref => this.scrollView = ref}
                         contentContainerStyle={{
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -418,7 +416,6 @@ class ChatScreen extends Component {
                         keyboardShouldPersistTaps='handled'
                         keyboardDismissMode='on-drag'
                     >
-
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <View style={styles.listView}>
                                 {this.renderMessages()}

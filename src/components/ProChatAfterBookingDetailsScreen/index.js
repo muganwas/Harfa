@@ -80,7 +80,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
         });
         this.setState({
             isLoading: false
-        })
+        });
     }
 
     reInit = () => {

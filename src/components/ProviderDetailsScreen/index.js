@@ -61,7 +61,7 @@ class ProviderDetailsScreen extends Component {
       address: null,
       description: null,
       status: null,
-      online: '0',
+      online: false,
       selectedStatus: '0',
       liveChatStatus: '0',
       fcmId: null,

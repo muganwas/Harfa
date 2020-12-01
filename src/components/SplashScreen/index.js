@@ -84,7 +84,6 @@ class SplashScreen extends Component {
                 );
             }
         }).catch(error => {
-            console.log('Messaging permission error --', error)
             Alert.alert(
                 "Permission Request",
                 "You don't have permission for notification. Please enable notification then try again ",
@@ -110,10 +109,6 @@ class SplashScreen extends Component {
                 AsyncStorage.getItem('userType')
                     .then(userType => this.autoLogin(userId, userType, fcmToken));
             }
-            else {
-                // user doesn't have a device token yet
-                console.log("User doesn't have Token")
-            }
         }).catch(error => {
             Alert.alert(
                 "Auth Token",
@@ -131,7 +126,6 @@ class SplashScreen extends Component {
                     },
                 ]
             );
-            console.log('fcm token error --', error)
         });
     }
 
@@ -212,8 +206,6 @@ class SplashScreen extends Component {
                         isLoading: false
                     })
                     alert(error);
-                    console.log('error in autologin')
-                    console.log(JSON.stringify(responseJson));
                 });
         }
         else if (userType == 'User') {
@@ -226,7 +218,7 @@ class SplashScreen extends Component {
                 },
             })
                 .then(response => response.json())
-                .then(responseJson => {
+                .then(async responseJson => {
                     if (responseJson && responseJson.result) {
                         var userData = {
                             userId: responseJson.data.id,
@@ -243,6 +235,21 @@ class SplashScreen extends Component {
                             firebaseId: responseJson.data.id,
                             fcmId: responseJson.data.fcm_id,
                         }
+                        const id = responseJson.data.id;
+                        const usersRef = database().ref(`users/${id}`);
+                        await usersRef.once('value', snapshot => {
+                            const value = snapshot.val();
+                            if (value)
+                                status = value.status;
+                            else {
+                                usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                    console.log('status set');
+                                }).
+                                    catch(e => {
+                                        console.log(e.message);
+                                    });
+                            }
+                        });
                         updateUserDetails(userData);
                         //Check if any Ongoing Request 
                         fetchJobRequestHistoryClient(userId);
@@ -273,27 +280,22 @@ class SplashScreen extends Component {
                         isLoading: false
                     })
                     alert(error);
-                    console.log(JSON.stringify(responseJson));
                 });
         }
     }
 
     autoLogin = (userId, userType, fcmToken) => {
-        console.log('userid', userId)
         if (userId !== null) {
             this.setState({
                 isLoading: true,
             });
             AsyncStorage.getItem('auth').then(storedInfo => {
-                console.log('stored --', storedInfo)
                 if (storedInfo) {
                     const { email, password } = JSON.parse(storedInfo);
                     firebaseAuth().signInWithEmailAndPassword(email, password).then(res => {
-                        console.log('res -- ', res)
                         this.inhouseLogin(userId, userType, fcmToken);
                     }).catch(error => {
                         SimpleToast.show('Something went wrong, try closing and reopening app');
-                        console.log('auth error --', error)
                     });
                 }
                 else this.inhouseLogin(userId, userType, fcmToken);

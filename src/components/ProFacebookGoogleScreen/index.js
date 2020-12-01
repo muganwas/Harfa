@@ -310,8 +310,22 @@ class FacebookGoogleScreen extends Component {
                             body: JSON.stringify(data)
                         })
                         .then((response) => response.json())
-                        .then((responseJson) => {
+                        .then(async responseJson => {
                             if (responseJson.result) {
+                                const usersRef = database().ref(`users/${responseJson.data.id}`);
+                                await usersRef.once('value', snapshot => {
+                                    const value = snapshot.val();
+                                    if (value)
+                                        status = value.status;
+                                    else {
+                                        usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                            console.log('status set');
+                                        }).
+                                            catch(e => {
+                                                console.log(e.message);
+                                            });
+                                    }
+                                });
                                 this.setState({
                                     isLoading: false,
                                     isErrorToast: true,

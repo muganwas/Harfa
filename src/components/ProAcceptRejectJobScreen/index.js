@@ -20,9 +20,11 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../../Redux/Actions/jobsActions';
+import { chatDate } from '../../misc/helpers';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
-import { colorPrimary, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white, black, themeRed, colorGreen, darkGray } from '../../Constants/colors';
+import { colorPrimary, lightGray, colorBg, white, black, themeRed, colorGreen, darkGray } from '../../Constants/colors';
+import style from './styles'
 
 const socket = Config.socket;
 const screenWidth = Dimensions.get('window').width;
@@ -51,7 +53,13 @@ class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
         super()
-        const { userInfo: { providerDetails }, jobsInfo: { jobRequestsProviders }, navigation } = props;
+        const {
+            userInfo: { providerDetails },
+            jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } },
+            messagesInfo: { dataChatSource, fetched },
+            generalInfo: { OnlineUsers },
+            navigation
+        } = props;
         let currRequestPos = navigation.getParam('currentPos', 0);
         this.state = {
             senderId: providerDetails.providerId,
@@ -62,8 +70,8 @@ class ProAcceptRejectJobScreen extends Component {
             showButton: false,
             isAcceptJob: jobRequestsProviders[currRequestPos].status === "Accepted",
             isRejectJob: false,
-            dataChatSource: [],
-            isLoading: true,
+            dataChatSource: dataChatSource[user_id] || [],
+            isLoading: !fetched,
             isErrorToast: false,
             receiverId: jobRequestsProviders[currRequestPos].user_id,
             receiverName: jobRequestsProviders[currRequestPos].name,
@@ -83,31 +91,53 @@ class ProAcceptRejectJobScreen extends Component {
             chatStatus: jobRequestsProviders[currRequestPos].chat_status,
             status: jobRequestsProviders[currRequestPos].status,
             userImageExists: jobRequestsProviders[currRequestPos].imageAvailable,
-            currRequestPos
+            currRequestPos,
+            selectedStatus: '0',
+            liveChatStatus: OnlineUsers[user_id] ? OnlineUsers[user_id].status : '0',
+            online: false
         };
     };
 
     componentDidMount() {
-        const { navigation } = this.props;
+        const { navigation, jobsInfo: { selectedJobRequest: { user_id } }, generalInfo: { OnlineUsers } } = this.props;
         navigation.addListener('willFocus', async () => {
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
-        database().ref('chatting').child(this.state.senderId).child(this.state.receiverId)
-            .on('child_added', value => {
-                this.setState(prevState => {
-                    return {
-                        dataChatSource: [...prevState.dataChatSource, value.val()],
-                        isLoading: false,
-                    }
-                })
-            });
-
         this.setState({
             isLoading: false,
-        })
+        });
+        const userRef = database().ref(`users/${user_id}`);
+        userRef.on('child_changed', result => {
+            if (result && result.key === "status" && user_id) {
+                if (OnlineUsers[user_id] && result.val() === '1') this.setState({ selectedStatus: result.val(), online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1' });
+                else this.setState({ online: result.val() === '1', selectedStatus: result.val() });
+            } else console.log('provider id unavailable');
+        });
+
+        userRef.once('value', data => {
+            if (data) {
+                const { status } = data.val();
+                if (user_id) {
+                    if (OnlineUsers[user_id]) {
+                        if (OnlineUsers[user_id] && status === '1') this.setState({ selectedStatus: status, online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1' });
+                        else {
+                            this.setState({ online: status === '1', selectedStatus: status, });
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    componentDidUpdate() {
+        const { generalInfo: { OnlineUsers }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
+        const { liveChatStatus } = this.state;
+        if (OnlineUsers[user_id] && liveChatStatus !== OnlineUsers[user_id].status) {
+            this.setState({ online: OnlineUsers[user_id].status === '1' && selectedStatus === '1', liveChatStatus: OnlineUsers[user_id].status })
+        }
     }
 
     handleBackButtonClick = () => {
@@ -115,46 +145,51 @@ class ProAcceptRejectJobScreen extends Component {
         return true;
     }
 
-    renderMessageItem = (item, index) => {
-        if (item) {
+    renderMessages = () => {
+        const { senderId, receiverId } = this.state;
+        const { messagesInfo: { messages } } = this.props;
+        if (senderId && receiverId) {
             return (
-                this.state.senderId != item.senderId
-                    ?
-                    item.type == 'text'
-                        ?
-                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                            <View style={styles.itemLeftChatContainer}>
-                                <View style={styles.itemChatImageView}>
-                                    <Image style={{ width: 20, height: 20, borderRadius: 100, alignItems: 'center' }}
-                                        source={{ uri: item.senderImage }} />
+                <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                    {
+                        Object.keys(messages).map(key => {
+                            const usersMessages = messages[key];
+                            // display messages from selected user
+                            if (String(key) === String(receiverId)) {
+                                return <View key={key} style={style.messagesSubContainer}>
+                                    {
+                                        Object.keys(usersMessages).map(key => {
+                                            const sender = usersMessages[key].sender;
+                                            const message = usersMessages[key].message;
+                                            const time = usersMessages[key].time;
+                                            if (String(sender) === String(receiverId)) {
+                                                return (
+                                                    <View key={key} style={style.recievedContainer}>
+                                                        <View style={style.recievedMsgContainer}>
+                                                            <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                            <Text style={style.recievedMsg}>{message}</Text>
+                                                        </View>
+                                                    </View>
+                                                )
+                                            }
+                                            else if (String(sender) === String(senderId)) {
+                                                return (
+                                                    <View key={key} style={style.sentContainer}>
+                                                        <View style={style.sentMsgContainer}>
+                                                            <Text style={style.chatTime}>{chatDate(time)}</Text>
+                                                            <Text style={style.sentMsg}>{message}</Text>
+                                                        </View>
+                                                    </View>
+                                                )
+                                            }
+                                            else return;
+                                        })
+                                    }
                                 </View>
-                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                        {item.textMessage}
-                                    </Text>
-                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'black', marginLeft: 5 }}>
-                                        {this.convertTime(item && item.time)}
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        : null
-                    :
-                    item.type == 'text'
-                        ?
-                        <View key={index} style={{ width: screenWidth, flex: 1, alignContent: 'flex-end', justifyContent: 'flex-end', alignItems: 'flex-end', }}>
-                            <View style={styles.itemRightChatContainer}>
-                                <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 12, color: 'black', textAlignVertical: 'center', color: 'white' }}>
-                                        {item.textMessage}
-                                    </Text>
-                                    <Text style={{ fontSize: 8, color: 'black', textAlignVertical: 'center', color: 'white', marginLeft: 5 }}>
-                                        {this.convertTime(item && item.time)}
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        : null
+                            }
+                        })
+                    }
+                </View>
             )
         }
 
@@ -451,13 +486,24 @@ class ProAcceptRejectJobScreen extends Component {
                 </View>
                 <ImageBackground style={{ flex: 1 }}
                     source={require('../../icons/bg_chat.png')}>
-                    <ScrollView style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'column', marginBottom: 110 }}>
-
-                            <View style={styles.listView}>
-                                {this.state.dataChatSource.map(this.renderMessageItem)}
+                    <ScrollView
+                        style={{ marginBottom: 50 }}
+                        ref={ref => this.scrollView = ref}
+                        contentContainerStyle={{
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            alwaysBounceVertical: true
+                        }}
+                        onContentSizeChange={(contentWidth, contentHeight) => {
+                            this.scrollView.scrollToEnd({ animated: true })
+                        }}
+                        keyboardShouldPersistTaps='handled'
+                        keyboardDismissMode='on-drag'
+                    >
+                        <View style={{ flexDirection: 'column', marginBottom: 45 }}>
+                            <View style={[styles.listView]}>
+                                {this.renderMessages()}
                             </View>
-
                             {this.state.isAcceptJob && (
                                 <TouchableOpacity style={styles.textViewDirection}
                                     onPress={this.goToMapDirection}>
@@ -498,13 +544,13 @@ class ProAcceptRejectJobScreen extends Component {
                                 multiline={true}
                                 onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
                             </TextInput>
-                            { showButton && <TouchableOpacity
+                            {showButton && <TouchableOpacity
                                 style={styles.sendButton}
                                 onPress={this.sendMessageTask}>
                                 <Image style={styles.sendButtonImg}
                                     source={require('../../images/png/paper-plane-thicc.png')}
                                 />
-                            </TouchableOpacity> }
+                            </TouchableOpacity>}
                         </View>
 
                     </View>
@@ -524,7 +570,7 @@ const styles = StyleSheet.create({
         backgroundColor: colorBg,
     },
     listView: {
-        height: screenHeight,
+        flex: 1,
         padding: 5,
     },
     itemLeftChatContainer: {
@@ -636,6 +682,31 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         marginBottom: 15,
     },
+    sentContainer: {
+        flex: 1,
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+    },
+    sentMsg: {
+        margin: 3,
+        padding: 3,
+        borderRadius: 3,
+        textAlign: 'right',
+        color: "#000",
+        backgroundColor: "#ffffff"
+    },
+    messagesContainer: {
+        height: '100%',
+        minHeight: 100,
+        padding: 10,
+        height: 200
+    },
+    messagesSubContainer: {
+        display: 'flex',
+        flex: 1,
+        width: '100%',
+        flexDirection: "column"
+    },
     loaderStyle: {
         position: 'absolute',
         left: 0,
@@ -652,7 +723,8 @@ const mapStateToProps = state => {
         notificationsInfo: state.notificationsInfo,
         jobsInfo: state.jobsInfo,
         generalInfo: state.generalInfo,
-        userInfo: state.userInfo
+        userInfo: state.userInfo,
+        messagesInfo: state.messagesInfo
     }
 }
 

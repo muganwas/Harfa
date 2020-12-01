@@ -277,7 +277,7 @@ class ProDashboardScreen extends Component {
             )
         } else {
             return (
-                <View style={{ padding: 15 }}>
+                <View key={index} style={{ padding: 15 }}>
                     <Text style={{ fontStyle: 'italic', color: darkGray }}>You haven't completed any jobs yet.</Text>
                 </View>
             )

@@ -265,9 +265,7 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
         })
             .then(response => response.json())
             .then(responseJson => {
-                console.log('pending info', responseJson)
                 if (responseJson.result) {
-                    //const id = responseJson.data.id;
                     responseJson.data.map((job, index) => {
                         var jobData = {
                             id: job._id,

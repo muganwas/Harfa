@@ -10,6 +10,7 @@ import { cloneDeep } from 'lodash';
 import {
     dbMessagesFetched
 } from '../../Redux/Actions/messageActions';
+import database from '@react-native-firebase/database';
 import { chatDate } from '../../misc/helpers';
 import Config from '../Config';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
@@ -46,7 +47,8 @@ class ProChatScreen extends Component {
             navigation: { state: { params: { currentPos } } },
             jobsInfo: { allJobRequestsProviders, selectedJobRequest: { user_id } },
             navigation,
-            userInfo: { providerDetails }
+            userInfo: { providerDetails },
+            generalInfo: { OnlineUsers }
         } = props;
         this.state = {
             showButton: false,
@@ -66,17 +68,48 @@ class ProChatScreen extends Component {
             serviceName: allJobRequestsProviders[currentPos].service_details.service_name,
             userImageAvailable: allJobRequestsProviders[currentPos].imageAvailable,
             customer_FCM_id: allJobRequestsProviders[currentPos].user_details.fcm_id,
+            selectedStatus: '0',
+            liveChatStatus: OnlineUsers[user_id] ? OnlineUsers[user_id].status : '0',
+            online: false
         };
     };
 
     componentDidMount() {
-        const { navigation } = this.props;
+        const { 
+            navigation, 
+            jobsInfo: { selectedJobRequest: { user_id } },
+            generalInfo: { OnlineUsers }
+        } = this.props;
+        
         navigation.addListener('willFocus', async () => {
             this.reInit();
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+        const userRef = database().ref(`users/${user_id}`);
+        userRef.on('child_changed', result => {
+            if (result && result.key === "status" && user_id) {
+                if (OnlineUsers[user_id] && result.val() === '1') this.setState({ selectedStatus: result.val(), online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1' });
+                else this.setState({ online: result.val() === '1', selectedStatus: result.val() });
+            } else console.log('provider id unavailable');
+        });
+
+        userRef.once('value', data => {
+            console.log('data', data)
+            if (data) {
+                const { status } = data.val();
+                console.log('status', status)
+                if (user_id) {
+                    if (OnlineUsers[user_id]) {
+                        if (OnlineUsers[user_id] && status === '1') this.setState({ selectedStatus: status, online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1' });
+                        else {
+                            this.setState({ online: status === '1', selectedStatus: status });
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -110,13 +143,22 @@ class ProChatScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { user_id } } } = this.props;
-        const { isLoading } = this.state;
+        const { 
+            messagesInfo: { fetched, dataChatSource }, 
+            jobsInfo: { selectedJobRequest: { user_id } },
+            generalInfo: { OnlineUsers },
+        } = this.props;
+        console.log('online users', OnlineUsers)
+        console.log('user id', user_id)
+        const { isLoading, liveChatStatus, selectedStatus } = this.state;
         const localDataChatSource = this.state.dataChatSource;
         if (fetched && isLoading)
             this.setState({ isLoading: false });
         if (JSON.stringify(dataChatSource[user_id]) !== JSON.stringify(localDataChatSource))
             this.setState({ dataChatSource: dataChatSource[user_id] });
+        if (OnlineUsers[user_id] && liveChatStatus !== OnlineUsers[user_id].status) {
+            this.setState({ online: OnlineUsers[user_id].status === '1' && selectedStatus === '1', liveChatStatus: OnlineUsers[user_id].status })
+        }
     }
 
     handleBackButtonClick = () => {
@@ -237,7 +279,8 @@ class ProChatScreen extends Component {
     }
 
     render() {
-        let { showButton } = this.state;
+        let { showButton, online } = this.state;
+        console.log('online', online)
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />

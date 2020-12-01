@@ -24,6 +24,7 @@ import {
 } from '../../Redux/Actions/userActions';
 import WaitingDialog from '../WaitingDialog';
 import firebaseAuth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
 import {
@@ -284,8 +285,22 @@ class FacebookGoogleScreen extends Component {
                             body: JSON.stringify(data)
                         })
                         .then((response) => response.json())
-                        .then((responseJson) => {
+                        .then(async responseJson => {
                             if (responseJson.result) {
+                                const usersRef = database().ref(`users/${responseJson.data.id}`);
+                                await usersRef.once('value', snapshot => {
+                                    const value = snapshot.val();
+                                    if (value)
+                                        status = value.status;
+                                    else {
+                                        usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                            console.log('status set');
+                                        }).
+                                            catch(e => {
+                                                console.log(e.message);
+                                            });
+                                    }
+                                });
                                 this.setState({
                                     isLoading: false,
                                     isErrorToast: true,
@@ -410,10 +425,10 @@ class FacebookGoogleScreen extends Component {
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
                 <KeyboardAwareScrollView
-                    contentContainerStyle={{ 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        alwaysBounceVertical: true 
+                    contentContainerStyle={{
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        alwaysBounceVertical: true
                     }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>
@@ -427,7 +442,7 @@ class FacebookGoogleScreen extends Component {
                             </TouchableOpacity>
                             <Image
                                 style={{ width: 140, height: 140 }}
-                                source={require('../../images/kuchapa_logo.png')} 
+                                source={require('../../images/kuchapa_logo.png')}
                                 resizeMode="contain" />
                         </View>
 
@@ -476,7 +491,7 @@ class FacebookGoogleScreen extends Component {
                         </View>
 
                         <View>
-                            <Text style={{ color: black , fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ color: black, fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
                                 or Login with
                             </Text>
                         </View>

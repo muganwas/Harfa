@@ -69,7 +69,8 @@ class Hamburger extends React.Component {
             fetchingMessagesError
         } = this.props;
         const senderId = userDetails.userId;
-        const userRef = database().ref(`liveLocation/${senderId}`);
+        const locationRef = database().ref(`liveLocation/${senderId}`); 
+        const userRef = database().ref(`users/${senderId}`);
         await this.checkNoficationsAvailability();
         await this.checkForUserType();
 
@@ -229,7 +230,7 @@ class Hamburger extends React.Component {
             const { coords: { latitude, longitude } } = info;
             const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
             fetchedCoordinates({ latitude, longitude });
-            userRef.update({ latitude, longitude }).then(() => {
+            locationRef.update({ latitude, longitude }).then(() => {
                 //updated loc
             }).
                 catch(e => {
@@ -245,7 +246,7 @@ class Hamburger extends React.Component {
             const { coords: { latitude, longitude } } = info;
             const { fetchingCoordinates, fetchedCoordinates, fetchCoordinatesError } = this.props
             fetchedCoordinates({ latitude, longitude });
-            userRef.update({ latitude, longitude }).then(() => {
+            locationRef.update({ latitude, longitude }).then(() => {
                 //fetchedCoordinates({ latitude, longitude });
             }).
                 catch(e => {
@@ -259,23 +260,11 @@ class Hamburger extends React.Component {
 
         this.fetchEmployeeLocations();
 
-        database().ref('adminChatting').child(senderId).on('child_changed', result => {
-            const { notificationsInfo } = this.props;
-            const adminMessageCount = notificationsInfo.adminMessages;
-            Android ? Notifications.postLocalNotification({
-                title: "Kuchapa Messages",
-                body: "You have a new message!",
-                extra: "data"
-            }) :
-                Notifications.postLocalNotification({
-                    body: "You have a new Message",
-                    title: "Kuchapa Messages",
-                    sound: "chime.aiff",
-                    silent: false,
-                    category: "SOME_CATEGORY",
-                    userInfo: {}
-                });
-            fetchedNotifications({ type: 'adminMessages', value: adminMessageCount });
+        userRef.once('value', data => {
+            console.log('data', data)
+            if (data) {
+                console.log('data --', data.val())
+            }
         });
 
         const { updateOnlineStatus, updateConnectivityStatus } = this.props
