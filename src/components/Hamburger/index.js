@@ -70,7 +70,6 @@ class Hamburger extends React.Component {
         } = this.props;
         const senderId = userDetails.userId;
         const locationRef = database().ref(`liveLocation/${senderId}`); 
-        const userRef = database().ref(`users/${senderId}`);
         await this.checkNoficationsAvailability();
         await this.checkForUserType();
 
