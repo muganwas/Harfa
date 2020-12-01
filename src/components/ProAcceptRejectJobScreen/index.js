@@ -10,7 +10,11 @@ import { withNavigation } from 'react-navigation';
 import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
+import moment from 'moment';
 import { cloneDeep } from 'lodash';
+import {
+    dbMessagesFetched
+} from '../../Redux/Actions/messageActions';
 import {
     startFetchingNotification,
     notificationsFetched,
@@ -191,14 +195,36 @@ class ProAcceptRejectJobScreen extends Component {
         }
     }
 
-    sendMessageTask = () => {
+    sendMessageTask = async () => {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, receiverFcmId, receiverName, serviceName, orderId } = this.state;
+        const { dbMessagesFetched, messagesInfo } = this.props;
+        let newMessages = cloneDeep(messagesInfo.messages);
+        const time = moment().toISOString();
+        const date = new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear();
         this.setState({
             inputMessage: '',
             showButton: false,
         });
-        if (this.state.inputMessage.length > 0) {
-            socket.emit('sent-message', { userType: 'employee', textMessage: inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, fcm_id: receiverFcmId, receiverName, serviceName, orderId });
+        if (inputMessage.length > 0) {
+            const messageObj = {
+                type: 'text',
+                userType: 'employee',
+                textMessage: inputMessage,
+                senderId,
+                senderName,
+                senderImage,
+                receiverId,
+                receiverImage,
+                fcm_id: receiverFcmId,
+                receiverName,
+                serviceName,
+                orderId,
+                time,
+                date
+            };
+            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            dbMessagesFetched(newMessages);
+            socket.emit('sent-message', messageObj);
         }
     }
 
@@ -689,6 +715,9 @@ const mapDispatchToProps = dispatch => {
         },
         getAllWorkRequestPro: providerId => {
             getAllWorkRequestPro(providerId)
+        },
+        dbMessagesFetched: messages => {
+            dispatch(dbMessagesFetched(messages));
         }
     }
 }
