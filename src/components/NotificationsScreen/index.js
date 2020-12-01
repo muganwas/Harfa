@@ -2,7 +2,8 @@
 import React, { Component } from 'react';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, Dimensions,
-    ActivityIndicator, BackHandler, StatusBar, Platform, Animated
+    ActivityIndicator, BackHandler, StatusBar, Platform, Animated,
+    ScrollView
 } from 'react-native';
 import { connect } from 'react-redux';
 import Toast from 'react-native-simple-toast';
@@ -255,9 +256,11 @@ class NotificationsScreen extends Component {
                     <ActivityIndicator size={'large'} color={colorGray} />
                 </View>}
                 {!this.state.isLoading && !this.state.isNoData &&
-                    <View style={styles.listView}>
-                        {this.state.dataSource.map(this.renderItem)}
-                    </View>
+                    <ScrollView>
+                        <View style={styles.listView}>
+                            {this.state.dataSource.map(this.renderItem)}
+                        </View>
+                    </ScrollView>
                 }
                 {!this.state.isLoading && (this.state.isNoData || (this.state.dataSource && this.state.dataSource.length === 0)) && (
                     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: lightGray, justifyContent: 'center', alignItems: 'center' }}>

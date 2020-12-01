@@ -11,7 +11,8 @@ import {
     Platform,
     Animated,
     BackHandler,
-    ActivityIndicator
+    ActivityIndicator,
+    ScrollView
 } from 'react-native';
 import Toast from 'react-native-simple-toast';
 import { cloneDeep } from 'lodash';
@@ -246,14 +247,18 @@ class ProNotificationsScreen extends Component {
                         text='Notifications'
                     />
                 </View>
+
                 { this.state.isLoading && <View style={{ height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size={'large'} color={colorGray} />
                 </View>}
                 {!this.state.isLoading && !this.state.isNoData &&
-                    <View style={styles.listView}>
-                        {this.state.dataSource.map(this.renderItem)}
-                    </View>
+                    <ScrollView>
+                        <View style={styles.listView}>
+                            {this.state.dataSource.map(this.renderItem)}
+                        </View>
+                    </ScrollView>
                 }
+
 
                 { !this.state.isLoading && (this.state.isNoData || (this.state.dataSource && this.state.dataSource.length === 0)) &&
                     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: lightGray, justifyContent: 'center', alignItems: 'center' }}>
