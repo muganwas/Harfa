@@ -12,7 +12,7 @@ const ProMessagesComponent = ({ senderId, receiverId, messagesInfo }) => {
         const { messages } = messagesInfo;
         if (senderId && receiverId) {
             return (
-                <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
+                <View style={{ width: screenWidth, marginBottom: 50, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
                     {
                         Object.keys(messages).map(key => {
                             const usersMessages = messages[key];
