@@ -112,7 +112,7 @@ class AllMessageScreen extends Component {
                 }}>
                 <View style={styles.itemImageView}>
                     <Image style={{ width: 40, height: 40, borderRadius: 100 }}
-                        source={{ uri: item.image }} />
+                        source={item.image ? { uri: item.image } : require('../../images/generic_avatar.png')} />
                 </View>
                 <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 14, color: 'black', textAlignVertical: 'center' }}>
@@ -246,23 +246,23 @@ export default connect(mapStateToProps, mapDispatchToProps)(AllMessageScreen)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: lightGray,
     },
     listView: {
         flex: 1,
-        backgroundColor: colorBg,
+        width: screenWidth,
+        backgroundColor: lightGray,
         padding: 5,
     },
     itemMainContainer: {
-        width: screenWidth,
-        flex: 1,
         height: 70,
         flexDirection: 'row',
         backgroundColor: 'white',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
+        borderRadius: 5,
         elevation: 5,
         padding: 5,
     },

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-    View, StyleSheet, TouchableOpacity, Text, ScrollView, TextInput, Dimensions,
+    View, StyleSheet, ScrollView, Dimensions,
     BackHandler, ActivityIndicator, ImageBackground, StatusBar, Platform,
     KeyboardAvoidingView,
 } from 'react-native';
@@ -14,7 +14,7 @@ import database from '@react-native-firebase/database';
 import Config from '../Config';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { startFetchingMessages, messagesFetched, messagesError } from '../../Redux/Actions/messageActions';
-import { lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../../Constants/colors';
+import { lightGray, colorBg, white } from '../../Constants/colors';
 import { MessagesView, MessagesHeader, MessagesFooter } from '../ProMessagesComponents';
 
 const screenWidth = Dimensions.get('window').width;

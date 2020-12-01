@@ -5,6 +5,7 @@ import {
     TextInput, Dimensions, ActivityIndicator,
     BackHandler, ImageBackground, StatusBar, Platform, KeyboardAvoidingView, ScrollView
 } from 'react-native';
+import { cloneDeep } from 'lodash';
 import {
     dbMessagesFetched
 } from '../../Redux/Actions/messageActions';
@@ -13,7 +14,7 @@ import { startFetchingNotification, notificationsFetched, notificationError } fr
 import { imageExists, chatDate } from '../../misc/helpers';
 import Config from '../Config';
 import { colorPrimary, lightGray, colorBg, inactiveBackground, buttonPrimary, inactiveText, white } from '../../Constants/colors';
-import { cloneDeep } from 'lodash';
+import { MessagesFooter, MessagesHeader, MessagesView } from '../MessagesComponents';
 import style from './styles';
 
 const screenWidth = Dimensions.get('window').width;
@@ -114,7 +115,6 @@ class ChatAfterBookingDetailsScreen extends Component {
 
     handleBackButtonClick = () => {
         const { titlePage } = this.state;
-        console.log(titlePage)
         const { navigation } = this.props;
         if (titlePage == 'MapDirection')
             navigation.navigate("MapDirection", {
@@ -235,33 +235,18 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     render() {
-        const { navigation: { state: { params: { providerImage } } } } = this.props
-        const { showButton } = this.state;
+        const { showButton, receiverImage, receiverId, senderId, receiverName, online } = this.state;
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
                 <ImageBackground style={styles.container}
                     source={require('../../icons/bg_chat.png')}>
-
-                    <View style={{
-                        flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                        paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
-                    }}>
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
-                                onPress={this.handleBackButtonClick}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                                    source={require('../../icons/arrow_back.png')} />
-                            </TouchableOpacity>
-
-                            <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={{ uri: providerImage }} />
-                            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-                                {this.state.receiverName + " "}{this.state.surname}
-                            </Text>
-                        </View>
-                    </View>
-
+                    <MessagesHeader
+                        receiverImage={receiverImage}
+                        receiverName={receiverName}
+                        online={online}
+                        handleBackButtonClick={this.handleBackButtonClick}
+                    />
                     <ScrollView
                         ref={ref => this.scrollView = ref}
                         contentContainerStyle={{
@@ -272,12 +257,10 @@ class ChatAfterBookingDetailsScreen extends Component {
                         keyboardShouldPersistTaps='handled'
                         keyboardDismissMode='on-drag'
                     >
-
-                        <View style={{ flexDirection: 'column', marginBottom: 45 }}>
-                            <View style={styles.listView}>
-                                {this.renderMessages()}
-                            </View>
-                        </View>
+                        <MessagesView 
+                            receiverId={receiverId}
+                            senderId={senderId}
+                        />
                     </ScrollView>
                     {this.state.isLoading && (
                         <View style={styles.loaderStyle}>
@@ -287,22 +270,14 @@ class ChatAfterBookingDetailsScreen extends Component {
                                 size="large" />
                         </View>
                     )}
-                    <View style={styles.footer}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TextInput style={{ width: screenWidth - 90, fontSize: 16, marginLeft: 5, alignSelf: 'center' }}
-                                placeholder='Type message'
-                                value={this.state.inputMessage}
-                                multiline={true}
-                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                            </TextInput>
-                            <TouchableOpacity disabled={!showButton} style={{ backgroundColor: !showButton ? inactiveBackground : buttonPrimary, height: 50, justifyContent: 'center', alignItems: 'center', alignContent: 'center', position: 'absolute', end: 0 }}
-                                onPress={this.sendMessageTask}>
-                                <Text style={{ alignSelf: 'center', fontWeight: 'bold', color: !showButton ? inactiveText : white, fontSize: 16, paddingLeft: 10, paddingRight: 10 }}>
-                                    Send
-                                    </Text>
-                            </TouchableOpacity>
-                        </View>
+                    <View style={styles.footerContainer}>
+                        {/*<View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>*/}
+                        <MessagesFooter
+                            sendMessageTask={this.sendMessageTask}
+                            showButton={showButton}
+                            textChangeAction={inputMesage => this.showHideButton(inputMesage)}
+                            inputMesage={this.state.inputMessage}
+                        />
                         {this.state.isJobAccepted && (
                             <View style={{
                                 flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
@@ -314,7 +289,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                                     <Image style={{ width: 20, height: 20, marginLeft: 20 }}
                                         source={require('../../icons/mobile_gps.png')} />
                                     <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                        Fournisseur de services de suivi
+                                        Tracking service provider
                                     </Text>
                                     <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
                                         source={require('../../icons/right_arrow.png')} />
@@ -338,11 +313,10 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 5,
     },
-    footer: {
+    footerContainer: {
         width: screenWidth,
         minHeight: 50,
         flexDirection: 'column',
-        backgroundColor: 'white',
         justifyContent: 'center',
         position: 'absolute', //Footer
         bottom: 0, //Footer
@@ -351,7 +325,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: screenWidth,
         height: 50,
-        backgroundColor: 'white',
         borderRadius: 2,
         alignItems: 'center',
         justifyContent: 'flex-start',

@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError } from '../../Redux/Actions/jobsActions';
 import {
-    View, StyleSheet, TouchableOpacity, Image, Text, TextInput, Dimensions,
+    View, StyleSheet, TouchableOpacity, Image, Text, Dimensions,
     ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert,
     KeyboardAvoidingView, ScrollView
 } from 'react-native';
@@ -12,12 +12,10 @@ import {
 } from '../../Redux/Actions/messageActions';
 import Config from '../Config';
 import moment from 'moment';
-import { chatDate } from '../../misc/helpers';
 import { cloneDeep, clone } from 'lodash';
 import database from '@react-native-firebase/database';
-import Availability from '../AvailabilityComponent';
-import { colorPrimary, colorBg, lightGray, darkGray, white, black, themeRed } from '../../Constants/colors';
-import style from './styles';
+import { MessagesFooter, MessagesHeader, MessagesView } from '../MessagesComponents';
+import { colorBg, lightGray, darkGray, white, themeRed, black } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const socket = Config.socket;
@@ -321,51 +319,20 @@ class ChatScreen extends Component {
             });
     }
 
-    renderMessages = () => {
-        const { senderId, receiverId } = this.state;
-        const { messagesInfo: { messages } } = this.props;
-        return (
-            <View style={{ width: screenWidth, flex: 1, alignContent: 'flex-start', justifyContent: 'flex-start', alignItems: 'flex-start', }}>
-                {
-                    Object.keys(messages).map(key => {
-                        const usersMessages = messages[key];
-                        // display messages from selected user
-                        if (String(key) === String(receiverId)) {
-                            return <View key={key} style={style.messagesSubContainer}>
-                                {
-                                    Object.keys(usersMessages).map(key => {
-                                        const sender = usersMessages[key].sender;
-                                        const message = usersMessages[key].message;
-                                        const time = usersMessages[key].time;
-                                        if (String(sender) === String(receiverId)) {
-                                            return (
-                                                <View key={key} style={style.recievedContainer}>
-                                                    <View style={style.recievedMsgContainer}>
-                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
-                                                        <Text style={style.recievedMsg}>{message}</Text>
-                                                    </View>
-                                                </View>
-                                            )
-                                        }
-                                        else if (String(sender) === String(senderId)) {
-                                            return (
-                                                <View key={key} style={style.sentContainer}>
-                                                    <View style={style.sentMsgContainer}>
-                                                        <Text style={style.chatTime}>{chatDate(time)}</Text>
-                                                        <Text style={style.sentMsg}>{message}</Text>
-                                                    </View>
-                                                </View>
-                                            )
-                                        }
-                                        else return;
-                                    })
-                                }
-                            </View>
-                        }
-                    })
-                }
-            </View>
-        )
+    handleBackButtonClick = () => {
+        const { titlePage } = this.state;
+        const { navigation } = this.props;
+        if (titlePage == 'MapDirection')
+            navigation.navigate("MapDirection", {
+                titlePage: "Chat"
+            });
+        else if (titlePage == 'ProviderDetails')
+            navigation.navigate("ProviderDetails");
+        else if (titlePage === "AllMessage")
+            navigation.navigate("AllMessage")
+        else
+            navigation.goBack();
+        return true;
     }
 
     renderSeparator = () => {
@@ -377,31 +344,18 @@ class ChatScreen extends Component {
     }
 
     render() {
-        const { requestStatus, showButton, online } = this.state;
+        const { requestStatus, showButton, online, senderId, receiverId } = this.state;
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
                 <ImageBackground style={styles.container}
                     source={require('../../icons/bg_chat.png')}>
-                    <View style={{
-                        flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
-                        paddingLeft: 10, paddingRight: 20, paddingBottom: 5
-                    }}>
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center' }}
-                                onPress={() => this.props.navigation.goBack()}>
-                                <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
-                                    source={require('../../icons/arrow_back.png')} />
-                            </TouchableOpacity>
-
-                            <Image style={{ width: 35, height: 35, borderRadius: 100, alignSelf: 'center', marginLeft: 10 }}
-                                source={this.state.receiverImage ? { uri: this.state.receiverImage } : require('../../images/generic_avatar.png')} />
-                            <Text style={{ color: black, fontSize: 16, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-                                {this.state.receiverName + " "}{this.state.surname}
-                            </Text>
-                        </View>
-                        <Availability online={online} />
-                    </View>
+                    <MessagesHeader
+                        receiverImage={this.state.receiverImage}
+                        receiverName={`${this.state.receiverName} ${this.state.surname}`}
+                        online={online}
+                        handleBackButtonClick={this.handleBackButtonClick}
+                    />
                     <ScrollView
                         style={{ marginBottom: requestStatus === 'Pending' ? 100 : 50 }}
                         ref={ref => this.scrollView = ref}
@@ -416,11 +370,10 @@ class ChatScreen extends Component {
                         keyboardShouldPersistTaps='handled'
                         keyboardDismissMode='on-drag'
                     >
-                        <View style={{ flexDirection: 'column', marginBottom: 45 }}>
-                            <View style={styles.listView}>
-                                {this.renderMessages()}
-                            </View>
-                        </View>
+                        <MessagesView
+                            senderId={senderId}
+                            receiverId={receiverId}
+                        />
                     </ScrollView>
                     {this.state.isLoading && (
                         <View style={styles.loaderStyle}>
@@ -430,8 +383,8 @@ class ChatScreen extends Component {
                                 size="large" />
                         </View>
                     )}
-                    <View style={[styles.footer, { minHeight: requestStatus === 'Pending' ? 120 : 50 }]}>
-                        <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
+                    <View style={[styles.footerContainer, { minHeight: requestStatus === 'Pending' ? 120 : 50 }]}>
+                        {/*<View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>*/}
                         {requestStatus === 'Pending' ? <View style={{
                             flex: 1, width: screenWidth, justifyContent: 'center',
                             backgroundColor: themeRed, alignItems: 'center'
@@ -443,21 +396,12 @@ class ChatScreen extends Component {
                                 </TouchableOpacity>
                             </View>
                         </View> : null}
-                        <View style={styles.textInputContainer}>
-                            <TextInput style={styles.textInput}
-                                placeholder='Type message'
-                                value={this.state.inputMessage}
-                                multiline={true}
-                                onChangeText={(inputMesage) => this.showHideButton(inputMesage)}>
-                            </TextInput>
-                            {showButton && <TouchableOpacity
-                                style={styles.sendButton}
-                                onPress={this.sendMessageTask}>
-                                <Image style={styles.sendButtonImg}
-                                    source={require('../../images/png/paper-plane-thicc.png')}
-                                />
-                            </TouchableOpacity>}
-                        </View>
+                        <MessagesFooter
+                            sendMessageTask={this.sendMessageTask}
+                            showButton={showButton}
+                            textChangeAction={inputMesage => this.showHideButton(inputMesage)}
+                            inputMesage={this.state.inputMessage}
+                        />
                         {this.state.isJobAccepted && (
                             <View style={{
                                 flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
@@ -584,7 +528,7 @@ const styles = StyleSheet.create({
         margin: 3,
         padding: 3,
         borderRadius: 3,
-        color: "#000",
+        color: black,
         textAlign: 'left',
         backgroundColor: "#16B5F3"
     },
@@ -603,11 +547,10 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         marginVertical: 5
     },
-    footer: {
+    footerContainer: {
         width: screenWidth,
         minHeight: 50,
         flexDirection: 'column',
-        backgroundColor: 'transparent',
         justifyContent: 'center',
         position: 'absolute',
         bottom: 0,
