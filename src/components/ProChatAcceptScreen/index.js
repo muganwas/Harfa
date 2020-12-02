@@ -18,7 +18,7 @@ import {
     setSelectedJobRequest,
     getPendingJobRequestProvider
 } from '../../Redux/Actions/jobsActions';
-import { colorPrimary, black, colorBg, white, themeRed } from '../../Constants/colors';
+import { colorPrimary, black, colorBg, white, lightGray, themeRed, colorGreen } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -414,7 +414,7 @@ class ProChatAcceptScreen extends Component {
                 <ScrollView>
                     {!this.state.isLoading && this.state.secondTimeLoader != "" &&
                         <View style={styles.headerLayoutStyle}>
-                            <View style={styles.mainContainer}>
+                            <View style={[styles.mainContainer, { backgroundColor: lightGray }]}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20, }}>
                                     <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hello,</Text>
                                     <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
@@ -435,12 +435,11 @@ class ProChatAcceptScreen extends Component {
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
                                     <TouchableOpacity style={styles.buttonContainer}
                                         onPress={this.rejectJob}>
-                                        <Text style={styles.text}>Busy</Text>
+                                        <Text style={[styles.text, { color: themeRed, fontWeight: '600' }]}>Busy</Text>
                                     </TouchableOpacity>
-
                                     <TouchableOpacity style={styles.buttonContainer}
                                         onPress={this.acceptJob}>
-                                        <Text style={styles.text}>Accept Chat</Text>
+                                        <Text style={[styles.text, { color: colorGreen, fontWeight: '600' }]}>Accept Chat</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -469,37 +468,6 @@ class ProChatAcceptScreen extends Component {
                                 </View>
                             </View>
                         </View>
-                    }
-
-                    {false && <View style={styles.mainContainer}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
-                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 25 }}>{this.state.timer}</Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 20 }}>
-                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 18 }}>Hi,</Text>
-                            <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }}>{providerDetails.name + " " + providerDetails.surname}</Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
-                            <Image style={{ width: 80, height: 80, borderRadius: 100, }}
-                                source={{ uri: this.state.userImage }}>
-                            </Image>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 15 }}>
-                            <Text style={{ color: 'black', fontSize: 16, marginLeft: 5 }} numberOfLines={2}>
-                                {this.state.userName + " veux te parler!"}
-                            </Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 50 }}>
-                            <TouchableOpacity style={styles.buttonContainer}
-                                onPress={this.acceptJob}>
-                                <Text style={styles.text}>Accept chat</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
                     }
 
                     <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
@@ -531,18 +499,21 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flex: 1,
         paddingTop: 10,
-        backgroundColor: '#000000',
+        backgroundColor: white,
+        shadowColor: black,
+        borderColor: lightGray,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: themeRed,
-        borderWidth: 2,
         marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
-        marginLeft: 10,
-        marginRight: 10,
+        margin: 10,
     },
     text: {
         fontSize: 14,
@@ -584,7 +555,7 @@ const styles = StyleSheet.create({
     },
     headerLayoutStyle: {
         width: screenWidth,
-        backgroundColor: 'orange',
+        backgroundColor: colorBg,
         justifyContent: 'center',
         alignItems: 'center',
     },
