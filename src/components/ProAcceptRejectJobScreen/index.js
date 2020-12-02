@@ -407,31 +407,6 @@ class ProAcceptRejectJobScreen extends Component {
     };
 
     goToMapDirection = () => {
-        const { userInfo: { providerDetails }, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders } } = this.props;
-        const { currRequestPos } = this.state;
-        var newjobRequestsProviders = [...jobRequestsProviders];
-        var jobData = {
-            ProviderId: providerDetails.providerId,
-            image: providerDetails.imageSource,
-            fcmId: providerDetails.fcmId,
-            name: providerDetails.name,
-            surname: providerDetails.surname,
-            mobile: providerDetails.mobile,
-            description: providerDetails.description,
-            address: providerDetails.address,
-            lat: providerDetails.lat,
-            lang: providerDetails.lang,
-            serviceName: this.state.serviceName,
-            orderId: this.state.orderId,
-            mainId: this.state.mainId,
-            chat_status: "1",
-            status: "Accepted",
-            delivery_address: this.state.delivertAddress,
-            delivery_lat: this.state.deliveryLat,
-            delivery_lang: this.state.deliveryLang,
-        }
-        newjobRequestsProviders[currRequestPos] = jobData;
-        fetchedPendingJobInfo(newjobRequestsProviders);
         this.props.navigation.navigate("ProMapDirection", {
             'pageTitle': "ProAcceptRejectJob",
         });

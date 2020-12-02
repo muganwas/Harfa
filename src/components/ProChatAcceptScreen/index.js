@@ -18,7 +18,7 @@ import {
     setSelectedJobRequest,
     getPendingJobRequestProvider
 } from '../../Redux/Actions/jobsActions';
-import { colorPrimary, black, colorBg, colorYellow, white, themeRed } from '../../Constants/colors';
+import { colorPrimary, black, colorBg, white, themeRed } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
