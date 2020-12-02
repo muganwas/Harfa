@@ -352,7 +352,7 @@ class ChatScreen extends Component {
                     source={require('../../icons/bg_chat.png')}>
                     <MessagesHeader
                         receiverImage={this.state.receiverImage}
-                        receiverName={`${this.state.receiverName} ${this.state.surname}`}
+                        receiverName={this.state.receiverName}
                         online={online}
                         handleBackButtonClick={this.handleBackButtonClick}
                     />
