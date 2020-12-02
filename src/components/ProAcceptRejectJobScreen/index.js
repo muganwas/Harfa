@@ -255,6 +255,7 @@ class ProAcceptRejectJobScreen extends Component {
                     name: providerDetails.name,
                     surname: providerDetails.surname,
                     mobile: providerDetails.mobile,
+                    ProviderData: providerDetails,
                     description: providerDetails.description,
                     address: providerDetails.address,
                     lat: providerDetails.lat,

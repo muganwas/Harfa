@@ -549,7 +549,7 @@ class ProDashboardScreen extends Component {
                         lat,
                         lang,
                         service_name,
-                        chat_status,
+                        chat_status: '1',
                         status,
                         delivery_address,
                         delivery_lat,

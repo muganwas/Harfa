@@ -152,8 +152,8 @@ class Hamburger extends React.Component {
                 this.showToast("Votre travail est terminé.")
             }
             else if (title == "Chat Request Accepted" && pos != null) {
-                var providerData = JSON.parse(data.ProviderData);
-                var pendingJobData = {
+                const providerData = typeof data.ProviderData === 'string' ? JSON.parse(data.ProviderData) : data.ProviderData;
+                const pendingJobData = {
                     id: data.mainId,
                     order_id: data.orderId,
                     employee_id: providerData.ProviderId,
@@ -168,6 +168,7 @@ class Hamburger extends React.Component {
                     lang: providerData.lang,
                     service_name: data.serviceName,
                     chat_status: data.chat_status,
+                    employee_details: providerData,
                     status: data.status,
                     delivery_address: data.delivery_address,
                     delivery_lat: data.delivery_lat,

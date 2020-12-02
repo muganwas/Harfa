@@ -251,7 +251,7 @@ class DashboardScreen extends Component {
 
     renderPendingJobRequests = (item, index) => {
         if (item) {
-            const { image, name, employee_id, order_id, surName, service_name, fcm_id, employee_details, chat_status, status } = item;
+            const { image, name, order_id, surName, service_name, fcm_id, employee_details, chat_status, status } = item;
             return (
                 <TouchableOpacity
                     key={index}
@@ -266,7 +266,9 @@ class DashboardScreen extends Component {
                         shadowRadius: 5,
                         elevation: 5,
                     }]}
-                    onPress={() => this.goToNextPage(chat_status, { userType: 'client', status, onlineStatus: employee_details.status, fcm_id, order_id, image, service_name, name, employee_id, currentPos: index })}>
+                    onPress={() => {
+                        this.goToNextPage(chat_status, { userType: 'client', status, onlineStatus: employee_details.status, fcm_id, order_id, image, service_name, name, employee_id: employee_details.providerId || employee_details._id, currentPos: index })
+                    }}>
                     <View
                         style={[styles.pendingJobRow]}>
                         <Image style={{ height: 30, width: 30, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
