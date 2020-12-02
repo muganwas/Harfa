@@ -258,8 +258,6 @@ class ProNotificationsScreen extends Component {
                         </View>
                     </ScrollView>
                 }
-
-
                 { !this.state.isLoading && (this.state.isNoData || (this.state.dataSource && this.state.dataSource.length === 0)) &&
                     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: lightGray, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ width: 100, height: 100, borderRadius: 100, backgroundColor: themeRed, justifyContent: 'center', alignItems: 'center' }}>
