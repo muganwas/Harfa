@@ -260,10 +260,14 @@ class ProMapDirectionScreen extends Component {
 
     jobCompleteTask = () => {
         this.setState({ isLoading: true });
-        const { fetchingPendingJobInfo, fetchedPendingJobInfo, jobsInfo: { jobRequestsProviders }, userInfo: { providerDetails } } = this.props;
-        const { orderId, userId } = this.state;
-        let currentPos = navigation.getParam('currentPos', 0);
-        let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
+        const { 
+            fetchingPendingJobInfo, 
+            fetchedPendingJobInfo, 
+            jobsInfo: { jobRequestsProviders }, 
+            userInfo: { providerDetails } 
+        } = this.props;
+        const { orderId, userId, currentPos } = this.state;
+        const newJobRequestsProviders = cloneDeep(jobRequestsProviders);
         const data = {
             main_id: this.state.mainId,
             chat_status: '1',
