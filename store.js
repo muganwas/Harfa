@@ -1,5 +1,6 @@
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 import thunk from 'redux-thunk';
+import logger from 'redux-logger';
 import generalReducer from './src/Redux/Reducers/generalReducer';
 import notificationsReducer from './src/Redux/Reducers/notificationsReducer';
 import messagesReducer from './src/Redux/Reducers/messagesReducer';
@@ -15,7 +16,7 @@ const rootReducer = combineReducers({
 });
 
 const configureStore = () => {
-  return createStore(rootReducer, applyMiddleware(thunk));
+  return createStore(rootReducer, applyMiddleware(thunk, logger));
 }
 
 export default configureStore;

@@ -308,7 +308,6 @@ class ChatAfterBookingDetailsScreen extends Component {
                         </View>
                     )}
                     <View style={styles.footerContainer}>
-                        {/*<View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>*/}
                         <MessagesFooter
                             sendMessageTask={this.sendMessageTask}
                             showButton={showButton}

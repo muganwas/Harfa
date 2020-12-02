@@ -99,8 +99,8 @@ class ProDashboardScreen extends Component {
         const { navigation } = this.props;
         this.onRefresh();
         navigation.addListener('willFocus', () => {
-            //this.onRefresh();
             this.initiateProps();
+            this.onRefresh();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
@@ -602,7 +602,7 @@ class ProDashboardScreen extends Component {
                 >
                     <View style={styles.pendingJobRow}>
                         <Image style={{ height: 30, width: 30, justifyContent: 'center', alignSelf: 'center', alignContent: 'center', marginLeft: 10, borderRadius: 200, }}
-                            source={{ uri: image }} />
+                            source={image ? { uri: image } : require('../../images/generic_avatar.png')} />
                         <View style={{ flexDirection: 'column', justifyContent: 'center', textAlignVertical: 'middle' }}>
                             <Text style={{ color: white, fontSize: 12, marginLeft: 10, fontWeight: 'bold' }}>
                                 {name}

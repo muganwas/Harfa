@@ -30,7 +30,7 @@ import {
 import { MessagesView, MessagesHeader, MessagesFooter } from '../ProMessagesComponents';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
-import { lightGray, colorBg, white, themeRed, colorGreen, darkGray } from '../../Constants/colors';
+import { lightGray, colorBg, white, themeRed, colorGreen, darkGray, black } from '../../Constants/colors';
 
 const socket = Config.socket;
 const screenWidth = Dimensions.get('window').width;
@@ -449,6 +449,7 @@ class ProAcceptRejectJobScreen extends Component {
 
     render() {
         const { online, senderId, receiverId } = this.state;
+        console.log('accept reject')
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
@@ -476,18 +477,6 @@ class ProAcceptRejectJobScreen extends Component {
                     >
                         <View style={{ flexDirection: 'column', marginBottom: 45 }}>
                             <MessagesView senderId={senderId} receiverId={receiverId} />
-                            {this.state.isAcceptJob && (
-                                <TouchableOpacity style={styles.textViewDirection}
-                                    onPress={this.goToMapDirection}>
-                                    <Image style={{ width: 20, height: 20, marginLeft: 20 }}
-                                        source={require('../../icons/mobile_gps.png')} />
-                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                        Direction
-                            </Text>
-                                    <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
-                                        source={require('../../icons/right_arrow.png')} />
-                                </TouchableOpacity>
-                            )}
                         </View>
                     </ScrollView>
 
@@ -515,6 +504,25 @@ class ProAcceptRejectJobScreen extends Component {
                             sendMessageTask={this.sendMessageTask}
                             showButton={this.state.showButton}
                         />
+                        {this.state.isAcceptJob &&
+                            <View style={{
+                                flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: white,
+                                borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
+                            }}>
+                                <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
+                                <TouchableOpacity style={styles.textViewDirection}
+                                    onPress={this.goToMapDirection}>
+                                    <Image style={{ width: 20, height: 20, marginLeft: 20 }}
+                                        source={require('../../icons/mobile_gps.png')} />
+                                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
+                                        Direction
+                                    </Text>
+                                    <Image
+                                        style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
+                                        source={require('../../icons/right_arrow.png')}
+                                    />
+                                </TouchableOpacity>
+                            </View>}
                     </View>
                 </ImageBackground>
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
@@ -633,7 +641,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: screenWidth,
         height: 50,
-        shadowColor: '#000',
+        shadowColor: black,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,

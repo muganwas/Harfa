@@ -11,14 +11,13 @@ import Polyline from '@mapbox/polyline';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import database from '@react-native-firebase/database';
 import Geolocation from 'react-native-geolocation-service';
-import LinearGradient from 'react-native-linear-gradient';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import simpleToast from 'react-native-simple-toast';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../../Redux/Actions/jobsActions';
-import { colorYellow, colorBg, white } from '../../Constants/colors';
+import { colorBg, white, black, lightGray, themeRed, colorGreen } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -128,7 +127,6 @@ class ProMapDirectionScreen extends Component {
         }
         else {
             const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-
             if (granted) {
 
                 let locationData = {
@@ -149,7 +147,6 @@ class ProMapDirectionScreen extends Component {
                 this.getDirections(usersCoordinates.latitude + "," + usersCoordinates.longitude, this.state.destinationLocation);
             }
             else {
-                console.log("ELSE");
                 this.permissionRequest()
             }
         }
@@ -179,7 +176,7 @@ class ProMapDirectionScreen extends Component {
             this.props.navigation.navigate("ProDashboard");
         else if (this.state.pageTitle == "ProAcceptRejectJob")
             this.props.navigation.navigate("ProAcceptRejectJob");
-        else 
+        else
             this.props.navigation.goBack();
         return true
     }
@@ -431,7 +428,6 @@ class ProMapDirectionScreen extends Component {
             destinationLng,
             routeCoordinates,
             userName,
-            proImageAvailable,
             userImage,
             serviceName,
             status
@@ -439,6 +435,22 @@ class ProMapDirectionScreen extends Component {
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
+                <View style={{
+                    flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorBg,
+                    paddingLeft: 10, paddingRight: 20, paddingBottom: 5, borderBottomColor: themeRed, borderBottomWidth: 1
+                }}>
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', }}
+                            onPress={() => this.props.navigation.goBack()}>
+                            <Image style={{ width: 20, height: 20, tintColor: black, alignSelf: 'center' }}
+                                source={require('../../icons/arrow_back.png')} />
+                        </TouchableOpacity>
+
+                        <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
+                            Direction
+                        </Text>
+                    </View>
+                </View>
                 {sourceLat && sourceLng && destinationLat && destinationLng ?
                     <MapView style={styles.map}
                         region={{
@@ -482,10 +494,10 @@ class ProMapDirectionScreen extends Component {
                         </MapView.Marker>
                         <MapView.Polyline
                             coordinates={routeCoordinates}
-                            strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+                            strokeColor={black} // fallback for when `strokeColors` is not supported by the map-provider
                             strokeColors={[
                                 '#7F0000',
-                                '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+                                black, // no color, creates a "long" gradient between the previous and next coordinate
                                 '#B24112',
                                 '#E5845C',
                                 '#238C23',
@@ -501,8 +513,7 @@ class ProMapDirectionScreen extends Component {
                 <SlidingPanel
                     headerLayoutHeight={140}
                     headerLayout={() =>
-                        <LinearGradient style={styles.headerLayoutStyle}
-                            colors={['#d7a10f', '#f2c240', '#f8e1a0']}>
+                        <View style={styles.headerLayoutStyle} >
                             <View style={{ flex: 1, flexDirection: 'column', width: screenWidth }}>
 
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 5 }}>
@@ -512,65 +523,64 @@ class ProMapDirectionScreen extends Component {
                                 </View>
 
                                 <View style={{ flexDirection: 'row', flex: 1 }}>
-
                                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
-                                        source={{ uri: userImage }} />
+                                        source={userImage ? { uri: userImage } : require('../../images/generic_avatar.png')} />
                                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                                        <Text style={{ marginRight: 200, color: 'white', fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
+                                        <Text style={{ marginRight: 200, color: white, fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
                                             numberOfLines={1}>
                                             {userName}
                                         </Text>
-                                        <Text style={{ color: 'white', fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                                        <Text style={{ color: white, fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
                                             {serviceName}
                                         </Text>
-                                        <Text style={{ color: 'green', fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
+                                        <Text style={{ color: white, fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
                                             {status == "Pending" ? "Chat Request Accepted" : "Job Accepted"}
                                         </Text>
                                     </View>
 
                                     <View style={styles.callView}>
                                         <TouchableOpacity style={{
-                                            width: 40, height: 40, backgroundColor: 'black', borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                                            width: 40, height: 40, backgroundColor: white, borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
                                             shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, padding: 10, marginRight: 15
                                         }}
                                             onPress={this.callPhoneTask}>
-                                            <Image style={styles.call}
+                                            <Image style={[styles.call, { tintColor: themeRed }]}
                                                 source={require('../../icons/call.png')} />
                                         </TouchableOpacity>
 
                                         <TouchableOpacity style={{
-                                            width: 40, height: 40, backgroundColor: 'black', borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                                            width: 40, height: 40, backgroundColor: white, borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
                                             shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, padding: 10
                                         }}
-                                            onPress={() => this.props.navigation.navigate("ProChat", {
+                                            onPress={() => this.props.navigation.navigate("ProAcceptRejectJob", {
                                                 "pageTitle": "ProMapDirection",
                                                 currentPos: this.state.currentPos
                                             })}>
-                                            <Image style={styles.call}
+                                            <Image style={[styles.call, { tintColor: themeRed }]}
                                                 source={require('../../icons/chat.png')} />
                                         </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
-                        </LinearGradient>
+                        </View>
                     }
                     slidingPanelLayout={() =>
                         <View style={styles.slidingPanelLayoutStyle}>
                             <View style={styles.containerSlide}>
-                                {this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
-                                    onPress={this.openCompleteConfirmation}>
-                                    <Text style={styles.text}>
-                                        Completed
+                                {this.state.isJobAccepted &&
+                                    <TouchableOpacity style={styles.buttonContainer}
+                                        onPress={this.openCompleteConfirmation}>
+                                        <Text style={[styles.text, { color: colorGreen, fontWeight: 'bold' }]}>
+                                            Completed
                                     </Text>
-                                </TouchableOpacity>}
-
-                                {!this.state.isJobAccepted && <TouchableOpacity style={styles.buttonContainer}
+                                    </TouchableOpacity>
+                                }
+                                <TouchableOpacity style={styles.buttonContainer}
                                     onPress={this.openCancelConfirmation}>
-                                    <Text style={styles.text}>
-                                        Cancel Request
+                                    <Text style={[styles.text, { color: themeRed, fontWeight: 'bold' }]}>
+                                        {this.state.isJobAccepted ? 'Cancel Job' : 'Reject Request'}
                                     </Text>
-                                </TouchableOpacity>}
-
+                                </TouchableOpacity>
                             </View>
                         </View>
                     }>
@@ -591,7 +601,8 @@ const styles = StyleSheet.create({
         height: screenHeight,
     },
     map: {
-        ...StyleSheet.absoluteFillObject,
+        height: screenHeight,
+        width: screenWidth,
         marginBottom: 140,
         marginTop: Platform.OS === 'ios' ? 20 : 0,
     },
@@ -604,7 +615,7 @@ const styles = StyleSheet.create({
         paddingTop: 5,
         paddingBottom: 5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
@@ -623,7 +634,7 @@ const styles = StyleSheet.create({
         alignContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
@@ -643,16 +654,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     headerLayoutStyle: {
-        width: screenWidth,
+        width: screenWidth + 5,
         height: 140,
         flexDirection: 'row',
         position: 'absolute',
         bottom: 0,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowColor: black,
+        borderWidth: 0.5,
+        borderColor: lightGray,
+        backgroundColor: themeRed,
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
-        elevation: 5,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -669,7 +682,7 @@ const styles = StyleSheet.create({
     slidingPanelLayoutStyle: {
         width: screenWidth,
         height: screenHeight,
-        backgroundColor: colorYellow,
+        backgroundColor: colorBg,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -693,21 +706,24 @@ const styles = StyleSheet.create({
         flex: 1,
         //width: 200,
         paddingTop: 10,
-        backgroundColor: '#000000',
+        backgroundColor: white,
+        shadowColor: black,
+        borderColor: lightGray,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: colorYellow,
-        borderWidth: 2,
         marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
-        marginTop: 10,
+        margin: 10,
     },
     text: {
         fontSize: 16,
-        color: 'white',
         textAlign: 'center',
         justifyContent: 'center',
     },
