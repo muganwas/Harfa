@@ -469,15 +469,12 @@ class MapDirectionScreen extends Component {
             headerLayout={() =>
               <View style={styles.headerLayoutStyle}>
                 <View style={{ flex: 1, flexDirection: 'column', width: screenWidth }}>
-
                   <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 5 }}>
                     <Image style={{ width: 20, height: 20, }}
                       source={require('../../icons/up_arrow.gif')}>
                     </Image>
                   </View>
-
                   <View style={{ flexDirection: 'row', flex: 1 }}>
-
                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
                       source={jobRequests[currRequestPos].image ? { uri: jobRequests[currRequestPos].image } : require('../../images/generic_avatar.png')} />
                     <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
@@ -528,7 +525,6 @@ class MapDirectionScreen extends Component {
             slidingPanelLayout={() =>
               <View style={styles.slidingPanelLayoutStyle}>
                 <View style={styles.containerSlide}>
-
                   {this.state.isJobAccepted &&
                     <TouchableOpacity style={styles.buttonContainer}
                       onPress={this.openCompleteConfirmation}>
@@ -559,6 +555,7 @@ class MapDirectionScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
+    flex: 1,
     width: screenWidth,
     height: screenHeight,
   },
@@ -566,7 +563,6 @@ const styles = StyleSheet.create({
     height: screenHeight,
     width: screenWidth,
     marginBottom: 140,
-    marginTop: Platform.OS === 'ios' ? 20 : 0,
   },
   header: {
     flexDirection: 'row',
@@ -620,13 +616,13 @@ const styles = StyleSheet.create({
   slidingPanelLayoutStyle: {
     width: screenWidth,
     height: screenHeight,
+    margin: 0,
     backgroundColor: colorBg,
     justifyContent: 'center',
     alignItems: 'center'
   },
   buttonContainer: {
     flex: 1,
-    //width: 200,
     paddingTop: 10,
     backgroundColor: white,
     shadowColor: black,

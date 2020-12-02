@@ -58,7 +58,6 @@ class ProMapDirectionScreen extends Component {
             isLoading: othersCoordinates[user_id],
             pageTitle: navigation.state.params.pageTitle,
             currentPos,
-            //From ProAcceptRejectJobScreen & ProDashboardScreen
             userId: currentRequest.user_id,
             userName: currentRequest.name,
             userImage: currentRequest.image,
@@ -515,13 +514,11 @@ class ProMapDirectionScreen extends Component {
                     headerLayout={() =>
                         <View style={styles.headerLayoutStyle} >
                             <View style={{ flex: 1, flexDirection: 'column', width: screenWidth }}>
-
                                 <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 5 }}>
                                     <Image style={{ width: 20, height: 20, }}
                                         source={require('../../icons/up_arrow.gif')}>
                                     </Image>
                                 </View>
-
                                 <View style={{ flexDirection: 'row', flex: 1 }}>
                                     <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
                                         source={userImage ? { uri: userImage } : require('../../images/generic_avatar.png')} />
@@ -597,6 +594,7 @@ class ProMapDirectionScreen extends Component {
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
+        flex: 1,
         width: screenWidth,
         height: screenHeight,
     },
@@ -604,7 +602,6 @@ const styles = StyleSheet.create({
         height: screenHeight,
         width: screenWidth,
         marginBottom: 140,
-        marginTop: Platform.OS === 'ios' ? 20 : 0,
     },
     header: {
         flexDirection: 'row',
@@ -683,6 +680,7 @@ const styles = StyleSheet.create({
         width: screenWidth,
         height: screenHeight,
         backgroundColor: colorBg,
+        margin: 0,
         justifyContent: 'center',
         alignItems: 'center',
     },
