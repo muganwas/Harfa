@@ -445,7 +445,7 @@ class ProviderDetailsScreen extends Component {
         </View>
 
         {(this.state.requestStatus == '' || this.state.requestStatus == 'No Response') &&
-          <View style={styles.bottomView}>
+          <View style={[styles.bottomView, { flexDirection: 'row' }]}>
             <TouchableOpacity style={styles.buttonContainer}
               onPress={this.requestForBooking}>
               <Text style={styles.text}>
@@ -555,7 +555,7 @@ const mapDispatchToProps = dispatch => {
       dispatch(updateProviderDetails(details));
     },
     getPendingJobRequest: (props, userId, goTo) => {
-      dispatch(getPendingJobRequest(props,userId,goTo));
+      dispatch(getPendingJobRequest(props, userId, goTo));
     }
   }
 }
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    color: 'white',
+    fontWeight: '600',
     textAlign: 'center',
     justifyContent: 'center',
   },
@@ -642,13 +642,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'center',
     fontWeight: 'bold',
-    color: 'white',
+    color: white,
 
   },
   bottomView: {
     width: screenWidth,
     flexDirection: 'column',
-    backgroundColor: 'white',
+    backgroundColor: lightGray,
     position: 'absolute',
     bottom: 0,
     shadowColor: '#000',
@@ -661,20 +661,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonContainer: {
-    width: screenWidth - 60,
+    flex: 1,
     paddingTop: 10,
-    backgroundColor: '#000000',
+    backgroundColor: white,
+    shadowColor: black,
+    borderColor: lightGray,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 5,
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 5,
-    borderColor: themeRed,
-    borderWidth: 2,
-    marginBottom: 10,
+    marginBottom: 25,
     textAlign: 'center',
     justifyContent: 'center',
-    alignContent: 'center',
-    marginTop: 10,
+    margin: 10,
   },
   loaderStyle: {
     width: screenWidth,
