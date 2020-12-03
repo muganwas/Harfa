@@ -448,16 +448,16 @@ class MapDirectionScreen extends Component {
             </MapView.Marker>
             <MapView.Polyline
               coordinates={coords}
-              strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+              strokeColor={themeRed} // fallback for when `strokeColors` is not supported by the map-provider
               strokeColors={[
                 '#7F0000',
-                '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+                black, // no color, creates a "long" gradient between the previous and next coordinate
                 '#B24112',
                 '#E5845C',
                 '#238C23',
                 '#7F0000'
               ]}
-              strokeWidth={6} />
+              strokeWidth={2} />
           </MapView> :
           <ActivityIndicator
             size={30}

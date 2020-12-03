@@ -497,7 +497,7 @@ class ProMapDirectionScreen extends Component {
                         </MapView.Marker>
                         <MapView.Polyline
                             coordinates={routeCoordinates}
-                            strokeColor={black} // fallback for when `strokeColors` is not supported by the map-provider
+                            strokeColor={themeRed} // fallback for when `strokeColors` is not supported by the map-provider
                             strokeColors={[
                                 '#7F0000',
                                 black, // no color, creates a "long" gradient between the previous and next coordinate
@@ -506,7 +506,7 @@ class ProMapDirectionScreen extends Component {
                                 '#238C23',
                                 '#7F0000'
                             ]}
-                            strokeWidth={6} />
+                            strokeWidth={2} />
                     </MapView> :
                     <ActivityIndicator
                         size={30}
