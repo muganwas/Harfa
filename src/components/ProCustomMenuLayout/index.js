@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { connect } from 'react-redux';
 import { DrawerActions } from 'react-navigation-drawer';
 import ProDialogLogout from '../ProDialogLogout';
@@ -121,10 +121,11 @@ class CustomMenuLayout extends Component {
                                 <Text style={styles.textMenu}>Log out</Text>
                             </View>
                         </TouchableOpacity>
-                        <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
-                            onRequestClose={() => this.changeDialogVisibility(false)}>
-                            <ProDialogLogout navigation={this.props.navigation} changeDialogVisibility={this.changeDialogVisibility} />
-                        </Modal>
+                        <ProDialogLogout
+                            isDialogLogoutVisible={this.state.isDialogLogoutVisible}
+                            navigation={this.props.navigation}
+                            changeDialogVisibility={this.changeDialogVisibility}
+                        />
                     </ScrollView>
                 </TouchableOpacity>
             </TouchableOpacity>

@@ -58,3 +58,4 @@ export { default as AllMessageScreen } from './AllMessageScreen';
 export { default as SwipeableButton } from './SwipeableBtn';
 export { default as Config } from './Config';
 export { default as ProMessagesComponent} from './ProMessagesComponent';
+export { default as DialogComponent } from './DialogComponent';
