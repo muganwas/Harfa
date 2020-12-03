@@ -24,7 +24,7 @@ import {
     notificationsFetched,
     notificationError
 } from '../../Redux/Actions/notificationActions';
-import { lightGray, colorPrimaryDark, white, themeRed, colorGray } from '../../Constants/colors';
+import { lightGray, colorPrimaryDark, white, themeRed, colorGray, black } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-employee-notification/";
@@ -247,7 +247,6 @@ class ProNotificationsScreen extends Component {
                         text='Notifications'
                     />
                 </View>
-
                 { this.state.isLoading && <View style={{ height: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size={'large'} color={colorGray} />
                 </View>}
@@ -285,14 +284,14 @@ class ProNotificationsScreen extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: lightGray,
     },
     header: {
         width: '100%',
         height: 50,
         flexDirection: 'row',
         backgroundColor: white,
-        shadowColor: '#000',
+        shadowColor: black,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
@@ -317,11 +316,11 @@ const styles = StyleSheet.create({
     },
     exitTitleText: {
         textAlign: "center",
-        color: 'white',
+        color: white,
         marginRight: 20,
     },
     exitText: {
-        color: 'red',
+        color: themeRed,
         fontWeight: 'bold',
         paddingHorizontal: 10,
         paddingVertical: 3

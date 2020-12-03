@@ -13,7 +13,7 @@ import Config from '../Config';
 import SwipeableButton from '../SwipeableBtn';
 import Hamburger from '../Hamburger';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
-import { colorPrimaryDark, lightGray, white, themeRed, colorGray } from '../../Constants/colors';
+import { colorPrimaryDark, lightGray, white, themeRed, colorGray, black } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-customer-notification/";
@@ -287,14 +287,14 @@ class NotificationsScreen extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: lightGray,
     },
     header: {
         width: '100%',
         height: 50,
         flexDirection: 'row',
         backgroundColor: white,
-        shadowColor: '#000',
+        shadowColor: black,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
@@ -319,11 +319,11 @@ const styles = StyleSheet.create({
     },
     exitTitleText: {
         textAlign: "center",
-        color: 'white',
+        color: white,
         marginRight: 20,
     },
     exitText: {
-        color: 'red',
+        color: themeRed,
         fontWeight: 'bold',
         paddingHorizontal: 10,
         paddingVertical: 3
