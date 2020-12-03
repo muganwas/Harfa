@@ -114,7 +114,8 @@ class Hamburger extends React.Component {
             else if (title == "Chat Request Rejected") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("The service provider rejected your request. please try again later")
+                this.showToast("The service provider rejected your request. please try again later");
+                navigation.navigate('Dashboard');
             }
             else if (title == "Job Accepted") {
                 var pendingJobData = {
@@ -139,17 +140,17 @@ class Hamburger extends React.Component {
                 }
                 newJobRequests[pos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Your job has been accepted.")
+                this.showToast("Your job has been accepted.");
             }
             else if (title == "Job Rejected") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Your job has been rejected. please try again later")
+                this.showToast("Your job has been rejected. please try again later");
             }
             else if (title == "Job Completed") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Your job is complete..")
+                this.showToast("Your job is complete..");
             }
             else if (title == "Chat Request Accepted" && pos != null) {
                 const providerData = typeof data.ProviderData === 'string' ? JSON.parse(data.ProviderData) : data.ProviderData;
@@ -182,9 +183,6 @@ class Hamburger extends React.Component {
                 this.showToast("Chat request accepted");
                 updateActiveRequest(false);
                 navigation.navigate('Dashboard');
-            }
-            else if (title == "Chat Request Rejected") {
-                this.showToast("The service provider rejected your request. please try again later")
             }
             else if ((title == "No Response" || title == "Canceled") && pos != null) {
                 newJobRequests.splice(pos, 1);

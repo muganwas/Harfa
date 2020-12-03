@@ -18,8 +18,8 @@ import {
 
 import { imageExists } from '../../misc/helpers';
 
-const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/user_status_check/";
-const PENDING_JOB_PROVIDER = Config.baseURL + "jobrequest/customer_status_check/";
+const PENDING_JOB_PROVIDER = Config.baseURL + "jobrequest/provider_status_check/";
+const PENDING_JOB_CUSTOMER = Config.baseURL + "jobrequest/customer_status_check/";
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/';
 const CUSTOMER_BOOKING_HISTORY = Config.baseURL + 'jobrequest/customer_request/';
 
@@ -120,7 +120,7 @@ export const getPendingJobRequest = (props, userId, navTo) => {
     return dispatch => {
         const { navigation } = props;
         dispatch(startFetchingJobCustomer());
-        fetch(PENDING_JOB_CUSTOMER + userId, {
+        fetch(PENDING_JOB_CUSTOMER + userId + '/pending', {
             method: "GET",
             headers: {
                 'Accept': 'application/json',
@@ -252,11 +252,12 @@ export const getAllWorkRequestPro = providerId => {
 }
 
 export const getPendingJobRequestProvider = (props, providerId, navTo) => {
+    console.log('pro id', providerId)
     return dispatch => {
         const { navigation } = props;
         let newJobRequestsProviders = [];
         dispatch(startFetchingJobProvider());
-        fetch(PENDING_JOB_PROVIDER + providerId, {
+        fetch(PENDING_JOB_PROVIDER + providerId + '/pending', {
             method: "GET",
             headers: {
                 'Accept': 'application/json',
@@ -265,6 +266,7 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
         })
             .then(response => response.json())
             .then(responseJson => {
+                console.log('pro res', responseJson)
                 if (responseJson.result) {
                     responseJson.data.map((job, index) => {
                         var jobData = {

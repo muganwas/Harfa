@@ -66,13 +66,17 @@ const StatusBarPlaceHolder = () => {
 class ProDashboardScreen extends Component {
     constructor(props) {
         super();
-        const { jobsInfo: { dataWorkSource }, generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails } } = props;
+        const { 
+            jobsInfo: { dataWorkSource }, 
+            generalInfo: { online, connectivityAvailable }, 
+            userInfo: { providerDetails } 
+        } = props;
         this.state = {
             isLoading: true,
             isErrorToast: false,
             mainId: '',
             reviewData: '',
-            width: Dimensions.get('window').width,
+            width: screenWidth,
             status: online && providerDetails.status === "1" && connectivityAvailable ? "ONLINE" : "OFFLINE",
             availBackground: online && providerDetails.status === "1" && connectivityAvailable ? 'green' : 'red',
             dataSource: [],
@@ -274,12 +278,6 @@ class ProDashboardScreen extends Component {
                         <Text style={{ fontSize: 12, }}>{item.employee_rating == "" ? 'Give review' : item.employee_rating + "/5"}</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
-            )
-        } else {
-            return (
-                <View key={index} style={{ padding: 15 }}>
-                    <Text style={{ fontStyle: 'italic', color: darkGray }}>You haven't completed any jobs yet.</Text>
-                </View>
             )
         }
     }
