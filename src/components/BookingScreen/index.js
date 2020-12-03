@@ -168,44 +168,42 @@ class BookingScreen extends Component {
         return (
             <TouchableOpacity
                 key={index}
-                style={{
-                    flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
+                style={{ flexDirection: 'column', backgroundColor: white, shadowColor: white,
                     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, marginBottom: 7
                 }}
                 onPress={() => this.props.navigation.navigate("BookingDetails", {
                     "bookingDetails": item
                 })}>
-
                 <View style={styles.itemContainer}>
                     <Image
                         style={{ height: 45, width: 45, alignSelf: 'flex-start', alignContent: 'flex-start', borderRadius: 100 }}
-                        source={{ uri: item.employee_details.image }} />
+                        source={item.employee_details.image ? { uri: item.employee_details.image } : require('../../images/generic_avatar.png')} />
                     <View style={{ flexDirection: 'column' }}>
-                        <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
+                        <Text style={{ color: black, fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                             {item.employee_details.username + " " + item.employee_details.surname}
                         </Text>
                         <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5 }}>
                             <Image
                                 style={{ height: 15, width: 15, alignSelf: 'center', alignContent: 'flex-start', borderRadius: 100, }}
                                 source={require('../../icons/mobile.png')} />
-                            <Text style={{ color: 'black', fontSize: 14, textAlignVertical: 'center', marginLeft: 5 }}>
+                            <Text style={{ color: black, fontSize: 14, textAlignVertical: 'center', marginLeft: 5 }}>
                                 {item.employee_details.mobile}
                             </Text>
                         </View>
                     </View>
-                    <View style={{ flex: 1, color: 'white', alignContent: 'center', justifyContent: 'center', }}>
-                        <Text style={{ textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: 'black', marginRight: 10, }}>
+                    <View style={{ flex: 1, color: white, alignContent: 'center', justifyContent: 'center', }}>
+                        <Text style={{ textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: black, marginRight: 10, }}>
                             {item.order_id.replace("\"", "")}
                         </Text>
                     </View>
                 </View>
 
                 <View style={{ flexDirection: 'row', backgroundColor: '#fafad2' }}>
-                    <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', alignSelf: 'center', textAlignVertical: 'center', marginLeft: 10, }}>
+                    <Text style={{ color: black, fontSize: 14, fontWeight: 'bold', alignSelf: 'center', textAlignVertical: 'center', marginLeft: 10, }}>
                         {item.service_details.service_name}
                     </Text>
                     <View style={{ flex: 1, alignContent: 'center', justifyContent: 'center', }}>
-                        <Text style={{ textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: 'black', marginRight: 10, }}>
+                        <Text style={{ textAlign: 'center', alignSelf: 'flex-end', padding: 10, fontSize: 12, color: black, marginRight: 10, }}>
                             {item.createdDate}
                         </Text>
                     </View>
@@ -247,11 +245,11 @@ class BookingScreen extends Component {
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 10, marginBottom: 10 }}>
                         <TouchableOpacity style={this.state.currentPage == 0 ? styles.buttonGreen : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Completed")}>
-                            <Text style={[styles.text, { color: this.state.currentPage == 0 ? black : white, fontWeight: 'bold'}]}>Completed</Text>
+                            <Text style={[styles.text, { color: this.state.currentPage == 0 ? black : white, fontWeight: 'bold' }]}>Completed</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={this.state.currentPage == 1 ? styles.buttonRed : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Rejected")}>
-                            <Text style={[styles.text, { color: this.state.currentPage == 1 ? black : white, fontWeight: 'bold'}]}>Rejected</Text>
+                            <Text style={[styles.text, { color: this.state.currentPage == 1 ? black : white, fontWeight: 'bold' }]}>Rejected</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -323,7 +321,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(BookingScreen);
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colorPrimary,
+        backgroundColor: lightGray,
     },
     viewPager: {
         flex: 1,
@@ -391,11 +389,11 @@ const styles = StyleSheet.create({
     },
     listView: {
         flex: 1,
+        flexDirection: 'column',
         backgroundColor: lightGray,
         padding: 5,
     },
     itemContainer: {
-        width: screenWidth,
         flexDirection: 'row',
         backgroundColor: 'white',
         padding: 10,

@@ -166,9 +166,8 @@ class ProBookingScreen extends Component {
         return (
             <TouchableOpacity
                 key={index}
-                style={{
-                    flex: 1, height: '100%', flexDirection: 'column', backgroundColor: 'white', shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
+                style={{flexDirection: 'column', backgroundColor: white, shadowColor: black,
+                    shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, marginBottom: 7
                 }}
                 onPress={() => this.props.navigation.navigate("ProBookingDetails", {
                     "bookingDetails": item
@@ -314,7 +313,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(ProBookingScreen);
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colorBg,
+        backgroundColor: lightGray,
     },
     viewPager: {
         flex: 1
@@ -385,7 +384,6 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     itemContainer: {
-        width: screenWidth,
         flexDirection: 'row',
         backgroundColor: white,
         padding: 10,
