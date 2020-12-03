@@ -139,17 +139,17 @@ class Hamburger extends React.Component {
                 }
                 newJobRequests[pos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Votre travail a été accepté.")
+                this.showToast("Your job has been accepted.")
             }
             else if (title == "Job Rejected") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Votre travail a été rejeté. Veuillez réessayer plus tard")
+                this.showToast("Your job has been rejected. please try again later")
             }
             else if (title == "Job Completed") {
                 newJobRequests.splice(pos, 1);
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Votre travail est terminé.")
+                this.showToast("Your job is complete..")
             }
             else if (title == "Chat Request Accepted" && pos != null) {
                 const providerData = typeof data.ProviderData === 'string' ? JSON.parse(data.ProviderData) : data.ProviderData;
@@ -179,7 +179,7 @@ class Hamburger extends React.Component {
                 });
                 newJobRequests[pos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
-                this.showToast("Demande de chat acceptée");
+                this.showToast("Chat request accepted");
                 updateActiveRequest(false);
                 navigation.navigate('Dashboard');
             }
