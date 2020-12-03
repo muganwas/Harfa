@@ -584,7 +584,7 @@ class ProDashboardScreen extends Component {
                     key={index}
                     style={[styles.pendingJobRow, {
                         paddingVertical: 0,
-                        shadowColor: '#000',
+                        shadowColor: black,
                         borderWidth: 0.5,
                         borderColor: lightGray,
                         backgroundColor: themeRed,
