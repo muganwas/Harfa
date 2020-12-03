@@ -275,7 +275,7 @@ class ProMapDirectionScreen extends Component {
             'notification': {
                 "fcm_id": this.state.userFcmId,
                 "title": "Job Completed",
-                "body": 'Your job request has been completed by the service provder : ' + providerDetails.providerId,
+                "body": 'Your job request has been completed by the service provder : ' + providerDetails.name,
                 "save_notification": true,
                 "user_id": userId,
                 "employee_id": providerDetails.providerId,

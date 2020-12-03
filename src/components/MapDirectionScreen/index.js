@@ -304,7 +304,7 @@ class MapDirectionScreen extends Component {
       'notification': {
         "fcm_id": jobRequests[currRequestPos].fcm_id,
         "title": "Job Completed",
-        "body": 'Your job request has been completed by ' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
+        "body": 'Job Id : ' + jobRequests[currRequestPos].order_id + ' has been reported complete by the client: ' + userDetails.username,
         "type": "Job Completed",
         "user_id": userDetails.userId,
         "employee_id": jobRequests[currRequestPos].employee_id,

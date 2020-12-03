@@ -478,7 +478,6 @@ class ProDashboardScreen extends Component {
             address,
             lat,
             lang,
-            chat_status,
             status,
             delivery_address,
             delivery_lat,
@@ -504,7 +503,7 @@ class ProDashboardScreen extends Component {
                 "user_id": user_id,
                 "employee_id": providerDetails.providerId,
                 "order_id": order_id,
-                "body": 'Chat request has been accepted by ' + name + ' Request Id : ' + order_id,
+                "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + order_id,
                 "data": {
                     user_id: '',
                     providerId: providerDetails.id,
@@ -526,12 +525,8 @@ class ProDashboardScreen extends Component {
             },
             body: JSON.stringify(data)
         })
-            .then(response => {
-                console.log('non json response', response)
-                return response.json()
-            })
+            .then(response => response.json())
             .then(responseJson => {
-                console.log('accept response', responseJson)
                 if (responseJson.result) {
                     this.setState({
                         isLoading: false
