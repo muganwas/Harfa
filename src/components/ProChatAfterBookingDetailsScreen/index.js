@@ -174,7 +174,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
         this.setState({
             inputMessage: input,
         });
-        if (input == '') {
+        if (input === '') {
             this.setState({
                 showButton: false,
             })
