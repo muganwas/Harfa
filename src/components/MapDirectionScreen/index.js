@@ -9,12 +9,13 @@ import simpleToast from 'react-native-simple-toast';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
-import { 
-  startFetchingJobCustomer, 
-  fetchedJobCustomerInfo, 
-  fetchCustomerJobInfoError, 
-  setSelectedJobRequest 
+import {
+  startFetchingJobCustomer,
+  fetchedJobCustomerInfo,
+  fetchCustomerJobInfoError,
+  setSelectedJobRequest
 } from '../../Redux/Actions/jobsActions';
+import DialogComponent from '../DialogComponent';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import Config from '../Config';
 import { white, colorBg, lightGray, black, themeRed, colorPrimary, colorGreen } from '../../Constants/colors';
@@ -81,7 +82,9 @@ class MapDirectionScreen extends Component {
       titlePage: navigation.state.params.titlePage,
       mapKey: Math.random(2),
       fcm_id: jobRequests[currRequestPos].fcm_id,
-      employeeLocationFetched: othersCoordinates[employee_id] ? true : false
+      employeeLocationFetched: othersCoordinates[employee_id] ? true : false,
+      showDialog: false,
+      currentModal: null
     };
   };
 
@@ -179,39 +182,11 @@ class MapDirectionScreen extends Component {
   }
 
   openCompleteConfirmation = () => {
-    Alert.alert(
-      "COMPLETED",
-      "Was the job completed successfully?",
-      [
-        {
-          text: 'Cancel',
-          onPress: () => console.log('Cancel Pressed'),
-          style: 'cancel',
-        },
-        {
-          text: 'Yes',
-          onPress: () => { this.jobCompleteTask() },
-        },
-      ]
-    );
+    this.setState({ currentModal: 'complete', showDialog: true });
   }
 
   openCancelConfirmation = () => {
-    Alert.alert(
-      "CANCEL JOB REQUEST",
-      "Are you sure you want to cancel the job request?",
-      [
-        {
-          text: 'No',
-          onPress: () => console.log('Cancel Pressed'),
-          style: 'cancel',
-        },
-        {
-          text: 'Yes',
-          onPress: () => { this.jobCancelTask() },
-        },
-      ]
-    );
+    this.setState({ currentModal: 'cancel', showDialog: true });
   }
 
   jobCancelTask = () => {
@@ -369,6 +344,8 @@ class MapDirectionScreen extends Component {
       })
   }
 
+  changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+
   render() {
     const { userInfo: { userDetails }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, generalInfo: { othersCoordinates } } = this.props;
     const {
@@ -379,13 +356,29 @@ class MapDirectionScreen extends Component {
       destinationLng,
       coords,
       providerName,
-      mapKey
+      mapKey,
+      currentModal,
+      showDialog
     } = this.state;
     const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : undefined;
     const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : undefined;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
+        <DialogComponent
+          transparent={true}
+          isDialogVisible={showDialog && currentModal !== null}
+          animation='fade'
+          width={screenWidth - 80}
+          changeDialogVisibility={this.changeDialogVisibility}
+          leftButtonAction={this.changeDialogVisibility}
+          rightButtonAction={currentModal && currentModal === 'cancel' ? this.jobCancelTask : this.jobCompleteTask}
+          isLoading={false}
+          titleText={currentModal && currentModal === 'cancel' ? 'Cancel Job Request' : 'Completed'}
+          descText='Are you sure?'
+          leftButtonText='Cancel'
+          rightButtonText='Ok'
+        />
         <View style={{
           flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorBg,
           paddingLeft: 10, paddingRight: 20, paddingBottom: 5, borderBottomColor: themeRed, borderBottomWidth: 1

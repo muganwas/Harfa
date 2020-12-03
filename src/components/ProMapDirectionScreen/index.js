@@ -15,6 +15,7 @@ import SlidingPanel from 'react-native-sliding-up-down-panels';
 import simpleToast from 'react-native-simple-toast';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
+import DialogComponent from '../DialogComponent';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { startFetchingJobProvider, fetchedJobProviderInfo, fetchProviderJobInfoError, setSelectedJobRequest } from '../../Redux/Actions/jobsActions';
 import { colorBg, white, black, lightGray, themeRed, colorGreen } from '../../Constants/colors';
@@ -77,6 +78,8 @@ class ProMapDirectionScreen extends Component {
             status: currentRequest.status,
             proImageAvailable: currentRequest.imageAvailable,
             isJobAccepted: currentRequest.status === 'Accepted',
+            showDialog: false,
+            currentModal: null
         };
     };
 
@@ -223,48 +226,20 @@ class ProMapDirectionScreen extends Component {
     }
 
     openCompleteConfirmation = () => {
-        Alert.alert(
-            "COMPLETED",
-            "Are you sure?",
-            [
-                {
-                    text: 'Cancel',
-                    onPress: () => console.log('Cancel Pressed'),
-                    style: 'cancel',
-                },
-                {
-                    text: 'OK',
-                    onPress: this.jobCompleteTask,
-                },
-            ]
-        );
+        this.setState({currentModal: 'complete', showDialog: true});
     }
 
     openCancelConfirmation = () => {
-        Alert.alert(
-            "CANCEL JOB REQUEST",
-            "Are you sure you want to cancel the job request?",
-            [
-                {
-                    text: 'No',
-                    onPress: () => console.log('Cancel Pressed'),
-                    style: 'cancel',
-                },
-                {
-                    text: 'Yes',
-                    onPress: this.jobCancelTask,
-                },
-            ]
-        );
+        this.setState({currentModal: 'cancel', showDialog: true});
     }
 
     jobCompleteTask = () => {
         this.setState({ isLoading: true });
-        const { 
-            fetchingPendingJobInfo, 
-            fetchedPendingJobInfo, 
-            jobsInfo: { jobRequestsProviders }, 
-            userInfo: { providerDetails } 
+        const {
+            fetchingPendingJobInfo,
+            fetchedPendingJobInfo,
+            jobsInfo: { jobRequestsProviders },
+            userInfo: { providerDetails }
         } = this.props;
         const { orderId, userId, currentPos } = this.state;
         const newJobRequestsProviders = cloneDeep(jobRequestsProviders);
@@ -423,6 +398,8 @@ class ProMapDirectionScreen extends Component {
         })
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+
     render() {
         const {
             sourceLat,
@@ -433,11 +410,27 @@ class ProMapDirectionScreen extends Component {
             userName,
             userImage,
             serviceName,
-            status
+            status,
+            currentModal,
+            showDialog
         } = this.state;
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
+                <DialogComponent
+                    transparent={true}
+                    isDialogVisible={showDialog && currentModal !== null}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.changeDialogVisibility}
+                    rightButtonAction={currentModal && currentModal === 'cancel' ? this.jobCancelTask : this.jobCompleteTask }
+                    isLoading={false}
+                    titleText={currentModal && currentModal === 'cancel' ? 'Cancel Job Request' : 'Completed'}
+                    descText='Are you sure?'
+                    leftButtonText='Cancel'
+                    rightButtonText='Ok'
+                />
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorBg,
                     paddingLeft: 10, paddingRight: 20, paddingBottom: 5, borderBottomColor: themeRed, borderBottomWidth: 1
