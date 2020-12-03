@@ -160,7 +160,7 @@ class ProChatAcceptScreen extends Component {
                 "order_id": orderId,
                 "body": 'Chat request has been accepted by ' + providerDetails.name + ' Request Id : ' + orderId,
                 "data": {
-                    user_id: '',
+                    user_id: userId,
                     providerId: providerDetails.providerId,
                     ProviderData: providerDetails,
                     serviceName: this.state.serviceName,

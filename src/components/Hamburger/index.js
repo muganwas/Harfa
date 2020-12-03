@@ -74,7 +74,7 @@ class Hamburger extends React.Component {
         await this.checkForUserType();
 
         messaging().onMessage(async message => {
-            const { data } = message;
+            const data = JSON.parse(message.data.data);
             const { title, body } = data;
             const {
                 fetchedNotifications,
@@ -118,7 +118,8 @@ class Hamburger extends React.Component {
                 navigation.navigate('Dashboard');
             }
             else if (title == "Job Accepted") {
-                var pendingJobData = {
+                const providerData = typeof data.ProviderData === 'string' ? JSON.parse(data.ProviderData) : data.ProviderData;
+                const pendingJobData = {
                     id: data.mainId,
                     order_id: data.orderId,
                     employee_id: data.ProviderId,
@@ -128,6 +129,7 @@ class Hamburger extends React.Component {
                     surName: data.surname,
                     mobile: data.mobile,
                     description: data.description,
+                    employee_details: providerData,
                     address: data.address,
                     lat: data.lat,
                     lang: data.lang,

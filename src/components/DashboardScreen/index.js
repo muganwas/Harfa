@@ -283,7 +283,7 @@ class DashboardScreen extends Component {
                             <Text style={{ color: white, fontSize: 11, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
                                 {chat_status == "0" ? "New job application"
                                     : status == "Pending" ? "Chat request accepted"
-                                        : "Accepted work"}
+                                        : "Job Accepted"}
                             </Text>
                         </View>
                         <View style={styles.arrowView}>

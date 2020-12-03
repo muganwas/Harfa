@@ -242,7 +242,7 @@ class ProAcceptRejectJobScreen extends Component {
                 "fcm_id": this.state.receiverFcmId,
                 "title": "Job Accepted",
                 "type": "JobAcceptence",
-                "Notification_by": "Employee",
+                "notification_by": "Employee",
                 "user_id": receiverId,
                 "employee_id": providerDetails.providerId,
                 "order_id": this.state.orderId,
@@ -250,7 +250,7 @@ class ProAcceptRejectJobScreen extends Component {
                 "body": 'Your request has been accepted by ' + providerDetails.name + " " + providerDetails.surname + ' Request Id : ' + this.state.orderId,
                 "data": {
                     ProviderId: providerDetails.providerId,
-                    image: providerDetails.imageSource ? providerDetails.imageSource : 'null',
+                    image: providerDetails.imageSource,
                     fcmId: providerDetails.fcmId,
                     name: providerDetails.name,
                     surname: providerDetails.surname,

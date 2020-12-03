@@ -57,7 +57,7 @@ class ProHamburger extends React.Component {
         await this.checkForUserType();
         
         messaging().onMessage( async message => {
-            const { data } = message;
+            const data = JSON.parse(message.data.data);
             const { notificationsInfo, navigation, jobsInfo: { jobRequestsProviders }, dispatchFetchedProJobRequests } = this.props;
             const { title, body } = data;
             const currentGenericCount = notificationsInfo.generic;
