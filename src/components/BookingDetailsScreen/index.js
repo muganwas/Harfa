@@ -11,7 +11,7 @@ import ReviewDialogCustomer from '../ReviewDialogCustomer';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
 import { setSelectedJobRequest } from '../../Redux/Actions/jobsActions';
-import { colorBg, colorPrimary, white } from '../../Constants/colors';
+import { black, colorBg, colorPrimary, white, lightGray, themeRed, darkGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -115,7 +115,7 @@ class BookingDetailsScreen extends Component {
             customer_rating: rating,
             customer_review: review,
         });
-        const { userDetails }  = this.props.userInfo;
+        const { userDetails } = this.props.userInfo;
         const reviewData = {
             "main_id": this.state.mainId,
             "type": "Customer",
@@ -182,7 +182,7 @@ class BookingDetailsScreen extends Component {
     }
 
     render() {
-        const { userInfo: { userDetails }, dispatchSelectedJobRequest } = this.props;
+        const { userInfo: { userDetails }, dispatchSelectedJobRequest, navigation } = this.props;
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
@@ -192,11 +192,11 @@ class BookingDetailsScreen extends Component {
                 }}>
                     <View style={{ flex: 1, flexDirection: 'row', }}>
                         <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
-                            onPress={() => this.props.navigation.goBack()}>
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                            onPress={() => navigation.navigate('Booking')}>
+                            <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
                                 source={require('../../icons/arrow_back.png')} />
                         </TouchableOpacity>
-                        <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
+                        <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
                             Booking details
                     </Text>
                     </View>
@@ -205,46 +205,63 @@ class BookingDetailsScreen extends Component {
                 <ScrollView>
                     <View style={{ marginBottom: 10 }}>
                         <View style={styles.mainContainer}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                <Text style={{ color: 'grey', fontWeight: 'bold', fontSize: 14 }}>ID de la commande - {this.state.bookingDetails.order_id.replace("\"", "")}</Text>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'flex-start',
+                                alignContent: 'flex-start',
+                                marginTop: 15,
+                                paddingHorizontal: 10,
+                                borderBottomColor: lightGray,
+                                borderBottomWidth: 1
+                            }}>
+                                <Text style={{ color: darkGray, fontWeight: 'bold', fontSize: 14 }}>Order number - {this.state.bookingDetails.order_id.replace("\"", "")}</Text>
                             </View>
-
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
-
                             <View style={styles.providerDetailsContainer}>
                                 <Image
                                     style={{ height: 45, width: 45, alignSelf: 'flex-start', alignContent: 'flex-start', borderRadius: 100 }}
-                                    source={{ uri: this.state.bookingDetails.employee_details.image }} />
+                                    source={this.state.bookingDetails.employee_details.image ? { uri: this.state.bookingDetails.employee_details.image } : require('../../images/generic_avatar.png')} />
                                 <View style={{ flexDirection: 'column' }}>
-                                    <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
+                                    <Text style={{ color: black, fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                                         {this.state.bookingDetails.employee_details.username + " " + this.state.bookingDetails.employee_details.surname}
                                     </Text>
                                     <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5 }}>
                                         <Image
                                             style={{ height: 15, width: 15, alignSelf: 'center', alignContent: 'flex-start', borderRadius: 100, }}
                                             source={require('../../icons/mobile.png')} />
-                                        <Text style={{ color: 'black', fontSize: 12, color: 'grey', textAlignVertical: 'center', marginLeft: 5 }}>
+                                        <Text style={{ color: black, fontSize: 12, color: darkGray, textAlignVertical: 'center', marginLeft: 5 }}>
                                             {this.state.bookingDetails.employee_details.mobile}
                                         </Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5, marginRight: 50 }}>
-                                        <Text style={{ color: 'black', fontSize: 12, color: 'black', textAlignVertical: 'center', }}>
+                                        <Text style={{ color: black, fontSize: 12, color: black, textAlignVertical: 'center', }}>
                                             {this.state.bookingDetails.employee_details.description}
                                         </Text>
                                     </View>
-                                    <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5, marginRight: 50 }}>
-                                        <Text style={{ color: 'black', fontSize: 12, color: 'grey', textAlignVertical: 'center', }}>
+                                    <View style={{ flexDirection: 'row', marginLeft: 10, marginTowhitp: 5, marginRight: 50 }}>
+                                        <Text style={{ color: black, fontSize: 12, color: darkGray, textAlignVertical: 'center', }}>
                                             {this.state.bookingDetails.employee_details.address}
                                         </Text>
                                     </View>
                                 </View>
                             </View>
-
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Statut de notation du fournisseur</Text>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'flex-start',
+                                alignContent: 'flex-start',
+                                marginTop: 15,
+                                paddingHorizontal: 10,
+                                borderTopColor: lightGray,
+                                borderTopWidth: 1
+                            }}>
+                                <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Service provider's rating</Text>
                             </View>
-                            <View style={{ backgroundColor: 'white', marginTop: 10, marginBottom: 10, }}>
+                            <View style={{
+                                backgroundColor: white,
+                                marginTop: 10,
+                                marginBottom: 10,
+                                alignItems: 'flex-start',
+                                paddingHorizontal: 10
+                            }}>
                                 <AirbnbRating
                                     type='custom'
                                     ratingCount={5}
@@ -260,19 +277,31 @@ class BookingDetailsScreen extends Component {
                                 <View>
                                     <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Commentaires des fournisseurs</Text>
+                                        <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Service provider's review</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 10, marginLeft: 10 }}>
-                                        <Text style={{ color: 'grey', fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.employee_review}</Text>
+                                        <Text style={{ color: darkGray, fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.employee_review}</Text>
                                     </View>
                                 </View>
                             }
-
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Statut de l'évaluation du client</Text>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'flex-start',
+                                alignContent: 'flex-start',
+                                marginTop: 15,
+                                paddingHorizontal: 10,
+                                borderTopColor: lightGray,
+                                borderTopWidth: 1
+                            }}>
+                                <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Your rating of service</Text>
                             </View>
-                            <View style={{ backgroundColor: 'white', marginTop: 10, marginBottom: 10, }}>
+                            <View style={{
+                                backgroundColor: white,
+                                marginTop: 10,
+                                marginBottom: 10,
+                                alignItems: 'flex-start',
+                                paddingHorizontal: 10
+                            }}>
                                 <AirbnbRating
                                     type='custom'
                                     ratingCount={5}
@@ -294,10 +323,10 @@ class BookingDetailsScreen extends Component {
                                 <View>
                                     <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                        <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 14 }}>Commentaires des fournisseurs</Text>
+                                        <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Your service review</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 10, marginLeft: 10 }}>
-                                        <Text style={{ color: 'grey', fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.customer_review}</Text>
+                                        <Text style={{ color: darkGray, fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.customer_review}</Text>
                                     </View>
                                 </View>
                             }
@@ -305,31 +334,31 @@ class BookingDetailsScreen extends Component {
 
                         <View style={styles.mainContainer}>
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
-                                <Text style={{ color: 'grey', fontWeight: 'bold', fontSize: 14 }}>Adresse de service</Text>
+                                <Text style={{ color: darkGray, fontWeight: 'bold', fontSize: 14 }}>Service address</Text>
                             </View>
 
                             <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
 
                             <View style={styles.providerDetailsContainer}>
                                 <View style={{ flexDirection: 'column' }}>
-                                    <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
+                                    <Text style={{ color: black, fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                                         {userDetails.username}
                                     </Text>
                                     <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5 }}>
                                         <Image
                                             style={{ height: 15, width: 15, alignSelf: 'center', alignContent: 'flex-start', borderRadius: 100, }}
                                             source={require('../../icons/mobile.png')} />
-                                        <Text style={{ color: 'black', fontSize: 12, color: 'grey', textAlignVertical: 'center', marginLeft: 5 }}>
+                                        <Text style={{ color: black, fontSize: 12, color: darkGray, textAlignVertical: 'center', marginLeft: 5 }}>
                                             {userDetails.mobile}
                                         </Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5, marginRight: 50 }}>
-                                        <Text style={{ fontSize: 12, color: 'grey', textAlignVertical: 'center', }}>
+                                        <Text style={{ fontSize: 12, color: darkGray, textAlignVertical: 'center', }}>
                                             {this.state.bookingDetails.delivery_address}
                                         </Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', marginLeft: 10, marginTop: 5, marginRight: 50 }}>
-                                        <Text style={{ fontSize: 12, color: 'grey', textAlignVertical: 'center', fontWeight: 'bold' }}>
+                                        <Text style={{ fontSize: 12, color: darkGray, textAlignVertical: 'center', fontWeight: 'bold' }}>
                                             {this.state.bookingDetails.createdDate}
                                         </Text>
                                     </View>
@@ -351,19 +380,19 @@ class BookingDetailsScreen extends Component {
                                     'isJobAccepted': false,
                                 })
                             }}>
-                            <Image style={{ width: 20, height: 20, marginLeft: 20 }}
+                            <Image style={{ width: 20, height: 20, marginLeft: 20, tintColor: white }}
                                 source={require('../../icons/chatting.png')} />
-                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
-                                Historique du chat
+                            <Text style={{ color: white, fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
+                                Chat history
                         </Text>
-                            <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
+                            <Image style={{ width: 20, height: 20, marginLeft: 20, tintColor: white, position: "absolute", end: 0, marginRight: 15 }}
                                 source={require('../../icons/right_arrow.png')} />
                         </TouchableOpacity>
 
                         <Modal transparent={true} visible={this.state.isDialogLogoutVisible} animationType='fade'
                             onRequestClose={() => this.changeDialogVisibility(false, "", "", "", "", "")}>
                             <ReviewDialogCustomer style={{
-                                shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                                shadowColor: black, shadowOffset: { width: 0, height: 3 },
                                 shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
                             }}
                                 changeDialogVisibility={this.changeDialogVisibility}
@@ -407,26 +436,26 @@ const styles = StyleSheet.create({
     },
     mainContainer: {
         width: screenWidth,
-        backgroundColor: 'white',
+        backgroundColor: white,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
-        backgroundColor: 'white',
+        backgroundColor: white,
         borderRadius: 2,
         marginTop: 10
     },
     providerDetailContainer: {
         width: screenWidth,
         flexDirection: 'row',
-        backgroundColor: 'white',
+        backgroundColor: white,
         padding: 10,
     },
     providerDetailsContainer: {
         width: screenWidth,
         flexDirection: 'row',
-        backgroundColor: 'white',
+        backgroundColor: white,
         padding: 10,
     },
     chatView: {
@@ -434,11 +463,11 @@ const styles = StyleSheet.create({
         width: screenWidth,
         height: 50,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
-        backgroundColor: 'white',
+        backgroundColor: themeRed,
         borderRadius: 2,
         alignItems: 'center',
         justifyContent: 'flex-start',

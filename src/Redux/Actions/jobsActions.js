@@ -182,7 +182,7 @@ export const getPendingJobRequest = (props, userId, navTo) => {
 
 export const getAllWorkRequestClient = clientId => {
     return dispatch => {
-        fetch(CUSTOMER_BOOKING_HISTORY + clientId)
+        fetch(CUSTOMER_BOOKING_HISTORY + clientId + '/null')
             .then((response) => response.json())
             .then((responseJson) => {
                 let newAllClientDetails = [...responseJson.data];
@@ -217,7 +217,7 @@ export const getAllWorkRequestClient = clientId => {
 
 export const getAllWorkRequestPro = providerId => {
     return dispatch => {
-        fetch(BOOKING_HISTORY + providerId)
+        fetch(BOOKING_HISTORY + providerId + '/null')
             .then((response) => response.json())
             .then((responseJson) => {
                 if (responseJson.result) {
@@ -252,7 +252,6 @@ export const getAllWorkRequestPro = providerId => {
 }
 
 export const getPendingJobRequestProvider = (props, providerId, navTo) => {
-    console.log('pro id', providerId)
     return dispatch => {
         const { navigation } = props;
         let newJobRequestsProviders = [];

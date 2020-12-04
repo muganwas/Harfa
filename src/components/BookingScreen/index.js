@@ -11,7 +11,7 @@ import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
 import { font_size } from '../../Constants/metrics';
-import { colorPrimaryDark, colorPrimary, white, themeRed, black, lightGray, darkGray } from '../../Constants/colors';
+import { colorPrimaryDark, colorPrimary, white, themeRed, black, lightGray, darkGray, colorBg } from '../../Constants/colors';
 
 
 const screenWidth = Dimensions.get('window').width;
@@ -54,7 +54,6 @@ class BookingScreen extends Component {
         const { navigation } = this.props;
         this.getAllBookings();
         navigation.addListener('willFocus', async () => {
-            this.getAllBookings();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
@@ -102,30 +101,32 @@ class BookingScreen extends Component {
             bookingCompleteData: [],
             bookingRejectData: [],
         });
-
+        let bookingCompleteData = [];
+        let bookingRejectData = [];
         const { userInfo: { userDetails } } = this.props;
-        fetch(BOOKING_HISTORY + userDetails.userId)
-            .then((response) => response.json())
-            .then((responseJson) => {
+        fetch(BOOKING_HISTORY + userDetails.userId + '/bookings')
+            .then(response => response.json())
+            .then(responseJson => {
                 if (responseJson.result) {
                     for (let i = 0; i < responseJson.data.length; i++) {
                         if (responseJson.data[i].chat_status == "1") {
                             if (responseJson.data[i].status == "Completed") {
-                                this.state.bookingCompleteData.push(responseJson.data[i]);
+                                bookingCompleteData.push(responseJson.data[i]);
                             }
                             else if (responseJson.data[i].status == "Rejected") {
-                                this.state.bookingRejectData.push(responseJson.data[i]);
+                                bookingRejectData.push(responseJson.data[i]);
                             }
                         }
                         else {
                             if (responseJson.data[i].status == "Rejected") {
-                                this.state.bookingRejectData.push(responseJson.data[i]);
+                                bookingRejectData.push(responseJson.data[i]);
                             }
                         }
                     }
-
                     this.setState({
-                        isLoading: false
+                        isLoading: false,
+                        bookingCompleteData,
+                        bookingRejectData
                     });
                 }
                 else {
@@ -198,7 +199,7 @@ class BookingScreen extends Component {
                     </View>
                 </View>
 
-                <View style={{ flexDirection: 'row', backgroundColor: '#fafad2' }}>
+                <View style={{ flexDirection: 'row', backgroundColor: colorBg, borderTopWidth: 1, borderTopColor: lightGray }}>
                     <Text style={{ color: black, fontSize: 14, fontWeight: 'bold', alignSelf: 'center', textAlignVertical: 'center', marginLeft: 10, }}>
                         {item.service_details.service_name}
                     </Text>

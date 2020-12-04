@@ -8,7 +8,7 @@ import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../ProHamburger';
 import { font_size } from '../../Constants/metrics';
-import { colorPrimary, colorPrimaryDark, colorBg, white, themeRed, black, darkGray, lightGray } from '../../Constants/colors';
+import { colorPrimary, colorPrimaryDark, white, themeRed, black, darkGray, lightGray, colorBg } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/'
@@ -50,7 +50,6 @@ class ProBookingScreen extends Component {
         const { navigation } = this.props;
         this.getAllBookings();
         navigation.addListener('willFocus', async () => {
-            this.getAllBookings();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
@@ -99,29 +98,33 @@ class ProBookingScreen extends Component {
             bookingRejectData: [],
         });
         const { userInfo } = this.props;
+        let bookingCompleteData = [];
+        let bookingRejectData = [];
         if (userInfo && userInfo.providerDetailsFetched) {
             const { providerDetails } = userInfo;
-            fetch(BOOKING_HISTORY + providerDetails.providerId)
-                .then((response) => response.json())
-                .then((responseJson) => {
+            fetch(BOOKING_HISTORY + providerDetails.providerId + '/bookings')
+                .then(response => response.json())
+                .then(responseJson => {
                     if (responseJson.result) {
                         for (let i = 0; i < responseJson.data.length; i++) {
                             if (responseJson.data[i].chat_status == "1") {
                                 if (responseJson.data[i].status == "Completed") {
-                                    this.state.bookingCompleteData.push(responseJson.data[i]);
+                                    bookingCompleteData.push(responseJson.data[i]);
                                 }
                                 else if (responseJson.data[i].status == "Rejected") {
-                                    this.state.bookingRejectData.push(responseJson.data[i]);
+                                    bookingRejectData.push(responseJson.data[i]);
                                 }
                             }
                             else {
                                 if (responseJson.data[i].status == "Rejected") {
-                                    this.state.bookingRejectData.push(responseJson.data[i]);
+                                    bookingRejectData.push(responseJson.data[i]);
                                 }
                             }
                         }
                         this.setState({
-                            isLoading: false
+                            isLoading: false,
+                            bookingCompleteData,
+                            bookingRejectData
                         })
                     }
                     else {
@@ -143,7 +146,7 @@ class ProBookingScreen extends Component {
     }
 
     onPageSelected = event => {
-        currentPage = event.nativeEvent.position;
+        const currentPage = event.nativeEvent.position;
         this.setState({ currentPage });
     };
 
@@ -197,7 +200,7 @@ class ProBookingScreen extends Component {
                     </View>
                 </View>
 
-                <View style={{ flexDirection: 'row', backgroundColor: '#fafad2' }}>
+                <View style={{ flexDirection: 'row', backgroundColor: colorBg, borderTopWidth: 1, borderTopColor: lightGray }}>
                     <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', alignSelf: 'center', marginLeft: 10, }}>
                         {item.service_details.service_name}
                     </Text>
