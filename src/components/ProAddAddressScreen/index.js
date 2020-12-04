@@ -7,7 +7,7 @@ import { MAPS_API_KEY } from 'react-native-dotenv';
 import { updateProviderDetails } from '../../Redux/Actions/userActions';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
-import { colorPrimary, colorBg, lightGray, colorYellow, white } from '../../Constants/colors';
+import { colorPrimary, colorBg, themeRed, white, black, colorGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const USER_INFO_UPDATE = Config.baseURL + "employee/";
@@ -380,34 +380,31 @@ class ProAddAddressScreen extends Component {
     render() {
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder/>
-
                 <View style={styles.header}>
                     <View style={{ flex: 1, flexDirection: 'row' }}>
                         <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', 
                             justifyContent: 'center', }}
                             onPress={() => this.props.navigation.goBack()}>
-                            <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
+                            <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
                                 source={require('../../icons/arrow_back.png')} />
                         </TouchableOpacity>
-
-                        <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-                            Ma position
+                        <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
+                            My position
                         </Text>
                     </View>
                 </View>
 
                 <View style={styles.mainContainer}>
-                    <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', alignSelf: 'flex-start', }}>
-                        Ma position
+                    <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'flex-start', }}>
+                        Current position
                     </Text>
 
                     <View style={{
-                        width: screenWidth - 40, flexDirection: 'row', backgroundColor: 'white',
-                        alignContent: 'center', padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+                        width: screenWidth - 40, flexDirection: 'row', backgroundColor: themeRed,
+                        alignContent: 'center', padding: 20, shadowColor: black, shadowOffset: { width: 0, height: 3 },
                         shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, marginTop: 15}}>
-                        <Text style={{ color: lightGray, fontWeight: 'bold', fontSize: 16 }}>
+                        <Text style={{ color: white, fontWeight: 'bold', fontSize: 16 }}>
                             {this.state.address}
                         </Text>
                     </View>
@@ -417,19 +414,10 @@ class ProAddAddressScreen extends Component {
                             onGoBack: this.getDataFromAddAddressScreen,
                         })}>
                         <Text style={styles.text}>
-                            Changer de lieu
+                            Change location
                         </Text>
                     </TouchableOpacity>
                 </View>
-
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
                  <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -465,8 +453,8 @@ const styles = StyleSheet.create({
         paddingRight: 20,
         paddingTop: 5,
         paddingBottom: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
@@ -479,24 +467,26 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         width: screenWidth - 100,
-        paddingTop: 10,
-        backgroundColor: '#000000',
-        paddingBottom: 10,
-        paddingLeft: 20,
-        paddingRight: 20,
+        padding: 15,
+        backgroundColor: white,
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         borderRadius: 5,
-        borderColor: colorYellow,
-        borderWidth: 2,
         marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
+        alignItems: 'center',
         marginTop: 10,
     },
     text: {
         fontSize: 16,
-        color: 'white',
+        fontWeight: 'bold',
+        color: black,
         textAlign: 'center',
-        justifyContent: 'center',
+        alignSelf: 'center'
     },
     loaderStyle: {
         position: 'absolute',
