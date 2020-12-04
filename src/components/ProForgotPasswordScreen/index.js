@@ -161,13 +161,13 @@ export default class ProForgotPasswordScreen extends Component {
                             </ShakingText>
 
                             <View style={{ padding: 5, }}>
-                                <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 17, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
+                                <Text style={{ color: black, fontWeight: 'bold', fontSize: 17, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
                                     Recover Your Password
                                 </Text>
                             </View>
 
                             <View style={{ padding: 5, width: screenWidth-50,  }}>
-                                <Text style={{ color: 'black', fontSize: 13, marginBottom: 5, textAlign:'center' }}>
+                                <Text style={{ color: black, fontSize: 13, marginBottom: 5, textAlign:'center' }}>
                                     Please enter your registered Email address to access your pin account
                                 </Text>
                             </View>
@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 5,
-        backgroundColor: 'white',
-        shadowColor: '#000',
+        backgroundColor: white,
+        shadowColor: black,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
@@ -242,23 +242,27 @@ const styles = StyleSheet.create({
         marginBottom: 5
     },
     buttonContainer: {
-        width: 200,
+        width: 175,
+        height: 45,
+        backgroundColor: themeRed,
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingTop: 10,
-        backgroundColor: '#000000',
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: themeRed,
-        borderWidth: 2,
-        marginBottom: 10,
         textAlign: 'center',
         justifyContent: 'center',
-        marginTop: 15,
+        marginTop: 10,
     },
     text: {
         fontSize: 16,
-        color: 'white',
+        color: white,
+        fontWeight: 'bold',
         textAlign: 'center',
         justifyContent: 'center',
     },

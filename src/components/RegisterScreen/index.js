@@ -287,9 +287,9 @@ class RegisterScreen extends Component {
           else if (error.code === 'auth/invalid-email')
             this.setState({ error: 'Your email address is invalid!', isLoading: false });
           else if (error.code === 'auth/weak-password')
-            this.setState({ error: 'Your password is too weak', isLoading: false  });
-          else 
-            this.setState({ error: error.message, isLoading: false});
+            this.setState({ error: 'Your password is too weak', isLoading: false });
+          else
+            this.setState({ error: error.message, isLoading: false });
         });
     }
     else {
@@ -425,10 +425,10 @@ class RegisterScreen extends Component {
                     marginBottom: 10,
                   }}>
                   <View style={styles.buttonPrimaryDark}>
-                    <Text style={[styles.text, {fontWeight: 'bold'}]}>Account Type</Text>
+                    <Text style={[styles.text, { fontWeight: 'bold' }]}>Account Type</Text>
                   </View>
                   <View style={styles.buttonGreen}>
-                    <Text style={[styles.text, {color: black, fontWeight: 'bold'}]}>{this.state.accountType}</Text>
+                    <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>{this.state.accountType}</Text>
                   </View>
                 </View>
               </View>
@@ -577,23 +577,27 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   buttonContainer: {
-    width: 200,
+    width: 175,
+    height: 45,
+    backgroundColor: themeRed,
+    shadowColor: black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 5,
     paddingTop: 10,
-    backgroundColor: '#000000',
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 5,
-    borderColor: themeRed,
-    borderWidth: 2,
-    marginBottom: 10,
     textAlign: 'center',
     justifyContent: 'center',
-    marginTop: 15,
+    marginTop: 10,
   },
   text: {
     fontSize: 16,
-    color: 'white',
+    color: white,
+    fontWeight: 'bold',
     textAlign: 'center',
     justifyContent: 'center',
   },

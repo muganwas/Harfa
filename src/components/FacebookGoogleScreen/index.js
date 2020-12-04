@@ -29,9 +29,10 @@ import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
 import {
     colorBg,
-    colorFg,
+    themeRed,
     black,
     white,
+    lightGray,
 } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -477,7 +478,7 @@ class FacebookGoogleScreen extends Component {
 
                             <TouchableOpacity style={{ width: screenWidth - 50, marginTop: 10 }}
                                 onPress={() => this.props.navigation.navigate("ForgotPassword")}>
-                                <Text style={{ color: white, fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
+                                <Text style={{ color: black, fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
                                     Forgot password
                                 </Text>
                             </TouchableOpacity>
@@ -565,7 +566,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colorBg
+        backgroundColor: lightGray
     },
     logincontainer: {
         width: screenWidth - 15,
@@ -574,8 +575,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 20,
         marginBottom: 20,
-        backgroundColor: colorFg,
-        shadowColor: '#000',
+        backgroundColor: white,
+        shadowColor: black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.5,
         shadowRadius: 5,
@@ -606,14 +607,17 @@ const styles = StyleSheet.create({
     buttonContainer: {
         width: 175,
         height: 45,
-        backgroundColor: black,
+        backgroundColor: themeRed,
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingTop: 10,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: white,
-        borderWidth: 2,
         textAlign: 'center',
         justifyContent: 'center',
         marginTop: 10,

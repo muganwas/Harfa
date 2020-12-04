@@ -17,7 +17,7 @@ import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../../Redux/
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import { updateProviderDetails } from '../../Redux/Actions/userActions';
-import { colorFg, colorBg, black, white } from '../../Constants/colors';
+import { themeRed, colorBg, black, white, lightGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
@@ -478,7 +478,6 @@ class FacebookGoogleScreen extends Component {
                         </View>
 
                         <View style={styles.logincontainer}>
-
                             <ShakingText style={{ color: 'red', fontWeight: 'bold', marginBottom: 10 }}>
                                 {this.state.error}
                             </ShakingText>
@@ -508,7 +507,7 @@ class FacebookGoogleScreen extends Component {
 
                             <TouchableOpacity style={{ width: screenWidth - 50, marginTop: 10 }}
                                 onPress={() => this.props.navigation.navigate("ProForgotPassword")}>
-                                <Text style={{ color: white, fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
+                                <Text style={{ color: black, fontWeight: 'bold', fontSize: 13, marginBottom: 5, alignItems: 'flex-end', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
                                     Forgot Password
                                 </Text>
                             </TouchableOpacity>
@@ -522,7 +521,7 @@ class FacebookGoogleScreen extends Component {
                         </View>
 
                         <View>
-                            <Text style={{ color: 'black', fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ color: black, fontSize: 13, marginBottom: 5, alignItems: 'center', justifyContent: 'center' }}>
                                 Or Login With
                             </Text>
                         </View>
@@ -560,15 +559,6 @@ class FacebookGoogleScreen extends Component {
                     </View>
 
                 </KeyboardAwareScrollView>
-
-                {/* {this.state.isLoading && (
-                    <View style={styles.loaderStyle}>
-                        <ActivityIndicator
-                            style={{ height: 80 }}
-                            color="#C00"
-                            size="large" />
-                    </View>
-                )} */}
                 <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
                     onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
                     <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
@@ -606,7 +596,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colorBg
+        backgroundColor: lightGray
     },
     logincontainer: {
         width: screenWidth - 15,
@@ -615,8 +605,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 20,
         marginBottom: 20,
-        backgroundColor: colorFg,
-        shadowColor: '#000',
+        backgroundColor: white,
+        shadowColor: black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.5,
         shadowRadius: 5,
@@ -636,9 +626,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 5,
-        backgroundColor: 'white',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        backgroundColor: white,
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
@@ -647,14 +637,17 @@ const styles = StyleSheet.create({
     buttonContainer: {
         width: 175,
         height: 45,
-        backgroundColor: black,
+        backgroundColor: themeRed,
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingTop: 10,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderColor: white,
-        borderWidth: 2,
         textAlign: 'center',
         justifyContent: 'center',
         marginTop: 10,
