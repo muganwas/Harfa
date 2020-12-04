@@ -131,8 +131,8 @@ export default class SelectAddressScreen extends Component {
               <Image style={{ width: 20, tintColor: black, height: 20, alignSelf: 'center' }}
                 source={require('../../icons/arrow_back.png')} />
             </TouchableOpacity>
-            <Text style={{ color: 'white', fontWeight: 'bold', alignSelf: 'center', marginLeft: 1 }}>
-
+            <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
+              Update Location
             </Text>
           </View>
         </View>
@@ -201,13 +201,12 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   itemHeader: {
-    flex: 1,
     width: screenWidth,
     height: 50,
     flexDirection: 'row',
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    backgroundColor: white,
+    shadowColor: black,
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,

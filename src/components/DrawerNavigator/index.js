@@ -27,6 +27,7 @@ import RegisterScreen from '../RegisterScreen';
 import ProRegisterScreen from '../ProRegisterScreen';
 import ProRegisterFBScreen from '../ProRegisterFBScreen';
 import ForgotPasswordScreen from '../ForgotPasswordScreen';
+import SelectAddressScreen from '../SelectAddressScreen';
 import ProForgotPasswordScreen from '../ProForgotPasswordScreen';
 
 const MyDrawerNavigator = createDrawerNavigator({
@@ -58,6 +59,7 @@ const MyDrawerNavigator = createDrawerNavigator({
     ContactUs: { screen: ContactUsScreen },
     AllMessage: { screen: AllMessageScreen },
     Notifications: { screen: NotificationsScreen },
+    SelectAddress: { screen: SelectAddressScreen }
 },
     {
         initialRouteName: 'Dashboard',

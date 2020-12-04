@@ -29,6 +29,7 @@ import ProServiceSelectScreen from '../ProServiceSelectScreen';
 import DrawerNavigator from '../DrawerNavigator';
 import RegisterScreen from '../RegisterScreen';
 import ForgotPasswordScreen from '../ForgotPasswordScreen';
+import SelectAddressScreen from '../SelectAddressScreen'
 
 const ProMyDrawerNavigator = createDrawerNavigator({
     FacebookGoogle: { screen: FacebookGoogleScreen },
@@ -59,6 +60,7 @@ const ProMyDrawerNavigator = createDrawerNavigator({
     Regisger: { screen: RegisterScreen },
     ForgotPassword: { screen: ForgotPasswordScreen },
     ProServiceSelect: { screen: ProServiceSelectScreen },
+    SelectAddress: { screen: SelectAddressScreen }
 },
     {
         initialRouteName: 'ProDashboard',
