@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
     View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
-    Dimensions, Alert, Platform, BackHandler
+    Dimensions, Platform, BackHandler
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
 import ShakingText from 'react-native-shaking-text';
@@ -27,8 +27,8 @@ import firebaseAuth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
+import DialogComponent from '../DialogComponent';
 import {
-    colorBg,
     themeRed,
     black,
     white,
@@ -69,8 +69,16 @@ class FacebookGoogleScreen extends Component {
             isLoading: false,
             isErrorToast: '',
             firebaseId: '',
-            loginType: null
+            loginType: null,
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
         }
+        this.leftButtonActon = null;
+        this.rightButtonAction = null;
     }
 
     componentDidMount() {
@@ -119,7 +127,7 @@ class FacebookGoogleScreen extends Component {
                     }
                 ).catch(err => {
                     console.log('auth error --', err)
-                    simpleToast.show('Could not authenticate, try again later', simpleToast.SHORT);
+                    this.setState({error: 'Could not authenticate, try again later'})
                 })
             }
         },
@@ -204,44 +212,58 @@ class FacebookGoogleScreen extends Component {
                     }
                     else {
                         console.log("Response Else ");
+                        this.leftButtonActon = () => {
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        }
+                        this.rightButtonAction = () => {
+                            this.fbGoogleLoginCustomerTask(name, email, image);
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        }
                         this.setState({
                             isLoading: false,
-                        })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.data.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
-                                },
-                            ]
-                        );
+                            showDialog: true,
+                            dialogType: 'fb',
+                            dialogTitle: 'OOPS!',
+                            dialogDesc: responseJson.data.message,
+                            dialogLeftText: 'Cancel',
+                            dialogRightText: 'Retry'
+                        });
                     }
                 })
                 .catch((error) => {
                     console.log("Error :" + error);
+                    this.leftButtonActon = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.rightButtonAction = () => {
+                        this.fbGoogleLoginCustomerTask(name, email, image);
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
                     this.setState({
                         isLoading: false,
-                    })
-                    Alert.alert(
-                        "OOPS !",
-                        error.message,
-                        [
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retry',
-                                onPress: () => this.fbGoogleLoginCustomerTask(name, email, image),
-                            },
-                        ]
-                    );
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: error.message,
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Retry'
+                    });
                 })
                 .done();
         }
@@ -333,74 +355,100 @@ class FacebookGoogleScreen extends Component {
                             }
                             else {
                                 console.log("Response Else ");
+                                this.leftButtonActon = () => {
+                                    this.setState({
+                                        isLoading: false,
+                                        showDialog: false,
+                                        dialogType: null
+                                    });
+                                }
+                                this.rightButtonAction = () => {
+                                    this.this.authenticateTask();
+                                    this.setState({
+                                        isLoading: false,
+                                        showDialog: false,
+                                        dialogType: null
+                                    });
+                                }
                                 this.setState({
                                     isLoading: false,
-                                })
-                                Alert.alert(
-                                    "OOPS !",
-                                    responseJson.message,
-                                    [
-                                        {
-                                            text: 'Annuler',
-                                            onPress: () => console.log('Cancel Pressed'),
-                                        },
-                                        {
-                                            text: 'Retenter',
-                                            onPress: () => this.authenticateTask(),
-                                        },
-                                    ]
-                                );
+                                    showDialog: true,
+                                    dialogType: 'fb',
+                                    dialogTitle: 'OOPS!',
+                                    dialogDesc: responseJson.message,
+                                    dialogLeftText: 'Cancel',
+                                    dialogRightText: 'Retry'
+                                });
                             }
                         })
                         .catch(error => {
                             console.log('API auth error --', error);
+                            this.leftButtonActon = () => {
+                                this.setState({
+                                    isLoading: false,
+                                    showDialog: false,
+                                    dialogType: null
+                                });
+                            }
+                            this.rightButtonAction = () => {
+                                this.authenticateTask();
+                                this.setState({
+                                    isLoading: false,
+                                    showDialog: false,
+                                    dialogType: null
+                                });
+                            }
                             this.setState({
                                 isLoading: false,
+                                showDialog: true,
+                                dialogType: 'fb',
+                                dialogTitle: 'OOPS!',
+                                dialogDesc: "An error has occurred, please try again later.",
+                                dialogLeftText: 'Cancel',
+                                dialogRightText: 'Retry'
                             });
-                            Alert.alert(
-                                "OOPS !",
-                                "Une erreur s'est produite, veuillez réessayer plus tard",
-                                [
-                                    {
-                                        text: 'Annuler',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retenter',
-                                        onPress: () => this.authenticateTask(),
-                                    },
-                                ]
-                            );
                         })
                         .done();
                 }
 
             }).catch(error => {
                 if (error.code === 'auth/user-not-found') {
-                    //simpleToast.show("You've not registered yet, please register first.");
-                    Alert.alert(
-                        null,
-                        "You've not registered yet, please register first",
-                        [
-                            {
-                                text: 'Ok',
-                                onPress: () => console.log('Cancel Pressed'),
-                            }
-                        ]
-                    );
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.setState({
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: "You've not registered yet, please register first",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'OK'
+                    });
                 }
                 else if (error.code === 'auth/wrong-password') {
-                    //simpleToast.show("You've not registered yet, please register first.");
-                    Alert.alert(
-                        null,
-                        "You entered a wrong password!",
-                        [
-                            {
-                                text: 'Ok',
-                                onPress: () => console.log('Cancel Pressed'),
-                            }
-                        ]
-                    );
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.setState({
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: "You entered a wrong password!",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Retry'
+                    });
                 }
                 else {
                     simpleToast.show("Something went wrong, try again later", simpleToast.SHORT);
@@ -421,10 +469,27 @@ class FacebookGoogleScreen extends Component {
         })
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+
     render() {
+        const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
+                <DialogComponent
+                    isDialogVisible={showDialog && dialogType !== null}
+                    transparent={true}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.leftButtonActon}
+                    rightButtonAction={this.rightButtonAction}
+                    isLoading={false}
+                    titleText={dialogTitle}
+                    descText={dialogDesc}
+                    leftButtonText={dialogLeftText}
+                    rightButtonText={dialogRightText}
+                />
                 <KeyboardAwareScrollView
                     contentContainerStyle={{
                         justifyContent: 'center',
@@ -433,7 +498,6 @@ class FacebookGoogleScreen extends Component {
                     }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>
-
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ height: 200, width: screenWidth, backgroundColor: white, justifyContent: 'center', alignItems: 'center' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15, }}

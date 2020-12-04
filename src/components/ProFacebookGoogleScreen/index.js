@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
-    Dimensions, Alert, Platform, BackHandler
+    Dimensions, Platform, BackHandler
 } from 'react-native';
 import { connect } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview'
@@ -16,8 +16,9 @@ import { GoogleSignin, statusCodes } from '@react-native-community/google-signin
 import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
+import DialogComponent from '../DialogComponent';
 import { updateProviderDetails } from '../../Redux/Actions/userActions';
-import { themeRed, colorBg, black, white, lightGray } from '../../Constants/colors';
+import { themeRed, black, white, lightGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const CHECK_EMAIL = Config.baseURL + "employee/check/email";
@@ -53,8 +54,16 @@ class FacebookGoogleScreen extends Component {
             isLoading: false,
             isErrorToast: '',
             firebaseId: '',
-            loginType: null
+            loginType: null,
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
         }
+        this.leftButtonActon = null;
+        this.rightButtonAction = null;
     }
 
     componentDidMount() {
@@ -225,7 +234,31 @@ class FacebookGoogleScreen extends Component {
                             });
                         }
                         else {
-                            Alert.alert(
+                            this.leftButtonActon = () => {
+                                this.setState({
+                                    isLoading: false,
+                                    showDialog: false,
+                                    dialogType: null
+                                });
+                            };
+                            this.rightButtonAction = () => {
+                                this.fbGmailLoginTask(name, email, image);
+                                this.setState({
+                                    isLoading: false,
+                                    showDialog: false,
+                                    dialogType: null
+                                });
+                            }
+                            this.setState({
+                                isLoading: false,
+                                showDialog: true,
+                                dialogType: 'fb',
+                                dialogTitle: 'OOPS!',
+                                dialogDesc: responseJson.message,
+                                dialogLeftText: 'Cancel',
+                                dialogRightText: 'Retry'
+                            });
+                            /*Alert.alert(
                                 "OOPS !",
                                 responseJson.message,
                                 [
@@ -238,16 +271,37 @@ class FacebookGoogleScreen extends Component {
                                         onPress: () => this.fbGmailLoginTask(name, email, image),
                                     },
                                 ]
-                            );
+                            );*/
                         }
                     }
                 })
                 .catch((error) => {
                     console.log("Error :" + error);
+                    this.leftButtonActon = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    };
+                    this.rightButtonAction = () => {
+                        this.fbGmailLoginTask(name, email, image);
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
                     this.setState({
                         isLoading: false,
-                    })
-                    Alert.alert(
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: error.message,
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Retry'
+                    });
+                    /*Alert.alert(
                         "OOPS !",
                         error.message,
                         [
@@ -260,7 +314,7 @@ class FacebookGoogleScreen extends Component {
                                 onPress: () => this.fbGmailLoginTask(name, email, image),
                             },
                         ]
-                    );
+                    );*/
                 })
                 .done();
         }
@@ -361,44 +415,58 @@ class FacebookGoogleScreen extends Component {
                                 fetchProvidersJobRequests(this.props, id, "ProHome");
                             }
                             else {
+                                this.leftButtonActon = () => {
+                                    this.setState({
+                                        isLoading: false,
+                                        showDialog: false,
+                                        dialogType: null
+                                    });
+                                };
+                                this.rightButtonAction = () => {
+                                    this.authenticateProTask();
+                                    this.setState({
+                                        isLoading: false,
+                                        showDialog: false,
+                                        dialogType: null
+                                    });
+                                }
                                 this.setState({
                                     isLoading: false,
-                                })
-                                Alert.alert(
-                                    "OOPS !",
-                                    responseJson.message,
-                                    [
-                                        {
-                                            text: 'Cancel',
-                                            onPress: () => console.log('Cancel Pressed'),
-                                        },
-                                        {
-                                            text: 'Retry',
-                                            onPress: () => this.authenticateProTask(),
-                                        },
-                                    ]
-                                );
+                                    showDialog: true,
+                                    dialogType: 'fb',
+                                    dialogTitle: 'OOPS!',
+                                    dialogDesc: responseJson.message,
+                                    dialogLeftText: 'Cancel',
+                                    dialogRightText: 'Retry'
+                                });
                             }
                         })
                         .catch((error) => {
                             console.log("Error :" + error);
+                            this.leftButtonActon = () => {
+                                this.setState({
+                                    isLoading: false,
+                                    showDialog: false,
+                                    dialogType: null
+                                });
+                            };
+                            this.rightButtonAction = () => {
+                                this.authenticateProTask();
+                                this.setState({
+                                    isLoading: false,
+                                    showDialog: false,
+                                    dialogType: null
+                                });
+                            }
                             this.setState({
                                 isLoading: false,
-                            })
-                            Alert.alert(
-                                "OOPS !",
-                                error.message,
-                                [
-                                    {
-                                        text: 'Cancel',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retry',
-                                        onPress: () => this.authenticateProTask(),
-                                    },
-                                ]
-                            );
+                                showDialog: true,
+                                dialogType: 'fb',
+                                dialogTitle: 'OOPS!',
+                                dialogDesc: error.message,
+                                dialogLeftText: 'Cancel',
+                                dialogRightText: 'Retry'
+                            });
                         })
                         .done();
                 }
@@ -408,30 +476,42 @@ class FacebookGoogleScreen extends Component {
                 }
             }).catch(error => {
                 if (error.code === 'auth/user-not-found') {
-                    //simpleToast.show("You've not registered yet, please register first.");
-                    Alert.alert(
-                        null,
-                        "You've not registered yet, please register first",
-                        [
-                            {
-                                text: 'Ok',
-                                onPress: () => console.log('Cancel Pressed'),
-                            }
-                        ]
-                    );
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.setState({
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: "You've not registered yet, please register first",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Ok'
+                    });
                 }
                 else if (error.code === 'auth/wrong-password') {
-                    //simpleToast.show("You've not registered yet, please register first.");
-                    Alert.alert(
-                        null,
-                        "You entered a wrong password!",
-                        [
-                            {
-                                text: 'Ok',
-                                onPress: () => console.log('Cancel Pressed'),
-                            }
-                        ]
-                    );
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.setState({
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: "You entered a wrong password!",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Ok'
+                    });
                 }
                 else {
                     simpleToast.show("Something went wrong, try again later", simpleToast.SHORT);
@@ -453,12 +533,27 @@ class FacebookGoogleScreen extends Component {
 
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+
     render() {
+        const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
+                <DialogComponent
+                    isDialogVisible={showDialog && dialogType !== null}
+                    transparent={true}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.leftButtonActon}
+                    rightButtonAction={this.rightButtonAction}
+                    isLoading={false}
+                    titleText={dialogTitle}
+                    descText={dialogDesc}
+                    leftButtonText={dialogLeftText}
+                    rightButtonText={dialogRightText}
+                />
                 <KeyboardAwareScrollView
                     contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
                     keyboardShouldPersistTaps='handled'

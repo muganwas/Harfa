@@ -36,7 +36,7 @@ const DialogComponent = ({
                 <View style={[styles.modal, { width }]}>
                     <View style={styles.textView}>
                         <Text style={[styles.text, { fontSize: 20, color: white }]}>{titleText}</Text>
-                        <Text style={[styles.text, { color: white }]}>{descText}</Text>
+                        <Text style={[styles.text, { color: white, textAlign: 'center' }]}>{descText}</Text>
                     </View>
                     <View style={styles.buttonView}>
                         { leftButtonAction && <TouchableOpacity style={styles.touchableHighlight} onPress={leftButtonAction}

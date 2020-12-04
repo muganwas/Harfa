@@ -1,29 +1,33 @@
 
 import React, { Component } from 'react';
-import {View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
-    Dimensions, ActivityIndicator, Alert, Platform } from 'react-native';
+import {
+    View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity,
+    Dimensions, ActivityIndicator, Platform
+} from 'react-native';
 import ShakingText from 'react-native-shaking-text';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
+import DialogComponent from '../DialogComponent';
 import Config from '../Config';
 import { black, white, lightGray, themeRed } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const FORGOT_PASSWORD = Config.baseURL+"employee/forgot_password/email";
+const FORGOT_PASSWORD = Config.baseURL + "employee/forgot_password/email";
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
     return (
         Platform.OS === 'ios' ?
-        <View style={{
-            width: "100%",
-            height: STATUS_BAR_HEIGHT,
-            backgroundColor: white}}>
-            <StatusBar
-                barStyle="dark-content"/>
-        </View>
-        :
-        <StatusBar barStyle='dark-content' backgroundColor={white} /> 
+            <View style={{
+                width: "100%",
+                height: STATUS_BAR_HEIGHT,
+                backgroundColor: white
+            }}>
+                <StatusBar
+                    barStyle="dark-content" />
+            </View>
+            :
+            <StatusBar barStyle='dark-content' backgroundColor={white} />
     );
 }
 
@@ -35,11 +39,19 @@ export default class ProForgotPasswordScreen extends Component {
         this.state = {
             email: '',
             isLoading: false,
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
         }
+        this.leftButtonActon = null;
+        this.rightButtonAction = null;
     }
 
     checkValidation = () => {
-       if (this.state.email == '') {
+        if (this.state.email == '') {
             this.setState({ error: 'Enter valid email' })
         }
         else {
@@ -70,78 +82,110 @@ export default class ProForgotPasswordScreen extends Component {
             .then((responseJson) => {
                 console.log("Response Forgot" + JSON.stringify(responseJson));
                 if (responseJson.result) {
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
                     this.setState({
                         isLoading: false,
-                    })
-
-                    Alert.alert(  
-                        "Congratulations !",  
-                        "Your password is sent to your registered Email address",  
-                        [  
-                        //   {  
-                        //     text: 'Cancel',  
-                        //     onPress: () => console.log('Cancel Pressed'),    
-                        //   },  
-                          {
-                            text: 'Ok', 
-                            onPress: () => this.props.navigation.goBack(),
-                          },  
-                        ]  
-                    );  
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'Congratulations!',
+                        dialogDesc: "Your password is sent to your registered Email address",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Ok'
+                    });
                 }
                 else {
                     console.log("Response Else ");
+                    this.leftButtonActon = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    };
+                    this.rightButtonAction = () => {
+                        this.forgotPasswordTask();
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
                     this.setState({
                         isLoading: false,
-                    })  
-                    Alert.alert(  
-                        "OOPS !",  
-                        responseJson.message,  
-                        [  
-                          {  
-                            text: 'Cancel',  
-                            onPress: () => console.log('Cancel Pressed'),    
-                          },  
-                          {
-                            text: 'Retry', 
-                            onPress: () => this.forgotPasswordTask(),
-                          },  
-                        ]  
-                    );  
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'Congratulations!',
+                        dialogDesc: "Your password is sent to your registered Email address",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Retry'
+                    });
                 }
             })
             .catch((error) => {
                 console.log("Error :" + error);
+                this.leftButtonActon = () => {
+                    this.setState({
+                        isLoading: false,
+                        showDialog: false,
+                        dialogType: null
+                    });
+                };
+                this.rightButtonAction = () => {
+                    this.forgotPasswordTask();
+                    this.setState({
+                        isLoading: false,
+                        showDialog: false,
+                        dialogType: null
+                    });
+                }
                 this.setState({
                     isLoading: false,
-                })
-                Alert.alert(  
-                    "OOPS !",  
-                    "Something went wrong, Try again later",  
-                    [  
-                      {  
-                        text: 'Cancel',  
-                        onPress: () => console.log('Cancel Pressed'),  
-                      },  
-                      {
-                        text: 'Retry', 
-                        onPress: () => this.forgotPasswordTask(),
-                      },  
-                    ]  
-                );  
+                    showDialog: true,
+                    dialogType: 'fb',
+                    dialogTitle: 'OOPS!',
+                    dialogDesc: "Something went wrong, Try again later",
+                    dialogLeftText: 'Cancel',
+                    dialogRightText: 'Retry'
+                });
             })
             .done()
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+
     render() {
+        const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
         return (
             <View style={styles.container}>
-                <StatusBarPlaceHolder/>
-                <KeyboardAwareScrollView contentContainerStyle={{justifyContent: 'center', alignItems: 'center',
-                    alwaysBounceVertical: true}}
+                <StatusBarPlaceHolder />
+                <DialogComponent
+                    isDialogVisible={showDialog && dialogType !== null}
+                    transparent={true}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.leftButtonActon}
+                    rightButtonAction={this.rightButtonAction}
+                    isLoading={false}
+                    titleText={dialogTitle}
+                    descText={dialogDesc}
+                    leftButtonText={dialogLeftText}
+                    rightButtonText={dialogRightText}
+                />
+                <KeyboardAwareScrollView contentContainerStyle={{
+                    justifyContent: 'center', alignItems: 'center',
+                    alwaysBounceVertical: true
+                }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>
-                         
+
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ height: 200, width: screenWidth, backgroundColor: white, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
                             <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'flex-start', justifyContent: 'center', marginLeft: 5, marginTop: 15, }}
@@ -166,19 +210,19 @@ export default class ProForgotPasswordScreen extends Component {
                                 </Text>
                             </View>
 
-                            <View style={{ padding: 5, width: screenWidth-50,  }}>
-                                <Text style={{ color: black, fontSize: 13, marginBottom: 5, textAlign:'center' }}>
+                            <View style={{ padding: 5, width: screenWidth - 50, }}>
+                                <Text style={{ color: black, fontSize: 13, marginBottom: 5, textAlign: 'center' }}>
                                     Please enter your registered Email address to access your pin account
                                 </Text>
                             </View>
 
-                            <View style={[styles.textInputView, {marginTop: 15}]}>
+                            <View style={[styles.textInputView, { marginTop: 15 }]}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../../icons/email.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
                                     placeholder='Email'
-                                    onChangeText={(emailInput) => this.setState({email: emailInput})}>
+                                    onChangeText={(emailInput) => this.setState({ email: emailInput })}>
                                 </TextInput>
                             </View>
 
