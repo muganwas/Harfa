@@ -10,7 +10,7 @@ import ReviewDialog from '../ReviewDialog';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
 import { setSelectedJobRequest } from '../../Redux/Actions/jobsActions';
-import { colorPrimary, colorBg, white, black, lightGray, darkGray, colorGray, themeRed } from '../../Constants/colors';
+import { colorPrimary, colorBg, white, black, lightGray, darkGray, themeRed } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -54,10 +54,28 @@ class ProBookingDetailsScreen extends Component {
     componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
+            this.init(this.props);
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+    }
+
+    init = props => {
+
+        this.setState({
+            isLoading: false,
+            isErrorToast: false,
+            bookingDetails: props.navigation.state.params.bookingDetails,
+            isDialogLogoutVisible: false,
+            mainId: '',
+            fcm_id: props.navigation.state.params.bookingDetails.user_details.fcm_id,
+            username: props.navigation.state.params.bookingDetails.user_details.username,
+            customer_rating: props.navigation.state.params.bookingDetails.customer_rating,
+            customer_review: props.navigation.state.params.bookingDetails.customer_review,
+            employee_rating: props.navigation.state.params.bookingDetails.employee_rating,
+            employee_review: props.navigation.state.params.bookingDetails.employee_review
         });
     }
 
@@ -197,7 +215,7 @@ class ProBookingDetailsScreen extends Component {
                 }}>
                     <View style={{ flex: 1, flexDirection: 'row', }}>
                         <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
-                            onPress={() => navigation.navigate('ProBooking')}>
+                            onPress={() => navigation.navigate('ProBooking', {from: 'detailsScreen'})}>
                             <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
                                 source={require('../../icons/arrow_back.png')} />
                         </TouchableOpacity>

@@ -55,10 +55,27 @@ class BookingDetailsScreen extends Component {
     componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
+            this.init(this.props)
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
         });
         navigation.addListener('willBlur', () => {
             BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+    }
+
+    init = props => {
+        this.setState({
+            isLoading: false,
+            isErrorToast: false,
+            bookingDetails: props.navigation.state.params.bookingDetails,
+            isDialogLogoutVisible: false,
+            mainId: '',
+            username: props.navigation.state.params.bookingDetails.employee_details.username,
+            fcm_id: props.navigation.state.params.bookingDetails.employee_details.fcm_id,
+            customer_rating: props.navigation.state.params.bookingDetails.customer_rating,
+            customer_review: props.navigation.state.params.bookingDetails.customer_review,
+            employee_rating: props.navigation.state.params.bookingDetails.employee_rating,
+            employee_review: props.navigation.state.params.bookingDetails.employee_review
         });
     }
 
@@ -192,7 +209,7 @@ class BookingDetailsScreen extends Component {
                 }}>
                     <View style={{ flex: 1, flexDirection: 'row', }}>
                         <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
-                            onPress={() => navigation.navigate('Booking')}>
+                            onPress={() => navigation.navigate('Booking', {from: "detailsScreen"})}>
                             <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
                                 source={require('../../icons/arrow_back.png')} />
                         </TouchableOpacity>

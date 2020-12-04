@@ -54,6 +54,9 @@ class BookingScreen extends Component {
         const { navigation } = this.props;
         this.getAllBookings();
         navigation.addListener('willFocus', async () => {
+            const from = navigation.getParam('from');
+            if (from !== 'detailsScreen')
+                this.getAllBookings();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {

@@ -50,6 +50,9 @@ class ProBookingScreen extends Component {
         const { navigation } = this.props;
         this.getAllBookings();
         navigation.addListener('willFocus', async () => {
+            const from = navigation.getParam('from');
+            if (from !== 'detailsScreen')
+                this.getAllBookings();
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
@@ -169,7 +172,8 @@ class ProBookingScreen extends Component {
         return (
             <TouchableOpacity
                 key={index}
-                style={{flexDirection: 'column', backgroundColor: white, shadowColor: black,
+                style={{
+                    flexDirection: 'column', backgroundColor: white, shadowColor: black,
                     shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, marginBottom: 7
                 }}
                 onPress={() => this.props.navigation.navigate("ProBookingDetails", {
@@ -250,7 +254,7 @@ class ProBookingScreen extends Component {
                         </TouchableOpacity>
                         <TouchableOpacity style={this.state.currentPage == 1 ? styles.buttonRed : styles.buttonPrimaryDark}
                             onPress={() => this.selectPage("Rejected")}>
-                            <Text style={[styles.text, { color: this.state.currentPage == 1 ? black : white, fontWeight: 'bold'}]}>Rejected</Text>
+                            <Text style={[styles.text, { color: this.state.currentPage == 1 ? black : white, fontWeight: 'bold' }]}>Rejected</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -266,7 +270,7 @@ class ProBookingScreen extends Component {
                         </View>
                         {this.state.bookingCompleteData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>
-                                <Text style={{ color: darkGray, fontSize: 16, fontStyle: 'italic' }}> 
+                                <Text style={{ color: darkGray, fontSize: 16, fontStyle: 'italic' }}>
                                     No completed bookings found!
                                 </Text>
                             </View>
@@ -274,7 +278,7 @@ class ProBookingScreen extends Component {
                     </View>
                     <View key="2">
                         <View style={styles.listView}>
-                            {this.state.bookingCompleteData.map(this.renderBookingHistoryItem)}
+                            {this.state.bookingRejectData.map(this.renderBookingHistoryItem)}
                         </View>
                         {this.state.bookingRejectData.length == 0 && !this.state.isLoading && (
                             <View style={styles.loaderStyle}>

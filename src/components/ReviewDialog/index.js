@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import {StyleSheet, Text, View, Dimensions, TouchableOpacity, TouchableHighlight, Image, TextInput} from 'react-native'
+import {StyleSheet, Text, View, Dimensions, TouchableOpacity, Image, TextInput} from 'react-native'
 import { AirbnbRating } from 'react-native-ratings';
-import { lightGray, colorYellow, colorBg } from '../../Constants/colors';
+import { lightGray, white, colorBg, themeRed, colorGreen, black, colorGray } from '../../Constants/colors';
 
 export default class DialogReview extends Component {
     constructor(props) {
@@ -47,7 +47,7 @@ export default class DialogReview extends Component {
                     <View style={{width: this.state.width-100, height: 1, backgroundColor: lightGray}}></View>
                     
                     <Image style={{width: 45, height: 45, borderRadius: 100, marginTop: 15}}
-                        source={{uri: this.state.data.user_details.image}}>
+                        source={this.state.data.user_details.image ? {uri: this.state.data.user_details.image} : require('../../images/generic_avatar.png')}>
                     </Image>
                     <Text style={{fontSize: 16, fontWeight: 'bold', marginTop: 10}}>{this.state.data.user_details.username}</Text>
                  
@@ -64,7 +64,7 @@ export default class DialogReview extends Component {
                     
                     <View>
                         <TextInput style={{width: this.state.width-120, height: 80, borderRadius: 5, 
-                            borderColor: 'black', borderWidth:1, marginTop: 10, padding: 10}}
+                            borderColor: colorGray, borderWidth:1, marginTop: 10, padding: 10}}
                             multiline={true}
                             placeholder='Additional comments'
                             onChangeText={(input) => this.setState({review: input})}>
@@ -72,16 +72,14 @@ export default class DialogReview extends Component {
                     </View>
                 </View>
                 <View style={styles.buttonView}> 
-                    <TouchableHighlight style={styles.touchableHighlight} 
-                        onPress={ () => this.closeReviewDialog('Not now')}
-                        underlayColor={'#f1f1f1'}>
-                        <Text style={[styles.text, {color: colorYellow}]}> Not now </Text>
-                    </TouchableHighlight>
-                    <TouchableHighlight style={[styles.touchableHighlight, {backgroundColor:'black'}]} 
-                        onPress={ () => this.closeReviewDialog('Submit')}
-                        underlayColor={'#f1f1f1'}>
-                        <Text style={[styles.text, {color: 'white'}]}> Submit </Text>
-                    </TouchableHighlight>
+                    <TouchableOpacity style={styles.touchableHighlight} 
+                        onPress={ () => this.closeReviewDialog('Not now')}>
+                        <Text style={[styles.text, {color: themeRed}]}> Not now </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.touchableHighlight]} 
+                        onPress={ () => this.closeReviewDialog('Submit')}>
+                        <Text style={[styles.text, {color: colorGreen}]}> Submit </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </TouchableOpacity>
@@ -111,26 +109,24 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     text: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: 'bold',
     },
     touchableHighlight: {
         flex: 1,
-        backgroundColor: 'white',
-        paddingVertical: 5,
+        backgroundColor: white,
         alignSelf: 'stretch',
         alignItems: 'center',
         borderRadius: 5,
-        borderColor: 'black',
-        borderWidth: 1,
         borderRadius: 5,
         marginLeft: 5, 
         marginRight: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.75,
         shadowRadius: 5,
         elevation: 5,
+        padding: 10,
     },
     textView: {
         flex: 1,
