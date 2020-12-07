@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
   View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityIndicator, Modal,
-  Linking, Alert, BackHandler, StatusBar, Platform
+  Linking, BackHandler, StatusBar, Platform
 } from 'react-native';
 import { AirbnbRating } from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
@@ -23,6 +23,7 @@ import { imageExists } from '../../misc/helpers';
 import { updateUserDetails, updateProviderDetails } from '../../Redux/Actions/userActions';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
 import { lightGray, themeRed, colorBg, white, black, darkGray } from '../../Constants/colors';
+import DialogComponent from '../DialogComponent';
 import Availability from '../AvailabilityComponent';
 
 const screenWidth = Dimensions.get('window').width;
@@ -76,7 +77,15 @@ class ProviderDetailsScreen extends Component {
       title: '',
       body: '',
       data: '',
-    }
+      showDialog: false,
+      dialogType: null,
+      dialogTitle: '',
+      dialogDesc: '',
+      dialogLeftText: 'Cancel',
+      dialogRightText: 'Retry'
+    };
+    this.leftButtonActon = null;
+    this.rightButtonAction = null;
   };
 
   requestForBooking = () => {
@@ -153,52 +162,62 @@ class ProviderDetailsScreen extends Component {
           }
           else {
             if (responseJson.message == 'Already Exist') {
-              Alert.alert(
-                "JOB REQUEST ALERT",
-                "You already have a running job with this provider",
-                [
-                  {
-                    text: 'OK',
-                    onPress: this.goBack,
-                  },
-                ]
-              );
+              this.leftButtonActon = null;
+              this.rightButtonAction = () => {
+                this.setState({
+                  isLoading: false,
+                  showDialog: false,
+                  dialogType: null
+                });
+              }
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'JOB REQUEST ALERT!',
+                dialogDesc: 'You already have a running job with this provider',
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok'
+              });
             }
             else if (responseJson.message == 'Service provider busy') {
-              Alert.alert(
-                "BUSY",
-                "Service provider is busy. Book another service provider",
-                [
-                  {
-                    text: 'OK',
-                    onPress: this.goBack,
-                  },
-                ]
-              );
+              this.leftButtonActon = null;
+              this.rightButtonAction = () => this.goBack();
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'Busy!',
+                dialogDesc: 'Service provider is currently busy. please try another service provider',
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok'
+              });
             }
             else if (responseJson.message == 'Service provider is offline') {
-              Alert.alert(
-                "OFFLINE",
-                "Service provider is offline. Book another service provider",
-                [
-                  {
-                    text: 'OK',
-                    onPress: this.goBack,
-                  },
-                ]
-              );
+              this.leftButtonActon = null;
+              this.rightButtonAction = () => this.goBack();
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OFFLINE!',
+                dialogDesc: 'Service provider is offline. Book another service provider',
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok'
+              });
             }
             else if (responseJson.message == 'No Response') {
-              Alert.alert(
-                "No Response",
-                "Check your internet connection, may be it too slow",
-                [
-                  {
-                    text: 'OK',
-                    onPress: this.goBack,
-                  },
-                ]
-              );
+              this.leftButtonActon = null;
+              this.rightButtonAction = () => this.goBack();
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'NO RESPONSE!',
+                dialogDesc: "Check your internet connection, may be it's too slow",
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok'
+              });
             }
             else {
               //ToastAndroid.show("Something went wrong", ToastAndroid.SHORT);
@@ -375,10 +394,27 @@ class ProviderDetailsScreen extends Component {
     getPendingJobRequest(this.props, userDetails.userId);
   }
 
+  changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }));
+
   render() {
+    const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
+        <DialogComponent
+          isDialogVisible={showDialog && dialogType !== null}
+          transparent={true}
+          animation='fade'
+          width={screenWidth - 80}
+          changeDialogVisibility={this.changeDialogVisibility}
+          leftButtonAction={this.leftButtonActon}
+          rightButtonAction={this.rightButtonAction}
+          isLoading={false}
+          titleText={dialogTitle}
+          descText={dialogDesc}
+          leftButtonText={dialogLeftText}
+          rightButtonText={dialogRightText}
+        />
         <View style={styles.header}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', marginLeft: 5, }}

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
   View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Linking,
-  BackHandler, Alert, StatusBar, Platform, ActivityIndicator
+  BackHandler, StatusBar, Platform, ActivityIndicator
 } from 'react-native';
 import { connect } from 'react-redux';
 import { cloneDeep } from 'lodash';
@@ -18,7 +18,7 @@ import {
 import DialogComponent from '../DialogComponent';
 import { MAPS_API_KEY } from 'react-native-dotenv';
 import Config from '../Config';
-import { white, colorBg, lightGray, black, themeRed, colorPrimary, colorGreen } from '../../Constants/colors';
+import { white, colorBg, lightGray, black, themeRed, colorGreen } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -84,8 +84,14 @@ class MapDirectionScreen extends Component {
       fcm_id: jobRequests[currRequestPos].fcm_id,
       employeeLocationFetched: othersCoordinates[employee_id] ? true : false,
       showDialog: false,
-      currentModal: null
+      dialogType: null,
+      dialogTitle: '',
+      dialogDesc: '',
+      dialogLeftText: 'Cancel',
+      dialogRightText: 'Retry'
     };
+    this.leftButtonActon = null;
+    this.rightButtonAction = null;
   };
 
   componentDidMount() {
@@ -182,14 +188,61 @@ class MapDirectionScreen extends Component {
   }
 
   openCompleteConfirmation = () => {
-    this.setState({ currentModal: 'complete', showDialog: true });
+    this.leftButtonActon = () => {
+      this.setState({
+        isLoading: false,
+        showDialog: false,
+        dialogType: null
+      });
+    };
+    this.rightButtonAction = async () => {
+      await this.jobCompleteTask();
+      this.setState({
+        isLoading: false,
+        showDialog: false,
+        dialogType: null
+      });
+    }
+    this.setState({
+      isLoading: false,
+      showDialog: true,
+      dialogType: 'fb',
+      dialogTitle: 'JOB COMPLETED',
+      dialogDesc: "Are you sure?",
+      dialogLeftText: 'No',
+      dialogRightText: 'Yes'
+    });
   }
 
   openCancelConfirmation = () => {
-    this.setState({ currentModal: 'cancel', showDialog: true });
+    this.leftButtonActon = () => {
+      this.setState({
+        isLoading: false,
+        showDialog: false,
+        dialogType: null
+      });
+    };
+    this.rightButtonAction = async () => {
+      await this.jobCancelTask();
+      this.setState({
+        isLoading: false,
+        showDialog: false,
+        dialogType: null
+      });
+    }
+    this.setState({
+      isLoading: false,
+      showDialog: true,
+      dialogType: 'fb',
+      dialogTitle: 'CANCEL JOB',
+      dialogDesc: "Are you sure?",
+      dialogLeftText: 'No',
+      dialogRightText: 'Yes'
+    });
+
   }
 
-  jobCancelTask = () => {
+  jobCancelTask = async () => {
     this.setState({ isLoading: true });
     const { fetchedPendingJobInfo, jobsInfo: { jobRequests }, userInfo: { userDetails } } = this.props;
     const { currRequestPos } = this.state;
@@ -231,7 +284,7 @@ class MapDirectionScreen extends Component {
       }
     }
 
-    fetch(REJECT_ACCEPT_REQUEST, {
+    await fetch(REJECT_ACCEPT_REQUEST, {
       method: "POST",
       headers: {
         'Accept': 'application/json',
@@ -251,9 +304,22 @@ class MapDirectionScreen extends Component {
           this.props.navigation.navigate("Dashboard");
         }
         else {
-          Alert.alert("OOPS!", "Something went wrong, try again later");
+          this.leftButtonActon = null;
+          this.rightButtonAction = () => {
+            this.setState({
+              isLoading: false,
+              showDialog: false,
+              dialogType: null
+            });
+          }
           this.setState({
             isLoading: false,
+            showDialog: true,
+            dialogType: 'fb',
+            dialogTitle: 'OOPS!',
+            dialogDesc: "An error has occurred, please try again later",
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Ok'
           });
         }
       })
@@ -265,7 +331,7 @@ class MapDirectionScreen extends Component {
       })
   }
 
-  jobCompleteTask = () => {
+  jobCompleteTask = async () => {
     this.setState({
       isLoading: true
     })
@@ -310,7 +376,7 @@ class MapDirectionScreen extends Component {
       }
     }
 
-    fetch(REJECT_ACCEPT_REQUEST, {
+    await fetch(REJECT_ACCEPT_REQUEST, {
       method: "POST",
       headers: {
         'Accept': 'application/json',
@@ -330,9 +396,22 @@ class MapDirectionScreen extends Component {
           this.props.navigation.navigate("Dashboard");
         }
         else {
-          Alert.alert("OOPS!", "Something went wrong, try again later");
+          this.leftButtonActon = null;
+          this.rightButtonAction = () => {
+            this.setState({
+              isLoading: false,
+              showDialog: false,
+              dialogType: null
+            });
+          }
           this.setState({
             isLoading: false,
+            showDialog: true,
+            dialogType: 'fb',
+            dialogTitle: 'OOPS!',
+            dialogDesc: "An error has occurred, please try again later",
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Ok'
           });
         }
       })
@@ -356,28 +435,27 @@ class MapDirectionScreen extends Component {
       destinationLng,
       coords,
       providerName,
-      mapKey,
-      currentModal,
-      showDialog
+      mapKey
     } = this.state;
+    const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
     const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : undefined;
     const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : undefined;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
         <DialogComponent
+          isDialogVisible={showDialog && dialogType !== null}
           transparent={true}
-          isDialogVisible={showDialog && currentModal !== null}
           animation='fade'
           width={screenWidth - 80}
           changeDialogVisibility={this.changeDialogVisibility}
-          leftButtonAction={this.changeDialogVisibility}
-          rightButtonAction={currentModal && currentModal === 'cancel' ? this.jobCancelTask : this.jobCompleteTask}
+          leftButtonAction={this.leftButtonActon}
+          rightButtonAction={this.rightButtonAction}
           isLoading={false}
-          titleText={currentModal && currentModal === 'cancel' ? 'Cancel Job Request' : 'Completed'}
-          descText='Are you sure?'
-          leftButtonText='Cancel'
-          rightButtonText='Ok'
+          titleText={dialogTitle}
+          descText={dialogDesc}
+          leftButtonText={dialogLeftText}
+          rightButtonText={dialogRightText}
         />
         <View style={{
           flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorBg,

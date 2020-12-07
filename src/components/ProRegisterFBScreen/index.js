@@ -9,6 +9,7 @@ import messaging from '@react-native-firebase/messaging';
 import Axios from 'axios';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
+import DialogComponent from '../DialogComponent';
 import { updateProviderDetails } from '../../Redux/Actions/userActions';
 import { black, white, lightGray, themeRed } from '../../Constants/colors';
 
@@ -53,7 +54,15 @@ class ProRegisterFBScreen extends Component {
             currentPage: 0,
             account_type: props.navigation.state.params.accountType,
             isLoading: false,
-        }
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
+        };
+        this.leftButtonActon = null;
+        this.rightButtonAction = null;
     }
 
     componentDidMount() {
@@ -155,42 +164,57 @@ class ProRegisterFBScreen extends Component {
                         this.props.navigation.navigate("ProHome");
                     }
                     else {
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.data.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                },
-                            ]
-                        );
+                        this.leftButtonActon = () => {
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        };
+                        this.rightButtonAction = async () => {
+                            await this.autoLogin(userId, userType, fcmToken)
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        }
+                        this.setState({
+                            isLoading: false,
+                            showDialog: true,
+                            dialogType: 'fb',
+                            dialogTitle: 'OOPS!',
+                            dialogDesc: responseJson.data.message,
+                            dialogLeftText: 'Cancel',
+                            dialogRightText: 'Retry'
+                        });
                     }
                 })
-                .catch((error) => {
-                    console.log("Error >> " + error)
-                    Alert.alert(
-                        "OOPS !",
-                        error,
-                        [
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retry',
-                                onPress: () => this.autoLogin(userId, userType, fcmToken),
-                            },
-                        ]
-                    );
-
+                .catch(error => {
+                    this.leftButtonActon = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    };
+                    this.rightButtonAction = async () => {
+                        await this.autoLogin(userId, userType, fcmToken)
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
                     this.setState({
-                        isLoading: false
-                    })
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: error.message,
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Retry'
+                    });
                 });
         }
     }
@@ -218,12 +242,27 @@ class ProRegisterFBScreen extends Component {
         })
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+
     render() {
+        const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
         return (
             <View style={StyleSheet.container}>
-
                 <StatusBarPlaceHolder />
-
+                <DialogComponent
+                    isDialogVisible={showDialog && dialogType !== null}
+                    transparent={true}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.leftButtonActon}
+                    rightButtonAction={this.rightButtonAction}
+                    isLoading={false}
+                    titleText={dialogTitle}
+                    descText={dialogDesc}
+                    leftButtonText={dialogLeftText}
+                    rightButtonText={dialogRightText}
+                />
                 <KeyboardAwareScrollView contentContainerStyle={{
                     justifyContent: 'center',
                     alignItems: 'center', alwaysBounceVertical: true
@@ -281,7 +320,7 @@ class ProRegisterFBScreen extends Component {
                             <View style={styles.textInputView}>
                                 <Image style={{ width: 15, height: 15, marginLeft: 5 }}
                                     source={require('../../icons/mobile.png')}></Image>
-                                <TextInput 
+                                <TextInput
                                     style={{ width: screenWidth - 85, height: 45, marginLeft: 10, color: black }}
                                     placeholder='Mobile'
                                     keyboardType='numeric'

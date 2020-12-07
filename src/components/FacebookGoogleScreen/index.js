@@ -126,8 +126,7 @@ class FacebookGoogleScreen extends Component {
                         new GraphRequestManager().addRequest(infoRequest).start();
                     }
                 ).catch(err => {
-                    console.log('auth error --', err)
-                    this.setState({error: 'Could not authenticate, try again later'})
+                    this.setState({ error: 'Could not authenticate, try again later' })
                 })
             }
         },
@@ -275,9 +274,9 @@ class FacebookGoogleScreen extends Component {
 
     checkValidation = () => {
         if (this.state.email == '')
-            this.setState({ error: 'Entrez une adresse email valide' });
+            this.setState({ error: 'Please enter a valid email address' });
         else if (this.state.password == '')
-            this.setState({ error: 'Entrer le mot de passe' });
+            this.setState({ error: 'Enter Password' });
         else
             this.authenticateTask();
     }
@@ -451,15 +450,45 @@ class FacebookGoogleScreen extends Component {
                     });
                 }
                 else {
-                    simpleToast.show("Something went wrong, try again later", simpleToast.SHORT);
-                    console.log('login error code --', error.code)
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.setState({
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: "Something went wrong, try again later.",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Retry'
+                    });
+                    console.log('login error code --', error.code);
                 }
-                this.setState({ isLoading: false })
             });
         }
         else {
-            this.setState({ isLoading: false });
-            simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+                this.setState({
+                    isLoading: false,
+                    showDialog: false,
+                    dialogType: null
+                });
+            }
+            this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OOPS!',
+                dialogDesc: "Something went wrong, try again later.",
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Retry'
+            });
         }
     }
 

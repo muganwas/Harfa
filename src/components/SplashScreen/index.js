@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler } from 'react-native';
+import { View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler, Dimensions } from 'react-native';
 import { createAppContainer, } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -25,11 +25,21 @@ import ProServiceSelectScreen from '../ProServiceSelectScreen';
 import ProHomeScreen from '../ProHomeScreen';
 import ProAccountTypeScreen from '../ProAccountTypeScreen';
 import SelectAddressScreen from '../SelectAddressScreen';
+import DialogComponent from '../DialogComponent';
 import Config from '../Config';
-import { updateUserDetails, updateProviderDetails } from '../../Redux/Actions/userActions';
-import { getPendingJobRequest, getPendingJobRequestProvider, getAllWorkRequestPro, getAllWorkRequestClient } from '../../Redux/Actions/jobsActions';
+import {
+    updateUserDetails,
+    updateProviderDetails
+} from '../../Redux/Actions/userActions';
+import {
+    getPendingJobRequest,
+    getPendingJobRequestProvider,
+    getAllWorkRequestPro,
+    getAllWorkRequestClient
+} from '../../Redux/Actions/jobsActions';
 import { white } from '../../Constants/colors';
 
+const screenWidth = Dimensions.get('screen').width;
 const PRO_GET_PROFILE = Config.baseURL + "employee/";
 const USER_GET_PROFILE = Config.baseURL + "users/";
 
@@ -40,7 +50,15 @@ class SplashScreen extends Component {
         this.state = {
             id: null,
             isLoading: false,
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
         };
+        this.leftButtonActon = null;
+        this.rightButtonAction = null;
     };
 
     componentDidMount() {
@@ -66,40 +84,40 @@ class SplashScreen extends Component {
                 this.getFCMToken(userId);
             }
             else {
-                Alert.alert(
-                    "Permission Request",
-                    "You don't have permission for notification. Please enable notification then try again ",
-                    [
-                        {
-                            text: 'OK',
-                            onPress: () => {
-                                if (Platform.OS == 'android')
-                                    BackHandler.exitApp();
-                                else
-                                    RNExitApp.exitApp();
-                            },
-                            style: 'cancel',
-                        },
-                    ]
-                );
+                this.leftButtonActon = null;
+                this.rightButtonAction = () => {
+                    if (Platform.OS == 'android')
+                        BackHandler.exitApp();
+                    else
+                        RNExitApp.exitApp();
+                }
+                this.setState({
+                    isLoading: false,
+                    showDialog: true,
+                    dialogType: 'fb',
+                    dialogTitle: 'ENABLE NOTIFICATIONS!',
+                    dialogDesc: "You don't have permission for notification. Please enable notification then try again",
+                    dialogLeftText: 'Cancel',
+                    dialogRightText: 'Ok'
+                });
             }
         }).catch(error => {
-            Alert.alert(
-                "Permission Request",
-                "You don't have permission for notification. Please enable notification then try again ",
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            if (Platform.OS == 'android')
-                                BackHandler.exitApp();
-                            else
-                                RNExitApp.exitApp();
-                        },
-                        style: 'cancel',
-                    },
-                ]
-            );
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+                if (Platform.OS == 'android')
+                    BackHandler.exitApp();
+                else
+                    RNExitApp.exitApp();
+            }
+            this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'ENABLE NOTIFICATIONS!',
+                dialogDesc: "You don't have permission for notification. Please enable notification then try again",
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok'
+            });
         });
     }
 
@@ -110,22 +128,22 @@ class SplashScreen extends Component {
                     .then(userType => this.autoLogin(userId, userType, fcmToken));
             }
         }).catch(error => {
-            Alert.alert(
-                "Auth Token",
-                "Your device has not received an authentication token, check your internet connection and try again later",
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            if (Platform.OS == 'android')
-                                BackHandler.exitApp();
-                            else
-                                RNExitApp.exitApp();
-                        },
-                        style: 'cancel',
-                    },
-                ]
-            );
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+                if (Platform.OS == 'android')
+                    BackHandler.exitApp();
+                else
+                    RNExitApp.exitApp();
+            }
+            this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'AUTH TOKEN!',
+                dialogDesc: "Your device has not received an authentication token, check your internet connection and try again later",
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok'
+            });
         });
     }
 
@@ -182,23 +200,30 @@ class SplashScreen extends Component {
                         fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
                     }
                     else {
+                        this.leftButtonActon = () => {
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        };
+                        this.rightButtonAction = async () => {
+                            await this.autoLogin(userId, userType, fcmToken);
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        }
                         this.setState({
-                            isLoading: false
-                        })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                },
-                            ]
-                        );
+                            isLoading: false,
+                            showDialog: true,
+                            dialogType: 'fb',
+                            dialogTitle: 'OOPS!',
+                            dialogDesc: responseJson.message,
+                            dialogLeftText: 'Cancel',
+                            dialogRightText: 'Retry'
+                        });
                     }
                 })
                 .catch(error => {
@@ -256,23 +281,30 @@ class SplashScreen extends Component {
                         fetchPendingJobRequest(this.props, userId, 'Home');
                     }
                     else {
+                        this.leftButtonActon = () => {
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        };
+                        this.rightButtonAction = async () => {
+                            await this.autoLogin(userId, userType, fcmToken);
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        }
                         this.setState({
-                            isLoading: false
-                        })
-                        Alert.alert(
-                            "OOPS !",
-                            responseJson.message,
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                },
-                                {
-                                    text: 'Retry',
-                                    onPress: () => this.autoLogin(userId, userType, fcmToken),
-                                },
-                            ]
-                        );
+                            isLoading: false,
+                            showDialog: true,
+                            dialogType: 'fb',
+                            dialogTitle: 'OOPS!',
+                            dialogDesc: responseJson.message,
+                            dialogLeftText: 'Cancel',
+                            dialogRightText: 'Retry'
+                        });
                     }
                 }).
                 catch((error) => {
@@ -284,7 +316,7 @@ class SplashScreen extends Component {
         }
     }
 
-    autoLogin = (userId, userType, fcmToken) => {
+    autoLogin = async (userId, userType, fcmToken) => {
         if (userId !== null) {
             this.setState({
                 isLoading: true,
@@ -309,12 +341,27 @@ class SplashScreen extends Component {
         }
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }));
+
     render() {
+        const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
         return (
             <View style={styles.container}>
-
                 <StatusBar barStyle='dark-content' backgroundColor={white} />
-
+                <DialogComponent
+                    isDialogVisible={showDialog && dialogType !== null}
+                    transparent={true}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.leftButtonActon}
+                    rightButtonAction={this.rightButtonAction}
+                    isLoading={false}
+                    titleText={dialogTitle}
+                    descText={dialogDesc}
+                    leftButtonText={dialogLeftText}
+                    rightButtonText={dialogRightText}
+                />
                 <Image
                     style={{ width: 150, height: 150 }}
                     source={require('../../images/kuchapa_logo.png')} resizeMode={'contain'} />

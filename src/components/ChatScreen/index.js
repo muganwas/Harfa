@@ -4,16 +4,17 @@ import { startFetchingNotification, notificationsFetched, notificationError } fr
 import { startFetchingJobCustomer, fetchedJobCustomerInfo, fetchCustomerJobInfoError } from '../../Redux/Actions/jobsActions';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text, Dimensions,
-    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform, Alert,
+    ActivityIndicator, BackHandler, ImageBackground, StatusBar, Platform,
     KeyboardAvoidingView, ScrollView
 } from 'react-native';
+import moment from 'moment';
+import { cloneDeep, clone } from 'lodash';
+import database from '@react-native-firebase/database';
+import DialogComponent from '../DialogComponent';
 import {
     dbMessagesFetched
 } from '../../Redux/Actions/messageActions';
 import Config from '../Config';
-import moment from 'moment';
-import { cloneDeep, clone } from 'lodash';
-import database from '@react-native-firebase/database';
 import { MessagesFooter, MessagesHeader, MessagesView } from '../MessagesComponents';
 import { colorBg, lightGray, darkGray, white, themeRed, black } from '../../Constants/colors';
 
@@ -70,8 +71,16 @@ class ChatScreen extends Component {
             dataChatSourceSynced: false,
             selectedStatus: '0',
             liveChatStatus: '0',
-            online: false
+            online: false,
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
         }
+        this.leftButtonActon = null;
+        this.rightButtonAction = null;
     };
 
     componentDidMount() {
@@ -306,9 +315,22 @@ class ChatScreen extends Component {
                     this.props.navigation.navigate("Dashboard");
                 }
                 else {
-                    Alert.alert("OOPS!", "Something went wrong, try again later");
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
                     this.setState({
                         isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: "Something went wrong, try again later",
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'Ok'
                     });
                 }
             })
@@ -343,11 +365,28 @@ class ChatScreen extends Component {
         );
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+
     render() {
-        const { requestStatus, showButton, online, senderId, receiverId } = this.state;
+        const { requestStatus, showButton, online, senderId, receiverId, showDialog, dialogType,
+            dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
+                <DialogComponent
+                    isDialogVisible={showDialog && dialogType !== null}
+                    transparent={true}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.leftButtonActon}
+                    rightButtonAction={this.rightButtonAction}
+                    isLoading={false}
+                    titleText={dialogTitle}
+                    descText={dialogDesc}
+                    leftButtonText={dialogLeftText}
+                    rightButtonText={dialogRightText}
+                />
                 <ImageBackground style={styles.container}
                     source={require('../../icons/bg_chat.png')}>
                     <MessagesHeader

@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import {
     View, StatusBar, Text, StyleSheet, TextInput, Image, TouchableOpacity
-    , Dimensions, Alert, Platform, BackHandler, Modal
+    , Dimensions, Platform, BackHandler, Modal
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import { connect } from 'react-redux';
@@ -13,6 +13,7 @@ import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import { updateProviderDetails, updateNewUserInfo } from '../../Redux/Actions/userActions';
 import WaitingDialog from '../WaitingDialog';
+import DialogComponent from '../DialogComponent';
 import Config from '../Config';
 import { black, white, themeRed, lightGray } from '../../Constants/colors';
 
@@ -59,7 +60,15 @@ class ProRegisterScreen extends Component {
             currentPage: 0,
             account_type: props.navigation.state.params.accountType,
             isLoading: false,
-        }
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
+        };
+        this.leftButtonActon = null;
+        this.rightButtonAction = null;
     }
 
     componentDidMount() {
@@ -143,58 +152,76 @@ class ProRegisterScreen extends Component {
                                 Axios.post(REGISTER_URL, { data: JSON.stringify(newUserData) })
                                     .then(responseJson => {
                                         if (responseJson.status === 200 && responseJson.data.createdDate) {
-
+                                            this.leftButtonActon = () => {
+                                                this.setState({
+                                                    isLoading: false,
+                                                    showDialog: false,
+                                                    dialogType: null
+                                                });
+                                            };
+                                            this.rightButtonAction = () => this.props.navigation.goBack();
                                             this.setState({
                                                 isLoading: false,
-                                                isToastShow: true,
+                                                showDialog: true,
+                                                dialogType: 'fb',
+                                                dialogTitle: 'REGISTARTION SUCCESSFUL',
+                                                dialogDesc: 'We have send you a email verification link to your registered email id and then Login to your account',
+                                                dialogLeftText: 'Cancel',
+                                                dialogRightText: 'OK'
                                             });
-
-                                            Alert.alert(
-                                                'Successfully Registered !',
-                                                'We have send you a email verification link to your registered email id and then Login to your account',
-                                                [
-                                                    {
-                                                        text: 'Cancel',
-                                                        onPress: () => console.log('Cancel Pressed'),
-                                                    },
-                                                    {
-                                                        text: 'Ok',
-                                                        onPress: () => this.props.navigation.goBack(),
-                                                    },
-                                                ],
-                                            );
+                                            
                                         } else {
+                                            this.leftButtonActon = () => {
+                                                this.setState({
+                                                    isLoading: false,
+                                                    showDialog: false,
+                                                    dialogType: null
+                                                });
+                                            };
+                                            this.rightButtonAction = () => {
+                                                this.registerTask(this.state.imageDataObject);
+                                                this.setState({
+                                                    isLoading: false,
+                                                    showDialog: false,
+                                                    dialogType: null
+                                                });
+                                            }
                                             this.setState({
                                                 isLoading: false,
+                                                showDialog: true,
+                                                dialogType: 'fb',
+                                                dialogTitle: 'OOPS!',
+                                                dialogDesc: responseJson.data.message,
+                                                dialogLeftText: 'Cancel',
+                                                dialogRightText: 'Retry'
                                             });
-                                            Alert.alert('OOPS !', responseJson.data.message, [
-                                                {
-                                                    text: 'Cancel',
-                                                    onPress: () => console.log('Cancel Pressed'),
-                                                },
-                                                {
-                                                    text: 'Retry',
-                                                    onPress: () =>
-                                                        this.registerTask(this.state.imageDataObject),
-                                                },
-                                            ]);
                                         }
                                     })
                                     .catch(error => {
-                                        console.log('Error :' + error);
+                                        this.leftButtonActon = () => {
+                                            this.setState({
+                                                isLoading: false,
+                                                showDialog: false,
+                                                dialogType: null
+                                            });
+                                        };
+                                        this.rightButtonAction = () => {
+                                            this.registerTask(this.state.imageDataObject);
+                                            this.setState({
+                                                isLoading: false,
+                                                showDialog: false,
+                                                dialogType: null
+                                            });
+                                        }
                                         this.setState({
                                             isLoading: false,
+                                            showDialog: true,
+                                            dialogType: 'fb',
+                                            dialogTitle: 'OOPS!',
+                                            dialogDesc: error.message,
+                                            dialogLeftText: 'Cancel',
+                                            dialogRightText: 'Retry'
                                         });
-                                        Alert.alert('OOPS !', error.message, [
-                                            {
-                                                text: 'Cancel',
-                                                onPress: () => console.log('Cancel Pressed'),
-                                            },
-                                            {
-                                                text: 'Retry',
-                                                onPress: () => this.registerTask(this.state.imageDataObject),
-                                            },
-                                        ]);
                                     })
                                     .done();
                             })
@@ -209,9 +236,9 @@ class ProRegisterScreen extends Component {
                     else if (error.code === 'auth/invalid-email')
                         this.setState({ error: 'Your email address is invalid!', isLoading: false });
                     else if (error.code === 'auth/weak-password')
-                        this.setState({ error: 'Your password is too weak', isLoading: false  });
-                    else 
-                        this.setState({ error: error.message, isLoading: false});
+                        this.setState({ error: 'Your password is too weak', isLoading: false });
+                    else
+                        this.setState({ error: "Something went wrong, please try again later", isLoading: false });
                 });
         }
     }
@@ -239,10 +266,27 @@ class ProRegisterScreen extends Component {
         });
     }
 
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }));
+
     render() {
+        const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
         return (
             <View style={StyleSheet.container}>
                 <StatusBarPlaceHolder />
+                <DialogComponent
+                    isDialogVisible={showDialog && dialogType !== null}
+                    transparent={true}
+                    animation='fade'
+                    width={screenWidth - 80}
+                    changeDialogVisibility={this.changeDialogVisibility}
+                    leftButtonAction={this.leftButtonActon}
+                    rightButtonAction={this.rightButtonAction}
+                    isLoading={false}
+                    titleText={dialogTitle}
+                    descText={dialogDesc}
+                    leftButtonText={dialogLeftText}
+                    rightButtonText={dialogRightText}
+                />
                 <KeyboardAwareScrollView contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', alwaysBounceVertical: true }}
                     keyboardShouldPersistTaps='handled'
                     keyboardDismissMode='on-drag'>

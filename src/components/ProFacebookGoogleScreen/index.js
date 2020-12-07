@@ -258,20 +258,6 @@ class FacebookGoogleScreen extends Component {
                                 dialogLeftText: 'Cancel',
                                 dialogRightText: 'Retry'
                             });
-                            /*Alert.alert(
-                                "OOPS !",
-                                responseJson.message,
-                                [
-                                    {
-                                        text: 'Cancel',
-                                        onPress: () => console.log('Cancel Pressed'),
-                                    },
-                                    {
-                                        text: 'Retry',
-                                        onPress: () => this.fbGmailLoginTask(name, email, image),
-                                    },
-                                ]
-                            );*/
                         }
                     }
                 })
@@ -301,20 +287,6 @@ class FacebookGoogleScreen extends Component {
                         dialogLeftText: 'Cancel',
                         dialogRightText: 'Retry'
                     });
-                    /*Alert.alert(
-                        "OOPS !",
-                        error.message,
-                        [
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                            },
-                            {
-                                text: 'Retry',
-                                onPress: () => this.fbGmailLoginTask(name, email, image),
-                            },
-                        ]
-                    );*/
                 })
                 .done();
         }
@@ -533,7 +505,7 @@ class FacebookGoogleScreen extends Component {
 
     }
 
-    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+    changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }));
 
     render() {
         const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
