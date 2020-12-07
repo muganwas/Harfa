@@ -4,7 +4,7 @@ import { themeRed, black, white } from '../../Constants/colors';
 
 export default class AccountTypeScreen extends Component {
 
-    componentDidMount(){
+    componentDidMount() {
         const { navigation } = this.props;
         navigation.addListener('willFocus', async () => {
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -28,13 +28,14 @@ export default class AccountTypeScreen extends Component {
                     style={{ width: 140, height: 140, marginBottom: 10 }}
                     source={require('../../images/kuchapa_logo.png')}
                     resizeMode="contain" />
-                <Text style={{color: 'white', fontSize: 20, marginBottom: 50, fontWeight: 'bold', color:black}}>
+                <Text style={{ color: 'white', fontSize: 20, marginBottom: 50, fontWeight: 'bold', color: black }}>
                     Select your account type
                 </Text>
 
                 <TouchableOpacity style={styles.buttonContainer}
                     onPress={() => this.props.navigation.navigate("FacebookGoogle", {
-                        "accountType" : "Individual"})}>
+                        "accountType": "Individual"
+                    })}>
                     <Text style={styles.text}>
                         Individual
                     </Text>
@@ -42,7 +43,8 @@ export default class AccountTypeScreen extends Component {
 
                 <TouchableOpacity style={styles.buttonContainer}
                     onPress={() => this.props.navigation.navigate("FacebookGoogle", {
-                        "accountType" : "Company"})}>
+                        "accountType": "Company"
+                    })}>
                     <Text style={styles.text}>
                         Enterprise
                     </Text>
@@ -62,19 +64,23 @@ const styles = {
     },
     buttonContainer: {
         width: 250,
+        backgroundColor: themeRed,
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingTop: 10,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderWidth: 3,
-        borderColor: themeRed,
-        marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
+        marginTop: 10,
     },
     text: {
-        color: black,
+        color: white,
         textAlign: 'center',
         justifyContent: 'center',
         textTransform: 'uppercase',

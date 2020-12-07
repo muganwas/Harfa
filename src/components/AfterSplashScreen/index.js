@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { View, Image, Text, StatusBar, TouchableOpacity, BackHandler, Platform, StyleSheet } from 'react-native';
 import { withNavigation } from 'react-navigation';
 import RNExitApp from 'react-native-exit-app';
-import { themeRed, white } from '../../Constants/colors';
+import { themeRed, white, black } from '../../Constants/colors';
 
 class AfterSplashScreen extends Component {
     componentDidMount() {
@@ -65,19 +65,23 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         width: 250,
+        backgroundColor: themeRed,
+        shadowColor: black,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.75,
+        shadowRadius: 5,
+        elevation: 5,
         paddingTop: 10,
         paddingBottom: 10,
         paddingLeft: 20,
         paddingRight: 20,
         borderRadius: 5,
-        borderWidth: 3,
-        borderColor: themeRed,
-        marginBottom: 25,
         textAlign: 'center',
         justifyContent: 'center',
+        marginTop: 10,
     },
     text: {
-        color: '#000000',
+        color: white,
         textAlign: 'center',
         justifyContent: 'center',
         textTransform: 'uppercase',

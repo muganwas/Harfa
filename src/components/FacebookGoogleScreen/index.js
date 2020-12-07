@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         width: 175,
-        height: 45,
+        height: 40,
         backgroundColor: themeRed,
         shadowColor: black,
         shadowOffset: { width: 0, height: 3 },
