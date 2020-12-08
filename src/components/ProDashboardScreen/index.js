@@ -692,8 +692,7 @@ class ProDashboardScreen extends Component {
         if (item.customer_review != "Requested" && item.customer_rating == "") {
             this.setState({
                 isLoading: true,
-            })
-
+            });
             const askReviewData = {
                 "order_id": item._id,
                 "user_id": item.user_id,
