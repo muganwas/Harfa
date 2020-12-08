@@ -13,12 +13,15 @@ import messaging from '@react-native-firebase/messaging';
 import database from '@react-native-firebase/database';
 import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
-import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../../Redux/Actions/jobsActions';
+import {
+    getPendingJobRequestProvider,
+    getAllWorkRequestPro
+} from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
 import Axios from 'axios';
 import WaitingDialog from '../WaitingDialog';
 import DialogComponent from '../DialogComponent';
-import { updateProviderDetails } from '../../Redux/Actions/userActions';
+import { updateProviderDetails, updateProviderAuthToken } from '../../Redux/Actions/userActions';
 import { themeRed, black, white, lightGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -88,6 +91,7 @@ class FacebookGoogleScreen extends Component {
             console.log("Error : " + JSON.stringify(result));
         }
         else {
+            console.log('result -fb', result)
             const { id, name, email, picture: { data: { url } } } = result;
             this.setState({ firebaseId: id, loginType: 'facebook' });
             this.fbGmailLoginTask(name, email, url);
@@ -99,13 +103,14 @@ class FacebookGoogleScreen extends Component {
             if (result.isCancelled) {
                 console.log("Login cancelled");
             } else {
-
                 AccessToken.getCurrentAccessToken().then(
                     data => {
+                        const { updateProviderAuthToken } = this.props;
+                        updateProviderAuthToken(data.accessToken);
                         const infoRequest = new GraphRequest(
                             '/me?fields=email,name,picture',
                             null,
-                            responseFbCallbackPro
+                            this.responseFbCallbackPro
                         );
                         // Start the graph request.
                         new GraphRequestManager().addRequest(infoRequest).start();
@@ -161,98 +166,100 @@ class FacebookGoogleScreen extends Component {
                 "fcm_id": fcmToken,
                 "type": this.state.loginType
             };
+            console.log('user data', userData)
             Axios.post(REGISTER_URL, { data: JSON.stringify(userData) }).then(async responseJson => {
-                    let status;
-                    if (responseJson.status === 200 && responseJson.data.createdDate) {
+                let status;
+                console.log('response --', responseJson)
+                if (responseJson.status === 200 && responseJson.data.createdDate) {
+                    this.setState({
+                        isLoading: false,
+                        isErrorToast: true,
+                    });
+                    const usersRef = database().ref(`users/${responseJson.data.id}`);
+                    await usersRef.once('value', snapshot => {
+                        const value = snapshot.val();
+                        if (value)
+                            status = value.status;
+                        else {
+                            usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                console.log('status set');
+                            }).
+                                catch(e => {
+                                    console.log(e.message);
+                                });
+                        }
+                    });
+                    const id = responseJson.data.id;
+                    var providerData = {
+                        providerId: responseJson.data.id,
+                        name: responseJson.data.username,
+                        email: responseJson.data.email,
+                        password: responseJson.data.password,
+                        imageSource: responseJson.data.image,
+                        surname: responseJson.data.surname,
+                        mobile: responseJson.data.mobile,
+                        services: responseJson.data.services,
+                        description: responseJson.data.description,
+                        address: responseJson.data.address,
+                        lat: responseJson.data.lat,
+                        lang: responseJson.data.lang,
+                        invoice: responseJson.data.invoice,
+                        status: status != undefined ? status : responseJson.data.status,
+                        fcmId: responseJson.data.fcm_id,
+                        accountType: responseJson.data.account_type,
+                        firebaseId: this.state.firebaseId
+                    };
+                    updateProviderDetails(providerData);
+                    //Store data like sharedPreference
+                    AsyncStorage.setItem('userId', id);
+                    AsyncStorage.setItem('userType', 'Provider');
+                    AsyncStorage.setItem('email', email);
+                    AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                    fetchJobRequestHistory(id);
+                    fetchProvidersJobRequests(this.props, id, "ProHome");
+                }
+                else {
+                    console.log('response message', responseJson.message)
+                    if (responseJson.message === "Email not found") {
                         this.setState({
                             isLoading: false,
-                            isErrorToast: true,
                         });
-                        const usersRef = database().ref(`users/${responseJson.data.id}`);
-                        await usersRef.once('value', snapshot => {
-                            const value = snapshot.val();
-                            if (value)
-                                status = value.status;
-                            else {
-                                usersRef.set({ 'status': responseJson.data.status }).then(() => {
-                                    console.log('status set');
-                                }).
-                                    catch(e => {
-                                        console.log(e.message);
-                                    });
-                            }
+                        this.props.navigation.navigate("ProRegisterFB", {
+                            "email": email,
+                            "name": name,
+                            "image": image,
+                            "accountType": this.state.accountType
                         });
-                        const id = responseJson.data.id;
-                        var providerData = {
-                            providerId: responseJson.data.id,
-                            name: responseJson.data.username,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            imageSource: responseJson.data.image,
-                            surname: responseJson.data.surname,
-                            mobile: responseJson.data.mobile,
-                            services: responseJson.data.services,
-                            description: responseJson.data.description,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            invoice: responseJson.data.invoice,
-                            status: status != undefined ? status : responseJson.data.status,
-                            fcmId: responseJson.data.fcm_id,
-                            accountType: responseJson.data.account_type,
-                            firebaseId: this.state.firebaseId
-                        };
-                        updateProviderDetails(providerData);
-                        //Store data like sharedPreference
-                        AsyncStorage.setItem('userId', id);
-                        AsyncStorage.setItem('userType', 'Provider');
-                        AsyncStorage.setItem('email', email);
-                        AsyncStorage.setItem('firebaseId', this.state.firebaseId);
-                        fetchJobRequestHistory(id);
-                        fetchProvidersJobRequests(this.props, id, "ProHome");
                     }
                     else {
-                        this.setState({
-                            isLoading: false,
-                        });
-                        if (responseJson.message == "Email not found") {
-                            this.props.navigation.navigate("ProRegisterFB", {
-                                "email": email,
-                                "name": name,
-                                "image": image,
-                                "accountType": this.state.accountType
-                            });
-                        }
-                        else {
-                            this.leftButtonActon = () => {
-                                this.setState({
-                                    isLoading: false,
-                                    showDialog: false,
-                                    dialogType: null
-                                });
-                            };
-                            this.rightButtonAction = () => {
-                                this.fbGmailLoginTask(name, email, image);
-                                this.setState({
-                                    isLoading: false,
-                                    showDialog: false,
-                                    dialogType: null
-                                });
-                            }
+                        this.leftButtonActon = () => {
                             this.setState({
                                 isLoading: false,
-                                showDialog: true,
-                                dialogType: 'fb',
-                                dialogTitle: 'OOPS!',
-                                dialogDesc: responseJson.message || "Something went wrong, please try again later.",
-                                dialogLeftText: 'Cancel',
-                                dialogRightText: 'Retry'
+                                showDialog: false,
+                                dialogType: null
+                            });
+                        };
+                        this.rightButtonAction = () => {
+                            this.fbGmailLoginTask(name, email, image);
+                            this.setState({
+                                isLoading: false,
+                                showDialog: false,
+                                dialogType: null
                             });
                         }
+                        this.setState({
+                            isLoading: false,
+                            showDialog: true,
+                            dialogType: 'fb',
+                            dialogTitle: 'OOPS!',
+                            dialogDesc: responseJson.message || "Something went wrong, please try again later.",
+                            dialogLeftText: 'Cancel',
+                            dialogRightText: 'Retry'
+                        });
                     }
-                })
+                }
+            })
                 .catch((error) => {
-                    console.log("Error :" + error);
                     this.leftButtonActon = () => {
                         this.setState({
                             isLoading: false,
@@ -281,8 +288,24 @@ class FacebookGoogleScreen extends Component {
                 .done();
         }
         else {
-            this.setState({ isLoading: false });
-            simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+                this.fbGmailLoginTask(name, email, image);
+                this.setState({
+                    isLoading: false,
+                    showDialog: false,
+                    dialogType: null
+                });
+            }
+            this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OOPS!',
+                dialogDesc: "Something went wrong, try again later.",
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok'
+            });
         }
     }
 
@@ -642,6 +665,9 @@ const mapDispatchToProps = dispatch => {
         },
         updateProviderDetails: details => {
             dispatch(updateProviderDetails(details));
+        },
+        updateProviderAuthToken: token => {
+            dispatch(updateProviderAuthToken(token));
         }
     }
 }

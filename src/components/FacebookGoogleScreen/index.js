@@ -116,7 +116,7 @@ class FacebookGoogleScreen extends Component {
                 AccessToken.getCurrentAccessToken().then(
                     data => {
                         const { updateUserAuthToken } = this.props;
-                        updateUserAuthToken(data.accessToken)
+                        updateUserAuthToken(data.accessToken);
                         const infoRequest = new GraphRequest(
                             '/me?fields=email,name,picture',
                             null,
