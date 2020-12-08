@@ -25,6 +25,7 @@ import {
     notificationError
 } from '../../Redux/Actions/notificationActions';
 import { lightGray, colorPrimaryDark, white, themeRed, colorGray, black } from '../../Constants/colors';
+import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-employee-notification/";
@@ -98,6 +99,8 @@ class ProNotificationsScreen extends Component {
                     });
                     this.setState({ dataSource: altDataSource });
                 }
+            }).catch(e => {
+                SimpleToast("Notification couldn't be read, try again later", SimpleToast.SHORT);
             });
     }
 
@@ -121,6 +124,8 @@ class ProNotificationsScreen extends Component {
                     });
                     this.setState({ dataSource: altDataSource });
                 }
+            }).catch(e => {
+                SimpleToast("Notification couldn't be deleted, try again later", SimpleToast.SHORT);
             });
     }
 

@@ -98,10 +98,10 @@ class NotificationsScreen extends Component {
         });
     }
 
-    readNotification = id => {
+    readNotification = async id => {
         const { dataSource } = this.state;
         let altDataSource = cloneDeep(dataSource);
-        fetch(READ_NOTIFICATION_URL + id, {
+        await fetch(READ_NOTIFICATION_URL + id, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -118,6 +118,8 @@ class NotificationsScreen extends Component {
                     });
                     this.setState({ dataSource: altDataSource });
                 }
+            }).catch(e => {
+                SimpleToast("Notification couldn't be read, try again later", SimpleToast.SHORT);
             });
     }
 
@@ -141,6 +143,8 @@ class NotificationsScreen extends Component {
                     });
                     this.setState({ dataSource: altDataSource });
                 }
+            }).catch(e => {
+                SimpleToast("Notification couldn't be deleted, try again later", SimpleToast.SHORT);
             });
     }
 
