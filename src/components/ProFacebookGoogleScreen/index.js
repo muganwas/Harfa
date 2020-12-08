@@ -15,13 +15,14 @@ import { LoginManager, AccessToken, GraphRequest, GraphRequestManager } from 're
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
 import { getPendingJobRequestProvider, getAllWorkRequestPro } from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
+import Axios from 'axios';
 import WaitingDialog from '../WaitingDialog';
 import DialogComponent from '../DialogComponent';
 import { updateProviderDetails } from '../../Redux/Actions/userActions';
 import { themeRed, black, white, lightGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
-const CHECK_EMAIL = Config.baseURL + "employee/check/email";
+const REGISTER_URL = Config.baseURL + "employee/register/create";
 const AUTHENTICATE_URL = Config.baseURL + "employee/authenticate";
 const Android = Platform.OS === 'android';
 
@@ -158,21 +159,11 @@ class FacebookGoogleScreen extends Component {
                 "mobile": "",
                 "dob": "",
                 "fcm_id": fcmToken,
-                "type": this.state.loginType,
+                "type": this.state.loginType
             };
-            fetch(CHECK_EMAIL,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(userData)
-                })
-                .then((response) => response.json())
-                .then(async responseJson => {
-                    var status;
-                    if (responseJson.result) {
+            Axios.post(REGISTER_URL, { data: JSON.stringify(userData) }).then(async responseJson => {
+                    let status;
+                    if (responseJson.status === 200 && responseJson.data.createdDate) {
                         this.setState({
                             isLoading: false,
                             isErrorToast: true,
@@ -223,8 +214,7 @@ class FacebookGoogleScreen extends Component {
                     else {
                         this.setState({
                             isLoading: false,
-                        })
-                        console.log("Response Else ");
+                        });
                         if (responseJson.message == "Email not found") {
                             this.props.navigation.navigate("ProRegisterFB", {
                                 "email": email,
@@ -254,7 +244,7 @@ class FacebookGoogleScreen extends Component {
                                 showDialog: true,
                                 dialogType: 'fb',
                                 dialogTitle: 'OOPS!',
-                                dialogDesc: responseJson.message,
+                                dialogDesc: responseJson.message || "Something went wrong, please try again later.",
                                 dialogLeftText: 'Cancel',
                                 dialogRightText: 'Retry'
                             });

@@ -179,11 +179,25 @@ class FacebookGoogleScreen extends Component {
                 "type": this.state.loginType,
             }
             Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
-                .then(responseJson => {
+                .then( async responseJson => {
                     if (responseJson.status === 200 && responseJson.data.createdDate) {
                         this.setState({
                             isLoading: false,
                             isErrorToast: true,
+                        });
+                        const usersRef = database().ref(`users/${responseJson.data.id}`);
+                        await usersRef.once('value', snapshot => {
+                            const value = snapshot.val();
+                            if (value)
+                                status = value.status;
+                            else {
+                                usersRef.set({ 'status': responseJson.data.status }).then(() => {
+                                    console.log('status set');
+                                }).
+                                    catch(e => {
+                                        console.log(e.message);
+                                    });
+                            }
                         });
                         const id = responseJson.data.id;
                         var userData = {
