@@ -60,7 +60,7 @@ export default class ProServiceSelectScreen extends Component {
     return (
       <View key={index} style={[styles.header, { alignItems: 'center', marginVertical: 1.5, backgroundColor: themeRed }]}>
         <View
-          style={[styles.touchaleHighlight, { justifyContent: 'center', alignItems: 'center'}]}>
+          style={[styles.touchaleHighlight, { justifyContent: 'center', alignItems: 'center' }]}>
           <Image style={{ width: 25, tintColor: white, height: 25 }}
             source={images[item.image]} />
         </View>
@@ -187,26 +187,28 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   buttonContainer: {
-    width: 200,
+    width: 175,
+    height: 40,
+    backgroundColor: white,
+    shadowColor: black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 5,
     paddingTop: 10,
-    backgroundColor: '#000000',
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 5,
-    borderColor: themeRed,
-    borderWidth: 2,
-    marginBottom: 10,
     textAlign: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
+    marginVertical: 10,
   },
   text: {
     fontSize: 16,
-    color: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
+    color: black,
+    fontWeight: 'bold',
+    textAlign: 'center'
   },
   gridView: {
     flex: 1,

@@ -179,7 +179,6 @@ class ProMyProfileScreen extends Component {
             .then(async providerId => await this.updateInformation(providerId))
     }
 
-    //Information Update
     updateInformation = async providerId => {
         const userData = {
             "username": this.state.name,

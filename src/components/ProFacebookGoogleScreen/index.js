@@ -166,10 +166,8 @@ class FacebookGoogleScreen extends Component {
                 "fcm_id": fcmToken,
                 "type": this.state.loginType
             };
-            console.log('user data', userData)
             Axios.post(REGISTER_URL, { data: JSON.stringify(userData) }).then(async responseJson => {
                 let status;
-                console.log('response --', responseJson)
                 if (responseJson.status === 200 && responseJson.data.createdDate) {
                     this.setState({
                         isLoading: false,
@@ -219,7 +217,6 @@ class FacebookGoogleScreen extends Component {
                     fetchProvidersJobRequests(this.props, id, "ProHome");
                 }
                 else {
-                    console.log('response message', responseJson.message)
                     if (responseJson.message === "Email not found") {
                         this.setState({
                             isLoading: false,
@@ -317,7 +314,6 @@ class FacebookGoogleScreen extends Component {
             this.setState({ error: 'Enter password' })
         }
         else {
-            console.log("Else");
             this.authenticateProTask()
         }
     }
@@ -456,8 +452,23 @@ class FacebookGoogleScreen extends Component {
                         .done();
                 }
                 else {
-                    this.setState({ isLoading: false });
-                    simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.setState({
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: 'Something went wrong, try again later.',
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'OK'
+                    });
                 }
             }).catch(error => {
                 if (error.code === 'auth/user-not-found') {
@@ -499,15 +510,45 @@ class FacebookGoogleScreen extends Component {
                     });
                 }
                 else {
-                    simpleToast.show("Something went wrong, try again later", simpleToast.SHORT);
-                    console.log('login error code --', error.code)
+                    this.leftButtonActon = null;
+                    this.rightButtonAction = () => {
+                        this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null
+                        });
+                    }
+                    this.setState({
+                        isLoading: false,
+                        showDialog: true,
+                        dialogType: 'fb',
+                        dialogTitle: 'OOPS!',
+                        dialogDesc: 'Something went wrong, try again later.',
+                        dialogLeftText: 'Cancel',
+                        dialogRightText: 'OK'
+                    });
                 }
                 this.setState({ isLoading: false })
             });
         }
         else {
-            this.setState({ isLoading: false });
-            simpleToast.show('Something went wrong, try again later', simpleToast.SHORT);
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+                this.setState({
+                    isLoading: false,
+                    showDialog: false,
+                    dialogType: null
+                });
+            }
+            this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OOPS!',
+                dialogDesc: 'Something went wrong, try again later.',
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'OK'
+            });
         }
     }
 
