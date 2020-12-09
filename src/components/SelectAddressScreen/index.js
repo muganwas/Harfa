@@ -132,7 +132,7 @@ export default class SelectAddressScreen extends Component {
                 source={require('../../icons/arrow_back.png')} />
             </TouchableOpacity>
             <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 15 }}>
-              Update Location
+              Update location
             </Text>
           </View>
         </View>

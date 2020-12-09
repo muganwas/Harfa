@@ -89,14 +89,15 @@ class ProviderDetailsScreen extends Component {
   };
 
   requestForBooking = () => {
-    const { userInfo: { userDetails } } = this.props;
-
+    const { userInfo: { userDetails }, navigation } = this.props;
     if (userDetails.lang == "") {
       this.setState({
         isErrorToast: true,
       })
-      this.showToast('Please update address first')
-      //ToastAndroid.show("Please update address", ToastAndroid.SHORT);
+      this.showToast('Please provide your address first');
+      setTimeout(() => navigation.navigate('SelectAddress', {
+        onGoBack: this.goBack,
+      }), 400);
     }
     else if (userDetails.mobile == '') {
       this.setState({
