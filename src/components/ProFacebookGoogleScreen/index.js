@@ -91,7 +91,6 @@ class FacebookGoogleScreen extends Component {
             console.log("Error : " + JSON.stringify(result));
         }
         else {
-            console.log('result -fb', result)
             const { id, name, email, picture: { data: { url } } } = result;
             this.setState({ firebaseId: id, loginType: 'facebook' });
             this.fbGmailLoginTask(name, email, url);
@@ -217,6 +216,7 @@ class FacebookGoogleScreen extends Component {
                     fetchProvidersJobRequests(this.props, id, "ProHome");
                 }
                 else {
+                    console.log('response data', responseJson.data)
                     if (responseJson.message === "Email not found") {
                         this.setState({
                             isLoading: false,
@@ -299,7 +299,7 @@ class FacebookGoogleScreen extends Component {
                 showDialog: true,
                 dialogType: 'fb',
                 dialogTitle: 'OOPS!',
-                dialogDesc: "Something went wrong, try again later.",
+                dialogDesc: "Your device has no fcm token, check your internet connection please.",
                 dialogLeftText: 'Cancel',
                 dialogRightText: 'Ok'
             });

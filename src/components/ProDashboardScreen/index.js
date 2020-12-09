@@ -118,10 +118,9 @@ class ProDashboardScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { jobsInfo: { dataWorkSource }, fetchJobRequestHistory, generalInfo: { connectivityAvailable }, userInfo: { providerDetails } } = this.props;
+        const { generalInfo: { connectivityAvailable }, userInfo: { providerDetails } } = this.props;
         const { status } = this.state;
-        if (!dataWorkSource.length)
-            fetchJobRequestHistory(providerDetails.providerId);
+            
         if (!connectivityAvailable && status === "ONLINE")
             this.setState({
                 status: "OFFLINE",
@@ -767,7 +766,7 @@ class ProDashboardScreen extends Component {
 
     onRefresh = async () => {
         this.setState({ refreshing: true });
-        const { generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails } } = this.props;
+        const { generalInfo: { online, connectivityAvailable }, userInfo: { providerDetails }, fetchJobRequestHistory } = this.props;
         this.setState({
             dataSource: [],
             dataUserSource: [],
@@ -778,6 +777,7 @@ class ProDashboardScreen extends Component {
         });
         await this.getAllRecentChat();
         await this.getAllRecentUser();
+        await fetchJobRequestHistory(providerDetails.providerId);
         this.springValue = new Animated.Value(100);
         this.setState({ refreshing: false });
     }

@@ -17,7 +17,7 @@ import {
 //local --
 export default class Config {
   static clientId = WEB_CLIENT_ID
-  static baseURL = BASE_URL_CLOUD
+  static baseURL = BASE_URL_LOCAL_ALT_2
   static apiKey = FIREBASE_API_KEY
   static authDomain = FIREBASE_AUTH_DOMAIN
   static databaseURL = FIREBASE_DATABASE_URL

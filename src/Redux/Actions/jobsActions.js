@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import Config from '../../components/Config';
 import {
     FETCHING_JOB_REQUESTS,
@@ -185,7 +186,7 @@ export const getAllWorkRequestClient = clientId => {
         fetch(CUSTOMER_BOOKING_HISTORY + clientId + '/null')
             .then((response) => response.json())
             .then((responseJson) => {
-                let newAllClientDetails = [...responseJson.data];
+                let newAllClientDetails = responseJson.data ? cloneDeep(responseJson.data) : [];
                 let dataWorkSource = [];
                 if (responseJson.result) {
                     for (let i = 0; i < responseJson.data.length; i++) {
@@ -204,9 +205,8 @@ export const getAllWorkRequestClient = clientId => {
                     dispatch(fetchedDataWorkSource(dataWorkSource));
                     dispatch(fetchedAllJobRequestsClient(newAllClientDetails));
                 }
-                else {
-                    dispatch(fetchAllJobRequestsClientError());
-                }
+                dispatch(fetchedDataWorkSource(dataWorkSource));
+                dispatch(fetchedAllJobRequestsClient(newAllClientDetails));
             })
             .catch((error) => {
                 console.log(error);
@@ -220,28 +220,25 @@ export const getAllWorkRequestPro = providerId => {
         fetch(BOOKING_HISTORY + providerId + '/null')
             .then((response) => response.json())
             .then((responseJson) => {
+                let newAllProvidersDetails = responseJson.data ? cloneDeep(responseJson.data) : [];
+                let dataWorkSource = [];
                 if (responseJson.result) {
-                    let newAllProvidersDetails = [...responseJson.data];
-                    let dataWorkSource = [];
                     for (let i = 0; i < responseJson.data.length; i++) {
                         imageExists(responseJson.data[i].user_details.image).then(res => {
                             newAllProvidersDetails[i].imageAvailable = res;
                         })
-                        if (responseJson.data[i].chat_status == "1") {
+                        if (responseJson.data[i].chat_status === "1") {
                             dataWorkSource.push(responseJson.data[i]);
                         }
-                        else if (responseJson.data[i].chat_status == "0") {
-                            if (responseJson.data[i].status != "Pending") {
+                        else if (responseJson.data[i].chat_status === "0") {
+                            if (responseJson.data[i].status !== "Pending") {
                                 dataWorkSource.push(responseJson.data[i]);
                             }
                         }
                     }
-                    dispatch(fetchedDataWorkSource(dataWorkSource));
-                    dispatch(fetchedAllJobRequestsPro(newAllProvidersDetails));
                 }
-                else {
-                    dispatch(fetchAllJobRequestsProError());
-                }
+                dispatch(fetchedDataWorkSource(dataWorkSource));
+                dispatch(fetchedAllJobRequestsPro(newAllProvidersDetails));
             })
             .catch((error) => {
                 dispatch(fetchDataWorkSourceError());
