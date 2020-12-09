@@ -16,7 +16,7 @@ import { cloneDeep } from 'lodash';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../ProHamburger';
-import { updateProviderDetails } from '../../Redux/Actions/userActions';
+import { updateProviderDetails, fetchProviderProfile } from '../../Redux/Actions/userActions';
 import { colorPrimaryDark, white, themeRed, black } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -28,7 +28,6 @@ const options = {
     quality: 1
 };
 
-const PRO_GET_PROFILE = Config.baseURL + "employee/";
 const storageRef = storage().ref('/employees_info');
 const PRO_IMAGE_UPDATE = Config.baseURL + 'employee/upload/';
 const PRO_INFO_UPDATE = Config.baseURL + "employee/";
@@ -57,6 +56,7 @@ class ProMyProfileScreen extends Component {
         const { userInfo: { providerDetails } } = props;
         this.state = {
             providerId: providerDetails.providerId,
+            fcmId: providerDetails.fcmId,
             imageSource: providerDetails.imageSource,
             email: providerDetails.email,
             name: providerDetails.name,
@@ -66,6 +66,8 @@ class ProMyProfileScreen extends Component {
             description: providerDetails.description,
             address: providerDetails.address,
             error: '',
+            lat: providerDetails.lat,
+            lang: providerDetails.lang,
             invoice: providerDetails.invoice,
             isLoading: true,
             isErrorToast: false,
@@ -156,9 +158,10 @@ class ProMyProfileScreen extends Component {
     }
 
     getDataFromServiceScreen = data => {
-        var data = data.split("/")
+        var data = data.split("/");
+        console.log('data --', data)
         this.setState({
-            serviceId: data[0],
+            serviceIds: data[0],
             services: data[1],
         })
     }
@@ -181,16 +184,18 @@ class ProMyProfileScreen extends Component {
     }
 
     updateInformation = async providerId => {
+        const { name, fcmId, surname, mobile, serviceIds, description, address, lat, lang, invoice } = this.state;
+        const { fetchProviderProfile } = this.props;
         const userData = {
-            "username": this.state.name,
-            "surname": '',
-            "mobile": this.state.mobile,
-            "services": this.state.serviceId,
-            "description": this.state.description,
-            "address": this.state.address,
-            "lat": this.state.lat,
-            "lang": this.state.lang,
-            "invoice": this.state.invoice,
+            "username": name,
+            "surname": surname,
+            "mobile": mobile,
+            "services": serviceIds,
+            "description": description,
+            "address": address,
+            "lat": lat,
+            "lang": lang,
+            "invoice": invoice,
         }
 
         await fetch(PRO_INFO_UPDATE + providerId,
@@ -203,7 +208,7 @@ class ProMyProfileScreen extends Component {
                 body: JSON.stringify(userData)
             })
             .then(response => response.json())
-            .then(response => {
+            .then( async response => {
                 if (response.result) {
                     this.setState({
                         isLoading: false,
@@ -211,6 +216,7 @@ class ProMyProfileScreen extends Component {
                     })
                     //ToastAndroid.show(response.message, ToastAndroid.show);
                     this.showToast(response.message);
+                    fetchProviderProfile(providerId, fcmId);
                 }
                 else {
                     this.setState({
@@ -295,9 +301,7 @@ class ProMyProfileScreen extends Component {
     render() {
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
                 <View style={styles.header} >
                     <Hamburger
                         navigation={this.props.navigation}
@@ -478,6 +482,9 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
     updateProviderDetails: details => {
         dispatch(updateProviderDetails(details));
+    },
+    fetchProviderProfile: (id, fcmid) => {
+        dispatch(fetchProviderProfile(id, fcmid));
     }
 });
 

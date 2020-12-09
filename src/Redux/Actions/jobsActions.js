@@ -265,7 +265,6 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
         })
             .then(response => response.json())
             .then(responseJson => {
-                console.log('pro res', responseJson)
                 if (responseJson.result) {
                     responseJson.data.map((job, index) => {
                         var jobData = {

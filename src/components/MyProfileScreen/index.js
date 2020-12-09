@@ -29,7 +29,7 @@ import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
 import Config from '../Config';
-import { updateUserDetails } from '../../Redux/Actions/userActions';
+import { updateUserDetails, fetchUserProfile } from '../../Redux/Actions/userActions';
 import { colorPrimaryDark, white, themeRed, black } from '../../Constants/colors';
 
 const options = {
@@ -42,7 +42,6 @@ const options = {
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
 
-const USER_GET_PROFILE = Config.baseURL + 'users/';
 const USER_IMAGE_UPDATE = Config.baseURL + 'users/upload/';
 const USER_INFO_UPDATE = Config.baseURL + 'users/';
 
@@ -69,6 +68,7 @@ class MyProfileScreen extends Component {
     const { userInfo: { userDetails } } = props;
     this.state = {
       userId: userDetails.userId,
+      fcmId: userDetails.fcmId,
       image: userDetails.image,
       email: userDetails.email,
       username: userDetails.username,
@@ -122,47 +122,6 @@ class MyProfileScreen extends Component {
         this.setState({ backClickCount: 0 });
       });
     });
-  }
-
-  //getProfile no need
-  getProfile = userId => {
-    if (userId !== null) {
-      this.setState({
-        isLoading: true,
-      });
-      fetch(USER_GET_PROFILE + userId, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              userId: responseJson.data.id,
-              image: responseJson.data.image,
-              username: responseJson.data.username,
-              mobile: responseJson.data.mobile,
-              dob: responseJson.data.dob,
-              isLoading: false,
-            });
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          alert('Error ' + error);
-          this.setState({
-            isLoading: false,
-          });
-        });
-    }
   }
 
   selectPhoto = () => {
@@ -223,13 +182,13 @@ class MyProfileScreen extends Component {
 
   //Information Update
   updateInformation = userId => {
+    const { fcmId, username, mobile, dob } = this.state;
+    const { fetchUserProfile } = this.props;
     this.setState({
       isLoading: true,
     });
     const userData = {
-      username: this.state.username,
-      mobile: this.state.mobile,
-      dob: this.state.dob,
+      username, mobile, dob,
     };
 
     fetch(USER_INFO_UPDATE + userId, {
@@ -248,6 +207,7 @@ class MyProfileScreen extends Component {
             isErrorToast: false,
           });
           this.showToast(response.message);
+          fetchUserProfile(userId, fcmId);
         } else {
           this.setState({
             isLoading: false,
@@ -560,6 +520,9 @@ const mapDispatchToProps = dispatch => {
     },
     updateUserDetails: dits => {
       dispatch(updateUserDetails(dits));
+    },
+    fetchUserProfile: (userId, fcmId) => {
+      dispatch(fetchUserProfile(userId, fcmId));
     }
   }
 }

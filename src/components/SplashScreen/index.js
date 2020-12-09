@@ -234,7 +234,6 @@ class SplashScreen extends Component {
                 });
         }
         else if (userType == 'User') {
-
             fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
                 method: "GET",
                 headers: {
