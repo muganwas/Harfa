@@ -12,6 +12,7 @@ import axios from 'axios';
 import storage from '@react-native-firebase/storage';
 import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
+import { cloneDeep } from 'lodash';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../ProHamburger';
@@ -92,7 +93,7 @@ class ProMyProfileScreen extends Component {
                     isLoading: true
                 });
                 AsyncStorage.getItem('userId')
-                    .then((providerId) => this.updateImageTask(providerId, response));
+                    .then(providerId => this.updateImageTask(providerId, response));
             }
         });
     }
@@ -201,9 +202,8 @@ class ProMyProfileScreen extends Component {
                 },
                 body: JSON.stringify(userData)
             })
-            .then((response) => response.json())
-            .then((response) => {
-                console.log("Response" + JSON.stringify(response));
+            .then(response => response.json())
+            .then(response => {
                 if (response.result) {
                     this.setState({
                         isLoading: false,
@@ -248,7 +248,11 @@ class ProMyProfileScreen extends Component {
                             type: imageObject.type,
                             uri: urlResult,
                             name: imageObject.fileName,
-                        }).then(res => {
+                        }).then(async res => {
+                            const { userInfo: { providerDetails }, updateProviderDetails } = this.props;
+                            let newProviderDetails = cloneDeep(providerDetails);
+                            newProviderDetails.imageSource = urlResult;
+                            await updateProviderDetails(newProviderDetails);
                             this.setState({
                                 isLoading: false,
                                 isErrorToast: false,
@@ -285,7 +289,7 @@ class ProMyProfileScreen extends Component {
     changeWaitingDialogVisibility = bool => {
         this.setState({
             isLoading: bool
-        })
+        });
     }
 
     render() {

@@ -24,10 +24,12 @@ import storage from '@react-native-firebase/storage';
 import AsyncStorage from '@react-native-community/async-storage';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import moment from 'moment';
+import { cloneDeep } from 'lodash';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
 import Config from '../Config';
+import { updateUserDetails } from '../../Redux/Actions/userActions';
 import { colorPrimaryDark, white, themeRed, black } from '../../Constants/colors';
 
 const options = {
@@ -67,9 +69,9 @@ class MyProfileScreen extends Component {
     const { userInfo: { userDetails } } = props;
     this.state = {
       userId: userDetails.userId,
-      imageSource: userDetails.image,
+      image: userDetails.image,
       email: userDetails.email,
-      name: userDetails.username,
+      username: userDetails.username,
       mobile: userDetails.mobile,
       dob: userDetails.dob == '' ? 'Date of Birth' : userDetails.dob,
       address: userDetails.address,
@@ -140,8 +142,8 @@ class MyProfileScreen extends Component {
           if (responseJson.result) {
             this.setState({
               userId: responseJson.data.id,
-              imageSource: responseJson.data.image,
-              name: responseJson.data.username,
+              image: responseJson.data.image,
+              username: responseJson.data.username,
               mobile: responseJson.data.mobile,
               dob: responseJson.data.dob,
               isLoading: false,
@@ -173,14 +175,12 @@ class MyProfileScreen extends Component {
         } else {
           let source = { uri: response.uri };
           this.setState({
-            imageSource: source,
+            image: source,
             error: '',
             galleryCameraImage: 'galleryCamera',
             isLoading: true,
           });
-          AsyncStorage.getItem('userId').then(providerId =>
-            this.updateImageTask(providerId, response),
-          );
+          AsyncStorage.getItem('userId').then(providerId => this.updateImageTask(providerId, response));
         }
       });
     }
@@ -227,7 +227,7 @@ class MyProfileScreen extends Component {
       isLoading: true,
     });
     const userData = {
-      username: this.state.name,
+      username: this.state.username,
       mobile: this.state.mobile,
       dob: this.state.dob,
     };
@@ -281,7 +281,11 @@ class MyProfileScreen extends Component {
             type: imageObject.type,
             uri: urlResult,
             name: imageObject.fileName,
-          }).then(res => {
+          }).then(async res => {
+            const { userInfo: { userDetails }, updateUserDetails } = this.props;
+            let newUserDetails = cloneDeep(userDetails);
+            newUserDetails.image = urlResult;
+            await updateUserDetails(newUserDetails);
             this.setState({
               isLoading: false,
               isErrorToast: false,
@@ -372,10 +376,10 @@ class MyProfileScreen extends Component {
                 }}
                 source={
                   this.state.galleryCameraImage == ''
-                    ? this.state.imageSource
-                      ? { uri: this.state.imageSource }
+                    ? this.state.image
+                      ? { uri: this.state.image }
                       : require('../../images/generic_avatar.png')
-                    : { uri: this.state.imageSource.uri }
+                    : { uri: this.state.image.uri }
                 }
               />
 
@@ -445,9 +449,9 @@ class MyProfileScreen extends Component {
                 <TextInput
                   style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
                   placeholder="User name"
-                  value={this.state.name}
+                  value={this.state.username}
                   onChangeText={nameInput =>
-                    this.setState({ error: '', name: nameInput })
+                    this.setState({ error: '', username: nameInput })
                   }></TextInput>
               </View>
 
@@ -553,6 +557,9 @@ const mapDispatchToProps = dispatch => {
     },
     fetchingNotificationsError: error => {
       dispatch(notificationError(error));
+    },
+    updateUserDetails: dits => {
+      dispatch(updateUserDetails(dits));
     }
   }
 }
