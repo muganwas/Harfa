@@ -157,6 +157,7 @@ class FacebookGoogleScreen extends Component {
         const { fetchProvidersJobRequests, fetchJobRequestHistory } = this.props;
         if (fcmToken) {
             const userData = {
+                "account_type": this.state.accountType,
                 "username": name,
                 "email": email,
                 "image": image,
