@@ -352,7 +352,7 @@ class DashboardScreen extends Component {
                     </View> : null}
 
                 <Animated.View style={[styles.animatedView, { transform: [{ translateY: this.springValue }] }]}>
-                    <Text style={styles.exitTitleText}>Press again to exit app</Text>
+                    <Text style={styles.exitTitleText}>Press back again to exit app</Text>
                     <TouchableOpacity
                         activeOpacity={0.9}
                         onPress={() => BackHandler.exitApp()}>
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     },
     animatedView: {
         width: screenWidth,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: colorBg,
         elevation: (Platform.OS === 'android') ? 50 : 0,
         position: "absolute",
         bottom: 0,
@@ -488,11 +488,11 @@ const styles = StyleSheet.create({
     },
     exitTitleText: {
         textAlign: "center",
-        color: 'white',
+        color: black,
         marginRight: 20,
     },
     exitText: {
-        color: 'red',
+        color: themeRed,
         fontWeight: 'bold',
         paddingHorizontal: 10,
         paddingVertical: 3

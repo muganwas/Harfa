@@ -24,7 +24,7 @@ import {
     notificationsFetched,
     notificationError
 } from '../../Redux/Actions/notificationActions';
-import { lightGray, colorPrimaryDark, white, themeRed, colorGray, black } from '../../Constants/colors';
+import { lightGray, colorPrimaryDark, white, themeRed, colorGray, black, colorBg } from '../../Constants/colors';
 import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     },
     animatedView: {
         width: screenWidth,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: colorBg,
         elevation: 2,
         position: "absolute",
         bottom: 0,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     },
     exitTitleText: {
         textAlign: "center",
-        color: white,
+        color: black,
         marginRight: 20,
     },
     exitText: {

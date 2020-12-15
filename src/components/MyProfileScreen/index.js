@@ -30,7 +30,7 @@ import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
 import Config from '../Config';
 import { updateUserDetails, fetchUserProfile } from '../../Redux/Actions/userActions';
-import { colorPrimaryDark, white, themeRed, black } from '../../Constants/colors';
+import { colorPrimaryDark, white, themeRed, black, colorBg } from '../../Constants/colors';
 
 const options = {
   title: 'Select a photo',
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
   },
   animatedView: {
     width: screenWidth,
-    backgroundColor: themeRed,
+    backgroundColor: colorBg,
     elevation: 2,
     position: 'absolute',
     bottom: 0,
@@ -677,11 +677,11 @@ const styles = StyleSheet.create({
   },
   exitTitleText: {
     textAlign: 'center',
-    color: 'white',
+    color: black,
     marginRight: 20,
   },
   exitText: {
-    color: 'red',
+    color: themeRed,
     fontWeight: 'bold',
     paddingHorizontal: 10,
     paddingVertical: 3,

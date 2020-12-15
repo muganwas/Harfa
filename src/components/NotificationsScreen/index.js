@@ -13,7 +13,7 @@ import Config from '../Config';
 import SwipeableButton from '../SwipeableBtn';
 import Hamburger from '../Hamburger';
 import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
-import { colorPrimaryDark, lightGray, white, themeRed, colorGray, black } from '../../Constants/colors';
+import { colorPrimaryDark, lightGray, white, themeRed, colorGray, black, colorBg } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const NOTIFICATION_URL = Config.baseURL + "notification/get-customer-notification/";
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     },
     animatedView: {
         width: screenWidth,
-        backgroundColor: colorPrimaryDark,
+        backgroundColor: colorBg,
         elevation: 2,
         position: "absolute",
         bottom: 0,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     },
     exitTitleText: {
         textAlign: "center",
-        color: white,
+        color: black,
         marginRight: 20,
     },
     exitText: {
