@@ -321,6 +321,7 @@ class Hamburger extends React.Component {
             updateOnlineStatus(false)
             if (connectivityAvailable) {
                 console.log('reconnecting...');
+                socket.close();
                 socket.open();
             }
         });

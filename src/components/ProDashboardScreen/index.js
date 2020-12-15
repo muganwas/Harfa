@@ -336,9 +336,8 @@ class ProDashboardScreen extends Component {
         const liveOffline = !online && providerDetails.status === "1";
         const manualOffline = online && providerDetails.status === "0";
         const combinedOffline = !online && providerDetails.status === "0";
-
         if (liveOffline) {
-            console.log('live offline...');
+            Config.socket.close();
             Config.socket.open();
             this.setState({ isLoading: false });
         }
