@@ -58,7 +58,26 @@ const StatusBarPlaceHolder = () => {
 class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
-        super()
+        super();
+        this.state = {};
+        this.init(props);
+    };
+
+    componentDidMount() {
+        const { navigation, jobsInfo: { selectedJobRequest: { user_id } }, generalInfo: { OnlineUsers } } = this.props;
+        navigation.addListener('willFocus', async () => {
+            this.init(this.props);
+            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+        });
+        navigation.addListener('willBlur', () => {
+            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        });
+        this.setState({
+            isLoading: false,
+        });
+    }
+
+    init = props => {
         const {
             userInfo: { providerDetails },
             jobsInfo: { jobRequestsProviders, selectedJobRequest: { user_id } },
@@ -67,7 +86,7 @@ class ProAcceptRejectJobScreen extends Component {
             navigation
         } = props;
         let currRequestPos = navigation.getParam('currentPos', 0);
-        this.state = {
+        this.setState({
             senderId: providerDetails.providerId,
             senderImage: providerDetails.imageSource,
             senderName: providerDetails.name,
@@ -101,19 +120,6 @@ class ProAcceptRejectJobScreen extends Component {
             selectedStatus: '0',
             liveChatStatus: OnlineUsers[user_id] ? OnlineUsers[user_id].status : '0',
             online: false
-        };
-    };
-
-    componentDidMount() {
-        const { navigation, jobsInfo: { selectedJobRequest: { user_id } }, generalInfo: { OnlineUsers } } = this.props;
-        navigation.addListener('willFocus', async () => {
-            BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
-        });
-        navigation.addListener('willBlur', () => {
-            BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-        });
-        this.setState({
-            isLoading: false,
         });
         const userRef = database().ref(`users/${user_id}`);
         userRef.on('child_changed', result => {
