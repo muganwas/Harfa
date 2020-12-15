@@ -178,13 +178,13 @@ class ProHamburger extends React.Component {
             updateLiveChatUsers(users);
         });
         socket.on('disconnect', info => {
-            const { generalInfo: { online, connectivityAvailable } } = this.props;
+            const { generalInfo: { connectivityAvailable } } = this.props;
             console.log('you disconnected')
             // console.log(info);
             updateLiveChatUsers({});
             updateOnlineStatus(false)
-            if (!online && connectivityAvailable) {
-                console.log('reconnecting...')
+            if (connectivityAvailable) {
+                console.log('reconnecting...');
                 socket.open();
             }
         });
