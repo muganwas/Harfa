@@ -16,7 +16,10 @@ import {
     GraphRequestManager
 } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
-import { getPendingJobRequest } from '../../Redux/Actions/jobsActions';
+import { 
+    getPendingJobRequest,
+    getAllWorkRequestClient
+} from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
 import {
     updateUserDetails,
@@ -167,7 +170,7 @@ class FacebookGoogleScreen extends Component {
         });
         const fcmToken = await messaging().getToken();
         if (fcmToken) {
-            const { fetchJobRequests, updateUserDetails } = this.props;
+            const { fetchJobRequests, fetchJobRequestHistory, updateUserDetails } = this.props;
             const userData = {
                 "acc_type": this.state.accountType,
                 "username": name,
@@ -221,10 +224,10 @@ class FacebookGoogleScreen extends Component {
                         AsyncStorage.setItem('userType', 'User');
                         AsyncStorage.setItem('email', email);
                         AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                        fetchJobRequestHistory(id);
                         fetchJobRequests(this.props, id, "Home");
                     }
                     else {
-                        console.log("Response Else ");
                         this.leftButtonActon = () => {
                             this.setState({
                                 isLoading: false,
@@ -296,7 +299,7 @@ class FacebookGoogleScreen extends Component {
     }
 
     authenticateTask = async () => {
-        const { fetchJobRequests, updateUserDetails } = this.props;
+        const { fetchJobRequests, fetchJobRequestHistory, updateUserDetails } = this.props;
         this.setState({
             isLoading: true,
         });
@@ -364,6 +367,7 @@ class FacebookGoogleScreen extends Component {
                                 const auth = { email: this.state.email, password: this.state.password };
                                 AsyncStorage.setItem('auth', JSON.stringify(auth));
                                 AsyncStorage.setItem('firebaseId', uid);
+                                fetchJobRequestHistory(id);
                                 fetchJobRequests(this.props, id, "Home");
                             }
                             else {
@@ -656,6 +660,9 @@ const mapDispatchToProps = dispatch => {
     return {
         fetchJobRequests: (props, providerId, navTo) => {
             dispatch(getPendingJobRequest(props, providerId, navTo));
+        },
+        fetchJobRequestHistory: clientId => {
+            dispatch(getAllWorkRequestClient(clientId));
         },
         updateUserDetails: details => {
             dispatch(updateUserDetails(details));

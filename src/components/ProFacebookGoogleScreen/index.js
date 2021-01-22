@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {
-    View, StatusBar, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal,
+    View, StatusBar, Text, StyleSheet, Image, 
+    TouchableOpacity, TextInput, Modal,
     Dimensions, Platform, BackHandler
 } from 'react-native';
 import { connect } from 'react-redux';
