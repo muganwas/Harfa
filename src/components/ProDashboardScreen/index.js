@@ -454,9 +454,7 @@ class ProDashboardScreen extends Component {
 
     //Call also from ReviewDialog
     changeDialogVisibility = (bool, text, item, rating, review) => {
-
         if (item != '') {
-
             if (item.employee_rating == '') {
                 this.setState({
                     isDialogLogoutVisible: bool,

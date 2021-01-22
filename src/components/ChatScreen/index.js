@@ -44,41 +44,8 @@ const StatusBarPlaceHolder = () => {
 class ChatScreen extends Component {
     constructor(props) {
         super();
-        const { userInfo: { userDetails }, jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } }, messagesInfo: { dataChatSource, fetched }, navigation } = props;
-        var currRequestPos;
-        Object.keys(allJobRequestsClient).map(key => {
-            const currEmpId = allJobRequestsClient[key].employee_id;
-            if (currEmpId === employee_id) currRequestPos = key;
-        });
-        this.state = {
-            senderId: userDetails.userId,
-            senderImage: userDetails.image,
-            senderName: userDetails.username,
-            inputMessage: '',
-            showButton: false,
-            dataChatSource: dataChatSource[employee_id] || [],
-            isLoading: !fetched,
-            isUploading: false,
-            isJobAccepted:  allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].status === 'Accepted',
-            requestStatus: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].status,
-            receiverId: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].employee_id,
-            receiverName: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].employee_details.username,
-            receiverImage: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].employee_details.image,
-            serviceName: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].service_details.service_name,
-            orderId: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].order_id,
-            titlePage: navigation.state.params.titlePage,
-            provider_FCM_id: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].employee_details.fcm_id,
-            dataChatSourceSynced: false,
-            selectedStatus: '0',
-            liveChatStatus: '0',
-            online: false,
-            showDialog: false,
-            dialogType: null,
-            dialogTitle: '',
-            dialogDesc: '',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Retry'
-        }
+        this.state = {}
+        this.reInit(props);
         this.leftButtonActon = null;
         this.rightButtonAction = null;
     };
@@ -86,9 +53,8 @@ class ChatScreen extends Component {
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
         fetchedNotifications({ type: 'messages', value: 0 });
-        this.reInit();
         navigation.addListener('willFocus', async () => {
-            this.reInit();
+            this.reInit(this.props);
             BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
         });
         navigation.addListener('willBlur', () => {
@@ -96,21 +62,17 @@ class ChatScreen extends Component {
         });
     }
 
-    reInit = () => {
+    reInit = (props) => {
         const {
             userInfo: { userDetails },
             jobsInfo: { allJobRequestsClient, selectedJobRequest: { employee_id } },
             messagesInfo: { dataChatSource, fetched },
             generalInfo: { OnlineUsers },
             navigation
-        } = this.props;
-        let onlineUsers = clone(OnlineUsers);
-        let providerId = navigation.getParam('providerId', null) || allJobRequestsClient[currRequestPos].employee_id;
-        var currRequestPos;
-        Object.keys(allJobRequestsClient).map(key => {
-            const currEmpId = allJobRequestsClient[key].employee_id;
-            if (currEmpId === employee_id) currRequestPos = key;
-        });
+        } = props;
+        const onlineUsers = clone(OnlineUsers);
+        const providerId = navigation.getParam('providerId', null) || allJobRequestsClient[currRequestPos].employee_id;
+        const currRequestPos = navigation.getParam('currentPosition');
         this.setState({
             senderId: userDetails.userId,
             senderImage: userDetails.image,
@@ -130,7 +92,14 @@ class ChatScreen extends Component {
             titlePage: navigation.state.params.titlePage,
             provider_FCM_id: allJobRequestsClient[currRequestPos] && allJobRequestsClient[currRequestPos].employee_details.fcm_id,
             dataChatSourceSynced: false,
-            liveChatStatus: OnlineUsers[providerId] ? OnlineUsers[providerId].status : '0'
+            liveChatStatus: OnlineUsers[providerId] ? OnlineUsers[providerId].status : '0',
+            selectedStatus: '0',
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
         });
         const userRef = database().ref(`users/${providerId}`);
         userRef.on('child_changed', result => {
@@ -162,11 +131,7 @@ class ChatScreen extends Component {
             generalInfo: { OnlineUsers },
             navigation
         } = this.props;
-        let currRequestPos;
-        Object.keys(allJobRequestsClient).map(key => {
-            const currEmpId = allJobRequestsClient[key].employee_id;
-            if (currEmpId === employee_id) currRequestPos = key;
-        });
+        const currRequestPos = navigation.getParam('currentPosition');
         const providerId = navigation.getParam('providerId', null) || allJobRequestsClient[currRequestPos].employee_id;
         const { isLoading, dataChatSourceSynced, liveChatStatus, selectedStatus } = this.state;
         const localDataChatSource = this.state.dataChatSource;
@@ -215,7 +180,7 @@ class ChatScreen extends Component {
     sendMessageTask = async () => {
         const { inputMessage, senderId, senderName, senderImage, receiverId, receiverImage, provider_FCM_id, receiverName, serviceName, orderId } = this.state;
         const { dbMessagesFetched, messagesInfo } = this.props;
-        let newMessages = cloneDeep(messagesInfo.messages);
+        const newMessages = cloneDeep(messagesInfo.messages);
         const time = moment().toISOString();
         const date = new Date().getDate() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getFullYear();
         this.setState({
@@ -247,11 +212,8 @@ class ChatScreen extends Component {
 
     jobCancelTask = () => {
         const { fetchedPendingJobInfo, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
-        var currRequestPos;
-        jobRequests.map((obj, key) => {
-            const currEmpId = obj.employee_id;
-            if (currEmpId === employee_id) currRequestPos = key;
-        });
+        let currRequestPos;
+        jobRequests.map((obj, key) => {if (obj.employee_id === employee_id) currRequestPos = key});
         var newJobRequests = cloneDeep(jobRequests);
         this.setState({
             isLoading: true

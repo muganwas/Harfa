@@ -206,7 +206,7 @@ class DashboardScreen extends Component {
     }
 
     goToNextPage = (chat_status, jobInfo) => {
-        const { dispatchSelectedJobRequest } = this.props;
+        const { dispatchSelectedJobRequest, jobsInfo: { allJobRequestsClient } } = this.props;
         if (chat_status == '0') {
             this.showToast("Your chat request has been accepted yet. Please wait...")
         }
@@ -215,12 +215,15 @@ class DashboardScreen extends Component {
             const nameArr = name.split(' ');
             const username = nameArr[0];
             const surname = nameArr.pop();
+            let currentPostInAllJobs;
+            allJobRequestsClient.map((request, index) => {if (request.order_id === order_id) currentPostInAllJobs = index})
             dispatchSelectedJobRequest(jobInfo);
-            if (jobInfo.status == 'Pending') {
+            if (jobInfo.status.toLowerCase() === 'pending') {
                 this.props.navigation.navigate("Chat",
                     {
                         'providerId': employee_id,
                         'fcmId': fcm_id,
+                        'currentPosition': currentPostInAllJobs,
                         'providerName': username,
                         'providerSurname': surname,
                         'providerImage': image,
@@ -230,7 +233,7 @@ class DashboardScreen extends Component {
                         'isJobAccepted': status === "Accepted",
                     });
             }
-            else if (jobInfo.status == 'Accepted') {
+            else if (jobInfo.status.toLowerCase() === 'accepted') {
                 this.props.navigation.navigate("MapDirection", {
                     currentPos: jobInfo.currentPos,
                     titlePage: "Dashboard"
