@@ -206,16 +206,14 @@ class ProBookingDetailsScreen extends Component {
         const { dispatchSelectedJobRequest, navigation } = this.props;
         return (
             <View style={styles.container}>
-
                 <StatusBarPlaceHolder />
-
                 <View style={{
                     flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorPrimary,
                     paddingLeft: 10, paddingRight: 20, paddingTop: 5, paddingBottom: 5
                 }}>
                     <View style={{ flex: 1, flexDirection: 'row', }}>
                         <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
-                            onPress={() => navigation.navigate('ProBooking', {from: 'detailsScreen'})}>
+                            onPress={() => navigation.navigate('ProBooking', { from: 'detailsScreen' })}>
                             <Image style={{ width: 20, height: 20, alignSelf: 'center', tintColor: black }}
                                 source={require('../../icons/arrow_back.png')} />
                         </TouchableOpacity>
@@ -238,10 +236,13 @@ class ProBookingDetailsScreen extends Component {
                         <Text style={{ color: darkGray, fontWeight: 'bold', fontSize: 14 }}>Order number - {this.state.bookingDetails.order_id.replace("\"", "")}</Text>
                     </View>
                     <View style={styles.providerDetailsContainer}>
-                        <Image
-                            style={{ height: 45, width: 45, alignSelf: 'flex-start', alignContent: 'flex-start', borderRadius: 100 }}
-                            source={this.state.bookingDetails.user_details.image ? { uri: this.state.bookingDetails.user_details.image } : require('../../images/generic_avatar.png')} />
-                        <View style={{ flexDirection: 'column' }}>
+                        <View style={styles.profilePictureContainer}>
+                            <Image
+                                style={styles.profilePicture}
+                                source={this.state.bookingDetails.user_details.image ? { uri: this.state.bookingDetails.user_details.image } : require('../../images/generic_avatar.png')}
+                            />
+                        </View>
+                        <View style={styles.addressContainer}>
                             <Text style={{ color: black, fontSize: 14, fontWeight: 'bold', textAlignVertical: 'center', marginLeft: 10, }}>
                                 {this.state.bookingDetails.user_details.username}
                             </Text>
@@ -284,12 +285,7 @@ class ProBookingDetailsScreen extends Component {
                     }}>
                         <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Customer's rating of service</Text>
                     </View>
-                    <View style={{
-                        backgroundColor: white,
-                        marginTop: 10,
-                        alignItems: 'flex-start',
-                        paddingHorizontal: 10
-                    }}>
+                    <View style={styles.ratingSect}>
                         <AirbnbRating
                             type='custom'
                             ratingCount={5}
@@ -301,19 +297,18 @@ class ProBookingDetailsScreen extends Component {
                             onFinishRating={(rating) => console.log("Customer Rating : " + rating)} />
                     </View>
 
-                    {this.state.customer_review != '' &&
+                    {this.state.customer_review !== '' &&
                         <View>
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
                                 <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Customer's review</Text>
                             </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 10, marginLeft: 10 }}>
-                                <Text style={{ color: 'grey', fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.customer_review}</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', margin: 10 }}>
+                                <Text style={{ color: 'grey', fontSize: 14, padding: 10 }}>{this.state.customer_review}</Text>
                             </View>
                         </View>
                     }
 
-                    <View style={{ 
+                    <View style={{
                         flexDirection: 'row',
                         justifyContent: 'flex-start',
                         alignContent: 'flex-start',
@@ -324,13 +319,7 @@ class ProBookingDetailsScreen extends Component {
                     }}>
                         <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Your rating of customer</Text>
                     </View>
-                    <View style={{
-                        backgroundColor: white,
-                        marginTop: 10,
-                        marginBottom: 10,
-                        alignItems: 'flex-start',
-                        paddingHorizontal: 10
-                    }}>
+                    <View style={styles.ratingSect}>
                         <AirbnbRating
                             type='custom'
                             ratingCount={5}
@@ -348,14 +337,13 @@ class ProBookingDetailsScreen extends Component {
                             } />
                     </View>
 
-                    {this.state.employee_review != '' &&
+                    {this.state.employee_review !== '' &&
                         <View>
-                            <View style={{ width: screenWidth, height: 1, backgroundColor: colorBg, marginTop: 10 }}></View>
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 15, marginLeft: 10 }}>
                                 <Text style={{ color: black, fontWeight: 'bold', fontSize: 14 }}>Your customer review</Text>
                             </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', marginTop: 10, marginLeft: 10 }}>
-                                <Text style={{ color: 'grey', fontSize: 14, paddingLeft: 5, paddingRight: 5, paddingBottom: 10, }}>{this.state.employee_review}</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignContent: 'flex-start', margin: 10 }}>
+                                <Text style={{ color: 'grey', fontSize: 14, padding: 10 }}>{this.state.employee_review}</Text>
                             </View>
                         </View>
                     }
@@ -440,11 +428,43 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         padding: 10,
     },
+    profilePicture: { 
+        height: 100, 
+        width: 100, 
+        alignSelf: 'flex-start', 
+        alignContent: 'flex-start', 
+        borderRadius: 100 
+    }
+    ,
     providerDetailsContainer: {
         width: screenWidth,
         flexDirection: 'row',
         backgroundColor: 'white',
+        margin: 10,
         padding: 10,
+    },
+    profilePictureContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    ratingSect: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignContent: 'flex-start',
+        paddingTop: 10,
+        paddingLeft: 10,
+        paddingRight: 10,
+        paddingBottom: 0,
+        marginTop: 10,
+        marginLeft: 10,
+        marginRight: 10,
+        marginBottom: 0
+    },
+    addressContainer: {
+        flexDirection: 'column',
+        marginHorizontal: 10,
+        justifyContent: 'center'
     },
     chatView: {
         flexDirection: 'row',
