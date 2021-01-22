@@ -279,7 +279,6 @@ class ProviderDetailsScreen extends Component {
       name: navigation.state.params.name,
       surname: navigation.state.params.surname,
       image: navigation.state.params.image,
-      imageAvailable: false,
       mobile: navigation.state.params.mobile,
       avgRating: navigation.state.params.avgRating,
       distance: navigation.state.params.distance,
@@ -448,7 +447,7 @@ class ProviderDetailsScreen extends Component {
 
           <View style={{ flexDirection: 'column', marginLeft: 10 }}>
             <Image style={{ width: 60, height: 60, borderRadius: 100, alignSelf: 'center' }}
-              source={this.state.image ? { uri: this.state.image } : require('../../images/generic_avatar.png')} />
+              source={this.state.imageAvailable ? { uri: this.state.image } : require('../../images/generic_avatar.png')} />
 
             <View style={{ backgroundColor: 'white', marginTop: 5 }}>
               <AirbnbRating

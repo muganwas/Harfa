@@ -248,9 +248,8 @@ class ListOfProviderScreen extends Component {
                   borderRadius: 100,
                   alignSelf: 'center',
                 }}
-                source={item.image ? { uri: item.image } : require('../../images/generic_avatar.png')}
+                source={item.imageAvailable ? { uri: item.image } : require('../../images/generic_avatar.png')}
               />
-
               <View style={{ backgroundColor: 'white', marginTop: 5 }}>
 
                 <AirbnbRating
@@ -340,7 +339,6 @@ class ListOfProviderScreen extends Component {
       });
       this.setState({ dataSource: newDataSource, reviewOrder: !reviewOrder });
     }
-
     this.toggleShowClasses();
   }
 
