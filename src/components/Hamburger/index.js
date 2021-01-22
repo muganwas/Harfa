@@ -317,9 +317,13 @@ class Hamburger extends React.Component {
         socket.on('disconnect', info => {
             console.log('disconnection info --', info)
             updateLiveChatUsers({});
-            const { generalInfo: { online, connectivityAvailable } } = this.props
+            const { generalInfo: { connectivityAvailable } } = this.props
             updateOnlineStatus(false)
-            if (!online && connectivityAvailable) socket.open();
+            if (connectivityAvailable) {
+                console.log('reconnecting...');
+                socket.close();
+                socket.open();
+            }
         });
         socket.open();
     }

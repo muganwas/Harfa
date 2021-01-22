@@ -34,7 +34,7 @@ import {
     setSelectedJobRequest,
     getAllWorkRequestPro
 } from '../../Redux/Actions/jobsActions';
-import { colorBg, colorYellow, colorPrimaryDark, lightGray, white, themeRed, darkGray, black } from '../../Constants/colors';
+import { colorBg, colorYellow, lightGray, white, themeRed, darkGray, black } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -66,10 +66,10 @@ const StatusBarPlaceHolder = () => {
 class ProDashboardScreen extends Component {
     constructor(props) {
         super();
-        const { 
-            jobsInfo: { dataWorkSource }, 
-            generalInfo: { online, connectivityAvailable }, 
-            userInfo: { providerDetails } 
+        const {
+            jobsInfo: { dataWorkSource },
+            generalInfo: { online, connectivityAvailable },
+            userInfo: { providerDetails }
         } = props;
         this.state = {
             isLoading: true,
@@ -120,7 +120,7 @@ class ProDashboardScreen extends Component {
     componentDidUpdate() {
         const { generalInfo: { connectivityAvailable }, userInfo: { providerDetails } } = this.props;
         const { status } = this.state;
-            
+
         if (!connectivityAvailable && status === "ONLINE")
             this.setState({
                 status: "OFFLINE",
@@ -324,41 +324,89 @@ class ProDashboardScreen extends Component {
     }
 
     changeAvailabilityStaus = () => {
-        const { userInfo: { providerDetails } } = this.props;
-        var statusValue = null;
+        const {
+            generalInfo: { online },
+            userInfo: { providerDetails }
+        } = this.props;
         const providerId = providerDetails.providerId;
         const usersRef = database().ref('users/' + providerId);
         this.setState({
             isLoading: true,
-        })
-
-        if (this.state.status == 'ONLINE') {
-            statusValue = '0';
+        });
+        const liveOffline = !online && providerDetails.status === "1";
+        const manualOffline = online && providerDetails.status === "0";
+        const combinedOffline = !online && providerDetails.status === "0";
+        if (liveOffline) {
+            Config.socket.close();
+            Config.socket.open();
+            this.setState({ isLoading: false });
         }
-        else if (this.state.status == 'OFFLINE') {
-            statusValue = '1';
-        }
-
-        const userData = {
-            "status": statusValue
-        }
-        usersRef.once('value', data => {
-            if (data) {
-                usersRef.update(userData).then(() => {
-                    this.updateAvailabilityInMongoDB(userData);
-                }).catch(e => {
-                    console.log(e.message)
-                });
+        else if (manualOffline) {
+            let userData = {
+                "status": '1'
             }
-            else {
-                usersRef.set(userData).then(() => {
-                    this.updateAvailabilityInMongoDB(userData);
-                }).catch(e => {
-                    console.log(e.message);
-                });
+            usersRef.once('value', data => {
+                if (data) {
+                    usersRef.update(userData).then(() => {
+                        this.updateAvailabilityInMongoDB(userData);
+                    }).catch(e => {
+                        console.log(e.message)
+                    });
+                }
+                else {
+                    usersRef.set(userData).then(() => {
+                        this.updateAvailabilityInMongoDB(userData);
+                    }).catch(e => {
+                        console.log(e.message);
+                    });
+                }
+            })
+        }
+        else if (combinedOffline) {
+            Config.socket.open();
+            let userData = {
+                "status": "1"
             }
-        })
-
+            usersRef.once('value', data => {
+                if (data) {
+                    usersRef.update(userData).then(() => {
+                        this.updateAvailabilityInMongoDB(userData);
+                    }).catch(e => {
+                        console.log(e.message)
+                    });
+                }
+                else {
+                    usersRef.set(userData).then(() => {
+                        this.updateAvailabilityInMongoDB(userData);
+                    }).catch(e => {
+                        console.log(e.message);
+                    });
+                }
+            });
+        }
+        else {
+            const newStatus = providerDetails.status === "1" ? '0' : '1';
+            let userData = {
+                "status": newStatus
+            }
+            !online ? Config.socket.open() : Config.socket.close();
+            usersRef.once('value', data => {
+                if (data) {
+                    usersRef.update(userData).then(() => {
+                        this.updateAvailabilityInMongoDB(userData);
+                    }).catch(e => {
+                        console.log(e.message)
+                    });
+                }
+                else {
+                    usersRef.set(userData).then(() => {
+                        this.updateAvailabilityInMongoDB(userData);
+                    }).catch(e => {
+                        console.log(e.message);
+                    });
+                }
+            });
+        }
     };
 
     _spring = () => {
@@ -789,7 +837,11 @@ class ProDashboardScreen extends Component {
     }
 
     render() {
-        const { jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource } } = this.props;
+        const {
+            jobsInfo: { requestsProvidersFetched, jobRequestsProviders, dataWorkSource },
+            generalInfo: { online, connectivityAvailable },
+            userInfo: { providerDetails }
+        } = this.props;
         return (
             <View style={styles.container}>
                 <StatusBarPlaceHolder />
@@ -818,10 +870,10 @@ class ProDashboardScreen extends Component {
                             thumbColor={this.state.status.toLocaleLowerCase() === 'online' ? white : "#f4f3f4"}
                             ios_backgroundColor={this.state.availBackground}
                             onValueChange={this.changeAvailabilityStaus}
-                            value={this.state.status.toLowerCase() === 'online'}
+                            value={online && providerDetails.status === "1" && connectivityAvailable}
                         />
                         <Text style={{ color: black, textTransform: 'capitalize', alignSelf: 'center' }}>
-                            {this.state.status}
+                            {online && providerDetails.status === "1" && connectivityAvailable ? "ONLINE" : "OFFLINE"}
                         </Text>
                     </View>
                 </View>
