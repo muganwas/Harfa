@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { View, Image, StatusBar, ActivityIndicator, Platform, Alert, BackHandler, Dimensions } from 'react-native';
+import { View, Image, StatusBar, ActivityIndicator, Platform, BackHandler, Dimensions } from 'react-native';
 import { createAppContainer, } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import AsyncStorage from '@react-native-community/async-storage';

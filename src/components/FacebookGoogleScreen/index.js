@@ -16,7 +16,7 @@ import {
     GraphRequestManager
 } from 'react-native-fbsdk';
 import { GoogleSignin, statusCodes } from '@react-native-community/google-signin';
-import { 
+import {
     getPendingJobRequest,
     getAllWorkRequestClient
 } from '../../Redux/Actions/jobsActions';
@@ -37,9 +37,11 @@ import {
     white,
     lightGray,
 } from '../../Constants/colors';
+import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "users/register/create";
+const USER_GET_PROFILE = Config.baseURL + "users/";
 const AUTHENTICATE_URL = Config.baseURL + 'users/authenticate';
 const Android = Platform.OS === 'android';
 
@@ -143,7 +145,7 @@ class FacebookGoogleScreen extends Component {
         try {
             await GoogleSignin.hasPlayServices();
             var result = await GoogleSignin.signIn();
-            const { user, user: { name, email, photo, id } } = result;
+            const { user: { name, email, photo, id } } = result;
             this.setState({ firebaseId: id, loginType: 'google' });
             this.fbGoogleLoginCustomerTask(name, email, photo);
         }
@@ -182,12 +184,8 @@ class FacebookGoogleScreen extends Component {
                 "type": this.state.loginType,
             }
             Axios.post(REGISTER_URL, { data: JSON.stringify(userData) })
-                .then( async responseJson => {
+                .then(async responseJson => {
                     if (responseJson.status === 200 && responseJson.data.createdDate) {
-                        this.setState({
-                            isLoading: false,
-                            isErrorToast: true,
-                        });
                         const usersRef = database().ref(`users/${responseJson.data.id}`);
                         await usersRef.once('value', snapshot => {
                             const value = snapshot.val();
@@ -203,29 +201,79 @@ class FacebookGoogleScreen extends Component {
                             }
                         });
                         const id = responseJson.data.id;
-                        var userData = {
-                            userId: responseJson.data.id,
-                            accountType: responseJson.data.acc_type,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            username: responseJson.data.username,
-                            image: responseJson.data.image,
-                            mobile: responseJson.data.mobile,
-                            dob: responseJson.data.dob,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            fcmId: responseJson.data.fcm_id,
-                            firebaseId: this.state.firebaseId
-                        }
-                        updateUserDetails(userData);
-                        //Store data like sharedPreference
-                        AsyncStorage.setItem('userId', id);
-                        AsyncStorage.setItem('userType', 'User');
-                        AsyncStorage.setItem('email', email);
-                        AsyncStorage.setItem('firebaseId', this.state.firebaseId);
-                        fetchJobRequestHistory(id);
-                        fetchJobRequests(this.props, id, "Home");
+                        /** get stored profile if exists */
+                        fetch(USER_GET_PROFILE + id + '?fcm_id=' + fcmToken, {
+                            method: "GET",
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                            .then(response => response.json())
+                            .then(async response => {
+                                this.setState({
+                                    isLoading: false,
+                                    isErrorToast: true,
+                                });
+                                if (response && response.result) {
+                                    const userId = response.data.id;
+                                    const data = {
+                                        userId: response.data.id,
+                                        accountType: response.data.acc_type,
+                                        email: response.data.email,
+                                        password: response.data.password,
+                                        username: response.data.username,
+                                        image: response.data.image,
+                                        mobile: response.data.mobile,
+                                        dob: response.data.dob,
+                                        address: response.data.address,
+                                        lat: response.data.lat,
+                                        lang: response.data.lang,
+                                        firebaseId: this.state.firebaseId,
+                                        fcmId: response.data.fcm_id,
+                                    }
+                                    updateUserDetails(data);
+                                    //Store data like sharedPreference
+                                    AsyncStorage.setItem('userId', userId);
+                                    AsyncStorage.setItem('userType', 'User');
+                                    AsyncStorage.setItem('email', response.data.email);
+                                    AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                                    //Check if any Ongoing Request 
+                                    fetchJobRequestHistory(userId);
+                                    fetchJobRequests(this.props, userId, 'Home');
+                                }
+                                else {
+                                    const userData = {
+                                        userId: responseJson.data.id,
+                                        accountType: responseJson.data.acc_type,
+                                        email: responseJson.data.email,
+                                        password: responseJson.data.password,
+                                        username: responseJson.data.username,
+                                        image: responseJson.data.image,
+                                        mobile: responseJson.data.mobile,
+                                        dob: responseJson.data.dob,
+                                        address: responseJson.data.address,
+                                        lat: responseJson.data.lat,
+                                        lang: responseJson.data.lang,
+                                        fcmId: responseJson.data.fcm_id,
+                                        firebaseId: this.state.firebaseId
+                                    }
+                                    updateUserDetails(userData);
+                                    //Store data like sharedPreference
+                                    AsyncStorage.setItem('userId', id);
+                                    AsyncStorage.setItem('userType', 'User');
+                                    AsyncStorage.setItem('email', email);
+                                    AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                                    fetchJobRequestHistory(id);
+                                    fetchJobRequests(this.props, id, "Home");
+                                }
+                            }).
+                            catch((error) => {
+                                this.setState({
+                                    isLoading: false
+                                })
+                                SimpleToast('Something went wrong', SimpleToast.SHORT);
+                            });
                     }
                     else {
                         this.leftButtonActon = () => {

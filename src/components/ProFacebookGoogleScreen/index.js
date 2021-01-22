@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-    View, StatusBar, Text, StyleSheet, Image, 
+    View, StatusBar, Text, StyleSheet, Image,
     TouchableOpacity, TextInput, Modal,
     Dimensions, Platform, BackHandler
 } from 'react-native';
@@ -27,6 +27,7 @@ import { themeRed, black, white, lightGray } from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + "employee/register/create";
+const PRO_GET_PROFILE = Config.baseURL + "employee/";
 const AUTHENTICATE_URL = Config.baseURL + "employee/authenticate";
 const Android = Platform.OS === 'android';
 
@@ -170,10 +171,6 @@ class FacebookGoogleScreen extends Component {
             Axios.post(REGISTER_URL, { data: JSON.stringify(userData) }).then(async responseJson => {
                 let status;
                 if (responseJson.status === 200 && responseJson.data.createdDate) {
-                    this.setState({
-                        isLoading: false,
-                        isErrorToast: true,
-                    });
                     const usersRef = database().ref(`users/${responseJson.data.id}`);
                     await usersRef.once('value', snapshot => {
                         const value = snapshot.val();
@@ -189,33 +186,84 @@ class FacebookGoogleScreen extends Component {
                         }
                     });
                     const id = responseJson.data.id;
-                    var providerData = {
-                        providerId: responseJson.data.id,
-                        name: responseJson.data.username,
-                        email: responseJson.data.email,
-                        password: responseJson.data.password,
-                        imageSource: responseJson.data.image,
-                        surname: responseJson.data.surname,
-                        mobile: responseJson.data.mobile,
-                        services: responseJson.data.services,
-                        description: responseJson.data.description,
-                        address: responseJson.data.address,
-                        lat: responseJson.data.lat,
-                        lang: responseJson.data.lang,
-                        invoice: responseJson.data.invoice,
-                        status: status != undefined ? status : responseJson.data.status,
-                        fcmId: responseJson.data.fcm_id,
-                        accountType: responseJson.data.account_type,
-                        firebaseId: this.state.firebaseId
-                    };
-                    updateProviderDetails(providerData);
-                    //Store data like sharedPreference
-                    AsyncStorage.setItem('userId', id);
-                    AsyncStorage.setItem('userType', 'Provider');
-                    AsyncStorage.setItem('email', email);
-                    AsyncStorage.setItem('firebaseId', this.state.firebaseId);
-                    fetchJobRequestHistory(id);
-                    fetchProvidersJobRequests(this.props, id, "ProHome");
+                    fetch(PRO_GET_PROFILE + id + '?fcm_id=' + fcmToken, {
+                        method: "GET",
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then((response) => response.json())
+                        .then(async response => {
+                            this.setState({
+                                isLoading: false,
+                                isErrorToast: true,
+                            });
+                            if (response && response.result) {
+                                const data = {
+                                    providerId: response.data.id,
+                                    name: response.data.username,
+                                    email: response.data.email,
+                                    password: response.data.password,
+                                    imageSource: response.data.image,
+                                    surname: response.data.surname,
+                                    mobile: response.data.mobile,
+                                    services: response.data.services,
+                                    description: response.data.description,
+                                    address: response.data.address,
+                                    lat: response.data.lat,
+                                    lang: response.data.lang,
+                                    invoice: response.data.invoice,
+                                    firebaseId: this.state.firebaseId,
+                                    status: status != undefined ? status : response.data.status,
+                                    fcmId: response.data.fcm_id,
+                                    accountType: response.data.account_type
+                                }
+                                updateProviderDetails(data);
+                                //Store data like sharedPreference
+                                AsyncStorage.setItem('userId', id);
+                                AsyncStorage.setItem('userType', 'Provider');
+                                AsyncStorage.setItem('email', response.data.email);
+                                AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                                fetchJobRequestHistory(id);
+                                fetchProvidersJobRequests(this.props, id, 'ProHome');
+                            }
+                            else {
+                                const providerData = {
+                                    providerId: responseJson.data.id,
+                                    name: responseJson.data.username,
+                                    email: responseJson.data.email,
+                                    password: responseJson.data.password,
+                                    imageSource: responseJson.data.image,
+                                    surname: responseJson.data.surname,
+                                    mobile: responseJson.data.mobile,
+                                    services: responseJson.data.services,
+                                    description: responseJson.data.description,
+                                    address: responseJson.data.address,
+                                    lat: responseJson.data.lat,
+                                    lang: responseJson.data.lang,
+                                    invoice: responseJson.data.invoice,
+                                    status: status != undefined ? status : responseJson.data.status,
+                                    fcmId: responseJson.data.fcm_id,
+                                    accountType: responseJson.data.account_type,
+                                    firebaseId: this.state.firebaseId
+                                };
+                                updateProviderDetails(providerData);
+                                //Store data like sharedPreference
+                                AsyncStorage.setItem('userId', id);
+                                AsyncStorage.setItem('userType', 'Provider');
+                                AsyncStorage.setItem('email', responseJson.data.email);
+                                AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                                fetchJobRequestHistory(id);
+                                fetchProvidersJobRequests(this.props, id, "ProHome");
+                            }
+                        })
+                        .catch(error => {
+                            this.setState({
+                                isLoading: false
+                            })
+                            alert(error);
+                        });
                 }
                 else {
                     console.log('response data', responseJson.data)
