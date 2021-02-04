@@ -303,7 +303,7 @@ class Hamburger extends React.Component {
             const { notificationsInfo, messagesInfo, dbMessagesFetched } = this.props;
             let newMessages = cloneDeep(messagesInfo.messages);
             let currentMessagesCount = notificationsInfo.messages;
-            let prevMessages = cloneDeep(newMessages[sender]);
+            let prevMessages = newMessages[sender] ? cloneDeep(newMessages[sender]) : [];
             let prevMessage = prevMessages.pop();
             if (JSON.stringify(prevMessage) === JSON.stringify(data)) console.log('repeated message')
             else {

@@ -212,7 +212,12 @@ class ProChatScreen extends Component {
                 time,
                 date
             };
-            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            if (newMessages[receiverId])
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            else {
+                newMessages[receiverId] = [];
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            }
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }

@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import {
     View, StyleSheet, TouchableOpacity, Image, Text,
     Dimensions, ActivityIndicator,
-    BackHandler, ImageBackground, 
-    StatusBar, Platform, KeyboardAvoidingView, 
+    BackHandler, ImageBackground,
+    StatusBar, Platform, KeyboardAvoidingView,
     ScrollView
 } from 'react-native';
 import { cloneDeep } from 'lodash';
@@ -71,8 +71,8 @@ class ChatAfterBookingDetailsScreen extends Component {
     };
 
     componentDidMount() {
-        const { 
-            fetchedNotifications, navigation, 
+        const {
+            fetchedNotifications, navigation,
             jobsInfo: { selectedJobRequest: { employee_id } },
             generalInfo: { OnlineUsers }
         } = this.props;
@@ -136,7 +136,7 @@ class ChatAfterBookingDetailsScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { 
+        const {
             messagesInfo: { fetched, dataChatSource }, jobsInfo: { selectedJobRequest: { employee_id } }, generalInfo: { OnlineUsers } } = this.props;
         const { isLoading, liveChatStatus, selectedStatus } = this.state;
         const providerId = employee_id;
@@ -210,7 +210,12 @@ class ChatAfterBookingDetailsScreen extends Component {
                 time,
                 date
             };
-            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            if (newMessages[receiverId])
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            else {
+                newMessages[receiverId] = []
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            }
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }
@@ -294,7 +299,7 @@ class ChatAfterBookingDetailsScreen extends Component {
                         keyboardShouldPersistTaps='handled'
                         keyboardDismissMode='on-drag'
                     >
-                        <MessagesView 
+                        <MessagesView
                             receiverId={receiverId}
                             senderId={senderId}
                         />

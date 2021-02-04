@@ -60,11 +60,11 @@ class ProAcceptRejectJobScreen extends Component {
     constructor(props) {
         super();
         this.state = {};
-        this.init(props);
     };
 
     componentDidMount() {
-        const { navigation, jobsInfo: { selectedJobRequest: { user_id } }, generalInfo: { OnlineUsers } } = this.props;
+        const { navigation } = this.props;
+        this.init(this.props);
         navigation.addListener('willFocus', async () => {
             this.init(this.props);
             BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
@@ -228,7 +228,12 @@ class ProAcceptRejectJobScreen extends Component {
                 time,
                 date
             };
-            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            if (newMessages[receiverId])
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            else {
+                newMessages[receiverId] = [];
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            }
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }

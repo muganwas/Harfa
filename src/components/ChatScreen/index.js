@@ -44,14 +44,21 @@ const StatusBarPlaceHolder = () => {
 class ChatScreen extends Component {
     constructor(props) {
         super();
-        this.state = {}
-        this.reInit(props);
+        this.state = {
+            showDialog: false,
+            dialogType: null,
+            dialogTitle: '',
+            dialogDesc: '',
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Retry'
+        }
         this.leftButtonActon = null;
         this.rightButtonAction = null;
     };
 
     componentDidMount() {
         const { fetchedNotifications, navigation } = this.props;
+        this.reInit(this.props);
         fetchedNotifications({ type: 'messages', value: 0 });
         navigation.addListener('willFocus', async () => {
             this.reInit(this.props);
@@ -70,9 +77,9 @@ class ChatScreen extends Component {
             generalInfo: { OnlineUsers },
             navigation
         } = props;
+        const currRequestPos = navigation.getParam('currentPosition');
         const onlineUsers = clone(OnlineUsers);
         const providerId = navigation.getParam('providerId', null) || allJobRequestsClient[currRequestPos].employee_id;
-        const currRequestPos = navigation.getParam('currentPosition');
         this.setState({
             senderId: userDetails.userId,
             senderImage: userDetails.image,
@@ -204,7 +211,12 @@ class ChatScreen extends Component {
                 time,
                 date
             }
-            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            if (newMessages[receiverId])
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            else {
+                newMessages[receiverId] = [];
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            }
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }
@@ -213,7 +225,7 @@ class ChatScreen extends Component {
     jobCancelTask = () => {
         const { fetchedPendingJobInfo, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } } } = this.props;
         let currRequestPos;
-        jobRequests.map((obj, key) => {if (obj.employee_id === employee_id) currRequestPos = key});
+        jobRequests.map((obj, key) => { if (obj.employee_id === employee_id) currRequestPos = key });
         var newJobRequests = cloneDeep(jobRequests);
         this.setState({
             isLoading: true
@@ -336,7 +348,7 @@ class ChatScreen extends Component {
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />
                 <DialogComponent
-                    isDialogVisible={showDialog && dialogType !== null}
+                    isDialogVisible={showDialog && dialogType !== null ? true : false}
                     transparent={true}
                     animation='fade'
                     width={screenWidth - 80}

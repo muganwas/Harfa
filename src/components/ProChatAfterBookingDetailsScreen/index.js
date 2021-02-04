@@ -141,10 +141,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
 
     componentDidUpdate() {
-        const { 
-            messagesInfo: { fetched, dataChatSource }, 
-            jobsInfo: { selectedJobRequest: { user_id } }, 
-            generalInfo: { OnlineUsers } 
+        const {
+            messagesInfo: { fetched, dataChatSource },
+            jobsInfo: { selectedJobRequest: { user_id } },
+            generalInfo: { OnlineUsers }
         } = this.props;
         const { isLoading, liveChatStatus, selectedStatus } = this.state;
         const localDataChatSource = this.state.dataChatSource;
@@ -213,7 +213,12 @@ class ProChatAfterBookingDetailsScreen extends Component {
                 time,
                 date
             };
-            newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            if (newMessages[receiverId])
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            else {
+                newMessages[receiverId] = [];
+                newMessages[receiverId].push({ message: inputMessage, recipient: receiverId, sender: senderId, time, date });
+            }
             dbMessagesFetched(newMessages);
             socket.emit('sent-message', messageObj);
         }

@@ -46,8 +46,10 @@ class MapDirectionScreen extends Component {
 
   constructor(props) {
     super();
-    const { userInfo: { userDetails }, generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, navigation } = props;
-    var currRequestPos = navigation.getParam('currentPos', 0);
+    const { userInfo: { userDetails }, generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, allJobRequestsClient, selectedJobRequest: { employee_id } }, navigation } = props;
+    const currRequestPos = navigation.getParam('currentPos', 0);
+    let jobRequestPos = 0;
+    allJobRequestsClient.map((job, i) => { if (job.employee_id === jobRequests[currRequestPos].employee_id) jobRequestPos = i;});
     const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
     const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
 
@@ -66,6 +68,7 @@ class MapDirectionScreen extends Component {
       inputMessage: '',
       dataChatSource: [],
       currRequestPos,
+      jobRequestPos,
       id: jobRequests[currRequestPos].id,
       orderId: jobRequests[currRequestPos].order_id,
       providerId: jobRequests[currRequestPos].employee_id,
@@ -583,7 +586,8 @@ class MapDirectionScreen extends Component {
                           "serviceName": jobRequests[currRequestPos].service_name,
                           "OrderId": jobRequests[currRequestPos].order_id,
                           "fcmId": jobRequests[currRequestPos].fcm_id,
-                          'titlePage': "MapDirection"
+                          'titlePage': "MapDirection",
+                          "currentPosition": this.state.jobRequestPos
                         })}>
                         <Image style={[styles.call, { tintColor: themeRed }]}
                           source={require('../../icons/chat.png')} />
