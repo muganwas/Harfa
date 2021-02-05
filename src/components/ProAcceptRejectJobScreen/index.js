@@ -59,7 +59,14 @@ class ProAcceptRejectJobScreen extends Component {
 
     constructor(props) {
         super();
-        this.state = {};
+        this.state = {
+            online: false,
+            receiverName: '',
+            receiverImage: '',
+            receiverId: '',
+            senderId: '',
+            showButton: false
+        };
     };
 
     componentDidMount() {
@@ -436,7 +443,6 @@ class ProAcceptRejectJobScreen extends Component {
 
     render() {
         const { online, senderId, receiverId } = this.state;
-        console.log('accept reject')
         return (
             <KeyboardAvoidingView style={styles.container} behavior={ios ? 'padding' : null}>
                 <StatusBarPlaceHolder />

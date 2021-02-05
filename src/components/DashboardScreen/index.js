@@ -216,6 +216,8 @@ class DashboardScreen extends Component {
             const username = nameArr[0];
             const surname = nameArr.pop();
             let currentPostInAllJobs;
+            console.log('job ', jobInfo)
+            console.log(allJobRequestsClient)
             allJobRequestsClient.map((request, index) => {if (request.order_id === order_id) currentPostInAllJobs = index})
             dispatchSelectedJobRequest(jobInfo);
             if (jobInfo.status.toLowerCase() === 'pending') {

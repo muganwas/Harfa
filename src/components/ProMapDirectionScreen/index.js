@@ -294,6 +294,7 @@ class ProMapDirectionScreen extends Component {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
+                        showDialog: false
                     });
                     newJobRequestsProviders.splice(currentPos, 1)
                     fetchedPendingJobInfo(newJobRequestsProviders);
@@ -303,6 +304,7 @@ class ProMapDirectionScreen extends Component {
                     ToastAndroid.show("Something went wrong", ToastAndroid.show);
                     this.setState({
                         isLoading: false,
+                        showDialog: false
                     });
                 }
             })
@@ -310,6 +312,7 @@ class ProMapDirectionScreen extends Component {
                 console.log("Error >>> " + error);
                 this.setState({
                     isLoading: false,
+                    showDialog: false
                 });
             })
     }
@@ -371,6 +374,7 @@ class ProMapDirectionScreen extends Component {
                     this.setState({
                         isLoading: false,
                         isAcceptJob: true,
+                        showDialog: false
                     })
 
                     newJobRequestsProviders.splice(this.state.currentPos, 1);
@@ -381,6 +385,7 @@ class ProMapDirectionScreen extends Component {
                     ToastAndroid.show("Something went wrong", ToastAndroid.show);
                     this.setState({
                         isLoading: false,
+                        showDialog: false
                     });
                 }
             })
@@ -388,6 +393,7 @@ class ProMapDirectionScreen extends Component {
                 console.log("Error >>> " + error);
                 this.setState({
                     isLoading: false,
+                    showDialog: false
                 });
             })
     }
@@ -419,7 +425,7 @@ class ProMapDirectionScreen extends Component {
                 <StatusBarPlaceHolder />
                 <DialogComponent
                     transparent={true}
-                    isDialogVisible={showDialog && currentModal !== null}
+                    isDialogVisible={showDialog && currentModal !== null ? true : false}
                     animation='fade'
                     width={screenWidth - 80}
                     changeDialogVisibility={this.changeDialogVisibility}

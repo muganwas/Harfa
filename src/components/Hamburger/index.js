@@ -28,6 +28,7 @@ import {
 import {
     startFetchingJobCustomer,
     fetchedJobCustomerInfo,
+    getAllWorkRequestClient,
     fetchCustomerJobInfoError,
     setSelectedJobRequest,
     updateActiveRequest
@@ -82,6 +83,7 @@ class Hamburger extends React.Component {
                 navigation,
                 notificationsInfo,
                 fetchedPendingJobInfo,
+                getAllWorkRequestClient,
                 jobsInfo: { jobRequests }
             } = this.props;
             const currentGenericCount = notificationsInfo.generic;
@@ -91,10 +93,7 @@ class Hamburger extends React.Component {
             const orderId = data.orderId;
             let pos = 0;
 
-            await jobRequests.map((obj, key) => {
-                const currOrderId = obj.order_Id;
-                if (orderId === currOrderId) pos = key;
-            });
+            await jobRequests.map((obj, key) => {if (orderId === obj.order_Id) pos = key;});
 
             if (title == "Message Recieved") {
                 Android ? Notifications.postLocalNotification({
@@ -182,6 +181,7 @@ class Hamburger extends React.Component {
                 });
                 newJobRequests[pos] = pendingJobData;
                 fetchedPendingJobInfo(newJobRequests);
+                getAllWorkRequestClient(senderId)
                 this.showToast("Chat request accepted");
                 updateActiveRequest(false);
                 navigation.navigate('Dashboard');
@@ -541,6 +541,9 @@ const mapDispatchToProps = dispatch => {
         },
         dbMessagesFetched: messages => {
             dispatch(dbMessagesFetched(messages));
+        },
+        getAllWorkRequestClient: userId => {
+            dispatch(getAllWorkRequestClient(userId))
         }
     }
 }

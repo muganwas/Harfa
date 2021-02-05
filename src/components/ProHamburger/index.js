@@ -65,10 +65,7 @@ class ProHamburger extends React.Component {
             fetchedNotifications({ type: 'generic', value: newGenericCount });
             const orderId = data.order_id;
             let pos = 0;
-            await jobRequestsProviders.map((obj, key) => {
-                const currOrderId = obj.order_Id;
-                if (orderId === currOrderId) pos = key;
-            });
+            await jobRequestsProviders.map((obj, key) => {if (orderId === obj.order_Id) pos = key;});
             let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
             if (title == "Message Recieved") {
                 Android ? Notifications.postLocalNotification({
@@ -97,7 +94,7 @@ class ProHamburger extends React.Component {
                 });
             }
             else if (title.toLowerCase() == "job canceled") {
-                Toast.show(title + ' has been canceled by client');
+                SimpleToast.show(title + ' has been canceled by client');
                 newJobRequestsProviders.splice(pos, 1);
                 dispatchFetchedProJobRequests(newJobRequestsProviders);
             }
