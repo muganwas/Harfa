@@ -343,6 +343,9 @@ PODS:
   - react-native-simple-toast (1.1.3):
     - React-Core
     - Toast (~> 4.0.0)
+  - react-native-text-input-mask (2.0.1):
+    - React
+    - RNInputMask
   - react-native-viewpager (2.0.2):
     - React
   - React-RCTActionSheet (0.61.2):
@@ -410,6 +413,7 @@ PODS:
   - RNGoogleSignin (3.0.4):
     - GoogleSignIn (~> 5.0.0)
     - React
+  - RNInputMask (4.1.0)
   - RNLocalize (2.0.1):
     - React-Core
   - RNReanimated (1.13.1):
@@ -457,6 +461,7 @@ DEPENDENCIES:
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-notifications (from `../node_modules/react-native-notifications`)
   - react-native-simple-toast (from `../node_modules/react-native-simple-toast`)
+  - react-native-text-input-mask (from `../node_modules/react-native-text-input-mask`)
   - "react-native-viewpager (from `../node_modules/@react-native-community/viewpager`)"
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -479,6 +484,7 @@ DEPENDENCIES:
   - "RNFBStorage (from `../node_modules/@react-native-firebase/storage`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-community/google-signin`)"
+  - RNInputMask (from `../node_modules/react-native-text-input-mask/ios/InputMask`)
   - RNLocalize (from `../node_modules/react-native-localize`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -560,6 +566,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-notifications"
   react-native-simple-toast:
     :path: "../node_modules/react-native-simple-toast"
+  react-native-text-input-mask:
+    :path: "../node_modules/react-native-text-input-mask"
   react-native-viewpager:
     :path: "../node_modules/@react-native-community/viewpager"
   React-RCTActionSheet:
@@ -602,6 +610,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNGoogleSignin:
     :path: "../node_modules/@react-native-community/google-signin"
+  RNInputMask:
+    :path: "../node_modules/react-native-text-input-mask/ios/InputMask"
   RNLocalize:
     :path: "../node_modules/react-native-localize"
   RNReanimated:
@@ -663,6 +673,7 @@ SPEC CHECKSUMS:
   react-native-netinfo: 0212ce8604e88edf686f1481b925b17a42a52449
   react-native-notifications: 159f52c1f45f418aba8d364df19755abb8b03ae7
   react-native-simple-toast: bf002828cf816775a6809f7a9ec3907509bce11f
+  react-native-text-input-mask: cffd00848940e7670cf233a99e7be782257935ed
   react-native-viewpager: 88f4269c19d626d2ccd5f7c7f5f7f76422ddb9e3
   React-RCTActionSheet: 89b037c0fb7d2671607cb645760164e7e0c013f6
   React-RCTAnimation: e3cefa93c38c004c318f7ec04b883eb14b8b8235
@@ -684,6 +695,7 @@ SPEC CHECKSUMS:
   RNFBStorage: 7423ed0e1973aadf255780f7f6624d32c81c2377
   RNGestureHandler: 7a5833d0f788dbd107fbb913e09aa0c1ff333c39
   RNGoogleSignin: a00f87261ea13df9a5cea8deafa6927d6f2c3562
+  RNInputMask: 815461ebdf396beb62cf58916c35cf6930adb991
   RNLocalize: 41026b7c14878f1a1b381bc79f668f1fbf841adb
   RNReanimated: dd8c286ab5dd4ba36d3a7fef8bff7e08711b5476
   RNScreens: 2e278a90eb15092ed261d4f2271e3fc9b60d08d4
@@ -692,6 +704,6 @@ SPEC CHECKSUMS:
   Toast: 91b396c56ee72a5790816f40d3a94dd357abc196
   Yoga: 14927e37bd25376d216b150ab2a561773d57911f
 
-PODFILE CHECKSUM: 4a1ac60af75713f6d55675d31bbc471e40b4f428
+PODFILE CHECKSUM: 1d66e8101f2ed83475e66190c5fb8ede32907fff
 
 COCOAPODS: 1.9.3

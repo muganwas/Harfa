@@ -1,9 +1,27 @@
 import axios from 'axios';
+import {PhoneNumberUtil} from 'google-libphonenumber';
 import {cloneDeep} from 'lodash';
+import Config from '../components/Config';
 import moment from 'moment';
 
+const phoneUtil = PhoneNumberUtil.getInstance();
 const emailRegex = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i;
 const passwordRegex = /[^\w\d]*(([0-9]+.*[A-Z]+.*)|[A-Z]+.*([0-9]+.*))/;
+
+export const phoneNumberCheck = async phoneNumber => {
+  if (phoneNumber && phoneNumber.length > 0) {
+    try {
+      const number = phoneUtil.parseAndKeepRawInput(
+        phoneNumber,
+        Config.countryCode,
+      );
+      const isValid = phoneUtil.isValidNumber(number);
+      return isValid;
+    } catch (e) {
+      return false;
+    }
+  } else return false;
+};
 
 export const emailCheck = (
   email = '',
@@ -12,7 +30,7 @@ export const emailCheck = (
 ) => {
   const wrongEmailFormat = 'Please enter an proper email address';
   const noEmailAddress = 'Please fill in your email address';
-  if (emailRegex && email) {
+  if (emailRegex && email && email.length > 0) {
     if (email.match(emailRegex)) setEmail(email);
     else setError(wrongEmailFormat);
   } else setError(noEmailAddress);
@@ -27,7 +45,7 @@ export const passwordCheck = (
     'Your password must have a number, capital letter and symbol';
   const noPassword = 'Please fill enter a password';
   const shortpassword = 'Your password is too short';
-  if (passwordRegex && password) {
+  if (passwordRegex && password && password.length > 0) {
     if (password.length < 8) setError(shortpassword);
     else if (password.match(passwordRegex)) setPassword(password);
     else setError(wrongPassFormat);

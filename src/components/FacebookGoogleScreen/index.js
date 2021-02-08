@@ -667,7 +667,11 @@ class FacebookGoogleScreen extends Component {
             </View>
             <View style={styles.logincontainer}>
               <ShakingText
-                style={{color: 'red', fontWeight: 'bold', marginBottom: 10}}>
+                style={{
+                  color: 'red',
+                  fontWeight: 'bold',
+                  marginBottom: 10,
+                }}>
                 {this.state.error}
               </ShakingText>
               <View style={styles.textInputView}>
@@ -709,24 +713,49 @@ class FacebookGoogleScreen extends Component {
                   }
                 />
               </View>
-              <TouchableOpacity
-                style={{width: screenWidth - 50, marginTop: 10}}
-                onPress={() =>
-                  this.props.navigation.navigate('ForgotPassword')
-                }>
-                <Text
-                  style={{
-                    color: black,
-                    fontWeight: 'bold',
-                    fontSize: 13,
-                    marginBottom: 5,
-                    alignItems: 'flex-end',
-                    justifyContent: 'flex-end',
-                    alignSelf: 'flex-end',
-                  }}>
-                  Forgot password
-                </Text>
-              </TouchableOpacity>
+              <View
+                style={{
+                  width: '100%',
+                  marginTop: 10,
+                  paddingHorizontal: 20,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                }}>
+                <TouchableOpacity
+                  onPress={() =>
+                    this.props.navigation.navigate('LoginPhoneScreen')
+                  }>
+                  <Text
+                    style={{
+                      color: black,
+                      fontWeight: 'bold',
+                      fontSize: 13,
+                      marginBottom: 5,
+                      alignItems: 'flex-end',
+                      justifyContent: 'flex-end',
+                      alignSelf: 'flex-end',
+                    }}>
+                    Login with Phone Number
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    this.props.navigation.navigate('ForgotPassword')
+                  }>
+                  <Text
+                    style={{
+                      color: black,
+                      fontWeight: 'bold',
+                      fontSize: 13,
+                      marginBottom: 5,
+                      alignItems: 'flex-end',
+                      justifyContent: 'flex-end',
+                      alignSelf: 'flex-end',
+                    }}>
+                    Forgot password
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={this.checkValidation}>
@@ -839,6 +868,7 @@ const styles = StyleSheet.create({
   },
   logincontainer: {
     width: screenWidth - 15,
+    flexDirection: 'column',
     height: 275,
     alignItems: 'center',
     justifyContent: 'center',

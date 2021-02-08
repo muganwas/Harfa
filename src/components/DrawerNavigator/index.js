@@ -1,7 +1,6 @@
-
-import React, { Component } from 'react';
-import { createAppContainer } from 'react-navigation';
-import { createDrawerNavigator } from 'react-navigation-drawer';
+import React, {Component} from 'react';
+import {createAppContainer} from 'react-navigation';
+import {createDrawerNavigator} from 'react-navigation-drawer';
 import DashboardScreen from '../DashboardScreen';
 import MapDirectionScreen from '../MapDirectionScreen';
 import AccountTypeScreen from '../AccountTypeScreen';
@@ -20,6 +19,8 @@ import ProFacebookGoogleScreen from '../ProFacebookGoogleScreen';
 import ProviderDetailsScreen from '../ProviderDetailsScreen';
 import ProAccountTypeScreen from '../ProAccountTypeScreen';
 import ListOfProviderScreen from '../ListOfProviderScreen';
+import LoginPhoneScreen from '../LoginPhoneScreen';
+import ProLoginPhoneScreen from '../ProLoginPhoneScreen';
 import FacebookGoogleScreen from '../FacebookGoogleScreen';
 import AddAddressScreen from '../AddAddressScreen';
 import ProDrawerNavigator from '../ProDrawerNavigator';
@@ -30,50 +31,53 @@ import ForgotPasswordScreen from '../ForgotPasswordScreen';
 import SelectAddressScreen from '../SelectAddressScreen';
 import ProForgotPasswordScreen from '../ProForgotPasswordScreen';
 
-const MyDrawerNavigator = createDrawerNavigator({
-    ProDashboard: { screen: ProDrawerNavigator },
-    FacebookGoogle: { screen: FacebookGoogleScreen},
-    Register: { screen: RegisterScreen },
-    ProRegisterFB: { screen: ProRegisterFBScreen },
-    ForgotPassword: { screen: ForgotPasswordScreen },
-    ProForgotPassword: { screen: ProForgotPasswordScreen },
-    ProRegister: { screen: ProRegisterScreen },
-    ProDashboard: { screen: () => <ProDrawerNavigator /> },
-    MapDirection: { screen: MapDirectionScreen },
-    AfterSplash: { screen: AfterSplashScreen },
-    AccountType: { screen: AccountTypeScreen },
-    Chat: { screen: ChatScreen},
-    Home: { screen: DashboardScreen },
-    ProHome: { screen: () => <ProDrawerNavigator /> },
-    ProAccountType: { screen: ProAccountTypeScreen },
-    Dashboard: { screen: DashboardScreen },
-    ProviderDetails: { screen: ProviderDetailsScreen },
-    ProFacebookGoogle: { screen: ProFacebookGoogleScreen },
-    ListOfProviders: { screen: ListOfProviderScreen },
-    AddAddress: { screen: AddAddressScreen },
-    MyProfile: { screen: MyProfileScreen },
-    Booking: { screen: BookingScreen },
-    BookingDetails: { screen: BookingDetailsScreen },
-    ChatWithAdmin: { screen: ChatWithAdminScreen },
-    ChatAfterBookingDetails: { screen: ChatAfterBookingDetailsScreen },
-    ContactUs: { screen: ContactUsScreen },
-    AllMessage: { screen: AllMessageScreen },
-    Notifications: { screen: NotificationsScreen },
-    SelectAddress: { screen: SelectAddressScreen }
-},
-    {
-        initialRouteName: 'Dashboard',
-        drawerWidth: 275,
-        drawerPosition: 'left',
-        drawerType: "push-screen",
-        contentComponent: CustomMenuLayout,
-    }
+const MyDrawerNavigator = createDrawerNavigator(
+  {
+    ProDashboard: {screen: ProDrawerNavigator},
+    FacebookGoogle: {screen: FacebookGoogleScreen},
+    Register: {screen: RegisterScreen},
+    ProRegisterFB: {screen: ProRegisterFBScreen},
+    ForgotPassword: {screen: ForgotPasswordScreen},
+    ProForgotPassword: {screen: ProForgotPasswordScreen},
+    ProRegister: {screen: ProRegisterScreen},
+    ProDashboard: {screen: () => <ProDrawerNavigator />},
+    MapDirection: {screen: MapDirectionScreen},
+    AfterSplash: {screen: AfterSplashScreen},
+    AccountType: {screen: AccountTypeScreen},
+    Chat: {screen: ChatScreen},
+    Home: {screen: DashboardScreen},
+    ProHome: {screen: () => <ProDrawerNavigator />},
+    ProAccountType: {screen: ProAccountTypeScreen},
+    Dashboard: {screen: DashboardScreen},
+    ProviderDetails: {screen: ProviderDetailsScreen},
+    ProFacebookGoogle: {screen: ProFacebookGoogleScreen},
+    ListOfProviders: {screen: ListOfProviderScreen},
+    LoginPhoneScreen: {screen: LoginPhoneScreen},
+    ProLoginPhoneScreen: {screen: ProLoginPhoneScreen},
+    AddAddress: {screen: AddAddressScreen},
+    MyProfile: {screen: MyProfileScreen},
+    Booking: {screen: BookingScreen},
+    BookingDetails: {screen: BookingDetailsScreen},
+    ChatWithAdmin: {screen: ChatWithAdminScreen},
+    ChatAfterBookingDetails: {screen: ChatAfterBookingDetailsScreen},
+    ContactUs: {screen: ContactUsScreen},
+    AllMessage: {screen: AllMessageScreen},
+    Notifications: {screen: NotificationsScreen},
+    SelectAddress: {screen: SelectAddressScreen},
+  },
+  {
+    initialRouteName: 'Dashboard',
+    drawerWidth: 275,
+    drawerPosition: 'left',
+    drawerType: 'push-screen',
+    contentComponent: CustomMenuLayout,
+  },
 );
 
 const AppContainer = createAppContainer(MyDrawerNavigator);
 
 export default class DrawerNavigator extends Component {
-    render() {
-        return <AppContainer />
-    }
-};
+  render() {
+    return <AppContainer />;
+  }
+}
