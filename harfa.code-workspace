@@ -1,0 +1,26 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "git.ignoreLimitWarning": true,
+    "editor.detectIndentation": false,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.autoIndent": "keep",
+    "editor.tabSize": 4,
+    "editor.multiCursorModifier": "ctrlCmd",
+    "editor.formatOnPaste": true,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "prettier.singleQuote": true,
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/node_modules/**": true
+    }
+  }
+}
