@@ -7,13 +7,15 @@ import moment from 'moment';
 const phoneUtil = PhoneNumberUtil.getInstance();
 const emailRegex = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i;
 const passwordRegex = /[^\w\d]*(([0-9]+.*[A-Z]+.*)|[A-Z]+.*([0-9]+.*))/;
+const countryCode = Config.countryPhoneCode;
+const countryLetterCode = Config.countryCode;
 
 export const phoneNumberCheck = async phoneNumber => {
   if (phoneNumber && phoneNumber.length > 0) {
     try {
       const number = phoneUtil.parseAndKeepRawInput(
         phoneNumber,
-        Config.countryCode,
+        countryLetterCode,
       );
       const isValid = phoneUtil.isValidNumber(number);
       return isValid;
@@ -21,6 +23,18 @@ export const phoneNumberCheck = async phoneNumber => {
       return false;
     }
   } else return false;
+};
+
+export const sanitizeMobileNumber = async (mobile = '', removeCode = true) => {
+  let pN;
+  if (mobile && mobile.length > 0) {
+    pN = mobile;
+    if (pN.indexOf(countryCode) > -1 && removeCode) {
+      pN = pN.replace(countryCode, '0');
+    }
+    pN = pN.replace(/ /g, '');
+  }
+  return pN;
 };
 
 export const emailCheck = (

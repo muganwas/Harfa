@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import {
   View,
   StyleSheet,
@@ -14,23 +14,33 @@ import {
   Animated,
 } from 'react-native';
 //import {NavigationActions} from 'react-navigation';
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
 import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import axios from 'axios';
 import storage from '@react-native-firebase/storage';
 import AsyncStorage from '@react-native-community/async-storage';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
-import { cloneDeep } from 'lodash';
+import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
 import Config from '../Config';
-import { updateUserDetails, fetchUserProfile } from '../../Redux/Actions/userActions';
-import { colorPrimaryDark, white, themeRed, black, colorBg } from '../../Constants/colors';
+import {
+  updateUserDetails,
+  fetchUserProfile,
+} from '../../Redux/Actions/userActions';
+import {
+  colorPrimaryDark,
+  white,
+  themeRed,
+  black,
+  colorBg,
+} from '../../Constants/colors';
 
 const options = {
   title: 'Select a photo',
@@ -41,6 +51,7 @@ const options = {
 
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
+const countryCode = Config.countryPhoneCode;
 
 const USER_IMAGE_UPDATE = Config.baseURL + 'users/upload/';
 const USER_INFO_UPDATE = Config.baseURL + 'users/';
@@ -58,14 +69,16 @@ const StatusBarPlaceHolder = () => {
       <StatusBar barStyle="dark-content" />
     </View>
   ) : (
-      <StatusBar barStyle="dark-content" backgroundColor={white} />
-    );
-}
+    <StatusBar barStyle="dark-content" backgroundColor={white} />
+  );
+};
 
 class MyProfileScreen extends Component {
   constructor(props) {
     super();
-    const { userInfo: { userDetails } } = props;
+    const {
+      userInfo: {userDetails},
+    } = props;
     this.state = {
       userId: userDetails.userId,
       fcmId: userDetails.fcmId,
@@ -88,12 +101,17 @@ class MyProfileScreen extends Component {
   }
 
   componentDidMount() {
-    const { navigation } = this.props;
+    const {navigation} = this.props;
     navigation.addListener('willFocus', async () => {
-      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+      BackHandler.addEventListener('hardwareBackPress', () =>
+        this.handleBackButtonClick(),
+      );
     });
     navigation.addListener('willBlur', () => {
-      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+      BackHandler.removeEventListener(
+        'hardwareBackPress',
+        this.handleBackButtonClick,
+      );
     });
   }
 
@@ -102,10 +120,10 @@ class MyProfileScreen extends Component {
       this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
     else
       this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
-  }
+  };
 
   _spring = () => {
-    this.setState({ backClickCount: 1 }, () => {
+    this.setState({backClickCount: 1}, () => {
       Animated.sequence([
         Animated.spring(this.springValue, {
           toValue: -0.15 * 1,
@@ -119,10 +137,10 @@ class MyProfileScreen extends Component {
           useNativeDriver: true,
         }),
       ]).start(() => {
-        this.setState({ backClickCount: 0 });
+        this.setState({backClickCount: 0});
       });
     });
-  }
+  };
 
   selectPhoto = () => {
     try {
@@ -132,19 +150,20 @@ class MyProfileScreen extends Component {
         } else if (response.error) {
           console.log('ImagePicker Error: ', response.error);
         } else {
-          let source = { uri: response.uri };
+          let source = {uri: response.uri};
           this.setState({
             image: source,
             error: '',
             galleryCameraImage: 'galleryCamera',
             isLoading: true,
           });
-          AsyncStorage.getItem('userId').then(providerId => this.updateImageTask(providerId, response));
+          AsyncStorage.getItem('userId').then(providerId =>
+            this.updateImageTask(providerId, response),
+          );
         }
       });
-    }
-    catch (error) {
-      console.log('image selection error --', error)
+    } catch (error) {
+      console.log('image selection error --', error);
     }
   };
 
@@ -182,13 +201,15 @@ class MyProfileScreen extends Component {
 
   //Information Update
   updateInformation = userId => {
-    const { fcmId, username, mobile, dob } = this.state;
-    const { fetchUserProfile } = this.props;
+    const {fcmId, username, mobile, dob} = this.state;
+    const {fetchUserProfile} = this.props;
     this.setState({
       isLoading: true,
     });
     const userData = {
-      username, mobile, dob,
+      username,
+      mobile,
+      dob,
     };
 
     fetch(USER_INFO_UPDATE + userId, {
@@ -223,53 +244,64 @@ class MyProfileScreen extends Component {
         });
       })
       .done();
-  }
+  };
 
   //Image Update
   updateImageTask = (userId, imageObject) => {
     this.setState({
       isLoading: true,
     });
-    const { userInfo: { userDetails: { firebaseId } } } = this.props;
-    const { fileName, path } = imageObject;
+    const {
+      userInfo: {
+        userDetails: {firebaseId},
+      },
+    } = this.props;
+    const {fileName, path} = imageObject;
     const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
-    userDataRef.putFile(path).then(uploadRes => {
-      const { state } = uploadRes;
-      if (state === 'success') {
-        userDataRef.getDownloadURL().then(urlResult => {
-          axios.post(USER_IMAGE_UPDATE + userId, {
-            type: imageObject.type,
-            uri: urlResult,
-            name: imageObject.fileName,
-          }).then(async res => {
-            const { userInfo: { userDetails }, updateUserDetails } = this.props;
-            let newUserDetails = cloneDeep(userDetails);
-            newUserDetails.image = urlResult;
-            await updateUserDetails(newUserDetails);
-            this.setState({
-              isLoading: false,
-              isErrorToast: false,
-            });
-            if (res && res.data.result) {
-              this.showToast(res.data.message);
-            }
-
-          }).catch(error => {
-            console.log('Error :' + error);
-            this.setState({
-              isLoading: false,
-            });
-            this.showToast('Something went wrong');
+    userDataRef
+      .putFile(path)
+      .then(uploadRes => {
+        const {state} = uploadRes;
+        if (state === 'success') {
+          userDataRef.getDownloadURL().then(urlResult => {
+            axios
+              .post(USER_IMAGE_UPDATE + userId, {
+                type: imageObject.type,
+                uri: urlResult,
+                name: imageObject.fileName,
+              })
+              .then(async res => {
+                const {
+                  userInfo: {userDetails},
+                  updateUserDetails,
+                } = this.props;
+                let newUserDetails = cloneDeep(userDetails);
+                newUserDetails.image = urlResult;
+                await updateUserDetails(newUserDetails);
+                this.setState({
+                  isLoading: false,
+                  isErrorToast: false,
+                });
+                if (res && res.data.result) {
+                  this.showToast(res.data.message);
+                }
+              })
+              .catch(error => {
+                console.log('Error :' + error);
+                this.setState({
+                  isLoading: false,
+                });
+                this.showToast('Something went wrong');
+              });
           });
-        })
-      }
-      else {
-        this.showToast('Upload failed, try again please.')
-      }
-    }).catch(error => {
-      console.log('image upload error', error.messge)
-    });
-  }
+        } else {
+          this.showToast('Upload failed, try again please.');
+        }
+      })
+      .catch(error => {
+        console.log('image upload error', error.messge);
+      });
+  };
 
   showToast = message => {
     Toast.show(message);
@@ -277,12 +309,14 @@ class MyProfileScreen extends Component {
 
   changeWaitingDialogVisibility = bool => {
     this.setState({
-      isLoading: bool
-    })
-  }
+      isLoading: bool,
+    });
+  };
 
   render() {
-    const { userInfo: { userDetails } } = this.props;
+    const {
+      userInfo: {userDetails},
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -296,16 +330,12 @@ class MyProfileScreen extends Component {
             paddingRight: 20,
             paddingBottom: 5,
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 0 },
+            shadowOffset: {width: 0, height: 0},
             shadowOpacity: 0.75,
             shadowRadius: 5,
             elevation: 5,
           }}>
-
-          <Hamburger
-            navigation={this.props.navigation}
-            text='My Profile'
-          />
+          <Hamburger navigation={this.props.navigation} text="My Profile" />
         </View>
 
         <KeyboardAwareScrollView
@@ -318,7 +348,11 @@ class MyProfileScreen extends Component {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag">
           <View
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
             <View
               style={{
                 flex: 0.35,
@@ -337,9 +371,9 @@ class MyProfileScreen extends Component {
                 source={
                   this.state.galleryCameraImage == ''
                     ? this.state.image
-                      ? { uri: this.state.image }
+                      ? {uri: this.state.image}
                       : require('../../images/generic_avatar.png')
-                    : { uri: this.state.image.uri }
+                    : {uri: this.state.image.uri}
                 }
               />
 
@@ -354,14 +388,19 @@ class MyProfileScreen extends Component {
                   backgroundColor: '#fff',
                   margin: 20,
                   shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 0 },
+                  shadowOffset: {width: 0, height: 0},
                   shadowOpacity: 0.75,
                   shadowRadius: 5,
                   elevation: 5,
                 }}
                 onPress={this.selectPhoto}>
                 <Image
-                  style={{ width: 20, tintColor: themeRed, height: 20, alignSelf: 'center' }}
+                  style={{
+                    width: 20,
+                    tintColor: themeRed,
+                    height: 20,
+                    alignSelf: 'center',
+                  }}
                   source={require('../../icons/camera.png')}
                 />
               </TouchableOpacity>
@@ -369,7 +408,11 @@ class MyProfileScreen extends Component {
 
             <View style={styles.logincontainer}>
               <ShakingText
-                style={{ color: 'red', fontWeight: 'bold', marginBottom: 10 }}>
+                style={{
+                  color: 'red',
+                  fontWeight: 'bold',
+                  marginBottom: 10,
+                }}>
                 {this.state.error}
               </ShakingText>
 
@@ -392,10 +435,13 @@ class MyProfileScreen extends Component {
                     marginBottom: 10,
                   }}>
                   <View style={styles.buttonPrimaryDark}>
-                    <Text style={[styles.text, { fontWeight: 'bold' }]}>Account Type</Text>
+                    <Text style={[styles.text, {fontWeight: 'bold'}]}>
+                      Account Type
+                    </Text>
                   </View>
                   <View style={styles.buttonGreen}>
-                    <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>
+                    <Text
+                      style={[styles.text, {color: black, fontWeight: 'bold'}]}>
                       {userDetails.accountType}
                     </Text>
                   </View>
@@ -404,21 +450,28 @@ class MyProfileScreen extends Component {
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/ic_user_64dp.png')}></Image>
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/ic_user_64dp.png')}
+                />
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
+                  style={{
+                    width: screenWidth - 85,
+                    height: 50,
+                    marginLeft: 10,
+                  }}
                   placeholder="User name"
                   value={this.state.username}
                   onChangeText={nameInput =>
-                    this.setState({ error: '', username: nameInput })
-                  }></TextInput>
+                    this.setState({error: '', username: nameInput})
+                  }
+                />
               </View>
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/email.png')}></Image>
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/email.png')}
+                />
                 <Text
                   style={{
                     width: screenWidth - 85,
@@ -431,25 +484,35 @@ class MyProfileScreen extends Component {
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/mobile.png')}></Image>
-                <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 10 }}
-                  placeholder="Mobile"
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/mobile.png')}
+                />
+                <TextInputMask
+                  style={{
+                    width: screenWidth - 85,
+                    height: 50,
+                    marginLeft: 10,
+                  }}
+                  refInput={ref => {
+                    this.input = ref;
+                  }}
+                  keyboardType="phone-pad"
+                  placeholder={`${countryCode} 000 000 000`}
                   value={this.state.mobile}
-                  maxLength={10}
-                  keyboardType="numeric"
                   onChangeText={mobileInput =>
-                    this.setState({ error: '', mobile: mobileInput })
-                  }></TextInput>
+                    this.setState({error: '', mobile: mobileInput})
+                  }
+                  mask={`${countryCode} [000] [000] [000]`}
+                />
               </View>
 
               <TouchableOpacity
                 style={styles.textInputView}
                 onPress={this.showPicker}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/calendar.png')}></Image>
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/calendar.png')}
+                />
                 <Text
                   style={{
                     width: screenWidth - 85,
@@ -466,7 +529,9 @@ class MyProfileScreen extends Component {
               <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={this.checkValidation}>
-                <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>Update</Text>
+                <Text style={[styles.text, {color: black, fontWeight: 'bold'}]}>
+                  Update
+                </Text>
               </TouchableOpacity>
 
               <DateTimePicker
@@ -477,14 +542,19 @@ class MyProfileScreen extends Component {
             </View>
           </View>
         </KeyboardAwareScrollView>
-        <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+        <Modal
+          transparent={true}
+          visible={this.state.isLoading}
+          animationType="fade"
           onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
-          <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
+          <WaitingDialog
+            changeWaitingDialogVisibility={this.changeWaitingDialogVisibility}
+          />
         </Modal>
         <Animated.View
           style={[
             styles.animatedView,
-            { transform: [{ translateY: this.springValue }] },
+            {transform: [{translateY: this.springValue}]},
           ]}>
           <Text style={styles.exitTitleText}>
             Press back again to exit the app
@@ -503,9 +573,9 @@ class MyProfileScreen extends Component {
 const mapStateToProps = state => {
   return {
     notificationsInfo: state.notificationsInfo,
-    userInfo: state.userInfo
-  }
-}
+    userInfo: state.userInfo,
+  };
+};
 
 const mapDispatchToProps = dispatch => {
   return {
@@ -523,11 +593,14 @@ const mapDispatchToProps = dispatch => {
     },
     fetchUserProfile: (userId, fcmId) => {
       dispatch(fetchUserProfile(userId, fcmId));
-    }
-  }
-}
+    },
+  };
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(MyProfileScreen);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(MyProfileScreen);
 
 const styles = StyleSheet.create({
   container: {
@@ -552,7 +625,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: white,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -563,7 +636,7 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     backgroundColor: white,
     shadowColor: themeRed,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 1,
     shadowRadius: 5,
     elevation: 7,
@@ -588,7 +661,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: '100%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -606,7 +679,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 120,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,

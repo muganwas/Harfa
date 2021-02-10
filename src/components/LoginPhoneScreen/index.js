@@ -12,6 +12,7 @@ import {
   Dimensions,
   Platform,
   BackHandler,
+  ActivityIndicator,
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ShakingText from 'react-native-shaking-text';
@@ -34,15 +35,27 @@ import {
   updateUserDetails,
   updateUserAuthToken,
 } from '../../Redux/Actions/userActions';
+import {
+  updateConfirmationObject,
+  updateNumberSent,
+  updateValidationCode,
+  updateMobileNumber,
+} from '../../Redux/Actions/validateionActions';
 import WaitingDialog from '../WaitingDialog';
 import firebaseAuth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
 import TextInputMask from 'react-native-text-input-mask';
-import {phoneNumberCheck} from '../../misc/helpers';
+import {phoneNumberCheck, sanitizeMobileNumber} from '../../misc/helpers';
 import DialogComponent from '../DialogComponent';
-import {themeRed, black, white, lightGray} from '../../Constants/colors';
+import {
+  themeRed,
+  inactiveBackground,
+  black,
+  white,
+  lightGray,
+} from '../../Constants/colors';
 import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
@@ -74,19 +87,15 @@ class LoginPhoneScreen extends Component {
     super();
     this.state = {
       accountType: props.navigation.getParam('accountType'),
-      phoneNumber: '',
       opacity: 1,
       isLoading: false,
       isErrorToast: '',
       firebaseId: '',
-      loginType: null,
+      loginType: 'phone',
       showDialog: false,
       dialogType: null,
       dialogTitle: '',
       dialogDesc: '',
-      validationCode: '',
-      numberSent: false,
-      confirmation: null,
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
     };
@@ -164,7 +173,7 @@ class LoginPhoneScreen extends Component {
   googleLoginTask = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      var result = await GoogleSignin.signIn();
+      const result = await GoogleSignin.signIn();
       const {
         user: {name, email, photo, id},
       } = result;
@@ -187,22 +196,24 @@ class LoginPhoneScreen extends Component {
     }
   };
 
-  phoneLoginTask = async number => {
+  phoneConfirmationTusk = async number => {
+    const {updateConfirmationObject, updateNumberSent} = this.props;
     try {
-      this.setState({numberSent: true});
+      updateNumberSent(true);
       await firebaseAuth()
         .signInWithPhoneNumber(number)
         .then(confirmation => {
-          this.setState({confirmation});
+          updateConfirmationObject(confirmation);
         });
     } catch (e) {
-      this.rightButtonAction = () => {
+      this.leftButtonActon = () => {
         this.setState({
           isLoading: false,
           showDialog: false,
           dialogType: null,
         });
       };
+      this.rightButtonAction = this.phoneConfirmationTusk(number);
       this.setState({
         isLoading: false,
         showDialog: true,
@@ -215,7 +226,7 @@ class LoginPhoneScreen extends Component {
     }
   };
 
-  fbGoogleLoginCustomerTask = async (name, email, image) => {
+  phoneLoginCustomerTask = async () => {
     this.setState({
       isLoading: true,
     });
@@ -225,14 +236,13 @@ class LoginPhoneScreen extends Component {
         fetchJobRequests,
         fetchJobRequestHistory,
         updateUserDetails,
+        validationInfo: {mobile},
       } = this.props;
+      const newMobile = await sanitizeMobileNumber(mobile, false);
       const userData = {
         acc_type: this.state.accountType,
-        username: name,
-        email: email,
-        image: image,
-        mobile: '',
-        dob: '',
+        username: newMobile,
+        mobile: newMobile,
         fcm_id: fcmToken,
         type: this.state.loginType,
       };
@@ -336,7 +346,7 @@ class LoginPhoneScreen extends Component {
               });
             };
             this.rightButtonAction = () => {
-              this.fbGoogleLoginCustomerTask(name, email, image);
+              this.phoneLoginCustomerTask();
               this.setState({
                 isLoading: false,
                 showDialog: false,
@@ -348,14 +358,13 @@ class LoginPhoneScreen extends Component {
               showDialog: true,
               dialogType: 'fb',
               dialogTitle: 'OOPS!',
-              dialogDesc: responseJson.data.message,
+              dialogDesc: responseJson.data.message || 'Something went wrong',
               dialogLeftText: 'Cancel',
               dialogRightText: 'Retry',
             });
           }
         })
         .catch(error => {
-          console.log('Error :' + error);
           this.leftButtonActon = () => {
             this.setState({
               isLoading: false,
@@ -364,7 +373,7 @@ class LoginPhoneScreen extends Component {
             });
           };
           this.rightButtonAction = () => {
-            this.fbGoogleLoginCustomerTask(name, email, image);
+            this.phoneLoginCustomerTask();
             this.setState({
               isLoading: false,
               showDialog: false,
@@ -376,7 +385,7 @@ class LoginPhoneScreen extends Component {
             showDialog: true,
             dialogType: 'fb',
             dialogTitle: 'OOPS!',
-            dialogDesc: error.message,
+            dialogDesc: error.message || 'Something went wrong',
             dialogLeftText: 'Cancel',
             dialogRightText: 'Retry',
           });
@@ -391,28 +400,61 @@ class LoginPhoneScreen extends Component {
     }
   };
 
-  checkValidation = () => {
+  checkValidation = async () => {
     const wrongPhoneNumberFormat = 'Please enter a proper phone number';
     const noPhoneNumber = 'Please fill in your phone number';
-    if (String(this.state.phoneNumber.trim()) === String(countryCode.trim()))
+    const {
+      validationInfo: {mobile},
+    } = this.props;
+    if (String(mobile.trim()) === String(countryCode.trim()))
       this.setState({error: noPhoneNumber});
     else {
-      const number = this.state.phoneNumber.replace(/ /g, '');
+      const number = await sanitizeMobileNumber(mobile, false);
       phoneNumberCheck(number).then(isValid => {
         if (!isValid) this.setState({error: wrongPhoneNumberFormat});
         else {
-          this.phoneLoginTask(number);
+          this.phoneConfirmationTusk(number);
         }
       });
     }
   };
 
   confirmValidationCode = code => {
-    const confirmation = this.state.confirmation;
+    const {
+      validationInfo: {confirmation},
+    } = this.props;
     if (code && confirmation) {
-      confirmation.confirm(code).then(response => {
-        console.log('code confirmation info', response);
-      });
+      confirmation
+        .confirm(code)
+        .then(response => {
+          /*const {
+            additionalUserInfo: {isNewUser},
+            user: {_user},
+          } = response;*/
+          if (response) this.phoneLoginCustomerTask();
+        })
+        .catch(e => {
+          const message =
+            e.code.indexOf('invalid-verification') > -1
+              ? 'You used a wrong code, please try again.'
+              : 'Something went wrong, please try again';
+          this.leftButtonActon = () => {
+            this.setState({
+              isLoading: false,
+              showDialog: false,
+              dialogType: null,
+            });
+          };
+          this.setState({
+            isLoading: false,
+            showDialog: true,
+            dialogType: 'fb',
+            dialogTitle: 'OOPS!',
+            dialogDesc: message,
+            dialogLeftText: 'OK',
+            dialogRightText: 'Retry',
+          });
+        });
     }
   };
 
@@ -501,7 +543,6 @@ class LoginPhoneScreen extends Component {
                   fetchJobRequestHistory(id);
                   fetchJobRequests(this.props, id, 'Home');
                 } else {
-                  console.log('Response Else ');
                   this.leftButtonActon = () => {
                     this.setState({
                       isLoading: false,
@@ -654,12 +695,12 @@ class LoginPhoneScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
-      phoneNumber,
-      validationCode,
-      numberSent,
-      confirmation,
     } = this.state;
-    console.log(confirmation);
+    const {
+      validationInfo: {confirmation, numberSent, validationCode, mobile},
+      updateValidationCode,
+      updateMobileNumber,
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -722,8 +763,9 @@ class LoginPhoneScreen extends Component {
             </View>
             <View style={styles.logincontainer}>
               <View style={{padding: 20}}>
-                <Text style={{textAlign: 'center', fontWeight: 'bold'}}>
-                  Make sure you can receive messages on the provided number
+                <Text style={{textAlign: 'center', fontWeight: '500'}}>
+                  Make sure you can receive messages on the provided number,
+                  we'll send you a OTP
                 </Text>
               </View>
               <ShakingText
@@ -750,7 +792,7 @@ class LoginPhoneScreen extends Component {
                       color: black,
                     }}
                     value={validationCode}
-                    onChangeText={text => this.setState({validationCode: text})}
+                    onChangeText={text => updateValidationCode(text)}
                   />
                 ) : (
                   <TextInputMask
@@ -765,13 +807,13 @@ class LoginPhoneScreen extends Component {
                     }}
                     keyboardType="phone-pad"
                     placeholder={`${countryCode} 000 000 000`}
-                    value={phoneNumber}
-                    onChangeText={phoneNumberInput =>
+                    value={mobile}
+                    onChangeText={phoneNumberInput => {
                       this.setState({
                         error: '',
-                        phoneNumber: phoneNumberInput,
-                      })
-                    }
+                      });
+                      updateMobileNumber(phoneNumberInput);
+                    }}
                     mask={`${countryCode} [000] [000] [000]`}
                   />
                 )}
@@ -779,35 +821,37 @@ class LoginPhoneScreen extends Component {
               <TouchableOpacity
                 style={
                   !confirmation && numberSent
-                    ? [
-                        styles.buttonContainer,
-                        {
-                          backgroundColor: '#D95E5E',
-                          elevation: 0,
-                          shadowColor: white,
-                          shadowOffset: {width: 0, height: 0},
-                        },
-                      ]
+                    ? styles.buttonContainerInactive
                     : styles.buttonContainer
                 }
                 disabled={!confirmation && numberSent}
                 onPress={
                   confirmation && numberSent
-                    ? this.confirmValidationCode(validationCode)
+                    ? () => this.confirmValidationCode(validationCode)
                     : this.checkValidation
                 }>
-                <Text style={styles.text}>
-                  {numberSent ? 'Send Code' : 'Request Code'}
-                </Text>
+                <View style={{flex: 1}}>
+                  {numberSent ? (
+                    !confirmation ? (
+                      <ActivityIndicator size="small" />
+                    ) : (
+                      <Text style={styles.text}>Send OTP</Text>
+                    )
+                  ) : (
+                    <Text style={styles.text}>Request OTP</Text>
+                  )}
+                </View>
               </TouchableOpacity>
             </View>
             <TouchableOpacity
               style={{padding: 5}}
-              onPress={() =>
-                this.props.navigation.navigate('Register', {
-                  accountType: this.state.accountType,
-                })
-              }>
+              onPress={() => {
+                if (confirmation && numberSent) this.checkValidation();
+                else
+                  this.props.navigation.navigate('Register', {
+                    accountType: this.state.accountType,
+                  });
+              }}>
               <Text
                 style={{
                   color: 'black',
@@ -817,7 +861,9 @@ class LoginPhoneScreen extends Component {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                Don't have an account? Sign up
+                {confirmation && numberSent
+                  ? 'Request new code'
+                  : "Don't have an account? Sign up"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -840,6 +886,7 @@ const mapStateToProps = state => {
   return {
     jobsInfo: state.jobsInfo,
     userInfo: state.userInfo,
+    validationInfo: state.validationInfo,
   };
 };
 
@@ -856,6 +903,18 @@ const mapDispatchToProps = dispatch => {
     },
     updateUserAuthToken: authToken => {
       dispatch(updateUserAuthToken(authToken));
+    },
+    updateValidationCode: code => {
+      dispatch(updateValidationCode(code));
+    },
+    updateConfirmationObject: confirmation => {
+      dispatch(updateConfirmationObject(confirmation));
+    },
+    updateNumberSent: sent => {
+      dispatch(updateNumberSent(sent));
+    },
+    updateMobileNumber: number => {
+      dispatch(updateMobileNumber(number));
     },
   };
 };
@@ -908,6 +967,24 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
     marginBottom: 10,
+  },
+  buttonContainerInactive: {
+    width: 175,
+    height: 40,
+    backgroundColor: inactiveBackground,
+    shadowColor: white,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 5,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    borderRadius: 5,
+    textAlign: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
   },
   buttonContainer: {
     width: 175,

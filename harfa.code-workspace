@@ -9,7 +9,7 @@
     "editor.detectIndentation": true,
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.autoIndent": "keep",
+    "editor.autoIndent": "brackets",
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
     "editor.multiCursorModifier": "ctrlCmd",
