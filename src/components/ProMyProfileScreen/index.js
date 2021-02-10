@@ -31,13 +31,7 @@ import {
   updateProviderDetails,
   fetchProviderProfile,
 } from '../../Redux/Actions/userActions';
-import {
-  colorPrimaryDark,
-  white,
-  themeRed,
-  black,
-  colorBg,
-} from '../../Constants/colors';
+import {white, themeRed, black, colorBg} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -51,6 +45,7 @@ const options = {
 const storageRef = storage().ref('/employees_info');
 const PRO_IMAGE_UPDATE = Config.baseURL + 'employee/upload/';
 const PRO_INFO_UPDATE = Config.baseURL + 'employee/';
+const countryCode = Config.countryPhoneCode;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
