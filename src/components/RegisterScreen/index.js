@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import {
   View,
   StatusBar,
@@ -14,28 +14,30 @@ import {
   Platform,
   BackHandler,
 } from 'react-native';
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 import axios from 'axios';
 import ShakingText from 'react-native-shaking-text';
 import DateTimePicker from 'react-native-modal-datetime-picker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
+import TextInputMask from 'react-native-text-input-mask';
 import simpleToast from 'react-native-simple-toast';
 import moment from 'moment';
 import RNExitApp from 'react-native-exit-app';
 import messaging from '@react-native-firebase/messaging';
 import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
-import { cloneDeep } from 'lodash';
+import {cloneDeep} from 'lodash';
 import ImagePicker from 'react-native-image-picker';
 import Config from '../Config';
-import { updateNewUserInfo } from '../../Redux/Actions/userActions';
+import {updateNewUserInfo} from '../../Redux/Actions/userActions';
 import WaitingDialog from '../WaitingDialog';
 import DialogComponent from '../DialogComponent';
-import { black, white, themeRed } from '../../Constants/colors';
+import {black, white, themeRed} from '../../Constants/colors';
 
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
+const countryCode = Config.countryPhoneCode;
 
 const options = {
   title: 'Select a photo',
@@ -57,9 +59,9 @@ const StatusBarPlaceHolder = () => {
       <StatusBar barStyle="dark-content" />
     </View>
   ) : (
-      <StatusBar barStyle="dark-content" backgroundColor={white} />
-    );
-}
+    <StatusBar barStyle="dark-content" backgroundColor={white} />
+  );
+};
 
 class RegisterScreen extends Component {
   constructor(props) {
@@ -82,26 +84,31 @@ class RegisterScreen extends Component {
       dialogTitle: '',
       dialogDesc: '',
       dialogLeftText: 'Cancel',
-      dialogRightText: 'Retry'
+      dialogRightText: 'Retry',
     };
     this.leftButtonActon = null;
     this.rightButtonAction = null;
   }
 
   componentDidMount() {
-    const { navigation } = this.props;
+    const {navigation} = this.props;
     navigation.addListener('willFocus', async () => {
-      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+      BackHandler.addEventListener('hardwareBackPress', () =>
+        this.handleBackButtonClick(),
+      );
     });
     navigation.addListener('willBlur', () => {
-      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+      BackHandler.removeEventListener(
+        'hardwareBackPress',
+        this.handleBackButtonClick,
+      );
     });
   }
 
   handleBackButtonClick = () => {
     this.props.navigation.goBack();
     return true;
-  }
+  };
 
   handlePicker = date => {
     this.setState({
@@ -133,7 +140,7 @@ class RegisterScreen extends Component {
         simpleToast.show('Something went wrong, try again.', simpleToast.SHORT);
       } else {
         let source;
-        source = { uri: response.uri };
+        source = {uri: response.uri};
         this.setState({
           imageURI: source,
           imageDataObject: response,
@@ -146,26 +153,26 @@ class RegisterScreen extends Component {
   emailValidate = email => {
     let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
     if (reg.test(email) === false) {
-      this.setState({ error: 'Email is incorrect', email: email });
+      this.setState({error: 'Email is incorrect', email: email});
       return false;
     } else {
-      this.setState({ error: '', email: email });
+      this.setState({error: '', email: email});
     }
-  }
+  };
 
   checkValidation = () => {
     if (this.state.imageURI == null) {
-      this.setState({ error: 'Select profile image' });
+      this.setState({error: 'Select profile image'});
     } else if (this.state.username == '') {
-      this.setState({ error: 'Enter username' });
+      this.setState({error: 'Enter username'});
     } else if (this.state.email == '') {
-      this.setState({ error: 'Enter valid email' });
+      this.setState({error: 'Enter valid email'});
     } else if (this.state.password == '') {
-      this.setState({ error: 'Enter password' });
+      this.setState({error: 'Enter password'});
     } else if (this.state.mobile == '') {
-      this.setState({ error: 'Enter mobile' });
+      this.setState({error: 'Enter mobile'});
     } else if (this.state.dob == 'Date of Birth') {
-      this.setState({ error: 'Select date of birth' });
+      this.setState({error: 'Select date of birth'});
     } else {
       this.registerTask(this.state.imageDataObject);
     }
@@ -181,67 +188,97 @@ class RegisterScreen extends Component {
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
     if (enabled && fcmToken) {
-      const {
-        username,
-        email,
-        mobile,
-        password,
-        dob,
-        accountType,
-      } = this.state;
+      const {username, email, mobile, password, dob, accountType} = this.state;
 
       const userData = {
-        'username': username,
-        'email': email,
-        'mobile': mobile,
-        'password': password,
-        'dob': dob,
-        'acc_type': accountType,
-        'fcm_id': fcmToken,
-        'type': 'normal',
+        username: username,
+        email: email,
+        mobile: mobile,
+        password: password,
+        dob: dob,
+        acc_type: accountType,
+        fcm_id: fcmToken,
+        type: 'normal',
       };
       firebaseAuth()
         .createUserWithEmailAndPassword(email, password)
         .then(result => {
-          const { fileName, path } = imageObject;
-          const { updateNewUserInfo } = this.props;
-          const { user, user: { uid } } = result;
-          const newUser = Object.assign({ uid }, userData);
+          const {fileName, path} = imageObject;
+          const {updateNewUserInfo} = this.props;
+          const {
+            user,
+            user: {uid},
+          } = result;
+          const newUser = Object.assign({uid}, userData);
           const userDataRef = storageRef.child(`/${uid}/${fileName}`);
           updateNewUserInfo(newUser);
-          userDataRef.putFile(path).then(uploadRes => {
-            const { state } = uploadRes;
-            if (state === 'success') {
-              userDataRef.getDownloadURL().then(urlResult => {
-                let newUserData = cloneDeep(userData);
-                newUserData.image = urlResult;
-                axios
-                  .post(REGISTER_URL, { data: JSON.stringify(newUserData) })
-                  .then(responseJson => {
-                    if (responseJson.status === 200 && responseJson.data.createdDate) {
-                      this.leftButtonActon = () => {
+          userDataRef
+            .putFile(path)
+            .then(uploadRes => {
+              const {state} = uploadRes;
+              if (state === 'success') {
+                userDataRef.getDownloadURL().then(urlResult => {
+                  let newUserData = cloneDeep(userData);
+                  newUserData.image = urlResult;
+                  axios
+                    .post(REGISTER_URL, {data: JSON.stringify(newUserData)})
+                    .then(responseJson => {
+                      if (
+                        responseJson.status === 200 &&
+                        responseJson.data.createdDate
+                      ) {
+                        this.leftButtonActon = () => {
+                          this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null,
+                          });
+                        };
+                        this.rightButtonAction = () =>
+                          this.props.navigation.goBack();
                         this.setState({
                           isLoading: false,
-                          showDialog: false,
-                          dialogType: null
+                          showDialog: true,
+                          dialogType: 'fb',
+                          dialogTitle: 'REGISTERED SUCCESSFULLY!',
+                          dialogDesc:
+                            'We have send you a email verification link to your registered email id and then Login to your account',
+                          dialogLeftText: 'Cancel',
+                          dialogRightText: 'Ok',
                         });
-                      };
-                      this.rightButtonAction = () => this.props.navigation.goBack();
-                      this.setState({
-                        isLoading: false,
-                        showDialog: true,
-                        dialogType: 'fb',
-                        dialogTitle: 'REGISTERED SUCCESSFULLY!',
-                        dialogDesc: 'We have send you a email verification link to your registered email id and then Login to your account',
-                        dialogLeftText: 'Cancel',
-                        dialogRightText: 'Ok'
-                      });
-                    } else {
+                      } else {
+                        this.leftButtonActon = () => {
+                          this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null,
+                          });
+                        };
+                        this.rightButtonAction = async () => {
+                          await this.registerTask(this.state.imageDataObject);
+                          this.setState({
+                            isLoading: false,
+                            showDialog: false,
+                            dialogType: null,
+                          });
+                        };
+                        this.setState({
+                          isLoading: false,
+                          showDialog: true,
+                          dialogType: 'fb',
+                          dialogTitle: 'OOPS!',
+                          dialogDesc: responseJson.data.message,
+                          dialogLeftText: 'Cancel',
+                          dialogRightText: 'Retry',
+                        });
+                      }
+                    })
+                    .catch(error => {
                       this.leftButtonActon = () => {
                         this.setState({
                           isLoading: false,
                           showDialog: false,
-                          dialogType: null
+                          dialogType: null,
                         });
                       };
                       this.rightButtonAction = async () => {
@@ -249,7 +286,7 @@ class RegisterScreen extends Component {
                         this.setState({
                           isLoading: false,
                           showDialog: false,
-                          dialogType: null
+                          dialogType: null,
                         });
                       };
                       this.setState({
@@ -257,75 +294,62 @@ class RegisterScreen extends Component {
                         showDialog: true,
                         dialogType: 'fb',
                         dialogTitle: 'OOPS!',
-                        dialogDesc: responseJson.data.message,
+                        dialogDesc:
+                          error.message ||
+                          'Something went wrong, please try again.',
                         dialogLeftText: 'Cancel',
-                        dialogRightText: 'Retry'
+                        dialogRightText: 'Retry',
                       });
-                    }
-                  })
-                  .catch(error => {
-                    this.leftButtonActon = () => {
-                      this.setState({
-                        isLoading: false,
-                        showDialog: false,
-                        dialogType: null
-                      });
-                    };
-                    this.rightButtonAction = async () => {
-                      await this.registerTask(this.state.imageDataObject);
-                      this.setState({
-                        isLoading: false,
-                        showDialog: false,
-                        dialogType: null
-                      });
-                    }
-                    this.setState({
-                      isLoading: false,
-                      showDialog: true,
-                      dialogType: 'fb',
-                      dialogTitle: 'OOPS!',
-                      dialogDesc: error.message || 'Something went wrong, please try again.',
-                      dialogLeftText: 'Cancel',
-                      dialogRightText: 'Retry'
-                    });
-                  })
-                  .done();
-              })
-            }
-          }).catch(error => {
-            simpleToast.show('Image upload failed', simpleToast.SHORT);
-            console.log('image upload error', error.messge)
-          });
-        }).catch(error => {
+                    })
+                    .done();
+                });
+              }
+            })
+            .catch(error => {
+              simpleToast.show('Image upload failed', simpleToast.SHORT);
+              console.log('image upload error', error.messge);
+            });
+        })
+        .catch(error => {
           if (error.code === 'auth/email-already-in-use')
-            this.setState({ error: 'The email is already registerd.', isLoading: false });
+            this.setState({
+              error: 'The email is already registerd.',
+              isLoading: false,
+            });
           else if (error.code === 'auth/invalid-email')
-            this.setState({ error: 'Your email address is invalid!', isLoading: false });
+            this.setState({
+              error: 'Your email address is invalid!',
+              isLoading: false,
+            });
           else if (error.code === 'auth/weak-password')
-            this.setState({ error: 'Your password is too weak', isLoading: false });
+            this.setState({
+              error: 'Your password is too weak',
+              isLoading: false,
+            });
           else
-            this.setState({ error: "Something went wrong, please try again later", isLoading: false });
+            this.setState({
+              error: 'Something went wrong, please try again later',
+              isLoading: false,
+            });
         });
-    }
-    else {
+    } else {
       this.leftButtonActon = null;
       this.rightButtonAction = () => {
-        if (Platform.OS == 'android')
-          BackHandler.exitApp();
-        else
-          RNExitApp.exitApp();
-      }
+        if (Platform.OS == 'android') BackHandler.exitApp();
+        else RNExitApp.exitApp();
+      };
       this.setState({
         isLoading: false,
         showDialog: true,
         dialogType: 'fb',
         dialogTitle: 'ENABLE NOTIFICATIONS!',
-        dialogDesc: "You don't have permission for notification. Please enable notification then try again",
+        dialogDesc:
+          "You don't have permission for notification. Please enable notification then try again",
         dialogLeftText: 'Cancel',
-        dialogRightText: 'Ok'
+        dialogRightText: 'Ok',
       });
     }
-  }
+  };
 
   changeWaitingDialogVisibility = bool => {
     this.setState({
@@ -333,17 +357,25 @@ class RegisterScreen extends Component {
     });
   };
 
-  changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }));
+  changeDialogVisibility = () =>
+    this.setState(prevState => ({showDialog: !prevState.showDialog}));
 
   render() {
-    const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
+    const {
+      showDialog,
+      dialogType,
+      dialogTitle,
+      dialogDesc,
+      dialogLeftText,
+      dialogRightText,
+    } = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
         <DialogComponent
           isDialogVisible={showDialog && dialogType !== null}
           transparent={true}
-          animation='fade'
+          animation="fade"
           width={screenWidth - 80}
           changeDialogVisibility={this.changeDialogVisibility}
           leftButtonAction={this.leftButtonActon}
@@ -363,7 +395,11 @@ class RegisterScreen extends Component {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag">
           <View
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
             <View
               style={{
                 width: screenWidth,
@@ -373,13 +409,13 @@ class RegisterScreen extends Component {
                 alignItems: 'center',
               }}>
               <ImageBackground
-                style={{ width: screenWidth, height: screenWidth }}
+                style={{width: screenWidth, height: screenWidth}}
                 source={
                   this.state.imageURI != null
                     ? this.state.imageURI
                     : require('../../icons/user.png')
                 }>
-                <View style={{ width: screenWidth, height: screenWidth }}>
+                <View style={{width: screenWidth, height: screenWidth}}>
                   <TouchableOpacity
                     style={{
                       width: 35,
@@ -391,7 +427,12 @@ class RegisterScreen extends Component {
                     }}
                     onPress={() => this.props.navigation.goBack()}>
                     <Image
-                      style={{ width: 20, height: 20, tintColor: black, alignSelf: 'center' }}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: black,
+                        alignSelf: 'center',
+                      }}
                       source={require('../../icons/arrow_back.png')}
                     />
                   </TouchableOpacity>
@@ -409,14 +450,19 @@ class RegisterScreen extends Component {
                       backgroundColor: '#fff',
                       margin: 20,
                       shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 0 },
+                      shadowOffset: {width: 0, height: 0},
                       shadowOpacity: 0.75,
                       shadowRadius: 5,
                       elevation: 5,
                     }}
                     onPress={this.selectPhoto.bind(this)}>
                     <Image
-                      style={{ width: 20, height: 20, tintColor: themeRed, alignSelf: 'center' }}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: themeRed,
+                        alignSelf: 'center',
+                      }}
                       source={require('../../icons/camera.png')}
                     />
                   </TouchableOpacity>
@@ -426,7 +472,11 @@ class RegisterScreen extends Component {
 
             <View style={styles.logincontainer}>
               <ShakingText
-                style={{ color: 'red', fontWeight: 'bold', marginBottom: 10 }}>
+                style={{
+                  color: 'red',
+                  fontWeight: 'bold',
+                  marginBottom: 10,
+                }}>
                 {this.state.error}
               </ShakingText>
 
@@ -448,71 +498,107 @@ class RegisterScreen extends Component {
                     marginBottom: 10,
                   }}>
                   <View style={styles.buttonPrimaryDark}>
-                    <Text style={[styles.text, { fontWeight: 'bold' }]}>Account Type</Text>
+                    <Text style={[styles.text, {fontWeight: 'bold'}]}>
+                      Account Type
+                    </Text>
                   </View>
                   <View style={styles.buttonGreen}>
-                    <Text style={[styles.text, { color: black, fontWeight: 'bold' }]}>{this.state.accountType}</Text>
+                    <Text
+                      style={[styles.text, {color: black, fontWeight: 'bold'}]}>
+                      {this.state.accountType}
+                    </Text>
                   </View>
                 </View>
               </View>
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/ic_user_64dp.png')}></Image>
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/ic_user_64dp.png')}
+                />
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
+                  style={{
+                    width: screenWidth - 85,
+                    height: 50,
+                    marginLeft: 5,
+                    color: black,
+                  }}
                   placeholder="Username"
                   onChangeText={userNameInput =>
-                    this.setState({ error: '', username: userNameInput })
-                  }></TextInput>
+                    this.setState({error: '', username: userNameInput})
+                  }
+                />
               </View>
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/email.png')}></Image>
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/email.png')}
+                />
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
+                  style={{
+                    width: screenWidth - 85,
+                    height: 50,
+                    marginLeft: 5,
+                    color: black,
+                  }}
                   placeholder="Email"
-                  onChangeText={emailInput =>
-                    this.emailValidate(emailInput)
-                  }></TextInput>
+                  onChangeText={emailInput => this.emailValidate(emailInput)}
+                />
               </View>
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/ic_lock_64dp.png')}></Image>
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/ic_lock_64dp.png')}
+                />
                 <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
+                  style={{
+                    width: screenWidth - 85,
+                    height: 50,
+                    marginLeft: 5,
+                    color: black,
+                  }}
                   placeholder="Password"
                   secureTextEntry={true}
                   onChangeText={passwordInput =>
-                    this.setState({ error: '', password: passwordInput })
-                  }></TextInput>
+                    this.setState({error: '', password: passwordInput})
+                  }
+                />
               </View>
 
               <View style={styles.textInputView}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/mobile.png')}></Image>
-                <TextInput
-                  style={{ width: screenWidth - 85, height: 50, marginLeft: 5, color: black }}
-                  placeholder="Mobile"
-                  maxLength={10}
-                  keyboardType="numeric"
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/mobile.png')}
+                />
+                <TextInputMask
+                  style={{
+                    width: screenWidth - 85,
+                    height: 50,
+                    marginLeft: 5,
+                    color: black,
+                  }}
+                  refInput={ref => {
+                    this.input = ref;
+                  }}
+                  keyboardType="phone-pad"
+                  placeholder={`${countryCode} 000 000 000`}
+                  value={this.state.mobile}
                   onChangeText={mobileInput =>
-                    this.setState({ error: '', mobile: mobileInput })
-                  }></TextInput>
+                    this.setState({error: '', mobile: mobileInput})
+                  }
+                  mask={`${countryCode} [000] [000] [000]`}
+                />
               </View>
 
               <TouchableOpacity
                 style={styles.textInputView}
                 onPress={this.showPicker}>
                 <Image
-                  style={{ width: 15, height: 15, marginLeft: 5 }}
-                  source={require('../../icons/calendar.png')}></Image>
+                  style={{width: 15, height: 15, marginLeft: 5}}
+                  source={require('../../icons/calendar.png')}
+                />
                 <Text
                   style={{
                     width: screenWidth - 85,
@@ -555,14 +641,17 @@ class RegisterScreen extends Component {
 }
 
 const mapSateToProps = state => ({
-  newUser: state.userInfo.newUser
+  newUser: state.userInfo.newUser,
 });
 
 const mapDispatchToProps = dispatch => ({
-  updateNewUserInfo: newUser => dispatch(updateNewUserInfo(newUser))
+  updateNewUserInfo: newUser => dispatch(updateNewUserInfo(newUser)),
 });
 
-export default connect(mapSateToProps, mapDispatchToProps)(RegisterScreen);
+export default connect(
+  mapSateToProps,
+  mapDispatchToProps,
+)(RegisterScreen);
 
 const styles = StyleSheet.create({
   container: {
@@ -587,7 +676,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: 'white',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -604,7 +693,7 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: themeRed,
     shadowColor: black,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
