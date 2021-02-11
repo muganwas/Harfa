@@ -43,6 +43,7 @@ import {
 } from '../../Redux/Actions/generalActions';
 import {fetchedJobProviderInfo} from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
+import _ from 'lodash';
 import {black, white, red} from '../../Constants/colors';
 
 const socket = Config.socket;
@@ -50,9 +51,14 @@ const Android = Platform.OS === 'android';
 const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
 
 class ProHamburger extends React.Component {
-  state = {
-    fetchedOthersLocations: false,
-  };
+  constructor() {
+    super();
+    this.state = {
+      fetchedOthersLocations: false,
+      currentMessage: null,
+    };
+    Notifications.registerRemoteNotifications();
+  }
 
   async componentDidMount() {
     const {
@@ -76,8 +82,10 @@ class ProHamburger extends React.Component {
       } = this.props;
       const {title, body} = data;
       const currentGenericCount = notificationsInfo.generic;
-      const newGenericCount = currentGenericCount + 1;
-      fetchedNotifications({type: 'generic', value: newGenericCount});
+      this.setState({currentMessage: message});
+      if (!_.isEqual(this.state.currentMessage, message)) {
+        fetchedNotifications({type: 'generic', value: currentGenericCount + 1});
+      }
       const orderId = data.order_id;
       let pos = 0;
       await jobRequestsProviders.map((obj, key) => {
@@ -109,8 +117,10 @@ class ProHamburger extends React.Component {
           delivery_lat: data.delivery_lat,
           delivery_lang: data.delivery_lang,
         });
-      } else if (title.toLowerCase() == 'job cancelled') {
-        SimpleToast.show(title + ' has been cancelled by client');
+      } else if (
+        title.toLowerCase() == 'job cancelled' ||
+        title.toLowerCase() == 'job completed'
+      ) {
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
       }

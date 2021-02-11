@@ -13,6 +13,7 @@ import {NavigationEvents} from 'react-navigation';
 import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
 import NetInfo from '@react-native-community/netinfo';
+import _ from 'lodash';
 import Config from '../Config';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
@@ -64,8 +65,8 @@ class Hamburger extends React.Component {
       connectivityAvailable: false,
       availabilityChecked: false,
       availabilityObj: {},
+      currentMessage: null,
     };
-
     Notifications.registerRemoteNotifications();
   }
   async componentDidMount() {
@@ -94,12 +95,18 @@ class Hamburger extends React.Component {
         jobsInfo: {jobRequests},
       } = this.props;
       const currentGenericCount = notificationsInfo.generic;
-      const newGenericCount = currentGenericCount + 1;
+      this.setState({currentMessage: message});
+      console.log('message', message);
+      console.log('current message', this.state.currentMessage);
+      if (!_.isEqual(this.state.currentMessage, message)) {
+        fetchedNotifications({
+          type: 'generic',
+          value: currentGenericCount + 1,
+        });
+      }
       let newJobRequests = cloneDeep(jobRequests);
-      fetchedNotifications({type: 'generic', value: newGenericCount});
       const orderId = data.orderId;
       let pos = 0;
-
       await jobRequests.map((obj, key) => {
         if (orderId === obj.order_Id) pos = key;
       });

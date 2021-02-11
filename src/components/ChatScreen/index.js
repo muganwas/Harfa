@@ -439,8 +439,16 @@ class ChatScreen extends Component {
         }
       })
       .catch(error => {
-        this.leftButtonActon = null;
+        console.log('cancellation error', error);
+        this.leftButtonActon = () => {
+          this.setState({
+            isLoading: false,
+            showDialog: false,
+            dialogType: null,
+          });
+        };
         this.rightButtonAction = () => {
+          this.jobCancelTask();
           this.setState({
             isLoading: false,
             showDialog: false,
@@ -452,9 +460,9 @@ class ChatScreen extends Component {
           showDialog: true,
           dialogType: 'fb',
           dialogTitle: 'OOPS!',
-          dialogDesc: 'Something went wrong, try again later',
+          dialogDesc: 'Something went wrong!',
           dialogLeftText: 'Cancel',
-          dialogRightText: 'Ok',
+          dialogRightText: 'Retry',
         });
       });
   };

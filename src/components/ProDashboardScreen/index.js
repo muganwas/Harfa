@@ -109,6 +109,7 @@ class ProDashboardScreen extends Component {
       refreshing: false,
       pause: false,
       backClickCount: 0,
+      selectedReviewItem: null,
       proImageAvailable: null,
     };
     this.springValue = new Animated.Value(100);
@@ -583,29 +584,29 @@ class ProDashboardScreen extends Component {
 
   //Call also from ReviewDialog
   changeDialogVisibility = (bool, text, item, rating, review) => {
-    if (item != '') {
-      if (item.employee_rating == '') {
+    if (item !== '') {
+      if (item.employee_rating === '') {
         this.setState({
           isDialogLogoutVisible: bool,
           reviewData: item,
           mainId: item._id,
+          selectedReviewItem: item,
         });
       }
     } else {
-      if (text == 'Not now') {
+      if (text === 'Not now') {
         this.setState({
           isDialogLogoutVisible: bool,
           reviewData: item,
         });
-      } else if (text == 'Submitted') {
+      } else if (text === 'Submitted') {
         this.setState({
           isDialogLogoutVisible: bool,
           reviewData: item,
           rating: rating,
           review: review,
         });
-
-        this.reviewTask(rating, review, item);
+        this.reviewTask(rating, review, this.state.selectedReviewItem);
       }
     }
   };
@@ -913,13 +914,16 @@ class ProDashboardScreen extends Component {
             isLoading: false,
             isReviewDialogVisible: false,
             mainId: '',
+            dataWorkSource: [],
             isErrorToast: false,
+            selectedReviewItem: null,
           });
           this.showToast('Review submitted');
           this.onRefresh();
         } else {
           this.setState({
             isLoading: false,
+            selectedReviewItem: null,
           });
           //ToastAndroid.show("Something went wrong", ToastAndroid.show);
           this.showToast('Something went wrong');
@@ -929,6 +933,7 @@ class ProDashboardScreen extends Component {
         console.log('Error :' + error);
         this.setState({
           isLoading: false,
+          selectedReviewItem: null,
         });
       })
       .done();
@@ -939,7 +944,7 @@ class ProDashboardScreen extends Component {
       fetchJobRequestHistory,
       userInfo: {providerDetails},
     } = this.props;
-    if (item.customer_review != 'Requested' && item.customer_rating == '') {
+    if (item.customer_review !== 'Requested' && item.customer_rating === '') {
       this.setState({
         isLoading: true,
       });
