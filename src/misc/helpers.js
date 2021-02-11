@@ -1,16 +1,13 @@
 import axios from 'axios';
 import {PhoneNumberUtil} from 'google-libphonenumber';
 import {cloneDeep} from 'lodash';
-import Config from '../components/Config';
 import moment from 'moment';
 
 const phoneUtil = PhoneNumberUtil.getInstance();
 const emailRegex = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i;
 const passwordRegex = /[^\w\d]*(([0-9]+.*[A-Z]+.*)|[A-Z]+.*([0-9]+.*))/;
-const countryCode = Config.countryPhoneCode;
-const countryLetterCode = Config.countryCode;
 
-export const phoneNumberCheck = async phoneNumber => {
+export const phoneNumberCheck = async (phoneNumber, countryLetterCode) => {
   if (phoneNumber && phoneNumber.length > 0) {
     try {
       const number = phoneUtil.parseAndKeepRawInput(
@@ -25,7 +22,11 @@ export const phoneNumberCheck = async phoneNumber => {
   } else return false;
 };
 
-export const sanitizeMobileNumber = async (mobile = '', removeCode = true) => {
+export const sanitizeMobileNumber = async (
+  mobile = '',
+  countryCode,
+  removeCode = true,
+) => {
   let pN;
   if (mobile && mobile.length > 0) {
     pN = mobile;

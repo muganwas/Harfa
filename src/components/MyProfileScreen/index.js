@@ -25,7 +25,8 @@ import AsyncStorage from '@react-native-community/async-storage';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
-import {cloneDeep} from 'lodash';
+import database from '@react-native-firebase/database';
+import {cloneDeep, clone} from 'lodash';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
@@ -51,7 +52,6 @@ const options = {
 
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
-const countryCode = Config.countryPhoneCode;
 
 const USER_IMAGE_UPDATE = Config.baseURL + 'users/upload/';
 const USER_INFO_UPDATE = Config.baseURL + 'users/';
@@ -91,6 +91,8 @@ class MyProfileScreen extends Component {
       lat: userDetails.lat,
       lang: userDetails.lang,
       error: '',
+      countryCode: '',
+      postCountryCode: false,
       isLoading: false,
       galleryCameraImage: '',
       isVisible: false,
@@ -102,6 +104,10 @@ class MyProfileScreen extends Component {
 
   componentDidMount() {
     const {navigation} = this.props;
+    const countryCodeRef = database().ref('constants/countryCode');
+    countryCodeRef.once('value').then(code => {
+      this.setState({countryCode: code.val()});
+    });
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -113,6 +119,19 @@ class MyProfileScreen extends Component {
         this.handleBackButtonClick,
       );
     });
+  }
+
+  componentDidUpdate() {
+    const {mobile, countryCode, postCountryCode} = this.state;
+    if (!postCountryCode && countryCode) {
+      if (countryCode.indexOf(mobile) > -1) {
+        let newMobile = mobile.slice(countryCode.length, mobile.length);
+        this.setState({postCountryCode: true, mobile: newMobile});
+      } else if (String(mobile[0]) === '0') {
+        let newMobile = mobile.slice(1, mobile.length);
+        this.setState({postCountryCode: true, mobile: newMobile});
+      }
+    }
   }
 
   handleBackButtonClick = () => {
@@ -317,6 +336,7 @@ class MyProfileScreen extends Component {
     const {
       userInfo: {userDetails},
     } = this.props;
+    const {countryCode, mobile} = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -498,7 +518,7 @@ class MyProfileScreen extends Component {
                   }}
                   keyboardType="phone-pad"
                   placeholder={`${countryCode} 000 000 000`}
-                  value={this.state.mobile}
+                  value={mobile}
                   onChangeText={mobileInput =>
                     this.setState({error: '', mobile: mobileInput})
                   }

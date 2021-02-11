@@ -20,6 +20,7 @@ import messaging from '@react-native-firebase/messaging';
 import Axios from 'axios';
 import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
+import database from '@react-native-firebase/database';
 import {
   updateProviderDetails,
   updateNewUserInfo,
@@ -32,7 +33,6 @@ import {black, white, themeRed, lightGray} from '../../Constants/colors';
 const storageRef = storage().ref('/employees_info');
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'employee/register';
-const countryCode = Config.countryPhoneCode;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -76,6 +76,7 @@ class ProRegisterScreen extends Component {
       dialogType: null,
       dialogTitle: '',
       dialogDesc: '',
+      countryCode: '',
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
     };
@@ -85,6 +86,10 @@ class ProRegisterScreen extends Component {
 
   componentDidMount() {
     const {navigation} = this.props;
+    const countryCodeRef = database().ref('constants/countryCode');
+    countryCodeRef.once('value').then(code => {
+      this.setState({countryCode: code.val()});
+    });
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -314,6 +319,7 @@ class ProRegisterScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
+      countryCode,
     } = this.state;
     return (
       <View style={StyleSheet.container}>

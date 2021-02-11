@@ -14,6 +14,7 @@ import {
   Modal,
 } from 'react-native';
 import {connect} from 'react-redux';
+import database from '@react-native-firebase/database';
 import RNExitApp from 'react-native-exit-app';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -45,7 +46,6 @@ const options = {
 const storageRef = storage().ref('/employees_info');
 const PRO_IMAGE_UPDATE = Config.baseURL + 'employee/upload/';
 const PRO_INFO_UPDATE = Config.baseURL + 'employee/';
-const countryCode = Config.countryPhoneCode;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -86,6 +86,8 @@ class ProMyProfileScreen extends Component {
       lang: providerDetails.lang,
       invoice: providerDetails.invoice,
       isLoading: true,
+      countryCode: '',
+      postCountryCode: false,
       isErrorToast: false,
       galleryCameraImage: '',
       accountType: providerDetails.accountType,
@@ -120,6 +122,10 @@ class ProMyProfileScreen extends Component {
       userInfo: {providerDetails},
       navigation,
     } = this.props;
+    const countryCodeRef = database().ref('constants/countryCode');
+    countryCodeRef.once('value').then(code => {
+      this.setState({countryCode: code.val()});
+    });
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -148,6 +154,19 @@ class ProMyProfileScreen extends Component {
       services: serviceName,
     });
   };
+
+  componentDidUpdate() {
+    const {mobile, countryCode, postCountryCode} = this.state;
+    if (!postCountryCode && countryCode) {
+      if (countryCode.indexOf(mobile) > -1) {
+        let newMobile = mobile.slice(countryCode.length, mobile.length);
+        this.setState({postCountryCode: true, mobile: newMobile});
+      } else if (String(mobile[0]) === '0') {
+        let newMobile = mobile.slice(1, mobile.length);
+        this.setState({postCountryCode: true, mobile: newMobile});
+      }
+    }
+  }
 
   handleBackButtonClick = () => {
     if (Platform.OS == 'ios')
@@ -338,6 +357,7 @@ class ProMyProfileScreen extends Component {
   };
 
   render() {
+    const {countryCode, mobile} = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -493,7 +513,7 @@ class ProMyProfileScreen extends Component {
               <View style={styles.textInputView}>
                 <Image
                   style={{width: 15, height: 15, marginLeft: 5}}
-                  source={require('../../icons/ic_user_64dp.png')}
+                  source={require('../../icons/mobile.png')}
                 />
                 <TextInputMask
                   style={{
@@ -506,7 +526,7 @@ class ProMyProfileScreen extends Component {
                   }}
                   keyboardType="phone-pad"
                   placeholder={`${countryCode} 000 000 000`}
-                  value={this.state.mobile}
+                  value={mobile}
                   onChangeText={mobileInput =>
                     this.setState({error: '', mobile: mobileInput})
                   }
