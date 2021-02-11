@@ -135,7 +135,7 @@ class RegisterScreen extends Component {
   selectPhoto = () => {
     ImagePicker.showImagePicker(options, response => {
       if (response.didCancel) {
-        simpleToast.show('You canceled image selection', simpleToast.SHORT);
+        simpleToast.show('You cancelled image selection', simpleToast.SHORT);
       } else if (response.error) {
         simpleToast.show('Something went wrong, try again.', simpleToast.SHORT);
       } else {

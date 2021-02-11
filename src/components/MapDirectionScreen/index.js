@@ -1,10 +1,19 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import {
-  View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, Linking,
-  BackHandler, StatusBar, Platform, ActivityIndicator
+  View,
+  StyleSheet,
+  Dimensions,
+  Image,
+  Text,
+  TouchableOpacity,
+  Linking,
+  BackHandler,
+  StatusBar,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { connect } from 'react-redux';
-import { cloneDeep } from 'lodash';
+import {connect} from 'react-redux';
+import {cloneDeep} from 'lodash';
 import simpleToast from 'react-native-simple-toast';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
@@ -13,51 +22,73 @@ import {
   startFetchingJobCustomer,
   fetchedJobCustomerInfo,
   fetchCustomerJobInfoError,
-  setSelectedJobRequest
+  setSelectedJobRequest,
 } from '../../Redux/Actions/jobsActions';
 import DialogComponent from '../DialogComponent';
-import { MAPS_API_KEY } from 'react-native-dotenv';
+import {MAPS_API_KEY} from 'react-native-dotenv';
 import Config from '../Config';
-import { white, colorBg, lightGray, black, themeRed, colorGreen } from '../../Constants/colors';
+import {
+  white,
+  colorBg,
+  lightGray,
+  black,
+  themeRed,
+  colorGreen,
+} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
-const REJECT_ACCEPT_REQUEST = Config.baseURL + "jobrequest/updatejobrequest";
+const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 
 const StatusBarPlaceHolder = () => {
-  return (
-    Platform.OS === 'ios' ?
-      <View style={{
-        width: "100%",
+  return Platform.OS === 'ios' ? (
+    <View
+      style={{
+        width: '100%',
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: white
+        backgroundColor: white,
       }}>
-        <StatusBar
-          barStyle="dark-content" />
-      </View>
-      :
-      <StatusBar barStyle='dark-content' backgroundColor={white} />
+      <StatusBar barStyle="dark-content" />
+    </View>
+  ) : (
+    <StatusBar barStyle="dark-content" backgroundColor={white} />
   );
-}
+};
 
 class MapDirectionScreen extends Component {
-
   constructor(props) {
     super();
-    const { userInfo: { userDetails }, generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { jobRequests, allJobRequestsClient, selectedJobRequest: { employee_id } }, navigation } = props;
+    const {
+      userInfo: {userDetails},
+      generalInfo: {usersCoordinates, othersCoordinates},
+      jobsInfo: {
+        jobRequests,
+        allJobRequestsClient,
+        selectedJobRequest: {employee_id},
+      },
+      navigation,
+    } = props;
     const currRequestPos = navigation.getParam('currentPos', 0);
     let jobRequestPos = 0;
-    allJobRequestsClient.map((job, i) => { if (job.employee_id === jobRequests[currRequestPos].employee_id) jobRequestPos = i;});
-    const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
-    const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
+    allJobRequestsClient.map((job, i) => {
+      if (job.employee_id === jobRequests[currRequestPos].employee_id)
+        jobRequestPos = i;
+    });
+    const employeeLatitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].latitude
+      : usersCoordinates.latitude;
+    const employeeLongitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].longitude
+      : usersCoordinates.longitude;
 
     this.state = {
-      sourceLocation: employeeLatitude + "," + employeeLongitude,
+      sourceLocation: employeeLatitude + ',' + employeeLongitude,
       sourceLat: parseFloat(employeeLatitude),
       sourceLng: parseFloat(employeeLongitude),
-      destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+      destinationLocation:
+        usersCoordinates.latitude + ',' + usersCoordinates.longitude,
       destinationLat: parseFloat(usersCoordinates.latitude),
       destinationLng: parseFloat(usersCoordinates.longitude),
       coords: [],
@@ -74,7 +105,10 @@ class MapDirectionScreen extends Component {
       providerId: jobRequests[currRequestPos].employee_id,
       providerImage: jobRequests[currRequestPos].image,
       providerfcmId: jobRequests[currRequestPos].fcm_id,
-      providerName: jobRequests[currRequestPos].name + " " + jobRequests[currRequestPos].surName,
+      providerName:
+        jobRequests[currRequestPos].name +
+        ' ' +
+        jobRequests[currRequestPos].surName,
       providerMobile: jobRequests[currRequestPos].mobile,
       providerDescription: jobRequests[currRequestPos].description,
       providerAddress: jobRequests[currRequestPos].address,
@@ -91,80 +125,116 @@ class MapDirectionScreen extends Component {
       dialogTitle: '',
       dialogDesc: '',
       dialogLeftText: 'Cancel',
-      dialogRightText: 'Retry'
+      dialogRightText: 'Retry',
     };
     this.leftButtonActon = null;
     this.rightButtonAction = null;
-  };
+  }
 
   componentDidMount() {
-    const { generalInfo: { othersCoordinates, usersCoordinates }, jobsInfo: { selectedJobRequest: { employee_id } }, navigation } = this.props;
-    const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : usersCoordinates.latitude;
-    const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : usersCoordinates.longitude;
-    this.getDirections(employeeLatitude + "," + employeeLongitude, this.state.destinationLocation);
+    const {
+      generalInfo: {othersCoordinates, usersCoordinates},
+      jobsInfo: {
+        selectedJobRequest: {employee_id},
+      },
+      navigation,
+    } = this.props;
+    const employeeLatitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].latitude
+      : usersCoordinates.latitude;
+    const employeeLongitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].longitude
+      : usersCoordinates.longitude;
+    this.getDirections(
+      employeeLatitude + ',' + employeeLongitude,
+      this.state.destinationLocation,
+    );
 
     navigation.addListener('willFocus', async () => {
-      this.refetchDirections()
-      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+      this.refetchDirections();
+      BackHandler.addEventListener('hardwareBackPress', () =>
+        this.handleBackButtonClick(),
+      );
     });
     navigation.addListener('willBlur', () => {
-      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+      BackHandler.removeEventListener(
+        'hardwareBackPress',
+        this.handleBackButtonClick,
+      );
     });
   }
 
   refetchDirections = () => {
-    const { generalInfo: { usersCoordinates, othersCoordinates }, jobsInfo: { selectedJobRequest: { employee_id } } } = this.props;
-    const { latitude, longitude } = othersCoordinates[employee_id] || {};
-    const { destinationLat, destinationLng, coords } = this.state;
+    const {
+      generalInfo: {usersCoordinates, othersCoordinates},
+      jobsInfo: {
+        selectedJobRequest: {employee_id},
+      },
+    } = this.props;
+    const {latitude, longitude} = othersCoordinates[employee_id] || {};
+    const {destinationLat, destinationLng, coords} = this.state;
     if (latitude !== undefined && longitude !== undefined) {
-      if (Math.floor(parseInt(latitude)) !== Math.floor(parseInt(destinationLat)) || Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))) {
+      if (
+        Math.floor(parseInt(latitude)) !==
+          Math.floor(parseInt(destinationLat)) ||
+        Math.floor(parseInt(longitude)) !== Math.floor(parseInt(destinationLng))
+      ) {
         this.setState({
-          sourceLocation: latitude + "," + longitude,
+          sourceLocation: latitude + ',' + longitude,
           sourceLat: parseFloat(latitude),
           sourceLng: parseFloat(longitude),
-          destinationLocation: usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+          destinationLocation:
+            usersCoordinates.latitude + ',' + usersCoordinates.longitude,
           destinationLat: parseFloat(usersCoordinates.latitude),
           destinationLng: parseFloat(usersCoordinates.longitude),
         });
-        this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
+        this.getDirections(
+          latitude + ',' + longitude,
+          this.state.destinationLocation,
+        );
       }
     }
     if (this.state.coords.length === 0) {
-      this.getDirections(latitude + "," + longitude, this.state.destinationLocation);
-    }
-    else {
+      this.getDirections(
+        latitude + ',' + longitude,
+        this.state.destinationLocation,
+      );
+    } else {
       let actualLat1 = coords[0].latitude;
       let actualLong1 = coords[0].longitude;
-      if (actualLat1 && actualLong1 && !this.state.keyReset) this.setState({ mapKey: Math.random(2), keyReset: true });
+      if (actualLat1 && actualLong1 && !this.state.keyReset)
+        this.setState({mapKey: Math.random(2), keyReset: true});
     }
-  }
+  };
 
   handleBackButtonClick = () => {
-    if (this.state.titlePage == "Dashboard")
-      this.props.navigation.navigate("Dashboard");
-    else if (this.state.titlePage == "ProviderDetails")
-      this.props.navigation.navigate("ProviderDetails");
-    else if (this.state.titlePage == "Chat")
-      this.props.navigation.navigate("Chat");
-    else
-      this.props.navigation.goBack()
-    return true
-  }
-
+    if (this.state.titlePage == 'Dashboard')
+      this.props.navigation.navigate('Dashboard');
+    else if (this.state.titlePage == 'ProviderDetails')
+      this.props.navigation.navigate('ProviderDetails');
+    else if (this.state.titlePage == 'Chat')
+      this.props.navigation.navigate('Chat');
+    else this.props.navigation.goBack();
+    return true;
+  };
 
   async getDirections(startLoc, destinationLoc) {
     if (startLoc && destinationLoc) {
       try {
-        fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`).
-          then(resp => resp.json()).
-          then(respJson => {
+        fetch(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`,
+        )
+          .then(resp => resp.json())
+          .then(respJson => {
             if (respJson && respJson.routes[0]) {
-              let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
+              let points = Polyline.decode(
+                respJson.routes[0].overview_polyline.points,
+              );
               let coords = points.map((point, index) => {
                 return {
                   latitude: point[0],
-                  longitude: point[1]
-                }
+                  longitude: point[1],
+                };
               });
               //If Delay some second, works fine..Reason don't know
               setTimeout(() => {
@@ -172,30 +242,32 @@ class MapDirectionScreen extends Component {
                   coords: coords,
                   isLoading: false,
                 });
-                return coords
-              }, 1500)
+                return coords;
+              }, 1500);
             }
           });
       } catch (error) {
-        alert(error)
-        return error
+        alert(error);
+        return error;
       }
-    }
-    else {
-      simpleToast.show('Destination co-ordinates missing, try later', simpleToast.LONG);
+    } else {
+      simpleToast.show(
+        'Destination co-ordinates missing, try later',
+        simpleToast.LONG,
+      );
     }
   }
 
   callPhoneTask = () => {
-    Linking.openURL('tel:' + this.state.providerMobile)
-  }
+    Linking.openURL('tel:' + this.state.providerMobile);
+  };
 
   openCompleteConfirmation = () => {
     this.leftButtonActon = () => {
       this.setState({
         isLoading: false,
         showDialog: false,
-        dialogType: null
+        dialogType: null,
       });
     };
     this.rightButtonAction = async () => {
@@ -203,26 +275,26 @@ class MapDirectionScreen extends Component {
       this.setState({
         isLoading: false,
         showDialog: false,
-        dialogType: null
+        dialogType: null,
       });
-    }
+    };
     this.setState({
       isLoading: false,
       showDialog: true,
       dialogType: 'fb',
       dialogTitle: 'JOB COMPLETED',
-      dialogDesc: "Are you sure?",
+      dialogDesc: 'Are you sure?',
       dialogLeftText: 'No',
-      dialogRightText: 'Yes'
+      dialogRightText: 'Yes',
     });
-  }
+  };
 
   openCancelConfirmation = () => {
     this.leftButtonActon = () => {
       this.setState({
         isLoading: false,
         showDialog: false,
-        dialogType: null
+        dialogType: null,
       });
     };
     this.rightButtonAction = async () => {
@@ -230,43 +302,51 @@ class MapDirectionScreen extends Component {
       this.setState({
         isLoading: false,
         showDialog: false,
-        dialogType: null
+        dialogType: null,
       });
-    }
+    };
     this.setState({
       isLoading: false,
       showDialog: true,
       dialogType: 'fb',
       dialogTitle: 'CANCEL JOB',
-      dialogDesc: "Are you sure?",
+      dialogDesc: 'Are you sure?',
       dialogLeftText: 'No',
-      dialogRightText: 'Yes'
+      dialogRightText: 'Yes',
     });
-
-  }
+  };
 
   jobCancelTask = async () => {
-    this.setState({ isLoading: true });
-    const { fetchedPendingJobInfo, jobsInfo: { jobRequests }, userInfo: { userDetails } } = this.props;
-    const { currRequestPos } = this.state;
+    this.setState({isLoading: true});
+    const {
+      fetchedPendingJobInfo,
+      jobsInfo: {jobRequests},
+      userInfo: {userDetails},
+    } = this.props;
+    const {currRequestPos} = this.state;
     var newJobRequests = [...jobRequests];
     const data = {
       main_id: jobRequests[currRequestPos].id,
       chat_status: '1',
-      status: 'Canceled',
-      'notification': {
-        "fcm_id": jobRequests[currRequestPos].fcm_id,
-        "title": "Job Canceled",
-        "type": "JobCancellation",
-        "user_id": userDetails.userId,
-        "employee_id": jobRequests[currRequestPos].employee_id,
-        "order_id": jobRequests[currRequestPos].order_id,
-        "notification_by": "Customer",
-        "save_notification": true,
-        "body": 'Job request has been canceled by client' + ' Request Id : ' + jobRequests[currRequestPos].order_id,
-        "data": {
+      status: 'Cancelled',
+      notification: {
+        fcm_id: jobRequests[currRequestPos].fcm_id,
+        title: 'Job Cancelled',
+        type: 'JobCancellation',
+        user_id: userDetails.userId,
+        employee_id: jobRequests[currRequestPos].employee_id,
+        order_id: jobRequests[currRequestPos].order_id,
+        notification_by: 'Customer',
+        save_notification: true,
+        body:
+          'Job request has been cancelled by client' +
+          ' Request Id : ' +
+          jobRequests[currRequestPos].order_id,
+        data: {
           ProviderId: jobRequests[currRequestPos].employee_id,
-          image: jobRequests[currRequestPos].image ? jobRequests[currRequestPos].image : 'null',
+          image: jobRequests[currRequestPos].image
+            ? jobRequests[currRequestPos].image
+            : 'null',
           fcmId: jobRequests[currRequestPos].fcm_id,
           name: jobRequests[currRequestPos].name,
           surname: jobRequests[currRequestPos].surname,
@@ -279,24 +359,24 @@ class MapDirectionScreen extends Component {
           orderId: jobRequests[currRequestPos].order_id,
           mainId: jobRequests[currRequestPos].id,
           chat_status: jobRequests[currRequestPos].chat_status,
-          status: 'Canceled',
+          status: 'Cancelled',
           delivery_address: jobRequests[currRequestPos].delivery_address,
           delivery_lat: jobRequests[currRequestPos].delivery_lat,
           delivery_lang: jobRequests[currRequestPos].delivery_lang,
         },
-      }
-    }
+      },
+    };
 
     await fetch(REJECT_ACCEPT_REQUEST, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
-      .then((response) => response.json())
-      .then((responseJson) => {
+      .then(response => response.json())
+      .then(responseJson => {
         if (responseJson.result) {
           this.setState({
             isLoading: false,
@@ -304,61 +384,70 @@ class MapDirectionScreen extends Component {
           });
           newJobRequests.splice(currRequestPos, 1);
           fetchedPendingJobInfo(newJobRequests);
-          this.props.navigation.navigate("Dashboard");
-        }
-        else {
+          this.props.navigation.navigate('Dashboard');
+        } else {
           this.leftButtonActon = null;
           this.rightButtonAction = () => {
             this.setState({
               isLoading: false,
               showDialog: false,
-              dialogType: null
+              dialogType: null,
             });
-          }
+          };
           this.setState({
             isLoading: false,
             showDialog: true,
             dialogType: 'fb',
             dialogTitle: 'OOPS!',
-            dialogDesc: "An error has occurred, please try again later",
+            dialogDesc: 'An error has occurred, please try again later',
             dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok'
+            dialogRightText: 'Ok',
           });
         }
       })
-      .catch((error) => {
-        console.log("Error >>> " + error);
+      .catch(error => {
+        console.log('Error >>> ' + error);
         this.setState({
           isLoading: false,
         });
-      })
-  }
+      });
+  };
 
   jobCompleteTask = async () => {
     this.setState({
-      isLoading: true
-    })
-    const { fetchedPendingJobInfo, jobsInfo: { jobRequests }, userInfo: { userDetails } } = this.props;
-    const { currRequestPos } = this.state;
+      isLoading: true,
+    });
+    const {
+      fetchedPendingJobInfo,
+      jobsInfo: {jobRequests},
+      userInfo: {userDetails},
+    } = this.props;
+    const {currRequestPos} = this.state;
     var newJobRequests = cloneDeep(jobRequests);
     const data = {
       main_id: jobRequests[currRequestPos].id,
       chat_status: '1',
       status: 'Completed',
-      'notification': {
-        "fcm_id": jobRequests[currRequestPos].fcm_id,
-        "title": "Job Completed",
-        "body": 'Job Id : ' + jobRequests[currRequestPos].order_id + ' has been reported complete by the client: ' + userDetails.username,
-        "type": "Job Completed",
-        "user_id": userDetails.userId,
-        "employee_id": jobRequests[currRequestPos].employee_id,
-        "order_id": jobRequests[currRequestPos].order_id,
-        "notification_by": "Customer",
-        "save_notification": true,
-        "data": {
+      notification: {
+        fcm_id: jobRequests[currRequestPos].fcm_id,
+        title: 'Job Completed',
+        body:
+          'Job Id : ' +
+          jobRequests[currRequestPos].order_id +
+          ' has been reported complete by the client: ' +
+          userDetails.username,
+        type: 'Job Completed',
+        user_id: userDetails.userId,
+        employee_id: jobRequests[currRequestPos].employee_id,
+        order_id: jobRequests[currRequestPos].order_id,
+        notification_by: 'Customer',
+        save_notification: true,
+        data: {
           ProviderId: jobRequests[currRequestPos].employee_id,
           user_id: userDetails.userId,
-          image: jobRequests[currRequestPos].image ? jobRequests[currRequestPos].image : 'null',
+          image: jobRequests[currRequestPos].image
+            ? jobRequests[currRequestPos].image
+            : 'null',
           fcmId: jobRequests[currRequestPos].fcm_id,
           name: jobRequests[currRequestPos].name,
           surname: jobRequests[currRequestPos].surname,
@@ -376,19 +465,19 @@ class MapDirectionScreen extends Component {
           delivery_lat: jobRequests[currRequestPos].delivery_lat,
           delivery_lang: jobRequests[currRequestPos].delivery_lang,
         },
-      }
-    }
+      },
+    };
 
     await fetch(REJECT_ACCEPT_REQUEST, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
-      .then((response) => response.json())
-      .then((responseJson) => {
+      .then(response => response.json())
+      .then(responseJson => {
         if (responseJson.result) {
           this.setState({
             isLoading: false,
@@ -396,40 +485,47 @@ class MapDirectionScreen extends Component {
           });
           newJobRequests.splice(currRequestPos, 1);
           fetchedPendingJobInfo(newJobRequests);
-          this.props.navigation.navigate("Dashboard");
-        }
-        else {
+          this.props.navigation.navigate('Dashboard');
+        } else {
           this.leftButtonActon = null;
           this.rightButtonAction = () => {
             this.setState({
               isLoading: false,
               showDialog: false,
-              dialogType: null
+              dialogType: null,
             });
-          }
+          };
           this.setState({
             isLoading: false,
             showDialog: true,
             dialogType: 'fb',
             dialogTitle: 'OOPS!',
-            dialogDesc: "An error has occurred, please try again later",
+            dialogDesc: 'An error has occurred, please try again later',
             dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok'
+            dialogRightText: 'Ok',
           });
         }
       })
-      .catch((error) => {
-        console.log("Error >>> " + error);
+      .catch(error => {
+        console.log('Error >>> ' + error);
         this.setState({
           isLoading: false,
         });
-      })
-  }
+      });
+  };
 
-  changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }))
+  changeDialogVisibility = () =>
+    this.setState(prevState => ({showDialog: !prevState.showDialog}));
 
   render() {
-    const { userInfo: { userDetails }, jobsInfo: { jobRequests, selectedJobRequest: { employee_id } }, generalInfo: { othersCoordinates } } = this.props;
+    const {
+      userInfo: {userDetails},
+      jobsInfo: {
+        jobRequests,
+        selectedJobRequest: {employee_id},
+      },
+      generalInfo: {othersCoordinates},
+    } = this.props;
     const {
       currRequestPos,
       sourceLat,
@@ -438,18 +534,29 @@ class MapDirectionScreen extends Component {
       destinationLng,
       coords,
       providerName,
-      mapKey
+      mapKey,
     } = this.state;
-    const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
-    const employeeLatitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].latitude : undefined;
-    const employeeLongitude = othersCoordinates[employee_id] ? othersCoordinates[employee_id].longitude : undefined;
+    const {
+      showDialog,
+      dialogType,
+      dialogTitle,
+      dialogDesc,
+      dialogLeftText,
+      dialogRightText,
+    } = this.state;
+    const employeeLatitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].latitude
+      : undefined;
+    const employeeLongitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].longitude
+      : undefined;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
         <DialogComponent
           isDialogVisible={showDialog && dialogType !== null}
           transparent={true}
-          animation='fade'
+          animation="fade"
           width={screenWidth - 80}
           changeDialogVisibility={this.changeDialogVisibility}
           leftButtonAction={this.leftButtonActon}
@@ -460,24 +567,52 @@ class MapDirectionScreen extends Component {
           leftButtonText={dialogLeftText}
           rightButtonText={dialogRightText}
         />
-        <View style={{
-          flexDirection: 'row', width: '100%', height: 50, backgroundColor: colorBg,
-          paddingLeft: 10, paddingRight: 20, paddingBottom: 5, borderBottomColor: themeRed, borderBottomWidth: 1
-        }}>
-          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', }}
+        <View
+          style={{
+            flexDirection: 'row',
+            width: '100%',
+            height: 50,
+            backgroundColor: colorBg,
+            paddingLeft: 10,
+            paddingRight: 20,
+            paddingBottom: 5,
+            borderBottomColor: themeRed,
+            borderBottomWidth: 1,
+          }}>
+          <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+            <TouchableOpacity
+              style={{width: 35, height: 35, justifyContent: 'center'}}
               onPress={() => this.props.navigation.goBack()}>
-              <Image style={{ width: 20, height: 20, tintColor: black, alignSelf: 'center' }}
-                source={require('../../icons/arrow_back.png')} />
+              <Image
+                style={{
+                  width: 20,
+                  height: 20,
+                  tintColor: black,
+                  alignSelf: 'center',
+                }}
+                source={require('../../icons/arrow_back.png')}
+              />
             </TouchableOpacity>
 
-            <Text style={{ color: black, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
+            <Text
+              style={{
+                color: black,
+                fontSize: 20,
+                fontWeight: 'bold',
+                alignSelf: 'center',
+                marginLeft: 5,
+              }}>
               Track Service Provider
             </Text>
           </View>
         </View>
-        {employeeLatitude && employeeLongitude && destinationLat && destinationLng ?
-          <MapView key={mapKey} style={styles.map}
+        {employeeLatitude &&
+        employeeLongitude &&
+        destinationLat &&
+        destinationLng ? (
+          <MapView
+            key={mapKey}
+            style={styles.map}
             region={{
               latitude: destinationLat,
               longitude: destinationLng,
@@ -489,11 +624,19 @@ class MapDirectionScreen extends Component {
             maxZoomLevel={20}>
             {Platform.OS === 'ios' && (
               <View style={styles.header}>
-                <View style={{ flex: 1, flexDirection: 'row', margin: 5 }}>
-                  <TouchableOpacity style={{ width: 35, height: 35, alignSelf: 'center', justifyContent: 'center', }}
+                <View style={{flex: 1, flexDirection: 'row', margin: 5}}>
+                  <TouchableOpacity
+                    style={{
+                      width: 35,
+                      height: 35,
+                      alignSelf: 'center',
+                      justifyContent: 'center',
+                    }}
                     onPress={() => this.props.navigation.goBack()}>
-                    <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                      source={require('../../icons/back_arrow_double.png')} />
+                    <Image
+                      style={{width: 20, height: 20, alignSelf: 'center'}}
+                      source={require('../../icons/back_arrow_double.png')}
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -505,8 +648,10 @@ class MapDirectionScreen extends Component {
               }}
               title={userDetails.username}
               description="Vous">
-              <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
-                source={require('../../icons/home_marker.png')} />
+              <Image
+                style={{width: 35, height: 35, backgroundColor: 'transparent'}}
+                source={require('../../icons/home_marker.png')}
+              />
             </MapView.Marker>
 
             <MapView.Marker
@@ -516,9 +661,10 @@ class MapDirectionScreen extends Component {
               }}
               title="Fournisseur"
               description={providerName}>
-
-              <Image style={{ width: 35, height: 35, backgroundColor: 'transparent' }}
-                source={require('../../icons/car_marker.png')} />
+              <Image
+                style={{width: 35, height: 35, backgroundColor: 'transparent'}}
+                source={require('../../icons/car_marker.png')}
+              />
             </MapView.Marker>
             <MapView.Polyline
               coordinates={coords}
@@ -529,99 +675,185 @@ class MapDirectionScreen extends Component {
                 '#B24112',
                 '#E5845C',
                 '#238C23',
-                '#7F0000'
+                '#7F0000',
               ]}
-              strokeWidth={2} />
-          </MapView> :
-          <ActivityIndicator
-            size={30}
-            color={'#000'}
-          />}
-        {jobRequests && jobRequests[currRequestPos] ?
+              strokeWidth={2}
+            />
+          </MapView>
+        ) : (
+          <ActivityIndicator size={30} color={'#000'} />
+        )}
+        {jobRequests && jobRequests[currRequestPos] ? (
           <SlidingPanel
             headerLayoutHeight={140}
-            headerLayout={() =>
+            headerLayout={() => (
               <View style={styles.headerLayoutStyle}>
-                <View style={{ flex: 1, flexDirection: 'column', width: screenWidth }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'center', alignContent: 'center', marginTop: 5 }}>
-                    <Image style={{ width: 20, height: 20, }}
-                      source={require('../../icons/up_arrow.gif')}>
-                    </Image>
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    width: screenWidth,
+                  }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      alignContent: 'center',
+                      marginTop: 5,
+                    }}>
+                    <Image
+                      style={{width: 20, height: 20}}
+                      source={require('../../icons/up_arrow.gif')}
+                    />
                   </View>
-                  <View style={{ flexDirection: 'row', flex: 1 }}>
-                    <Image style={{ height: 55, width: 55, justifyContent: 'center', alignSelf: 'center', alignContent: 'flex-start', marginLeft: 10, borderRadius: 200, }}
-                      source={jobRequests[currRequestPos].image ? { uri: jobRequests[currRequestPos].image } : require('../../images/generic_avatar.png')} />
-                    <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
-                      <Text style={{ marginRight: 200, color: white, fontSize: 18, marginLeft: 10, fontWeight: 'bold', textAlignVertical: 'center', }}
+                  <View style={{flexDirection: 'row', flex: 1}}>
+                    <Image
+                      style={{
+                        height: 55,
+                        width: 55,
+                        justifyContent: 'center',
+                        alignSelf: 'center',
+                        alignContent: 'flex-start',
+                        marginLeft: 10,
+                        borderRadius: 200,
+                      }}
+                      source={
+                        jobRequests[currRequestPos].image
+                          ? {uri: jobRequests[currRequestPos].image}
+                          : require('../../images/generic_avatar.png')
+                      }
+                    />
+                    <View
+                      style={{
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                      }}>
+                      <Text
+                        style={{
+                          marginRight: 200,
+                          color: white,
+                          fontSize: 18,
+                          marginLeft: 10,
+                          fontWeight: 'bold',
+                          textAlignVertical: 'center',
+                        }}
                         numberOfLines={1}>
-                        {jobRequests[currRequestPos].name + " " + jobRequests[currRequestPos].surName}
+                        {jobRequests[currRequestPos].name +
+                          ' ' +
+                          jobRequests[currRequestPos].surName}
                       </Text>
-                      <Text style={{ color: white, fontSize: 14, marginLeft: 10, textAlignVertical: 'center' }}>
+                      <Text
+                        style={{
+                          color: white,
+                          fontSize: 14,
+                          marginLeft: 10,
+                          textAlignVertical: 'center',
+                        }}>
                         {jobRequests[currRequestPos].service_name}
                       </Text>
-                      <Text style={{ color: white, fontSize: 14, marginLeft: 10, textAlignVertical: 'center', fontWeight: 'bold' }}>
-                        {jobRequests[currRequestPos].status == "Pending" ? "Chat request accepted" : "Job accepted"}
+                      <Text
+                        style={{
+                          color: white,
+                          fontSize: 14,
+                          marginLeft: 10,
+                          textAlignVertical: 'center',
+                          fontWeight: 'bold',
+                        }}>
+                        {jobRequests[currRequestPos].status == 'Pending'
+                          ? 'Chat request accepted'
+                          : 'Job accepted'}
                       </Text>
                     </View>
 
                     <View style={styles.callView}>
-                      <TouchableOpacity style={{
-                        width: 40, height: 40, backgroundColor: white, borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, padding: 10, marginRight: 15
-                      }}
+                      <TouchableOpacity
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: white,
+                          borderRadius: 5,
+                          shadowColor: '#000',
+                          shadowOffset: {width: 0, height: 0},
+                          shadowOpacity: 0.75,
+                          shadowRadius: 5,
+                          elevation: 5,
+                          padding: 10,
+                          marginRight: 15,
+                        }}
                         onPress={this.callPhoneTask}>
-                        <Image style={[styles.call, { tintColor: themeRed }]}
-                          source={require('../../icons/call.png')} />
+                        <Image
+                          style={[styles.call, {tintColor: themeRed}]}
+                          source={require('../../icons/call.png')}
+                        />
                       </TouchableOpacity>
 
-                      <TouchableOpacity style={{
-                        width: 40, height: 40, backgroundColor: white, borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.75, shadowRadius: 5, elevation: 5, padding: 10
-                      }}
-                        onPress={() => this.props.navigation.navigate("Chat", {
-                          "providerId": jobRequests[currRequestPos].employee_id,
-                          "providerName": jobRequests[currRequestPos].name,
-                          "providerSurname": jobRequests[currRequestPos].surName,
-                          "providerImage": jobRequests[currRequestPos].image,
-                          "serviceName": jobRequests[currRequestPos].service_name,
-                          "OrderId": jobRequests[currRequestPos].order_id,
-                          "fcmId": jobRequests[currRequestPos].fcm_id,
-                          'titlePage': "MapDirection",
-                          "currentPosition": this.state.jobRequestPos
-                        })}>
-                        <Image style={[styles.call, { tintColor: themeRed }]}
-                          source={require('../../icons/chat.png')} />
+                      <TouchableOpacity
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: white,
+                          borderRadius: 5,
+                          shadowColor: '#000',
+                          shadowOffset: {width: 0, height: 0},
+                          shadowOpacity: 0.75,
+                          shadowRadius: 5,
+                          elevation: 5,
+                          padding: 10,
+                        }}
+                        onPress={() =>
+                          this.props.navigation.navigate('Chat', {
+                            providerId: jobRequests[currRequestPos].employee_id,
+                            providerName: jobRequests[currRequestPos].name,
+                            providerSurname:
+                              jobRequests[currRequestPos].surName,
+                            providerImage: jobRequests[currRequestPos].image,
+                            serviceName:
+                              jobRequests[currRequestPos].service_name,
+                            OrderId: jobRequests[currRequestPos].order_id,
+                            fcmId: jobRequests[currRequestPos].fcm_id,
+                            titlePage: 'MapDirection',
+                            currentPosition: this.state.jobRequestPos,
+                          })
+                        }>
+                        <Image
+                          style={[styles.call, {tintColor: themeRed}]}
+                          source={require('../../icons/chat.png')}
+                        />
                       </TouchableOpacity>
                     </View>
                   </View>
                 </View>
               </View>
-            }
-            slidingPanelLayout={() =>
+            )}
+            slidingPanelLayout={() => (
               <View style={styles.slidingPanelLayoutStyle}>
                 <View style={styles.containerSlide}>
-                  {this.state.isJobAccepted &&
-                    <TouchableOpacity style={styles.buttonContainer}
+                  {this.state.isJobAccepted && (
+                    <TouchableOpacity
+                      style={styles.buttonContainer}
                       onPress={this.openCompleteConfirmation}>
-                      <Text style={[styles.text, { color: colorGreen }]}>
+                      <Text style={[styles.text, {color: colorGreen}]}>
                         Completed
                       </Text>
-                    </TouchableOpacity>}
+                    </TouchableOpacity>
+                  )}
 
-                  <TouchableOpacity style={styles.buttonContainer}
+                  <TouchableOpacity
+                    style={styles.buttonContainer}
                     onPress={this.openCancelConfirmation}>
-                    <Text style={[styles.text, { color: themeRed }]}>
-                      {this.state.isJobAccepted ? 'Cancel Job' : 'Reject Request'}
+                    <Text style={[styles.text, {color: themeRed}]}>
+                      {this.state.isJobAccepted
+                        ? 'Cancel Job'
+                        : 'Reject Request'}
                     </Text>
                   </TouchableOpacity>
                 </View>
               </View>
-            }>
-          </SlidingPanel> :
-          <ActivityIndicator
-            color={'black'}
+            )}
           />
-        }
+        ) : (
+          <ActivityIndicator color={'black'} />
+        )}
       </View>
     );
   }
@@ -648,7 +880,7 @@ const styles = StyleSheet.create({
     paddingTop: 5,
     paddingBottom: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -660,7 +892,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   headerLayoutStyle: {
     width: screenWidth + 5,
@@ -672,7 +904,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: lightGray,
     backgroundColor: themeRed,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     justifyContent: 'center',
@@ -694,7 +926,7 @@ const styles = StyleSheet.create({
     margin: 0,
     backgroundColor: colorBg,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   buttonContainer: {
     flex: 1,
@@ -702,7 +934,7 @@ const styles = StyleSheet.create({
     backgroundColor: white,
     shadowColor: black,
     borderColor: lightGray,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -743,9 +975,9 @@ const mapStateToProps = state => {
     notificationsInfo: state.notificationsInfo,
     jobsInfo: state.jobsInfo,
     generalInfo: state.generalInfo,
-    userInfo: state.userInfo
-  }
-}
+    userInfo: state.userInfo,
+  };
+};
 
 const mapDispatchToProps = dispatch => {
   return {
@@ -765,12 +997,15 @@ const mapDispatchToProps = dispatch => {
       dispatch(fetchedJobCustomerInfo(info));
     },
     fetchingPendingJobInfoError: error => {
-      dispatch(fetchCustomerJobInfoError(error))
+      dispatch(fetchCustomerJobInfoError(error));
     },
     dispatchSelectedJobRequest: job => {
       dispatch(setSelectedJobRequest(job));
-    }
-  }
-}
+    },
+  };
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(MapDirectionScreen);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(MapDirectionScreen);

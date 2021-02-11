@@ -220,7 +220,7 @@ export const getAllWorkRequestClient = clientId => {
 
 export const getAllWorkRequestPro = providerId => {
   return dispatch => {
-    fetch(BOOKING_HISTORY + providerId + '/Canceled')
+    fetch(BOOKING_HISTORY + providerId + '/Cancelled')
       .then(response => response.json())
       .then(responseJson => {
         let newAllProvidersDetails = responseJson.data

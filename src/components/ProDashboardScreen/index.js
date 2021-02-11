@@ -313,7 +313,7 @@ class ProDashboardScreen extends Component {
       String(item.employee_id) === String(providerDetails.providerId) &&
       (item.status === 'Accepted' ||
         item.status === 'Completed' ||
-        item.status === 'Canceled')
+        item.status === 'Cancelled')
     ) {
       return (
         <TouchableOpacity
