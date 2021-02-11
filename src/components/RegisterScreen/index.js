@@ -26,6 +26,7 @@ import RNExitApp from 'react-native-exit-app';
 import messaging from '@react-native-firebase/messaging';
 import firebaseAuth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
+import database from '@react-native-firebase/database';
 import {cloneDeep} from 'lodash';
 import ImagePicker from 'react-native-image-picker';
 import Config from '../Config';
@@ -37,7 +38,6 @@ import {black, white, themeRed} from '../../Constants/colors';
 const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
-const countryCode = Config.countryPhoneCode;
 
 const options = {
   title: 'Select a photo',
@@ -83,6 +83,7 @@ class RegisterScreen extends Component {
       dialogType: null,
       dialogTitle: '',
       dialogDesc: '',
+      countryCode: '',
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
     };
@@ -92,6 +93,10 @@ class RegisterScreen extends Component {
 
   componentDidMount() {
     const {navigation} = this.props;
+    const countryCodeRef = database().ref('constants/countryCode');
+    countryCodeRef.once('value').then(code => {
+      this.setState({countryCode: code.val()});
+    });
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -368,6 +373,7 @@ class RegisterScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
+      countryCode,
     } = this.state;
     return (
       <View style={styles.container}>
