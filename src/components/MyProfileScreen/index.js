@@ -26,7 +26,8 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
 import database from '@react-native-firebase/database';
-import {cloneDeep, clone} from 'lodash';
+import {cloneDeep} from 'lodash';
+import {sanitizeMobileNumber} from '../../misc/helpers';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
@@ -121,16 +122,11 @@ class MyProfileScreen extends Component {
     });
   }
 
-  componentDidUpdate() {
+  async componentDidUpdate() {
     const {mobile, countryCode, postCountryCode} = this.state;
     if (!postCountryCode && countryCode) {
-      if (countryCode.indexOf(mobile) > -1) {
-        let newMobile = mobile.slice(countryCode.length, mobile.length);
-        this.setState({postCountryCode: true, mobile: newMobile});
-      } else if (String(mobile[0]) === '0') {
-        let newMobile = mobile.slice(1, mobile.length);
-        this.setState({postCountryCode: true, mobile: newMobile});
-      }
+      let newMobile = await sanitizeMobileNumber(mobile, countryCode);
+      this.setState({postCountryCode: true, mobile: newMobile});
     }
   }
 

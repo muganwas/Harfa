@@ -33,6 +33,7 @@ import {
   fetchProviderProfile,
 } from '../../Redux/Actions/userActions';
 import {white, themeRed, black, colorBg} from '../../Constants/colors';
+import {sanitizeMobileNumber} from '../../misc/helpers';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -155,16 +156,11 @@ class ProMyProfileScreen extends Component {
     });
   };
 
-  componentDidUpdate() {
+  async componentDidUpdate() {
     const {mobile, countryCode, postCountryCode} = this.state;
     if (!postCountryCode && countryCode) {
-      if (countryCode.indexOf(mobile) > -1) {
-        let newMobile = mobile.slice(countryCode.length, mobile.length);
-        this.setState({postCountryCode: true, mobile: newMobile});
-      } else if (String(mobile[0]) === '0') {
-        let newMobile = mobile.slice(1, mobile.length);
-        this.setState({postCountryCode: true, mobile: newMobile});
-      }
+      let newMobile = await sanitizeMobileNumber(mobile, countryCode);
+      this.setState({postCountryCode: true, mobile: newMobile});
     }
   }
 
