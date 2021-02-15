@@ -33,6 +33,7 @@ import {
   fetchProviderProfile,
 } from '../../Redux/Actions/userActions';
 import {white, themeRed, black, colorBg} from '../../Constants/colors';
+import {sanitizeMobileNumber} from '../../misc/helpers';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -86,8 +87,6 @@ class ProMyProfileScreen extends Component {
       lang: providerDetails.lang,
       invoice: providerDetails.invoice,
       isLoading: true,
-      countryCode: '',
-      postCountryCode: false,
       isErrorToast: false,
       galleryCameraImage: '',
       accountType: providerDetails.accountType,
@@ -117,15 +116,15 @@ class ProMyProfileScreen extends Component {
     });
   };
 
-  componentDidMount = () => {
+  componentDidMount = async () => {
     const {
       userInfo: {providerDetails},
+      validationInfo: {countryCode},
       navigation,
     } = this.props;
-    const countryCodeRef = database().ref('constants/countryCode');
-    countryCodeRef.once('value').then(code => {
-      this.setState({countryCode: code.val()});
-    });
+    const {mobile} = this.state;
+    let newMobile = await sanitizeMobileNumber(mobile, countryCode);
+    this.setState({mobile: newMobile});
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -154,19 +153,6 @@ class ProMyProfileScreen extends Component {
       services: serviceName,
     });
   };
-
-  componentDidUpdate() {
-    const {mobile, countryCode, postCountryCode} = this.state;
-    if (!postCountryCode && countryCode) {
-      if (countryCode.indexOf(mobile) > -1) {
-        let newMobile = mobile.slice(countryCode.length, mobile.length);
-        this.setState({postCountryCode: true, mobile: newMobile});
-      } else if (String(mobile[0]) === '0') {
-        let newMobile = mobile.slice(1, mobile.length);
-        this.setState({postCountryCode: true, mobile: newMobile});
-      }
-    }
-  }
 
   handleBackButtonClick = () => {
     if (Platform.OS == 'ios')
@@ -357,7 +343,10 @@ class ProMyProfileScreen extends Component {
   };
 
   render() {
-    const {countryCode, mobile} = this.state;
+    const {mobile} = this.state;
+    const {
+      validationInfo: {countryCode},
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -699,6 +688,7 @@ class ProMyProfileScreen extends Component {
 
 const mapStateToProps = state => ({
   userInfo: state.userInfo,
+  validationInfo: state.validationInfo,
 });
 
 const mapDispatchToProps = dispatch => ({

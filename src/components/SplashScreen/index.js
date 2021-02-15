@@ -47,6 +47,7 @@ import {
   getAllWorkRequestPro,
   getAllWorkRequestClient,
 } from '../../Redux/Actions/jobsActions';
+import {fetchCountryCodes} from '../../Redux/Actions/validateionActions';
 import {white} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('screen').width;
@@ -72,6 +73,8 @@ class SplashScreen extends Component {
 
   componentDidMount() {
     setTimeout(this.splashTimeOut, 3000);
+    const {fetchCountryCodes} = this.props;
+    fetchCountryCodes();
   }
 
   componentDidUpdate() {
@@ -440,6 +443,9 @@ const mapDispatchToProps = dispatch => {
     },
     updateProviderDetails: details => {
       dispatch(updateProviderDetails(details));
+    },
+    fetchCountryCodes: () => {
+      dispatch(fetchCountryCodes());
     },
   };
 };

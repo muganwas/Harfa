@@ -31,7 +31,9 @@ export const sanitizeMobileNumber = async (
   if (mobile && mobile.length > 0) {
     pN = mobile;
     if (pN.indexOf(countryCode) > -1 && removeCode) {
-      pN = pN.replace(countryCode, '0');
+      pN = pN.replace(countryCode, '');
+    } else if (String(pN[0]) === '0') {
+      pN = pN.slice(pN[1], pN.length);
     }
     pN = pN.replace(/ /g, '');
   }
