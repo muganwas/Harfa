@@ -86,8 +86,6 @@ class LoginPhoneScreen extends Component {
       dialogType: null,
       dialogTitle: '',
       dialogDesc: '',
-      countryCode: '',
-      countryAlpha2: '',
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
     };
@@ -97,14 +95,6 @@ class LoginPhoneScreen extends Component {
 
   componentDidMount() {
     const {navigation} = this.props;
-    const countryCodeRef = database().ref('constants/countryCode');
-    const countryAlpha2Ref = database().ref('constants/countryAlpha2');
-    countryCodeRef.once('value').then(code => {
-      this.setState({countryCode: code.val()});
-    });
-    countryAlpha2Ref.once('value').then(code => {
-      this.setState({countryAlpha2: code.val()});
-    });
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -163,13 +153,9 @@ class LoginPhoneScreen extends Component {
         fetchJobRequests,
         fetchJobRequestHistory,
         updateUserDetails,
-        validationInfo: {mobile},
+        validationInfo: {mobile, countryCode},
       } = this.props;
-      const newMobile = await sanitizeMobileNumber(
-        mobile,
-        this.state.countryCode,
-        false,
-      );
+      const newMobile = await sanitizeMobileNumber(mobile, countryCode, false);
       const userData = {
         acc_type: this.state.accountType,
         username: newMobile,
@@ -335,17 +321,13 @@ class LoginPhoneScreen extends Component {
     const wrongPhoneNumberFormat = 'Please enter a proper phone number';
     const noPhoneNumber = 'Please fill in your phone number';
     const {
-      validationInfo: {mobile},
+      validationInfo: {mobile, countryCode, countryAlpha2},
     } = this.props;
-    if (String(mobile.trim()) === String(this.state.countryCode.trim()))
+    if (String(mobile.trim()) === String(countryCode.trim()))
       this.setState({error: noPhoneNumber});
     else {
-      const number = await sanitizeMobileNumber(
-        mobile,
-        this.state.countryCode,
-        false,
-      );
-      phoneNumberCheck(number, this.state.countryAlpha2).then(isValid => {
+      const number = await sanitizeMobileNumber(mobile, countryCode, false);
+      phoneNumberCheck(number, countryAlpha2).then(isValid => {
         if (!isValid) this.setState({error: wrongPhoneNumberFormat});
         else {
           this.phoneConfirmationTask(number);
@@ -410,10 +392,15 @@ class LoginPhoneScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
-      countryCode,
     } = this.state;
     const {
-      validationInfo: {confirmation, numberSent, validationCode, mobile},
+      validationInfo: {
+        confirmation,
+        numberSent,
+        validationCode,
+        countryCode,
+        mobile,
+      },
       updateValidationCode,
       updateMobileNumber,
     } = this.props;
