@@ -1065,6 +1065,7 @@ class ProDashboardScreen extends Component {
       },
       generalInfo: {online, connectivityAvailable},
       userInfo: {providerDetails},
+      navigation,
     } = this.props;
     return (
       <View style={styles.container}>
@@ -1110,7 +1111,10 @@ class ProDashboardScreen extends Component {
 
           <View style={styles.onlineOfflineView}>
             <Switch
-              trackColor={{false: '#767577', true: this.state.availBackground}}
+              trackColor={{
+                false: '#767577',
+                true: this.state.availBackground,
+              }}
               thumbColor={
                 this.state.status.toLocaleLowerCase() === 'online'
                   ? white
@@ -1262,9 +1266,46 @@ class ProDashboardScreen extends Component {
                     dataWorkSource.map(this.renderWorkItem)
                   ) : (
                     <View style={{padding: 15}}>
-                      <Text style={{fontStyle: 'italic', color: darkGray}}>
-                        You haven't completed any jobs yet.
-                      </Text>
+                      {providerDetails.address === '' ? (
+                        <View
+                          style={{
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}>
+                          <Text
+                            style={{
+                              fontStyle: 'italic',
+                              color: darkGray,
+                              textAlign: 'center',
+                            }}>
+                            Add your address to your profile for it to be
+                            visible to potential clients.
+                          </Text>
+                          <TouchableOpacity
+                            onPress={() => {
+                              navigation.navigate('ProMyProfile');
+                            }}
+                            style={{
+                              backgroundColor: themeRed,
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderRadius: 5,
+                              margin: 5,
+                              shadowColor: '#000',
+                              shadowOffset: {width: 0, height: 0},
+                              shadowOpacity: 0.75,
+                              shadowRadius: 5,
+                              elevation: 5,
+                            }}>
+                            <Text style={{color: white}}>Profile</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <Text style={{fontStyle: 'italic', color: darkGray}}>
+                          You haven't completed any jobs yet.
+                        </Text>
+                      )}
                     </View>
                   )}
                 </View>

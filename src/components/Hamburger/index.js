@@ -12,6 +12,7 @@ import {DrawerActions} from 'react-navigation-drawer';
 import {NavigationEvents} from 'react-navigation';
 import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
+import {exitApp} from 'react-native-exit-app';
 import NetInfo from '@react-native-community/netinfo';
 import _ from 'lodash';
 import Config from '../Config';
@@ -52,6 +53,7 @@ import {
   updateConnectivityStatus,
   updateLiveChatUsers,
 } from '../../Redux/Actions/generalActions';
+import SimpleToast from 'react-native-simple-toast';
 
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
@@ -252,60 +254,76 @@ class Hamburger extends React.Component {
         fetchingMessagesError(e.message);
       });
     /** fetch users current position and upload it to db */
-    geolocation.getCurrentPosition(
-      info => {
-        const {
-          coords: {latitude, longitude},
-        } = info;
-        const {
-          fetchingCoordinates,
-          fetchedCoordinates,
-          fetchCoordinatesError,
-        } = this.props;
-        fetchedCoordinates({latitude, longitude});
-        locationRef
-          .update({latitude, longitude})
-          .then(() => {
-            //updated loc
-          })
-          .catch(e => {
-            console.log(e.message);
-            fetchCoordinatesError(e.message);
+    this.permissionRequest(() => {
+      geolocation.getCurrentPosition(
+        info => {
+          const {
+            coords: {latitude, longitude},
+          } = info;
+          const {
+            fetchingCoordinates,
+            fetchedCoordinates,
+            fetchCoordinatesError,
+          } = this.props;
+          fetchedCoordinates({
+            latitude,
+            longitude,
           });
-      },
-      error => {
-        console.log(error);
-      },
-    );
+          locationRef
+            .update({
+              latitude,
+              longitude,
+            })
+            .then(() => {
+              //updated loc
+            })
+            .catch(e => {
+              console.log(e.message);
+              fetchCoordinatesError(e.message);
+            });
+        },
+        error => {
+          console.log(error);
+        },
+      );
 
-    /** lookout for users changing position start */
-    geolocation.watchPosition(
-      info => {
-        const {
-          coords: {latitude, longitude},
-        } = info;
-        const {
-          fetchingCoordinates,
-          fetchedCoordinates,
-          fetchCoordinatesError,
-        } = this.props;
-        fetchedCoordinates({latitude, longitude});
-        locationRef
-          .update({latitude, longitude})
-          .then(() => {
-            //fetchedCoordinates({ latitude, longitude });
-          })
-          .catch(e => {
-            console.log(e.message);
-            fetchCoordinatesError(e.message);
+      /** lookout for users changing position start */
+      geolocation.watchPosition(
+        info => {
+          const {
+            coords: {latitude, longitude},
+          } = info;
+          const {
+            fetchingCoordinates,
+            fetchedCoordinates,
+            fetchCoordinatesError,
+          } = this.props;
+          fetchedCoordinates({
+            latitude,
+            longitude,
           });
-      },
-      error => {
-        console.log(error);
-      },
-      {enableHighAccuracy: true},
-    );
-    /** end lookout for pros changing position */
+          locationRef
+            .update({
+              latitude,
+              longitude,
+            })
+            .then(() => {
+              //fetchedCoordinates({ latitude, longitude });
+            })
+            .catch(e => {
+              console.log(e.message);
+              fetchCoordinatesError(e.message);
+            });
+        },
+        error => {
+          console.log(error);
+        },
+        {
+          enableHighAccuracy: true,
+        },
+      );
+      /** end lookout for pros changing position */
+    });
 
     this.fetchEmployeeLocations();
 
@@ -452,6 +470,25 @@ class Hamburger extends React.Component {
       } catch (e) {
         console.log('Error initializing FCM', e);
       }
+    }
+  };
+
+  permissionRequest = async (action = () => {}) => {
+    try {
+      if (Platform.OS == 'ios') Geolocation.requestAuthorization();
+      else {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          action();
+        } else {
+          SimpleToast('You have denied location permission');
+          exitApp();
+        }
+      }
+    } catch (err) {
+      console.log(err);
     }
   };
 
