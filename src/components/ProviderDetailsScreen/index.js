@@ -1,51 +1,74 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
 import {
-  View, StyleSheet, Image, Text, TouchableOpacity, Dimensions, ActivityIndicator, Modal,
-  Linking, BackHandler, StatusBar, Platform
+  View,
+  StyleSheet,
+  Image,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  ActivityIndicator,
+  Modal,
+  Linking,
+  BackHandler,
+  StatusBar,
+  Platform,
 } from 'react-native';
-import { AirbnbRating } from 'react-native-ratings';
+import {AirbnbRating} from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
-import { cloneDeep } from 'lodash';
+import {cloneDeep} from 'lodash';
 import {
   startFetchingJobCustomer,
   fetchedJobCustomerInfo,
   fetchCustomerJobInfoError,
   setSelectedJobRequest,
   updateActiveRequest,
-  getPendingJobRequest
+  getPendingJobRequest,
 } from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
-import { clone } from 'lodash';
-import { imageExists } from '../../misc/helpers';
-import { updateUserDetails, updateProviderDetails } from '../../Redux/Actions/userActions';
-import { startFetchingNotification, notificationsFetched, notificationError } from '../../Redux/Actions/notificationActions';
-import { lightGray, themeRed, colorBg, white, black, darkGray } from '../../Constants/colors';
+import {clone} from 'lodash';
+import {imageExists} from '../../misc/helpers';
+import {
+  updateUserDetails,
+  updateProviderDetails,
+} from '../../Redux/Actions/userActions';
+import {
+  startFetchingNotification,
+  notificationsFetched,
+  notificationError,
+} from '../../Redux/Actions/notificationActions';
+import {
+  lightGray,
+  themeRed,
+  colorBg,
+  white,
+  black,
+  darkGray,
+} from '../../Constants/colors';
 import DialogComponent from '../DialogComponent';
 import Availability from '../AvailabilityComponent';
 
 const screenWidth = Dimensions.get('window').width;
 
-const BOOKING_REQUEST = Config.baseURL + "jobrequest/addjobrequest";
+const BOOKING_REQUEST = Config.baseURL + 'jobrequest/addjobrequest';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
-  return (
-    Platform.OS === 'ios' ?
-      <View style={{
-        width: "100%",
+  return Platform.OS === 'ios' ? (
+    <View
+      style={{
+        width: '100%',
         height: STATUS_BAR_HEIGHT,
-        backgroundColor: white
+        backgroundColor: white,
       }}>
-        <StatusBar
-          barStyle="dark-content" />
-      </View>
-      :
-      <StatusBar barStyle='dark-content' backgroundColor={white} />
+      <StatusBar barStyle="dark-content" />
+    </View>
+  ) : (
+    <StatusBar barStyle="dark-content" backgroundColor={white} />
   );
-}
+};
 
 class ProviderDetailsScreen extends Component {
   constructor(props) {
@@ -82,95 +105,98 @@ class ProviderDetailsScreen extends Component {
       dialogTitle: '',
       dialogDesc: '',
       dialogLeftText: 'Cancel',
-      dialogRightText: 'Retry'
+      dialogRightText: 'Retry',
     };
     this.leftButtonActon = null;
     this.rightButtonAction = null;
-  };
+  }
 
   requestForBooking = () => {
-    const { userInfo: { userDetails }, navigation } = this.props;
-    if (userDetails.lang == "") {
+    const {
+      userInfo: {userDetails},
+      navigation,
+    } = this.props;
+    if (userDetails.lang == '') {
       this.setState({
         isErrorToast: true,
-      })
+      });
       this.showToast('Please provide your address first');
-      setTimeout(() => navigation.navigate('SelectAddress', {
-        onGoBack: this.goBack,
-      }), 400);
-    }
-    else if (userDetails.mobile == '') {
+      setTimeout(
+        () =>
+          navigation.navigate('SelectAddress', {
+            onGoBack: this.goBack,
+          }),
+        400,
+      );
+    } else if (userDetails.mobile == '') {
       this.setState({
         isErrorToast: true,
-      })
-      this.showToast('Please update mobile first')
+      });
+      this.showToast('Please update mobile first');
       //ToastAndroid.show("Please update your mobile number", ToastAndroid.SHORT);
-    }
-    else if (!this.state.online) {
+    } else if (!this.state.online) {
       this.setState({
         isErrorToast: true,
-      })
+      });
       //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
       this.showToast('Service provider is Offline');
-    }
-    else {
+    } else {
       this.setState({
-        requestStatus: "Request Sending...",
-        isLoading: true
-      })
+        requestStatus: 'Request Sending...',
+        isLoading: true,
+      });
 
       const data = {
-        'user_id': userDetails.userId,
-        'employee_id': this.state.providerId,
-        'service_id': this.state.serviceId,
-        'delivery_address': userDetails.address,
-        'delivery_lat': userDetails.lat,
-        'delivery_lang': userDetails.lang,
-        'notification': {
-          "fcm_id": this.props.navigation.state.params.fcmId,
-          "title": "Booking Request",
-          "body": 'You have a booking request from ' + userDetails.username,
-          "save_notification": true,
-          "user_id": userDetails.userId,
-          "employee_id": this.state.providerId,
-          "notification_by": 'Customer',
-          "data": {
+        user_id: userDetails.userId,
+        employee_id: this.state.providerId,
+        service_id: this.state.serviceId,
+        delivery_address: userDetails.address,
+        delivery_lat: userDetails.lat,
+        delivery_lang: userDetails.lang,
+        notification: {
+          fcm_id: this.props.navigation.state.params.fcmId,
+          title: 'Booking Request',
+          body: 'You have a booking request from ' + userDetails.username,
+          save_notification: true,
+          user_id: userDetails.userId,
+          employee_id: this.state.providerId,
+          notification_by: 'Customer',
+          data: {
             userId: userDetails.userId,
             serviceName: this.state.serviceName,
             delivery_address: userDetails.address,
             delivery_lat: userDetails.lat,
             delivery_lang: userDetails.lang,
           },
-        }
-      }
+        },
+      };
 
       fetch(BOOKING_REQUEST, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       })
-        .then((response) => response.json())
-        .then((responseJson) => {
+        .then(response => response.json())
+        .then(responseJson => {
           if (responseJson.result) {
             this.props.updateActiveRequest(true);
             this.setState({
-              requestStatus: "Waiting for acceptance...",
+              requestStatus: 'Waiting for acceptance...',
               isLoading: false,
             });
-          }
-          else {
+          } else {
             if (responseJson.message == 'Already Exist') {
               this.leftButtonActon = null;
               this.rightButtonAction = () => {
                 this.setState({
                   isLoading: false,
                   showDialog: false,
-                  dialogType: null
+                  dialogType: null,
                 });
-              }
+              };
               this.setState({
                 isLoading: false,
                 showDialog: true,
@@ -178,10 +204,9 @@ class ProviderDetailsScreen extends Component {
                 dialogTitle: 'JOB REQUEST ALERT!',
                 dialogDesc: 'You already have a running job with this provider',
                 dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok'
+                dialogRightText: 'Ok',
               });
-            }
-            else if (responseJson.message == 'Service provider busy') {
+            } else if (responseJson.message == 'Service provider busy') {
               this.leftButtonActon = null;
               this.rightButtonAction = () => this.goBack();
               this.setState({
@@ -189,12 +214,12 @@ class ProviderDetailsScreen extends Component {
                 showDialog: true,
                 dialogType: 'fb',
                 dialogTitle: 'Busy!',
-                dialogDesc: 'Service provider is currently busy. please try another service provider',
+                dialogDesc:
+                  'Service provider is currently busy. please try another service provider',
                 dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok'
+                dialogRightText: 'Ok',
               });
-            }
-            else if (responseJson.message == 'Service provider is offline') {
+            } else if (responseJson.message == 'Service provider is offline') {
               this.leftButtonActon = null;
               this.rightButtonAction = () => this.goBack();
               this.setState({
@@ -202,12 +227,12 @@ class ProviderDetailsScreen extends Component {
                 showDialog: true,
                 dialogType: 'fb',
                 dialogTitle: 'OFFLINE!',
-                dialogDesc: 'Service provider is offline. Book another service provider',
+                dialogDesc:
+                  'Service provider is offline. Book another service provider',
                 dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok'
+                dialogRightText: 'Ok',
               });
-            }
-            else if (responseJson.message == 'No Response') {
+            } else if (responseJson.message == 'No Response') {
               this.leftButtonActon = null;
               this.rightButtonAction = () => this.goBack();
               this.setState({
@@ -215,43 +240,49 @@ class ProviderDetailsScreen extends Component {
                 showDialog: true,
                 dialogType: 'fb',
                 dialogTitle: 'NO RESPONSE!',
-                dialogDesc: "Check your internet connection, may be it's too slow",
+                dialogDesc:
+                  "Check your internet connection, may be it's too slow",
                 dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok'
+                dialogRightText: 'Ok',
               });
-            }
-            else {
+            } else {
               //ToastAndroid.show("Something went wrong", ToastAndroid.SHORT);
               this.showToast('Something went wrong');
             }
           }
         })
-        .catch((error) => {
+        .catch(error => {
           this.setState({
             timer: null,
             requestStatus: 'No Response',
-            isLoading: false
+            isLoading: false,
           });
           //ToastAndroid.show("Something went wrong", ToastAndroid.show);
           this.showToast('Something went wrong');
-        })
+        });
     }
-  }
+  };
 
   goBack = () => {
-    this.setState({ isLoading: false });
+    this.setState({isLoading: false});
     this.props.navigation.goBack();
-  }
+  };
 
   componentDidUpdate() {
-    const { jobsInfo: { activeRequest }, generalInfo: { OnlineUsers } } = this.props;
-    const { requestStatus, liveChatStatus } = this.state;
+    const {
+      jobsInfo: {activeRequest},
+      generalInfo: {OnlineUsers},
+    } = this.props;
+    const {requestStatus, liveChatStatus} = this.state;
     if (!activeRequest && requestStatus == 'Waiting for acceptance...')
-      this.setState({ requestStatus: '' });
-    const currentliveChatStatus = OnlineUsers[this.state.providerId] ? OnlineUsers[this.state.providerId].status : "0";
+      this.setState({requestStatus: ''});
+    const currentliveChatStatus = OnlineUsers[this.state.providerId]
+      ? OnlineUsers[this.state.providerId].status
+      : '0';
     if (liveChatStatus !== currentliveChatStatus) {
       this.setState({
-        online: this.state.selectedStatus === "1" && currentliveChatStatus === "1",
+        online:
+          this.state.selectedStatus === '1' && currentliveChatStatus === '1',
         liveChatStatus: currentliveChatStatus,
       });
     }
@@ -259,21 +290,34 @@ class ProviderDetailsScreen extends Component {
 
   componentDidMount() {
     this.initialRender();
-    const { navigation } = this.props;
+    const {navigation} = this.props;
     navigation.addListener('willFocus', async () => {
-      this.initialRender()
-      BackHandler.addEventListener('hardwareBackPress', () => this.handleBackButtonClick());
+      this.initialRender();
+      BackHandler.addEventListener('hardwareBackPress', () =>
+        this.handleBackButtonClick(),
+      );
     });
     navigation.addListener('willBlur', () => {
-      BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-      const { userInfo: { userDetails }, getPendingJobRequest } = this.props;
+      BackHandler.removeEventListener(
+        'hardwareBackPress',
+        this.handleBackButtonClick,
+      );
+      const {
+        userInfo: {userDetails},
+        getPendingJobRequest,
+      } = this.props;
       getPendingJobRequest(this.props, userDetails.userId);
     });
   }
 
   initialRender = () => {
-    const { navigation, generalInfo: { OnlineUsers } } = this.props;
-    const liveChatStatus = OnlineUsers[navigation.state.params.providerId] ? OnlineUsers[navigation.state.params.providerId].status : "0";
+    const {
+      navigation,
+      generalInfo: {OnlineUsers},
+    } = this.props;
+    const liveChatStatus = OnlineUsers[navigation.state.params.providerId]
+      ? OnlineUsers[navigation.state.params.providerId].status
+      : '0';
     this.setState({
       providerId: navigation.state.params.providerId,
       name: navigation.state.params.name,
@@ -285,7 +329,10 @@ class ProviderDetailsScreen extends Component {
       address: navigation.state.params.address,
       description: navigation.state.params.description,
       status: navigation.state.params && navigation.state.params.status,
-      online: navigation.state.params && navigation.state.params.status === "1" && liveChatStatus === "1",
+      online:
+        navigation.state.params &&
+        navigation.state.params.status === '1' &&
+        liveChatStatus === '1',
       liveChatStatus,
       fcmId: navigation.state.params.fcmId,
       accountType: navigation.state.params.accountType,
@@ -300,43 +347,62 @@ class ProviderDetailsScreen extends Component {
       body: '',
       data: '',
     });
-    const { image } = this.props.navigation.state.params;
+    const {image} = this.props.navigation.state.params;
     imageExists(image).then(imageAvailable => {
-      this.setState({ imageAvailable });
+      this.setState({imageAvailable});
     });
     const onlineUsers = clone(OnlineUsers);
-    const { providerId } = this.state;
+    const {providerId} = this.state;
     const userRef = database().ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {
-      if (result && result.key === "status" && providerId) {
-        if (onlineUsers[providerId] && result.val() === '1') this.setState({ selectedStatus: result.val(), online: onlineUsers[providerId] && onlineUsers[providerId].status === '1' });
-        else this.setState({ online: result.val() === '1', selectedStatus: result.val() });
-      } else console.log('provider id unavailable')
+      if (result && result.key === 'status' && providerId) {
+        if (onlineUsers[providerId] && result.val() === '1')
+          this.setState({
+            selectedStatus: result.val(),
+            online:
+              onlineUsers[providerId] && onlineUsers[providerId].status === '1',
+          });
+        else
+          this.setState({
+            online: result.val() === '1',
+            selectedStatus: result.val(),
+          });
+      } else console.log('provider id unavailable');
     });
 
     userRef.once('value', data => {
       if (data) {
-        const { status } = data.val();
+        const {status} = data.val();
         if (providerId) {
           if (onlineUsers[providerId]) {
-            if (onlineUsers[providerId] && status === '1') this.setState({ selectedStatus: status, online: onlineUsers[providerId] && onlineUsers[providerId].status === '1' });
+            if (onlineUsers[providerId] && status === '1')
+              this.setState({
+                selectedStatus: status,
+                online:
+                  onlineUsers[providerId] &&
+                  onlineUsers[providerId].status === '1',
+              });
             else {
-              this.setState({ online: status === '1', selectedStatus: status, });
+              this.setState({online: status === '1', selectedStatus: status});
             }
           }
         }
       }
     });
-  }
+  };
 
   handleBackButtonClick = () => {
     this.props.navigation.goBack();
     return true;
-  }
+  };
 
   goToChatScreen = () => {
-    const { userInfo: { userDetails }, jobsInfo: { jobRequests }, fetchedPendingJobInfo } = this.props;
+    const {
+      userInfo: {userDetails},
+      jobsInfo: {jobRequests},
+      fetchedPendingJobInfo,
+    } = this.props;
     let newJobRequests = cloneDeep(jobRequests);
     let data = this.state.data;
     const providerData = JSON.parse(data.ProviderData);
@@ -360,51 +426,62 @@ class ProviderDetailsScreen extends Component {
       delivery_address: userDetails.address,
       delivery_lat: userDetails.lat,
       delivery_lang: userDetails.lang,
-    }
+    };
     newJobRequests.push(pendingJobData);
     fetchedPendingJobInfo(newJobRequests);
-    this.props.navigation.navigate("Chat", {
-      'titlePage': "ProviderDetails",
-      'isJobAccepted': this.state.isJobAccepted,
-    })
-  }
+    this.props.navigation.navigate('Chat', {
+      titlePage: 'ProviderDetails',
+      isJobAccepted: this.state.isJobAccepted,
+    });
+  };
 
   goToMapDirection = () => {
-    this.props.navigation.navigate("MapDirection", {
-      titlePage: "ProviderDetails"
-    })
-  }
+    this.props.navigation.navigate('MapDirection', {
+      titlePage: 'ProviderDetails',
+    });
+  };
 
   callPhoneTask = () => {
-    Linking.openURL('tel:' + this.state.mobile)
-  }
+    Linking.openURL('tel:' + this.state.mobile);
+  };
 
-  showToast = (message) => {
+  showToast = message => {
     Toast.show(message);
-  }
+  };
 
   changeWaitingDialogVisibility = bool => {
     this.setState({
-      isLoading: bool
-    })
-  }
+      isLoading: bool,
+    });
+  };
 
   componentWillUnmount() {
-    const { userInfo: { userDetails }, getPendingJobRequest } = this.props;
+    const {
+      userInfo: {userDetails},
+      getPendingJobRequest,
+    } = this.props;
     getPendingJobRequest(this.props, userDetails.userId);
   }
 
-  changeDialogVisibility = () => this.setState(prevState => ({ showDialog: !prevState.showDialog }));
+  changeDialogVisibility = () =>
+    this.setState(prevState => ({showDialog: !prevState.showDialog}));
 
   render() {
-    const { showDialog, dialogType, dialogTitle, dialogDesc, dialogLeftText, dialogRightText } = this.state;
+    const {
+      showDialog,
+      dialogType,
+      dialogTitle,
+      dialogDesc,
+      dialogLeftText,
+      dialogRightText,
+    } = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
         <DialogComponent
           isDialogVisible={showDialog && dialogType !== null}
           transparent={true}
-          animation='fade'
+          animation="fade"
           width={screenWidth - 80}
           changeDialogVisibility={this.changeDialogVisibility}
           leftButtonAction={this.leftButtonActon}
@@ -416,133 +493,240 @@ class ProviderDetailsScreen extends Component {
           rightButtonText={dialogRightText}
         />
         <View style={styles.header}>
-          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity style={{ width: 35, height: 35, justifyContent: 'center', marginLeft: 5, }}
+          <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+            <TouchableOpacity
+              style={{
+                width: 35,
+                height: 35,
+                justifyContent: 'center',
+                marginLeft: 5,
+              }}
               onPress={() => this.props.navigation.goBack()}>
-              <Image style={{ width: 20, height: 20, alignSelf: 'center' }}
-                source={require('../../icons/arrow_back.png')} />
+              <Image
+                style={{width: 20, height: 20, alignSelf: 'center'}}
+                source={require('../../icons/arrow_back.png')}
+              />
             </TouchableOpacity>
-            <Text style={{ color: white, fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginLeft: 5 }}>
+            <Text
+              style={{
+                color: white,
+                fontSize: 20,
+                fontWeight: 'bold',
+                alignSelf: 'center',
+                marginLeft: 5,
+              }}>
               Provider Details
-              </Text>
+            </Text>
           </View>
         </View>
 
-        <View style={{
-          width: '100%', height: 50, flexDirection: 'row', backgroundColor: white, shadowColor: '#000',
-          shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.75, shadowRadius: 5, elevation: 5,
-        }}>
+        <View
+          style={{
+            width: '100%',
+            height: 50,
+            flexDirection: 'row',
+            backgroundColor: white,
+            shadowColor: '#000',
+            shadowOffset: {width: 0, height: 0},
+            shadowOpacity: 0.75,
+            shadowRadius: 5,
+            elevation: 5,
+          }}>
           <View style={styles.textView}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: black, textAlignVertical: 'center' }}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: black,
+                textAlignVertical: 'center',
+              }}>
               {this.state.name}
             </Text>
           </View>
           <Availability online={this.state.online} />
         </View>
 
-        <View style={{
-          width: screenWidth, flexDirection: 'row', backgroundColor: 'white', alignContent: 'center',
-          paddingTop: 10, paddingBottom: 25, paddingLeft: 5, paddingRight: 5
-        }}>
+        <View
+          style={{
+            width: screenWidth,
+            flexDirection: 'row',
+            backgroundColor: 'white',
+            alignContent: 'center',
+            paddingTop: 10,
+            paddingBottom: 25,
+            paddingLeft: 5,
+            paddingRight: 5,
+          }}>
+          <View style={{flexDirection: 'column', marginLeft: 10}}>
+            <Image
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: 100,
+                alignSelf: 'center',
+              }}
+              source={
+                this.state.imageAvailable
+                  ? {uri: this.state.image}
+                  : require('../../images/generic_avatar.png')
+              }
+            />
 
-          <View style={{ flexDirection: 'column', marginLeft: 10 }}>
-            <Image style={{ width: 60, height: 60, borderRadius: 100, alignSelf: 'center' }}
-              source={this.state.imageAvailable ? { uri: this.state.image } : require('../../images/generic_avatar.png')} />
-
-            <View style={{ backgroundColor: 'white', marginTop: 5 }}>
+            <View style={{backgroundColor: 'white', marginTop: 5}}>
               <AirbnbRating
-                type='custom'
+                type="custom"
                 ratingCount={5}
                 defaultRating={this.state.avgRating}
                 size={10}
                 ratingBackgroundColor={colorBg}
                 showRating={false}
-                onFinishRating={this.ratingCompleted} />
+                onFinishRating={this.ratingCompleted}
+              />
             </View>
           </View>
-          <View style={{ flexDirection: 'column', marginLeft: 20 }}>
+          <View style={{flexDirection: 'column', marginLeft: 20}}>
             <Text>
-              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Account Type: </Text>
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>
+                Account Type:{' '}
+              </Text>
               <Text>{this.state.accountType}</Text>
             </Text>
             <Text>
-              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Distance from you: </Text>
-              <Text>{this.state.distance + " Km"}</Text>
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>
+                Distance from you:{' '}
+              </Text>
+              <Text>
+                {this.state.distance !== 'NaN'
+                  ? this.state.distance + ' Km'
+                  : ' - '}
+              </Text>
             </Text>
             <Text>
-              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Address: </Text>
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>
+                Address:{' '}
+              </Text>
               <Text>{this.state.address}</Text>
             </Text>
             <Text>
-              <Text style={{ color: darkGray, fontWeight: 'bold' }}>Self Description: </Text>
+              <Text style={{color: darkGray, fontWeight: 'bold'}}>
+                Self Description:{' '}
+              </Text>
               <Text>{this.state.description}</Text>
             </Text>
           </View>
         </View>
 
-        {(this.state.requestStatus == '' || this.state.requestStatus == 'No Response') &&
-          <View style={[styles.bottomView, { flexDirection: 'row' }]}>
-            <TouchableOpacity style={styles.buttonContainer}
+        {(this.state.requestStatus == '' ||
+          this.state.requestStatus == 'No Response') && (
+          <View style={[styles.bottomView, {flexDirection: 'row'}]}>
+            <TouchableOpacity
+              style={styles.buttonContainer}
               onPress={this.requestForBooking}>
-              <Text style={styles.text}>
-                Send Request
-                </Text>
+              <Text style={styles.text}>Send Request</Text>
             </TouchableOpacity>
           </View>
-        }
+        )}
 
-        {this.state.requestStatus == 'Chat Request Accepted' &&
+        {this.state.requestStatus == 'Chat Request Accepted' && (
           <View style={styles.bottomView}>
-            <TouchableOpacity style={styles.buttonContainer}
+            <TouchableOpacity
+              style={styles.buttonContainer}
               onPress={() => this.goToChatScreen()}>
-              <Text style={styles.text}>
-                Message
-              </Text>
+              <Text style={styles.text}>Message</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.buttonContainer}
-              onPress={this.callPhoneTask} >
-              <Text style={styles.text}>
-                Call
-              </Text>
+            <TouchableOpacity
+              style={styles.buttonContainer}
+              onPress={this.callPhoneTask}>
+              <Text style={styles.text}>Call</Text>
             </TouchableOpacity>
 
             {this.state.isJobAccepted && (
-              <View style={{
-                flexDirection: 'column', width: screenWidth, height: 50, backgroundColor: 'white',
-                borderRadius: 2, alignItems: 'center', justifyContent: 'flex-start',
-              }}>
-                <View style={{ width: screenWidth, height: 1, backgroundColor: lightGray }}></View>
-                <TouchableOpacity style={styles.textViewDirection}
+              <View
+                style={{
+                  flexDirection: 'column',
+                  width: screenWidth,
+                  height: 50,
+                  backgroundColor: 'white',
+                  borderRadius: 2,
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                }}>
+                <View
+                  style={{
+                    width: screenWidth,
+                    height: 1,
+                    backgroundColor: lightGray,
+                  }}
+                />
+                <TouchableOpacity
+                  style={styles.textViewDirection}
                   onPress={this.goToMapDirection}>
-                  <Image style={{ width: 20, height: 20, marginLeft: 20 }}
-                    source={require('../../icons/mobile_gps.png')} />
-                  <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginLeft: 10 }}>
+                  <Image
+                    style={{width: 20, height: 20, marginLeft: 20}}
+                    source={require('../../icons/mobile_gps.png')}
+                  />
+                  <Text
+                    style={{
+                      color: 'black',
+                      fontWeight: 'bold',
+                      fontSize: 16,
+                      textAlign: 'center',
+                      marginLeft: 10,
+                    }}>
                     Track Service Provider
                   </Text>
-                  <Image style={{ width: 20, height: 20, marginLeft: 20, position: "absolute", end: 0, marginRight: 15 }}
-                    source={require('../../icons/right_arrow.png')} />
+                  <Image
+                    style={{
+                      width: 20,
+                      height: 20,
+                      marginLeft: 20,
+                      position: 'absolute',
+                      end: 0,
+                      marginRight: 15,
+                    }}
+                    source={require('../../icons/right_arrow.png')}
+                  />
                 </TouchableOpacity>
               </View>
             )}
           </View>
-        }
+        )}
 
-        {this.state.requestStatus == 'Request Sending...' || this.state.requestStatus == 'Waiting for acceptance...' &&
-          <View style={styles.loaderStyle}>
-            <ActivityIndicator
-              style={{ height: 30, width: 30, alignContent: 'flex-start', marginHorizontal: 20 }}
-              color={themeRed}
-              size="large" />
+        {this.state.requestStatus == 'Request Sending...' ||
+          (this.state.requestStatus == 'Waiting for acceptance...' && (
+            <View style={styles.loaderStyle}>
+              <ActivityIndicator
+                style={{
+                  height: 30,
+                  width: 30,
+                  alignContent: 'flex-start',
+                  marginHorizontal: 20,
+                }}
+                color={themeRed}
+                size="large"
+              />
 
-            <Text style={{ color: 'black', fontSize: 15, fontWeight: 'bold', textAlignVertical: 'center', alignSelf: 'center' }}>
-              {this.state.requestStatus}
-            </Text>
-          </View>
-        }
-        <Modal transparent={true} visible={this.state.isLoading} animationType='fade'
+              <Text
+                style={{
+                  color: 'black',
+                  fontSize: 15,
+                  fontWeight: 'bold',
+                  textAlignVertical: 'center',
+                  alignSelf: 'center',
+                }}>
+                {this.state.requestStatus}
+              </Text>
+            </View>
+          ))}
+        <Modal
+          transparent={true}
+          visible={this.state.isLoading}
+          animationType="fade"
           onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
-          <WaitingDialog changeWaitingDialogVisibility={this.changeWaitingDialogVisibility} />
+          <WaitingDialog
+            changeWaitingDialogVisibility={this.changeWaitingDialogVisibility}
+          />
         </Modal>
       </View>
     );
@@ -554,9 +738,9 @@ const mapStateToProps = state => {
     notificationsInfo: state.notificationsInfo,
     jobsInfo: state.jobsInfo,
     generalInfo: state.generalInfo,
-    userInfo: state.userInfo
-  }
-}
+    userInfo: state.userInfo,
+  };
+};
 
 const mapDispatchToProps = dispatch => {
   return {
@@ -576,7 +760,7 @@ const mapDispatchToProps = dispatch => {
       dispatch(fetchedJobCustomerInfo(info));
     },
     fetchingPendingJobInfoError: error => {
-      dispatch(fetchCustomerJobInfoError(error))
+      dispatch(fetchCustomerJobInfoError(error));
     },
     dispatchSelectedJobRequest: job => {
       dispatch(setSelectedJobRequest(job));
@@ -592,11 +776,14 @@ const mapDispatchToProps = dispatch => {
     },
     getPendingJobRequest: (props, userId, goTo) => {
       dispatch(getPendingJobRequest(props, userId, goTo));
-    }
-  }
-}
+    },
+  };
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProviderDetailsScreen);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(ProviderDetailsScreen);
 
 const styles = StyleSheet.create({
   container: {
@@ -609,7 +796,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: themeRed,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -618,7 +805,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     margin: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -643,14 +830,14 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingHorizontal: 10
+    paddingHorizontal: 10,
   },
   onlineOfflineDisplay: {
     width: 20,
     height: 20,
     textAlign: 'center',
     shadowColor: themeRed,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 10,
@@ -679,7 +866,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     fontWeight: 'bold',
     color: white,
-
   },
   bottomView: {
     width: screenWidth,
@@ -688,7 +874,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -702,7 +888,7 @@ const styles = StyleSheet.create({
     backgroundColor: white,
     shadowColor: black,
     borderColor: lightGray,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,
@@ -717,7 +903,7 @@ const styles = StyleSheet.create({
   },
   loaderStyle: {
     width: screenWidth,
-    flexDirection: "row",
+    flexDirection: 'row',
     alignItems: 'center',
     height: 65,
     flexDirection: 'row',
@@ -725,7 +911,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.75,
     shadowRadius: 5,
     elevation: 5,

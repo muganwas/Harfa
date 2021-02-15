@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import {cloneDeep} from 'lodash';
 import {DrawerActions} from 'react-navigation-drawer';
 import {NavigationEvents} from 'react-navigation';
+import {exitApp} from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
 import geolocation from '@react-native-community/geolocation';
 import messaging from '@react-native-firebase/messaging';
@@ -247,66 +248,101 @@ class ProHamburger extends React.Component {
     socket.open();
 
     const userRef = database().ref(`liveLocation/${receiverId}`);
-    /** get pros current position and upload it to db */
-    geolocation.getCurrentPosition(
-      info => {
-        const {
-          coords: {latitude, longitude},
-        } = info;
-        const {
-          fetchingCoordinates,
-          fetchedCoordinates,
-          fetchCoordinatesError,
-        } = this.props;
-        fetchingCoordinates();
-        userRef
-          .update({latitude, longitude})
-          .then(() => {
-            fetchedCoordinates({latitude, longitude});
-          })
-          .catch(e => {
-            console.log(e.message);
-            fetchCoordinatesError(e.message);
-          });
-      },
-      error => {
-        console.log(error);
-      },
-    );
+    this.permissionRequest(() => {
+      /** get pros current position and upload it to db */
+      geolocation.getCurrentPosition(
+        info => {
+          const {
+            coords: {latitude, longitude},
+          } = info;
+          const {
+            fetchingCoordinates,
+            fetchedCoordinates,
+            fetchCoordinatesError,
+          } = this.props;
+          fetchingCoordinates();
+          userRef
+            .update({
+              latitude,
+              longitude,
+            })
+            .then(() => {
+              fetchedCoordinates({
+                latitude,
+                longitude,
+              });
+            })
+            .catch(e => {
+              console.log(e.message);
+              fetchCoordinatesError(e.message);
+            });
+        },
+        error => {
+          console.log(error);
+        },
+      );
 
-    /** look out for pros changing position */
-    geolocation.watchPosition(
-      info => {
-        const {
-          fetchingCoordinates,
-          fetchedCoordinates,
-          fetchCoordinatesError,
-        } = this.props;
-        const {
-          coords: {latitude, longitude},
-        } = info;
-        fetchingCoordinates();
-        userRef
-          .update({latitude, longitude})
-          .then(() => {
-            fetchedCoordinates({latitude, longitude});
-          })
-          .catch(e => {
-            console.log(e.message);
-            fetchCoordinatesError(e.message);
-          });
-      },
-      error => {
-        console.log(error);
-      },
-      {enableHighAccuracy: true},
-    );
+      /** look out for pros changing position */
+      geolocation.watchPosition(
+        info => {
+          const {
+            fetchingCoordinates,
+            fetchedCoordinates,
+            fetchCoordinatesError,
+          } = this.props;
+          const {
+            coords: {latitude, longitude},
+          } = info;
+          fetchingCoordinates();
+          userRef
+            .update({
+              latitude,
+              longitude,
+            })
+            .then(() => {
+              fetchedCoordinates({
+                latitude,
+                longitude,
+              });
+            })
+            .catch(e => {
+              console.log(e.message);
+              fetchCoordinatesError(e.message);
+            });
+        },
+        error => {
+          console.log(error);
+        },
+        {
+          enableHighAccuracy: true,
+        },
+      );
+    });
   }
 
   checkForUserType = async () => {
     await AsyncStorage.getItem('userType').then(result => {
       if (!result) this.props.navigation.navigate('AfterSplash');
     });
+  };
+
+  permissionRequest = async (action = () => {}) => {
+    try {
+      if (Platform.OS == 'ios') Geolocation.requestAuthorization();
+      else {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          action();
+        } else {
+          SimpleToast('You have denied location permission');
+          exitApp();
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   async componentDidUpdate() {

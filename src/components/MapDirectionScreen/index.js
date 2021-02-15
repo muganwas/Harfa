@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {connect} from 'react-redux';
-import {cloneDeep} from 'lodash';
+import {cloneDeep, isEqual} from 'lodash';
 import simpleToast from 'react-native-simple-toast';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
@@ -131,6 +131,76 @@ class MapDirectionScreen extends Component {
     this.rightButtonAction = null;
   }
 
+  reInit = props => {
+    const {
+      userInfo: {userDetails},
+      generalInfo: {usersCoordinates, othersCoordinates},
+      jobsInfo: {
+        jobRequests,
+        allJobRequestsClient,
+        selectedJobRequest: {employee_id},
+      },
+      navigation,
+    } = props;
+    const currRequestPos = navigation.getParam('currentPos', 0);
+    let jobRequestPos = 0;
+    allJobRequestsClient.map((job, i) => {
+      if (job.employee_id === jobRequests[currRequestPos].employee_id)
+        jobRequestPos = i;
+    });
+    const employeeLatitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].latitude
+      : usersCoordinates.latitude;
+    const employeeLongitude = othersCoordinates[employee_id]
+      ? othersCoordinates[employee_id].longitude
+      : usersCoordinates.longitude;
+
+    this.setState({
+      sourceLocation: employeeLatitude + ',' + employeeLongitude,
+      sourceLat: parseFloat(employeeLatitude),
+      sourceLng: parseFloat(employeeLongitude),
+      destinationLocation:
+        usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+      destinationLat: parseFloat(usersCoordinates.latitude),
+      destinationLng: parseFloat(usersCoordinates.longitude),
+      coords: [],
+      isLoading: true,
+      senderId: userDetails.userId,
+      senderImage: userDetails.image,
+      senderName: userDetails.username,
+      inputMessage: '',
+      dataChatSource: [],
+      currRequestPos,
+      jobRequestPos,
+      id: jobRequests[currRequestPos].id,
+      orderId: jobRequests[currRequestPos].order_id,
+      providerId: jobRequests[currRequestPos].employee_id,
+      providerImage: jobRequests[currRequestPos].image,
+      providerfcmId: jobRequests[currRequestPos].fcm_id,
+      providerName:
+        jobRequests[currRequestPos].name +
+        ' ' +
+        jobRequests[currRequestPos].surName,
+      providerMobile: jobRequests[currRequestPos].mobile,
+      providerDescription: jobRequests[currRequestPos].description,
+      providerAddress: jobRequests[currRequestPos].address,
+      providerLat: jobRequests[currRequestPos].lat,
+      providerLang: jobRequests[currRequestPos].lang,
+      serviceName: jobRequests[currRequestPos].service_name,
+      isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
+      titlePage: navigation.state.params.titlePage,
+      mapKey: Math.random(2),
+      fcm_id: jobRequests[currRequestPos].fcm_id,
+      employeeLocationFetched: othersCoordinates[employee_id] ? true : false,
+      showDialog: false,
+      dialogType: null,
+      dialogTitle: '',
+      dialogDesc: '',
+      dialogLeftText: 'Cancel',
+      dialogRightText: 'Retry',
+    });
+  };
+
   componentDidMount() {
     const {
       generalInfo: {othersCoordinates, usersCoordinates},
@@ -145,10 +215,10 @@ class MapDirectionScreen extends Component {
     const employeeLongitude = othersCoordinates[employee_id]
       ? othersCoordinates[employee_id].longitude
       : usersCoordinates.longitude;
-    this.getDirections(
-      employeeLatitude + ',' + employeeLongitude,
-      this.state.destinationLocation,
-    );
+
+    const destination =
+      usersCoordinates.latitude + ',' + usersCoordinates.longitude;
+    this.getDirections(employeeLatitude + ',' + employeeLongitude, destination);
 
     navigation.addListener('willFocus', async () => {
       this.refetchDirections();
@@ -162,6 +232,45 @@ class MapDirectionScreen extends Component {
         this.handleBackButtonClick,
       );
     });
+  }
+
+  componentDidUpdate(oldProps) {
+    const {
+      generalInfo: {usersCoordinates, othersCoordinates},
+      jobsInfo: {
+        selectedJobRequest: {employee_id},
+      },
+      userInfo: {userDetails},
+    } = this.props;
+    if (
+      (othersCoordinates &&
+        oldProps &&
+        oldProps.generalInfo &&
+        oldProps.generalInfo.othersCoordinates &&
+        !isEqual(
+          othersCoordinates[employee_id],
+          oldProps.generalInfo.othersCoordinates[employee_id],
+        )) ||
+      (usersCoordinates &&
+        oldProps &&
+        oldProps.generalInfo &&
+        oldProps.generalInfo.usersCoordinates &&
+        !isEqual(usersCoordinates, oldProps.generalInfo.usersCoordinates))
+    ) {
+      this.reInit(this.props);
+      const employeeLatitude = othersCoordinates[employee_id]
+        ? othersCoordinates[employee_id].latitude
+        : usersCoordinates.latitude;
+      const employeeLongitude = othersCoordinates[employee_id]
+        ? othersCoordinates[employee_id].longitude
+        : usersCoordinates.longitude;
+      const destination =
+        usersCoordinates.latitude + ',' + usersCoordinates.longitude;
+      this.getDirections(
+        employeeLatitude + ',' + employeeLongitude,
+        destination,
+      );
+    }
   }
 
   refetchDirections = () => {
@@ -188,10 +297,9 @@ class MapDirectionScreen extends Component {
           destinationLat: parseFloat(usersCoordinates.latitude),
           destinationLng: parseFloat(usersCoordinates.longitude),
         });
-        this.getDirections(
-          latitude + ',' + longitude,
-          this.state.destinationLocation,
-        );
+        const destination =
+          usersCoordinates.latitude + ',' + usersCoordinates.longitude;
+        this.getDirections(latitude + ',' + longitude, destination);
       }
     }
     if (this.state.coords.length === 0) {
@@ -619,7 +727,7 @@ class MapDirectionScreen extends Component {
               latitudeDelta: 0.00922,
               longitudeDelta: 0.00121,
             }}
-            zoomEnabled={false}
+            zoomEnabled={true}
             minZoomLevel={1}
             maxZoomLevel={20}>
             {Platform.OS === 'ios' && (

@@ -16,7 +16,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import {cloneDeep} from 'lodash';
+import {cloneDeep, isEqual} from 'lodash';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import {MAPS_API_KEY} from 'react-native-dotenv';
@@ -121,10 +121,23 @@ class ProMapDirectionScreen extends Component {
   }
 
   componentDidMount() {
-    const {navigation} = this.props;
-    this.onRefresh();
+    const {
+      generalInfo: {usersCoordinates, othersCoordinates},
+      jobsInfo: {
+        selectedJobRequest: {user_id},
+      },
+      navigation,
+    } = this.props;
+    const destination =
+      othersCoordinates[user_id].latitude +
+      ',' +
+      othersCoordinates[user_id].longitude;
+    this.getDirections(
+      usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+      destination,
+    );
     navigation.addListener('willFocus', async () => {
-      this.onRefresh();
+      this.onRefresh(this.props);
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
       );
@@ -137,106 +150,89 @@ class ProMapDirectionScreen extends Component {
     });
   }
 
-  componentDidUpdate() {
-    const {
-      generalInfo: {
-        usersCoordinates: {latitude, longitude},
-      },
-    } = this.props;
-    const {sourceLat, sourceLng} = this.state;
-    if (
-      Math.floor(parseInt(latitude)) !== Math.floor(parseInt(sourceLat)) ||
-      Math.floor(parseInt(longitude)) !== Math.floor(parseInt(sourceLng))
-    )
-      this.onRefresh();
-  }
-
-  onRefresh = async () => {
+  componentDidUpdate(oldProps) {
     const {
       generalInfo: {usersCoordinates, othersCoordinates},
+      userInfo: {providerDetails},
       jobsInfo: {
         selectedJobRequest: {user_id},
       },
     } = this.props;
-    //Get latitude & longitude on Location change
-    if (Platform.OS == 'ios') {
-      let locationData = {
-        latitude: usersCoordinates.latitude,
-        longitude: usersCoordinates.longitude,
-      };
+    if (
+      (othersCoordinates &&
+        oldProps &&
+        oldProps.generalInfo &&
+        oldProps.generalInfo.othersCoordinates &&
+        !isEqual(
+          othersCoordinates[user_id],
+          oldProps.generalInfo.othersCoordinates[user_id],
+        )) ||
+      (usersCoordinates &&
+        oldProps &&
+        oldProps.generalInfo &&
+        oldProps.generalInfo.usersCoordinates &&
+        !isEqual(usersCoordinates, oldProps.generalInfo.usersCoordinates))
+    ) {
+      this.onRefresh(this.props);
+    }
+  }
 
-      let updates = {};
-      updates['tracking/' + this.state.orderId] = locationData;
-      database()
-        .ref()
-        .update(updates);
-
-      this.setState({
-        sourcesourceLocation:
-          usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-        sourceLat: parseFloat(usersCoordinates.latitude),
-        sourceLng: parseFloat(usersCoordinates.longitude),
-        destinationLocation:
-          othersCoordinates[user_id].latitude +
-          ',' +
-          othersCoordinates[user_id].longitude,
-        destinationLat: parseFloat(othersCoordinates[user_id].latitude),
-        destinationLng: parseFloat(othersCoordinates[user_id].longitude),
-      });
-
-      this.getDirections(
+  onRefresh = props => {
+    const {
+      generalInfo: {usersCoordinates, othersCoordinates},
+      jobsInfo: {
+        jobRequestsProviders,
+        selectedJobRequest: {user_id},
+      },
+      navigation,
+    } = props;
+    let currentPos = navigation.getParam('currentPos', 0);
+    const currentRequest = jobRequestsProviders[currentPos] || {};
+    this.setState({
+      sourcesourceLocation:
         usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-        this.state.destinationLocation,
-      );
-    } else {
-      const granted = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      );
-      if (granted) {
-        let locationData = {
-          latitude: usersCoordinates.latitude,
-          longitude: usersCoordinates.longitude,
-        };
-
-        let updates = {};
-        updates['tracking/' + this.state.orderId] = locationData;
-        database()
-          .ref()
-          .update(updates);
-
-        this.setState({
-          sourcesourceLocation:
-            usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-          sourceLat: parseFloat(usersCoordinates.latitude),
-          sourceLng: parseFloat(usersCoordinates.longitude),
-        });
-
-        this.getDirections(
-          usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-          this.state.destinationLocation,
-        );
-      } else {
-        this.permissionRequest();
-      }
-    }
-  };
-
-  permissionRequest = async () => {
-    try {
-      if (Platform.OS == 'ios') Geolocation.requestAuthorization();
-      else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          this.onRefresh();
-        } else {
-          console.log('location permission denied');
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    }
+      sourceLat: parseFloat(usersCoordinates.latitude),
+      sourceLng: parseFloat(usersCoordinates.longitude),
+      destinationLocation:
+        othersCoordinates[user_id].latitude +
+        ',' +
+        othersCoordinates[user_id].longitude,
+      destinationLat: parseFloat(othersCoordinates[user_id].latitude),
+      destinationLng: parseFloat(othersCoordinates[user_id].longitude),
+      routeCoordinates: [],
+      isLoading: othersCoordinates[user_id],
+      pageTitle: navigation.state.params.pageTitle,
+      currentPos,
+      userId: currentRequest.user_id,
+      userName: currentRequest.name,
+      userImage: currentRequest.image,
+      userMobile: currentRequest.mobile,
+      userDob: currentRequest.dob,
+      userAddress: currentRequest.address,
+      userLat: currentRequest.lat,
+      userLang: currentRequest.lang,
+      userFcmId: currentRequest.fcm_id,
+      orderId: currentRequest.order_id,
+      serviceName: currentRequest.service_name,
+      mainId: currentRequest.id,
+      delivertAddress: currentRequest.delivery_address,
+      deliveryLat: currentRequest.delivery_lat,
+      deliveryLang: currentRequest.delivery_lang,
+      chatStatus: currentRequest.chat_status,
+      status: currentRequest.status,
+      proImageAvailable: currentRequest.imageAvailable,
+      isJobAccepted: currentRequest.status === 'Accepted',
+      showDialog: false,
+      currentModal: null,
+    });
+    const destination =
+      othersCoordinates[user_id].latitude +
+      ',' +
+      othersCoordinates[user_id].longitude;
+    this.getDirections(
+      usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+      destination,
+    );
   };
 
   handleBackButtonClick = () => {
@@ -576,6 +572,7 @@ class ProMapDirectionScreen extends Component {
               latitudeDelta: 0.0922,
               longitudeDelta: 0.0121,
             }}
+            zoomEnabled={true}
             minZoomLevel={16}
             maxZoomLevel={20}>
             {Platform.OS === 'ios' && (
