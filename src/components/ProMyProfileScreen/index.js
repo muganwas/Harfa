@@ -87,8 +87,6 @@ class ProMyProfileScreen extends Component {
       lang: providerDetails.lang,
       invoice: providerDetails.invoice,
       isLoading: true,
-      countryCode: '',
-      postCountryCode: false,
       isErrorToast: false,
       galleryCameraImage: '',
       accountType: providerDetails.accountType,
@@ -118,15 +116,15 @@ class ProMyProfileScreen extends Component {
     });
   };
 
-  componentDidMount = () => {
+  componentDidMount = async () => {
     const {
       userInfo: {providerDetails},
+      validationInfo: {countryCode},
       navigation,
     } = this.props;
-    const countryCodeRef = database().ref('constants/countryCode');
-    countryCodeRef.once('value').then(code => {
-      this.setState({countryCode: code.val()});
-    });
+    const {mobile} = this.state;
+    let newMobile = await sanitizeMobileNumber(mobile, countryCode);
+    this.setState({mobile: newMobile});
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -155,14 +153,6 @@ class ProMyProfileScreen extends Component {
       services: serviceName,
     });
   };
-
-  async componentDidUpdate() {
-    const {mobile, countryCode, postCountryCode} = this.state;
-    if (!postCountryCode && countryCode) {
-      let newMobile = await sanitizeMobileNumber(mobile, countryCode);
-      this.setState({postCountryCode: true, mobile: newMobile});
-    }
-  }
 
   handleBackButtonClick = () => {
     if (Platform.OS == 'ios')
@@ -353,7 +343,10 @@ class ProMyProfileScreen extends Component {
   };
 
   render() {
-    const {countryCode, mobile} = this.state;
+    const {mobile} = this.state;
+    const {
+      validationInfo: {countryCode},
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -695,6 +688,7 @@ class ProMyProfileScreen extends Component {
 
 const mapStateToProps = state => ({
   userInfo: state.userInfo,
+  validationInfo: state.validationInfo,
 });
 
 const mapDispatchToProps = dispatch => ({

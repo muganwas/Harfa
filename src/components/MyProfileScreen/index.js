@@ -92,8 +92,6 @@ class MyProfileScreen extends Component {
       lat: userDetails.lat,
       lang: userDetails.lang,
       error: '',
-      countryCode: '',
-      postCountryCode: false,
       isLoading: false,
       galleryCameraImage: '',
       isVisible: false,
@@ -103,12 +101,14 @@ class MyProfileScreen extends Component {
     this.springValue = new Animated.Value(100);
   }
 
-  componentDidMount() {
-    const {navigation} = this.props;
-    const countryCodeRef = database().ref('constants/countryCode');
-    countryCodeRef.once('value').then(code => {
-      this.setState({countryCode: code.val()});
-    });
+  componentDidMount = async () => {
+    const {
+      navigation,
+      validationInfo: {countryCode},
+    } = this.props;
+    const {mobile} = this.state;
+    let newMobile = await sanitizeMobileNumber(mobile, countryCode);
+    this.setState({mobile: newMobile});
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -120,15 +120,7 @@ class MyProfileScreen extends Component {
         this.handleBackButtonClick,
       );
     });
-  }
-
-  async componentDidUpdate() {
-    const {mobile, countryCode, postCountryCode} = this.state;
-    if (!postCountryCode && countryCode) {
-      let newMobile = await sanitizeMobileNumber(mobile, countryCode);
-      this.setState({postCountryCode: true, mobile: newMobile});
-    }
-  }
+  };
 
   handleBackButtonClick = () => {
     if (Platform.OS == 'ios')
@@ -331,8 +323,9 @@ class MyProfileScreen extends Component {
   render() {
     const {
       userInfo: {userDetails},
+      validationInfo: {countryCode},
     } = this.props;
-    const {countryCode, mobile} = this.state;
+    const {mobile} = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -590,6 +583,7 @@ const mapStateToProps = state => {
   return {
     notificationsInfo: state.notificationsInfo,
     userInfo: state.userInfo,
+    validationInfo: state.validationInfo,
   };
 };
 
