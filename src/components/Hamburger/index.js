@@ -4,6 +4,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  PermissionsAndroid,
   Image,
   StyleSheet,
   Platform,
@@ -17,6 +18,7 @@ import NetInfo from '@react-native-community/netinfo';
 import _ from 'lodash';
 import Config from '../Config';
 import geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-community/async-storage';
 import {cloneDeep} from 'lodash';

@@ -4,6 +4,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  PermissionsAndroid,
   Image,
   StyleSheet,
   Platform,
@@ -16,6 +17,7 @@ import {NavigationEvents} from 'react-navigation';
 import {exitApp} from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
 import geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
 import {Notifications} from 'react-native-notifications';
 import Axios from 'axios';
