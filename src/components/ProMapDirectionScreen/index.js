@@ -9,8 +9,6 @@ import {
   TouchableOpacity,
   BackHandler,
   Linking,
-  PermissionsAndroid,
-  Alert,
   StatusBar,
   Platform,
   Modal,
@@ -20,8 +18,6 @@ import {cloneDeep, isEqual} from 'lodash';
 import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import {MAPS_API_KEY} from 'react-native-dotenv';
-import database from '@react-native-firebase/database';
-import Geolocation from 'react-native-geolocation-service';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import simpleToast from 'react-native-simple-toast';
 import Config from '../Config';
@@ -81,6 +77,7 @@ class ProMapDirectionScreen extends Component {
     } = props;
     let currentPos = navigation.getParam('currentPos', 0);
     const currentRequest = jobRequestsProviders[currentPos] || {};
+    console.log('user coordinates --', usersCoordinates);
     this.state = {
       sourcesourceLocation:
         usersCoordinates.latitude + ',' + usersCoordinates.longitude,
