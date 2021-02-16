@@ -286,7 +286,6 @@ class LoginPhoneScreen extends Component {
               this.rightButtonAction = () => {
                 this.phoneLoginCustomerTask();
                 this.setState({
-                  isLoading: false,
                   showDialog: false,
                   dialogType: null,
                 });
@@ -316,7 +315,6 @@ class LoginPhoneScreen extends Component {
           this.rightButtonAction = () => {
             this.phoneLoginCustomerTask();
             this.setState({
-              isLoading: false,
               showDialog: false,
               dialogType: null,
             });

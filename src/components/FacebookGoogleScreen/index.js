@@ -305,7 +305,6 @@ class FacebookGoogleScreen extends Component {
             this.rightButtonAction = () => {
               this.fbGoogleLoginCustomerTask(name, email, image);
               this.setState({
-                isLoading: false,
                 showDialog: false,
                 dialogType: null,
               });
@@ -333,7 +332,6 @@ class FacebookGoogleScreen extends Component {
           this.rightButtonAction = () => {
             this.fbGoogleLoginCustomerTask(name, email, image);
             this.setState({
-              isLoading: false,
               showDialog: false,
               dialogType: null,
             });
@@ -462,7 +460,6 @@ class FacebookGoogleScreen extends Component {
                   this.rightButtonAction = () => {
                     this.this.authenticateTask();
                     this.setState({
-                      isLoading: false,
                       showDialog: false,
                       dialogType: null,
                     });
@@ -490,7 +487,6 @@ class FacebookGoogleScreen extends Component {
                 this.rightButtonAction = () => {
                   this.authenticateTask();
                   this.setState({
-                    isLoading: false,
                     showDialog: false,
                     dialogType: null,
                   });
@@ -531,7 +527,6 @@ class FacebookGoogleScreen extends Component {
             this.leftButtonActon = null;
             this.rightButtonAction = () => {
               this.setState({
-                isLoading: false,
                 showDialog: false,
                 dialogType: null,
               });
@@ -549,7 +544,6 @@ class FacebookGoogleScreen extends Component {
             this.leftButtonActon = null;
             this.rightButtonAction = () => {
               this.setState({
-                isLoading: false,
                 showDialog: false,
                 dialogType: null,
               });
@@ -570,7 +564,6 @@ class FacebookGoogleScreen extends Component {
       this.leftButtonActon = null;
       this.rightButtonAction = () => {
         this.setState({
-          isLoading: false,
           showDialog: false,
           dialogType: null,
         });
