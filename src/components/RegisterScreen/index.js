@@ -262,7 +262,6 @@ class RegisterScreen extends Component {
                         this.rightButtonAction = async () => {
                           await this.registerTask(this.state.imageDataObject);
                           this.setState({
-                            isLoading: false,
                             showDialog: false,
                             dialogType: null,
                           });
@@ -289,7 +288,6 @@ class RegisterScreen extends Component {
                       this.rightButtonAction = async () => {
                         await this.registerTask(this.state.imageDataObject);
                         this.setState({
-                          isLoading: false,
                           showDialog: false,
                           dialogType: null,
                         });

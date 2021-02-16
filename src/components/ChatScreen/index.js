@@ -422,7 +422,6 @@ class ChatScreen extends Component {
           this.leftButtonActon = null;
           this.rightButtonAction = () => {
             this.setState({
-              isLoading: false,
               showDialog: false,
               dialogType: null,
             });
@@ -450,7 +449,6 @@ class ChatScreen extends Component {
         this.rightButtonAction = () => {
           this.jobCancelTask();
           this.setState({
-            isLoading: false,
             showDialog: false,
             dialogType: null,
           });

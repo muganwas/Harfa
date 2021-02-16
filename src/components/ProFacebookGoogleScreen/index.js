@@ -317,7 +317,6 @@ class FacebookGoogleScreen extends Component {
               this.rightButtonAction = () => {
                 this.fbGmailLoginTask(name, email, image);
                 this.setState({
-                  isLoading: false,
                   showDialog: false,
                   dialogType: null,
                 });
@@ -347,7 +346,6 @@ class FacebookGoogleScreen extends Component {
           this.rightButtonAction = () => {
             this.fbGmailLoginTask(name, email, image);
             this.setState({
-              isLoading: false,
               showDialog: false,
               dialogType: null,
             });
@@ -492,7 +490,6 @@ class FacebookGoogleScreen extends Component {
                   this.rightButtonAction = () => {
                     this.authenticateProTask();
                     this.setState({
-                      isLoading: false,
                       showDialog: false,
                       dialogType: null,
                     });
@@ -520,7 +517,6 @@ class FacebookGoogleScreen extends Component {
                 this.rightButtonAction = () => {
                   this.authenticateProTask();
                   this.setState({
-                    isLoading: false,
                     showDialog: false,
                     dialogType: null,
                   });
@@ -540,7 +536,6 @@ class FacebookGoogleScreen extends Component {
             this.leftButtonActon = null;
             this.rightButtonAction = () => {
               this.setState({
-                isLoading: false,
                 showDialog: false,
                 dialogType: null,
               });

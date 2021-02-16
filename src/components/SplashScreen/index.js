@@ -238,7 +238,6 @@ class SplashScreen extends Component {
             this.rightButtonAction = async () => {
               await this.autoLogin(userId, userType, fcmToken);
               this.setState({
-                isLoading: false,
                 showDialog: false,
                 dialogType: null,
               });
@@ -317,7 +316,6 @@ class SplashScreen extends Component {
             this.rightButtonAction = async () => {
               await this.autoLogin(userId, userType, fcmToken);
               this.setState({
-                isLoading: false,
                 showDialog: false,
                 dialogType: null,
               });

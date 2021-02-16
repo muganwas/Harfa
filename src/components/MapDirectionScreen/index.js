@@ -381,7 +381,6 @@ class MapDirectionScreen extends Component {
     this.rightButtonAction = async () => {
       await this.jobCompleteTask();
       this.setState({
-        isLoading: false,
         showDialog: false,
         dialogType: null,
       });
@@ -408,7 +407,6 @@ class MapDirectionScreen extends Component {
     this.rightButtonAction = async () => {
       await this.jobCancelTask();
       this.setState({
-        isLoading: false,
         showDialog: false,
         dialogType: null,
       });
@@ -497,7 +495,6 @@ class MapDirectionScreen extends Component {
           this.leftButtonActon = null;
           this.rightButtonAction = () => {
             this.setState({
-              isLoading: false,
               showDialog: false,
               dialogType: null,
             });
@@ -598,7 +595,6 @@ class MapDirectionScreen extends Component {
           this.leftButtonActon = null;
           this.rightButtonAction = () => {
             this.setState({
-              isLoading: false,
               showDialog: false,
               dialogType: null,
             });
