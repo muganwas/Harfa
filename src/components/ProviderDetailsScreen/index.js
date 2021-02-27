@@ -134,12 +134,6 @@ class ProviderDetailsScreen extends Component {
       });
       this.showToast('Please update mobile first');
       //ToastAndroid.show("Please update your mobile number", ToastAndroid.SHORT);
-    } else if (!this.state.online) {
-      this.setState({
-        isErrorToast: true,
-      });
-      //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
-      this.showToast('Service provider is Offline');
     } else {
       this.setState({
         requestStatus: 'Request Sending...',
@@ -170,6 +164,15 @@ class ProviderDetailsScreen extends Component {
           },
         },
       };
+      if (!this.state.online) {
+        this.setState({
+          isErrorToast: false,
+        });
+        //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
+        this.showToast(
+          'Service provider is Offline and might take a while to respond',
+        );
+      }
 
       fetch(BOOKING_REQUEST, {
         method: 'POST',
