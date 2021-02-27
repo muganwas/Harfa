@@ -108,58 +108,71 @@ class ListOfProviderScreen extends Component {
       lang: userDetails.lang,
     };
     const serviceId = navigation.getParam('serviceId', null);
-    fetch(GET_ALL_PROVIDER_URL + serviceId, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(async responseJson => {
-        if (responseJson.result) {
-          let dataSource = responseJson.data;
-          dataSource.map(async (obj, key) => {
-            const {image} = obj;
-            let imageAvaliable = true;
-            if (image) {
-              await imageExists(image).then(res => {
-                imageAvaliable = res;
-              });
-            } else {
-              imageAvaliable = false;
-            }
-            dataSource[key].imageAvailable = imageAvaliable;
-          });
-          this.setState({
-            dataSource,
-            isLoading: false,
-            isNoData: false,
-            isData: true,
-          });
-        } else {
-          this.setState({
-            isLoading: false,
-            isNoData: true,
-            isData: false,
-          });
-        }
+    try {
+      fetch(GET_ALL_PROVIDER_URL + serviceId, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        this.setState({
-          isLoading: false,
+        .then(response => response.json())
+        .then(async responseJson => {
+          if (responseJson.result) {
+            let dataSource = responseJson.data;
+            dataSource.map(async (obj, key) => {
+              const {image} = obj;
+              let imageAvaliable = true;
+              if (image) {
+                await imageExists(image).then(res => {
+                  imageAvaliable = res;
+                });
+              } else {
+                imageAvaliable = false;
+              }
+              dataSource[key].imageAvailable = imageAvaliable;
+            });
+            this.setState({
+              dataSource,
+              isLoading: false,
+              isNoData: false,
+              isData: true,
+            });
+          } else {
+            this.setState({
+              isLoading: false,
+              isNoData: true,
+              isData: false,
+            });
+          }
+        })
+        .catch(error => {
+          this.setState({
+            isLoading: false,
+          });
+          this.showToast(
+            'Something went wrong, Check your internet connection',
+          );
         });
-        this.showToast('Something went wrong, Check your internet connection');
+    } catch (e) {
+      this.setState({
+        isLoading: false,
       });
+      this.showToast('Something went wrong, try again');
+    }
     this.calculateDistance();
   };
 
   calculateRating = async id => {
     let avg = 0;
-    await axios.get(GET_EMPLOYEE_RATINGS + id).then(res => {
-      if (res.data.rating > 0) avg = res.data.rating;
-    });
+    try {
+      await axios.get(GET_EMPLOYEE_RATINGS + id).then(res => {
+        if (res.data.rating > 0) avg = res.data.rating;
+      });
+    } catch (e) {
+      console.log(e);
+    }
     return avg;
   };
 

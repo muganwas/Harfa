@@ -231,23 +231,31 @@ class DashboardScreen extends Component {
       !this.state.dataSource ||
       (this.state.dataSource && this.state.dataSource.length === 0)
     ) {
-      fetch(SERVICES_URL)
-        .then(response => response.json())
-        .then(responseJson => {
-          this.setState({
-            dataSource: responseJson.data,
-            isLoading: false,
+      try {
+        fetch(SERVICES_URL)
+          .then(response => response.json())
+          .then(responseJson => {
+            this.setState({
+              dataSource: responseJson.data,
+              isLoading: false,
+            });
+          })
+          .catch(error => {
+            console.log(error);
+            this.setState({
+              isLoading: false,
+            });
+            this.showToast(
+              'An error has occurred, check your internet connection',
+            );
           });
-        })
-        .catch(error => {
-          console.log(error);
-          this.setState({
-            isLoading: false,
-          });
-          this.showToast(
-            'An error has occurred, check your internet connection',
-          );
+      } catch (e) {
+        console.log(e);
+        this.setState({
+          isLoading: false,
         });
+        this.showToast('An error has occurred, try again');
+      }
     } else {
       this.setState({
         isLoading: false,

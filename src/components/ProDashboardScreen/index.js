@@ -216,31 +216,43 @@ class ProDashboardScreen extends Component {
     const {
       userInfo: {providerDetails},
     } = this.props;
-    await fetch(RECENT_USER + providerDetails.providerId)
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
+    try {
+      await fetch(RECENT_USER + providerDetails.providerId)
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              dataUserSource: responseJson.data,
+              isLoading: false,
+              isRecentUser: true,
+            });
+          } else {
+            this.setState({
+              isLoading: false,
+              isRecentUser: false,
+            });
+          }
+        })
+        .catch(error => {
+          console.log(error);
           this.setState({
-            dataUserSource: responseJson.data,
             isLoading: false,
             isRecentUser: true,
+            isErrorToast: true,
           });
-        } else {
-          this.setState({
-            isLoading: false,
-            isRecentUser: false,
-          });
-        }
-      })
-      .catch(error => {
-        console.log(error);
-        this.setState({
-          isLoading: false,
-          isRecentUser: true,
-          isErrorToast: true,
+          this.showToast(
+            'Something went wrong, Check your internet connection',
+          );
         });
-        this.showToast('Something went wrong, Check your internet connection');
+    } catch (e) {
+      console.log(e);
+      this.setState({
+        isLoading: false,
+        isRecentUser: true,
+        isErrorToast: true,
       });
+      this.showToast('Something went wrong, try again later.');
+    }
   };
 
   renderRecentMessageItem = (item, index) => {
@@ -410,44 +422,51 @@ class ProDashboardScreen extends Component {
     const {
       userInfo: {providerDetails},
     } = this.props;
-    await fetch(PRO_INFO_UPDATE + providerDetails.providerId, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    })
-      .then(response => {
-        return response.json();
+    try {
+      await fetch(PRO_INFO_UPDATE + providerDetails.providerId, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
       })
-      .then(response => {
-        const {result, data} = response;
-        const {
-          generalInfo: {online},
-        } = this.props;
-        if (result && data) {
-          providerDetails.status = data.status;
+        .then(response => {
+          return response.json();
+        })
+        .then(response => {
+          const {result, data} = response;
+          const {
+            generalInfo: {online},
+          } = this.props;
+          if (result && data) {
+            providerDetails.status = data.status;
+            this.setState({
+              status: data.status === '1' && online ? 'ONLINE' : 'OFFLINE',
+              availBackground: data.status === '1' && online ? 'green' : 'red',
+              isLoading: false,
+              isErrorToast: false,
+            });
+            this.showToast(response.message);
+          } else {
+            this.setState({
+              isLoading: false,
+            });
+            this.showToast(response.message);
+          }
+        })
+        .catch(error => {
+          console.log('Error :' + error);
           this.setState({
-            status: data.status === '1' && online ? 'ONLINE' : 'OFFLINE',
-            availBackground: data.status === '1' && online ? 'green' : 'red',
-            isLoading: false,
-            isErrorToast: false,
-          });
-          this.showToast(response.message);
-        } else {
-          this.setState({
             isLoading: false,
           });
-          this.showToast(response.message);
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.setState({
-          isLoading: false,
         });
+    } catch (e) {
+      console.log('Error :' + e);
+      this.setState({
+        isLoading: false,
       });
+    }
   };
 
   changeAvailabilityStaus = () => {
@@ -697,63 +716,69 @@ class ProDashboardScreen extends Component {
         },
       },
     };
-
-    await fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-          });
-          var jobData = {
-            id: responseJson.data.id,
-            order_id,
-            user_id,
-            image,
-            fcm_id,
-            name,
-            mobile,
-            dob,
-            address,
-            lat,
-            lang,
-            service_name,
-            chat_status: '1',
-            status,
-            delivery_address,
-            delivery_lat,
-            delivery_lang,
-          };
-
-          imageExists(image).then(res => {
-            jobData.imageAvailable = res;
-          });
-
-          newjobRequestsProviders[pos] = jobData;
-          fetchedPendingJobInfo(newjobRequestsProviders);
-          this.props.navigation.navigate('ProAcceptRejectJob');
-        } else {
-          this.setState({
-            isLoading: false,
-            isErrorToast: true,
-          });
-
-          this.showToast('Something went wrong');
-        }
+    try {
+      await fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        console.log('Error >>> ' + error);
-        this.setState({
-          isLoading: false,
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+            });
+            var jobData = {
+              id: responseJson.data.id,
+              order_id,
+              user_id,
+              image,
+              fcm_id,
+              name,
+              mobile,
+              dob,
+              address,
+              lat,
+              lang,
+              service_name,
+              chat_status: '1',
+              status,
+              delivery_address,
+              delivery_lat,
+              delivery_lang,
+            };
+
+            imageExists(image).then(res => {
+              jobData.imageAvailable = res;
+            });
+
+            newjobRequestsProviders[pos] = jobData;
+            fetchedPendingJobInfo(newjobRequestsProviders);
+            this.props.navigation.navigate('ProAcceptRejectJob');
+          } else {
+            this.setState({
+              isLoading: false,
+              isErrorToast: true,
+            });
+
+            this.showToast('Something went wrong');
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+          });
         });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
       });
+    }
   };
 
   renderPendingJobs = (item, index) => {
@@ -898,45 +923,52 @@ class ProDashboardScreen extends Component {
           ' has given you a review',
       },
     };
-
-    await fetch(REVIEW_RATING, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reviewData),
-    })
-      .then(response => response.json())
-      .then(response => {
-        if (response.result) {
+    try {
+      await fetch(REVIEW_RATING, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      })
+        .then(response => response.json())
+        .then(response => {
+          if (response.result) {
+            this.setState({
+              isLoading: false,
+              isReviewDialogVisible: false,
+              mainId: '',
+              dataWorkSource: [],
+              isErrorToast: false,
+              selectedReviewItem: null,
+            });
+            this.showToast('Review submitted');
+            this.onRefresh();
+          } else {
+            this.setState({
+              isLoading: false,
+              selectedReviewItem: null,
+            });
+            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
+            this.showToast('Something went wrong');
+          }
+        })
+        .catch(error => {
+          console.log('Error :' + error);
           this.setState({
             isLoading: false,
-            isReviewDialogVisible: false,
-            mainId: '',
-            dataWorkSource: [],
-            isErrorToast: false,
             selectedReviewItem: null,
           });
-          this.showToast('Review submitted');
-          this.onRefresh();
-        } else {
-          this.setState({
-            isLoading: false,
-            selectedReviewItem: null,
-          });
-          //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-          this.showToast('Something went wrong');
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.setState({
-          isLoading: false,
-          selectedReviewItem: null,
-        });
-      })
-      .done();
+        })
+        .done();
+    } catch (e) {
+      console.log('Error :' + e);
+      this.setState({
+        isLoading: false,
+        selectedReviewItem: null,
+      });
+    }
   };
 
   askForReview = async item => {
@@ -968,48 +1000,53 @@ class ProDashboardScreen extends Component {
             ' waiting for your feedback',
         },
       };
-
-      await fetch(ASK_FOR_REVIEW, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(askReviewData),
-      })
-        .then(response => response.json())
-        .then(response => {
-          if (response.result) {
-            this.setState({
-              isLoading: false,
-              dataWorkSource: [],
-              isErrorToast: false,
-            });
-            const {
-              userInfo: {providerDetails},
-            } = this.props;
-            //ToastAndroid.show("Request submitted successfully", ToastAndroid.show);
-            this.showToast('Request submitted successfully');
-            fetchJobRequestHistory(providerDetails.providerId);
-          } else {
+      try {
+        await fetch(ASK_FOR_REVIEW, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(askReviewData),
+        })
+          .then(response => response.json())
+          .then(response => {
+            if (response.result) {
+              this.setState({
+                isLoading: false,
+                dataWorkSource: [],
+                isErrorToast: false,
+              });
+              const {
+                userInfo: {providerDetails},
+              } = this.props;
+              this.showToast('Request submitted successfully');
+              fetchJobRequestHistory(providerDetails.providerId);
+            } else {
+              this.setState({
+                isLoading: false,
+                isErrorToast: true,
+              });
+              this.showToast('Something went wrong');
+            }
+          })
+          .catch(error => {
+            console.log('Error :' + error);
             this.setState({
               isLoading: false,
               isErrorToast: true,
             });
-            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
             this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
-          this.setState({
-            isLoading: false,
-            isErrorToast: true,
-          });
-          //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-          this.showToast('Something went wrong');
-        })
-        .done();
+          })
+          .done();
+      } catch (e) {
+        console.log('Error :' + e);
+        this.setState({
+          isLoading: false,
+          isErrorToast: true,
+        });
+        this.showToast('Something went wrong, try again');
+      }
     } else if (item.customer_review == 'Requested') {
       this.setState({
         isErrorToast: true,

@@ -71,37 +71,65 @@ export default class ProForgotPasswordScreen extends Component {
     const data = {
       email: this.state.email,
     };
-
-    fetch(FORGOT_PASSWORD, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
+    try {
+      fetch(FORGOT_PASSWORD, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
             this.setState({
-              showDialog: false,
-              dialogType: null,
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'Congratulations!',
+              dialogDesc:
+                'Your password is sent to your registered Email address',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Ok',
             });
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'Congratulations!',
-            dialogDesc:
-              'Your password is sent to your registered Email address',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        } else {
-          console.log('Response Else ');
+          } else {
+            console.log('Response Else ');
+            this.leftButtonActon = () => {
+              this.setState({
+                isLoading: false,
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.rightButtonAction = () => {
+              this.forgotPasswordTask();
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'Congratulations!',
+              dialogDesc:
+                'Your password is sent to your registered Email address',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Retry',
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error :' + error);
           this.leftButtonActon = () => {
             this.setState({
               isLoading: false,
@@ -120,41 +148,39 @@ export default class ProForgotPasswordScreen extends Component {
             isLoading: false,
             showDialog: true,
             dialogType: 'fb',
-            dialogTitle: 'Congratulations!',
-            dialogDesc:
-              'Your password is sent to your registered Email address',
+            dialogTitle: 'OOPS!',
+            dialogDesc: 'Something went wrong, Try again later',
             dialogLeftText: 'Cancel',
             dialogRightText: 'Retry',
           });
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.leftButtonActon = () => {
-          this.setState({
-            isLoading: false,
-            showDialog: false,
-            dialogType: null,
-          });
-        };
-        this.rightButtonAction = () => {
-          this.forgotPasswordTask();
-          this.setState({
-            showDialog: false,
-            dialogType: null,
-          });
-        };
+        })
+        .done();
+    } catch (e) {
+      console.log('Error :' + e);
+      this.leftButtonActon = () => {
         this.setState({
           isLoading: false,
-          showDialog: true,
-          dialogType: 'fb',
-          dialogTitle: 'OOPS!',
-          dialogDesc: 'Something went wrong, Try again later',
-          dialogLeftText: 'Cancel',
-          dialogRightText: 'Retry',
+          showDialog: false,
+          dialogType: null,
         });
-      })
-      .done();
+      };
+      this.rightButtonAction = () => {
+        this.forgotPasswordTask();
+        this.setState({
+          showDialog: false,
+          dialogType: null,
+        });
+      };
+      this.setState({
+        isLoading: false,
+        showDialog: true,
+        dialogType: 'fb',
+        dialogTitle: 'OOPS!',
+        dialogDesc: 'Something went wrong, Try again later',
+        dialogLeftText: 'Cancel',
+        dialogRightText: 'Retry',
+      });
+    }
   };
 
   changeDialogVisibility = () =>

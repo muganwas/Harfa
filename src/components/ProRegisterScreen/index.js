@@ -173,32 +173,62 @@ class ProRegisterScreen extends Component {
                 userDataRef.getDownloadURL().then(urlResult => {
                   let newUserData = cloneDeep(userData);
                   newUserData.image = urlResult;
-                  Axios.post(REGISTER_URL, {data: JSON.stringify(newUserData)})
-                    .then(responseJson => {
-                      if (
-                        responseJson.status === 200 &&
-                        responseJson.data.createdDate
-                      ) {
-                        this.leftButtonActon = () => {
+                  try {
+                    Axios.post(REGISTER_URL, {
+                      data: JSON.stringify(newUserData),
+                    })
+                      .then(responseJson => {
+                        if (
+                          responseJson.status === 200 &&
+                          responseJson.data.createdDate
+                        ) {
+                          this.leftButtonActon = () => {
+                            this.setState({
+                              isLoading: false,
+                              showDialog: false,
+                              dialogType: null,
+                            });
+                          };
+                          this.rightButtonAction = () =>
+                            this.props.navigation.goBack();
                           this.setState({
                             isLoading: false,
-                            showDialog: false,
-                            dialogType: null,
+                            showDialog: true,
+                            dialogType: 'fb',
+                            dialogTitle: 'REGISTARTION SUCCESSFUL',
+                            dialogDesc:
+                              'We have send you a email verification link to your registered email id and then Login to your account',
+                            dialogLeftText: 'Cancel',
+                            dialogRightText: 'OK',
                           });
-                        };
-                        this.rightButtonAction = () =>
-                          this.props.navigation.goBack();
-                        this.setState({
-                          isLoading: false,
-                          showDialog: true,
-                          dialogType: 'fb',
-                          dialogTitle: 'REGISTARTION SUCCESSFUL',
-                          dialogDesc:
-                            'We have send you a email verification link to your registered email id and then Login to your account',
-                          dialogLeftText: 'Cancel',
-                          dialogRightText: 'OK',
-                        });
-                      } else {
+                        } else {
+                          this.leftButtonActon = () => {
+                            this.setState({
+                              isLoading: false,
+                              showDialog: false,
+                              dialogType: null,
+                            });
+                          };
+                          this.rightButtonAction = () => {
+                            this.registerTask(this.state.imageDataObject);
+                            this.setState({
+                              isLoading: false,
+                              showDialog: false,
+                              dialogType: null,
+                            });
+                          };
+                          this.setState({
+                            isLoading: false,
+                            showDialog: true,
+                            dialogType: 'fb',
+                            dialogTitle: 'OOPS!',
+                            dialogDesc: responseJson.data.message,
+                            dialogLeftText: 'Cancel',
+                            dialogRightText: 'Retry',
+                          });
+                        }
+                      })
+                      .catch(error => {
                         this.leftButtonActon = () => {
                           this.setState({
                             isLoading: false,
@@ -219,39 +249,39 @@ class ProRegisterScreen extends Component {
                           showDialog: true,
                           dialogType: 'fb',
                           dialogTitle: 'OOPS!',
-                          dialogDesc: responseJson.data.message,
+                          dialogDesc: error.message,
                           dialogLeftText: 'Cancel',
                           dialogRightText: 'Retry',
                         });
-                      }
-                    })
-                    .catch(error => {
-                      this.leftButtonActon = () => {
-                        this.setState({
-                          isLoading: false,
-                          showDialog: false,
-                          dialogType: null,
-                        });
-                      };
-                      this.rightButtonAction = () => {
-                        this.registerTask(this.state.imageDataObject);
-                        this.setState({
-                          isLoading: false,
-                          showDialog: false,
-                          dialogType: null,
-                        });
-                      };
+                      })
+                      .done();
+                  } catch (e) {
+                    this.leftButtonActon = () => {
                       this.setState({
                         isLoading: false,
-                        showDialog: true,
-                        dialogType: 'fb',
-                        dialogTitle: 'OOPS!',
-                        dialogDesc: error.message,
-                        dialogLeftText: 'Cancel',
-                        dialogRightText: 'Retry',
+                        showDialog: false,
+                        dialogType: null,
                       });
-                    })
-                    .done();
+                    };
+                    this.rightButtonAction = () => {
+                      this.registerTask(this.state.imageDataObject);
+                      this.setState({
+                        isLoading: false,
+                        showDialog: false,
+                        dialogType: null,
+                      });
+                    };
+                    this.setState({
+                      isLoading: false,
+                      showDialog: true,
+                      dialogType: 'fb',
+                      dialogTitle: 'OOPS!',
+                      dialogDesc:
+                        'Something went wrong, please try again later',
+                      dialogLeftText: 'Cancel',
+                      dialogRightText: 'Retry',
+                    });
+                  }
                 });
               }
             })

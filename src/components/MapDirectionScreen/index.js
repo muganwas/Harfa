@@ -472,50 +472,56 @@ class MapDirectionScreen extends Component {
         },
       },
     };
-
-    await fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-            isAcceptJob: true,
-          });
-          newJobRequests.splice(currRequestPos, 1);
-          fetchedPendingJobInfo(newJobRequests);
-          this.props.navigation.navigate('Dashboard');
-        } else {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
-            this.setState({
-              showDialog: false,
-              dialogType: null,
-            });
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'OOPS!',
-            dialogDesc: 'An error has occurred, please try again later',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        }
+    try {
+      await fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        console.log('Error >>> ' + error);
-        this.setState({
-          isLoading: false,
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+            });
+            newJobRequests.splice(currRequestPos, 1);
+            fetchedPendingJobInfo(newJobRequests);
+            this.props.navigation.navigate('Dashboard');
+          } else {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'OOPS!',
+              dialogDesc: 'An error has occurred, please try again later',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Ok',
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+          });
         });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
       });
+    }
   };
 
   jobCompleteTask = async () => {
@@ -572,50 +578,56 @@ class MapDirectionScreen extends Component {
         },
       },
     };
-
-    await fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-            isAcceptJob: true,
-          });
-          newJobRequests.splice(currRequestPos, 1);
-          fetchedPendingJobInfo(newJobRequests);
-          this.props.navigation.navigate('Dashboard');
-        } else {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
-            this.setState({
-              showDialog: false,
-              dialogType: null,
-            });
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'OOPS!',
-            dialogDesc: 'An error has occurred, please try again later',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        }
+    try {
+      await fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        console.log('Error >>> ' + error);
-        this.setState({
-          isLoading: false,
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+            });
+            newJobRequests.splice(currRequestPos, 1);
+            fetchedPendingJobInfo(newJobRequests);
+            this.props.navigation.navigate('Dashboard');
+          } else {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'OOPS!',
+              dialogDesc: 'An error has occurred, please try again later',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Ok',
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+          });
         });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
       });
+    }
   };
 
   changeDialogVisibility = () =>
