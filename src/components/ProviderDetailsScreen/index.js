@@ -352,7 +352,7 @@ class ProviderDetailsScreen extends Component {
       this.setState({imageAvailable});
     });
     const onlineUsers = clone(OnlineUsers);
-    const {providerId} = this.state;
+    const providerId = navigation.state.params.providerId;
     const userRef = database().ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {
