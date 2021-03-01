@@ -32,10 +32,11 @@ import {
   fetchCustomerJobInfoError,
   setSelectedJobRequest,
   updateActiveRequest,
+  getAllWorkRequestClient,
+  getPendingJobRequest,
 } from '../../Redux/Actions/jobsActions';
 import {
   colorPrimary,
-  colorPrimaryDark,
   colorBg,
   themeRed,
   white,
@@ -84,11 +85,11 @@ class DashboardScreen extends Component {
   };
 
   //Get All Services
-  componentDidMount() {
-    this.onRefresh();
+  async componentDidMount() {
+    await this.onRefresh(this.props);
     const {navigation} = this.props;
-    navigation.addListener('willFocus', () => {
-      this.onRefresh();
+    navigation.addListener('willFocus', async () => {
+      await this.onRefresh(this.props);
       BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
     });
     navigation.addListener('willBlur', () => {
@@ -226,7 +227,12 @@ class DashboardScreen extends Component {
     return <View style={{height: 1, width: '100%', backgroundColor: black}} />;
   };
 
-  onRefresh = () => {
+  onRefresh = async props => {
+    const {
+      getAllWorkRequestClient,
+      getPendingJobRequest,
+      userInfo: {userDetails},
+    } = props;
     if (
       !this.state.dataSource ||
       (this.state.dataSource && this.state.dataSource.length === 0)
@@ -261,6 +267,8 @@ class DashboardScreen extends Component {
         isLoading: false,
       });
     }
+    await getPendingJobRequest(this.props, userDetails.userId);
+    await getAllWorkRequestClient(userDetails.userId);
     return true;
   };
 
@@ -269,7 +277,7 @@ class DashboardScreen extends Component {
       dispatchSelectedJobRequest,
       jobsInfo: {allJobRequestsClient},
     } = this.props;
-    if (chat_status == '0') {
+    if (chat_status === '0') {
       this.showToast('Your chat request has been accepted yet. Please wait...');
     } else {
       const {
@@ -355,7 +363,7 @@ class DashboardScreen extends Component {
             this.goToNextPage(chat_status, {
               userType: 'client',
               status,
-              onlineStatus: employee_details.status,
+              onlineStatus: employee_details.online,
               fcm_id,
               order_id,
               image,
@@ -548,6 +556,7 @@ const mapStateToProps = state => {
   return {
     notificationsInfo: state.notificationsInfo,
     jobsInfo: state.jobsInfo,
+    userInfo: state.userInfo,
     generalInfo: state.generalInfo,
     messagesInfo: state.messagesInfo,
   };
@@ -578,6 +587,12 @@ const mapDispatchToProps = dispatch => {
     },
     updateActiveRequest: val => {
       dispatch(updateActiveRequest(val));
+    },
+    getAllWorkRequestClient: id => {
+      dispatch(getAllWorkRequestClient(id));
+    },
+    getPendingJobRequest: (props, userId, navTo) => {
+      dispatch(getPendingJobRequest(props, userId, navTo));
     },
   };
 };

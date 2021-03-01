@@ -206,6 +206,7 @@ class FacebookGoogleScreen extends Component {
       try {
         Axios.post(REGISTER_URL, {data: JSON.stringify(userData)})
           .then(async responseJson => {
+            let status;
             if (responseJson.status === 200 && responseJson.data.createdDate) {
               const usersRef = database().ref(`users/${responseJson.data.id}`);
               await usersRef.once('value', snapshot => {
@@ -213,7 +214,7 @@ class FacebookGoogleScreen extends Component {
                 if (value) status = value.status;
                 else {
                   usersRef
-                    .set({status: responseJson.data.status})
+                    .set({status: responseJson.data.online})
                     .then(() => {
                       console.log('status set');
                     })
@@ -251,6 +252,7 @@ class FacebookGoogleScreen extends Component {
                         dob: response.data.dob,
                         address: response.data.address,
                         lat: response.data.lat,
+                        online: status ? status : response.data.online,
                         lang: response.data.lang,
                         firebaseId: this.state.firebaseId,
                         fcmId: response.data.fcm_id,
@@ -275,6 +277,7 @@ class FacebookGoogleScreen extends Component {
                         mobile: responseJson.data.mobile,
                         dob: responseJson.data.dob,
                         address: responseJson.data.address,
+                        online: status ? status : responseJson.data.online,
                         lat: responseJson.data.lat,
                         lang: responseJson.data.lang,
                         fcmId: responseJson.data.fcm_id,
@@ -426,6 +429,7 @@ class FacebookGoogleScreen extends Component {
               fcm_id: fcmToken,
             };
             try {
+              let status;
               fetch(AUTHENTICATE_URL, {
                 method: 'POST',
                 headers: {
@@ -445,7 +449,7 @@ class FacebookGoogleScreen extends Component {
                       if (value) status = value.status;
                       else {
                         usersRef
-                          .set({status: responseJson.data.status})
+                          .set({status: responseJson.data.online})
                           .then(() => {
                             console.log('status set');
                           })
@@ -468,6 +472,7 @@ class FacebookGoogleScreen extends Component {
                       image: responseJson.data.image,
                       mobile: responseJson.data.mobile,
                       dob: responseJson.data.dob,
+                      online: status ? status : responseJson.data.online,
                       address: responseJson.data.address,
                       lat: responseJson.data.lat,
                       lang: responseJson.data.lang,

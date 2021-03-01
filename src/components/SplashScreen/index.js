@@ -188,16 +188,17 @@ class SplashScreen extends Component {
         })
           .then(response => response.json())
           .then(async responseJson => {
-            var status;
+            let status;
             if (responseJson && responseJson.result) {
               const id = responseJson.data.id;
+              console.log('info', responseJson.data);
               const usersRef = database().ref(`users/${id}`);
               await usersRef.once('value', snapshot => {
                 const value = snapshot.val();
                 if (value) status = value.status;
                 else {
                   usersRef
-                    .set({status: responseJson.data.status})
+                    .set({status: responseJson.data.online})
                     .then(() => {
                       console.log('status set');
                     })
@@ -206,7 +207,7 @@ class SplashScreen extends Component {
                     });
                 }
               });
-              var providerData = {
+              let providerData = {
                 providerId: responseJson.data.id,
                 name: responseJson.data.username,
                 email: responseJson.data.email,
@@ -221,7 +222,10 @@ class SplashScreen extends Component {
                 lang: responseJson.data.lang,
                 invoice: responseJson.data.invoice,
                 firebaseId: responseJson.data.id,
-                status: status != undefined ? status : responseJson.data.status,
+                online: (status = !undefined
+                  ? status
+                  : responseJson.data.online),
+                status: responseJson.data.status,
                 fcmId: responseJson.data.fcm_id,
                 accountType: responseJson.data.account_type,
               };
@@ -268,6 +272,7 @@ class SplashScreen extends Component {
       }
     } else if (userType == 'User') {
       try {
+        let status;
         fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
           method: 'GET',
           headers: {
@@ -278,7 +283,7 @@ class SplashScreen extends Component {
           .then(response => response.json())
           .then(async responseJson => {
             if (responseJson && responseJson.result) {
-              var userData = {
+              let userData = {
                 userId: responseJson.data.id,
                 accountType: responseJson.data.acc_type,
                 email: responseJson.data.email,
@@ -289,6 +294,7 @@ class SplashScreen extends Component {
                 dob: responseJson.data.dob,
                 address: responseJson.data.address,
                 lat: responseJson.data.lat,
+                online: responseJson.data.online,
                 lang: responseJson.data.lang,
                 firebaseId: responseJson.data.id,
                 fcmId: responseJson.data.fcm_id,
@@ -300,7 +306,7 @@ class SplashScreen extends Component {
                 if (value) status = value.status;
                 else {
                   usersRef
-                    .set({status: responseJson.data.status})
+                    .set({status: responseJson.data.online})
                     .then(() => {
                       console.log('status set');
                     })

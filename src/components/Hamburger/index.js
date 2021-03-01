@@ -73,6 +73,23 @@ class Hamburger extends React.Component {
     };
     Notifications.registerRemoteNotifications();
   }
+
+  displayNotification = ({title, body}) => {
+    Android
+      ? Notifications.postLocalNotification({
+          title,
+          body,
+          extra: 'data',
+        })
+      : Notifications.postLocalNotification({
+          body,
+          title,
+          sound: 'chime.aiff',
+          silent: false,
+          category: 'SOME_CATEGORY',
+          userInfo: {},
+        });
+  };
   async componentDidMount() {
     const {
       fetchedNotifications,
@@ -100,8 +117,6 @@ class Hamburger extends React.Component {
       } = this.props;
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
-      console.log('message', message);
-      console.log('current message', this.state.currentMessage);
       if (!_.isEqual(this.state.currentMessage, message)) {
         fetchedNotifications({
           type: 'generic',
@@ -115,29 +130,18 @@ class Hamburger extends React.Component {
         if (orderId === obj.order_Id) pos = key;
       });
 
-      if (title == 'Message Recieved') {
-        Android
-          ? Notifications.postLocalNotification({
-              title,
-              body,
-              extra: 'data',
-            })
-          : Notifications.postLocalNotification({
-              body,
-              title,
-              sound: 'chime.aiff',
-              silent: false,
-              category: 'SOME_CATEGORY',
-              userInfo: {},
-            });
-      } else if (title == 'Chat Request Rejected') {
+      if (title.toLowerCase() === 'message recieved') {
+        displayNotification({title, body});
+      } else if (title.toLowerCase() === 'chat request rejected') {
+        displayNotification({title, body});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(
           'The service provider rejected your request. please try again later',
         );
         navigation.navigate('Dashboard');
-      } else if (title == 'Job Accepted') {
+      } else if (title.toLowerCase() === 'job accepted') {
+        displayNotification({title, body});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -166,15 +170,18 @@ class Hamburger extends React.Component {
         newJobRequests[pos] = pendingJobData;
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job has been accepted.');
-      } else if (title == 'Job Rejected') {
+      } else if (title.toLowerCase() === 'job rejected') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job has been rejected. please try again later');
-      } else if (title == 'Job Completed') {
+      } else if (title.toLowerCase() == 'job completed') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job is complete..');
-      } else if (title == 'Chat Request Accepted' && pos != null) {
+      } else if (
+        title.toLowerCase() === 'chat request accepted' &&
+        pos != null
+      ) {
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -210,7 +217,8 @@ class Hamburger extends React.Component {
         updateActiveRequest(false);
         navigation.navigate('Dashboard');
       } else if (
-        (title == 'No Response' || title == 'Cancelled') &&
+        (title.toLowerCase() === 'No Response' ||
+          title.toLowerCase() === 'cancelled') &&
         pos != null
       ) {
         newJobRequests.splice(pos, 1);

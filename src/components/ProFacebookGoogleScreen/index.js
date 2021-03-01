@@ -209,7 +209,7 @@ class FacebookGoogleScreen extends Component {
                 if (value) status = value.status;
                 else {
                   usersRef
-                    .set({status: responseJson.data.status})
+                    .set({status: responseJson.data.online})
                     .then(() => {
                       console.log('status set');
                     })
@@ -249,8 +249,8 @@ class FacebookGoogleScreen extends Component {
                         lang: response.data.lang,
                         invoice: response.data.invoice,
                         firebaseId: this.state.firebaseId,
-                        status:
-                          status != undefined ? status : response.data.status,
+                        online: status ? status : response.data.online,
+                        status: response.data.status,
                         fcmId: response.data.fcm_id,
                         accountType: response.data.account_type,
                       };
@@ -277,10 +277,8 @@ class FacebookGoogleScreen extends Component {
                         lat: responseJson.data.lat,
                         lang: responseJson.data.lang,
                         invoice: responseJson.data.invoice,
-                        status:
-                          status != undefined
-                            ? status
-                            : responseJson.data.status,
+                        online: status ? status : response.data.online,
+                        status: responseJson.data.status,
                         fcmId: responseJson.data.fcm_id,
                         accountType: responseJson.data.account_type,
                         firebaseId: this.state.firebaseId,
@@ -308,6 +306,7 @@ class FacebookGoogleScreen extends Component {
                 SimpleToast(error.message, SimpleToast.SHORT);
               }
             } else {
+              console.log('response --', responseJson);
               if (responseJson.message === 'Email not found') {
                 this.setState({
                   isLoading: false,
@@ -317,6 +316,28 @@ class FacebookGoogleScreen extends Component {
                   name: name,
                   image: image,
                   accountType: this.state.accountType,
+                });
+              } else if (
+                responseJson.data &&
+                responseJson.data.message.indexOf('deactivated')
+              ) {
+                this.leftButtonActon = () => {
+                  this.setState({
+                    isLoading: false,
+                    showDialog: false,
+                    dialogType: null,
+                  });
+                };
+                this.rightButtonAction = null;
+                this.setState({
+                  isLoading: false,
+                  showDialog: true,
+                  dialogType: 'fb',
+                  dialogTitle: 'OOPS!',
+                  dialogDesc:
+                    'Your account is currently innactive, contact admin.',
+                  dialogLeftText: 'Cancel',
+                  dialogRightText: 'Retry',
                 });
               } else {
                 this.leftButtonActon = () => {
@@ -374,6 +395,7 @@ class FacebookGoogleScreen extends Component {
           })
           .done();
       } catch (e) {
+        console.log('e --', e);
         this.leftButtonActon = () => {
           this.setState({
             isLoading: false,
@@ -500,6 +522,7 @@ class FacebookGoogleScreen extends Component {
                       lat: responseJson.data.lat,
                       lang: responseJson.data.lang,
                       invoice: responseJson.data.invoice,
+                      online: status ? status : responseJson.data.online,
                       status: responseJson.data.status,
                       fcmId: responseJson.data.fcm_id,
                       accountType: responseJson.data.account_type,

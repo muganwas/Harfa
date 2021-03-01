@@ -63,6 +63,23 @@ class ProHamburger extends React.Component {
     Notifications.registerRemoteNotifications();
   }
 
+  displayNotification = ({title, body}) => {
+    Android
+      ? Notifications.postLocalNotification({
+          title,
+          body,
+          extra: 'data',
+        })
+      : Notifications.postLocalNotification({
+          body,
+          title,
+          sound: 'chime.aiff',
+          silent: false,
+          category: 'SOME_CATEGORY',
+          userInfo: {},
+        });
+  };
+
   async componentDidMount() {
     const {
       fetchedNotifications,
@@ -95,22 +112,10 @@ class ProHamburger extends React.Component {
         if (orderId === obj.order_Id) pos = key;
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
-      if (title == 'Message Recieved') {
-        Android
-          ? Notifications.postLocalNotification({
-              title,
-              body,
-              extra: 'data',
-            })
-          : Notifications.postLocalNotification({
-              body,
-              title,
-              sound: 'chime.aiff',
-              silent: false,
-              category: 'SOME_CATEGORY',
-              userInfo: {},
-            });
-      } else if (title == 'Booking Request') {
+      if (title.toLowerCase() === 'message recieved') {
+        displayNotification({title, body});
+      } else if (title.toLowerCase() === 'booking request') {
+        displayNotification({title, body});
         navigation.navigate('ProChatAccept', {
           userId: data.userId,
           serviceName: data.serviceName,
@@ -121,8 +126,8 @@ class ProHamburger extends React.Component {
           delivery_lang: data.delivery_lang,
         });
       } else if (
-        title.toLowerCase() == 'job cancelled' ||
-        title.toLowerCase() == 'job completed'
+        title.toLowerCase() === 'job cancelled' ||
+        title.toLowerCase() === 'job completed'
       ) {
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);

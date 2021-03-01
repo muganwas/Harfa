@@ -37,7 +37,10 @@ import {
   fetchProviderJobInfoError,
   setSelectedJobRequest,
   getAllWorkRequestPro,
+  getPendingJobRequestProvider,
 } from '../../Redux/Actions/jobsActions';
+import _ from 'lodash';
+import {updateProviderDetails} from '../../Redux/Actions/userActions';
 import {
   colorBg,
   colorYellow,
@@ -89,11 +92,11 @@ class ProDashboardScreen extends Component {
       reviewData: '',
       width: screenWidth,
       status:
-        online && providerDetails.status === '1' && connectivityAvailable
+        online && providerDetails.online === '1' && connectivityAvailable
           ? 'ONLINE'
           : 'OFFLINE',
       availBackground:
-        online && providerDetails.status === '1' && connectivityAvailable
+        online && providerDetails.online === '1' && connectivityAvailable
           ? 'green'
           : 'red',
       dataSource: [],
@@ -157,7 +160,7 @@ class ProDashboardScreen extends Component {
       });
     else if (
       connectivityAvailable &&
-      providerDetails.status === '1' &&
+      providerDetails.online === '1' &&
       status === 'OFFLINE'
     ) {
       this.setState({
@@ -421,8 +424,10 @@ class ProDashboardScreen extends Component {
   updateAvailabilityInMongoDB = async userData => {
     const {
       userInfo: {providerDetails},
+      updateProviderDetails,
     } = this.props;
     try {
+      let newProDits = _.cloneDeep(providerDetails);
       await fetch(PRO_INFO_UPDATE + providerDetails.providerId, {
         method: 'POST',
         headers: {
@@ -440,10 +445,11 @@ class ProDashboardScreen extends Component {
             generalInfo: {online},
           } = this.props;
           if (result && data) {
-            providerDetails.status = data.status;
+            newProDits.online = data.online;
+            updateProviderDetails(newProDits);
             this.setState({
-              status: data.status === '1' && online ? 'ONLINE' : 'OFFLINE',
-              availBackground: data.status === '1' && online ? 'green' : 'red',
+              status: data.online === '1' && online ? 'ONLINE' : 'OFFLINE',
+              availBackground: data.online === '1' && online ? 'green' : 'red',
               isLoading: false,
               isErrorToast: false,
             });
@@ -479,9 +485,9 @@ class ProDashboardScreen extends Component {
     this.setState({
       isLoading: true,
     });
-    const liveOffline = !online && providerDetails.status === '1';
-    const manualOffline = online && providerDetails.status === '0';
-    const combinedOffline = !online && providerDetails.status === '0';
+    const liveOffline = !online && providerDetails.online === '1';
+    const manualOffline = online && providerDetails.online === '0';
+    const combinedOffline = !online && providerDetails.online === '0';
     if (liveOffline) {
       Config.socket.close();
       Config.socket.open();
@@ -495,7 +501,9 @@ class ProDashboardScreen extends Component {
           usersRef
             .update(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB(userData);
+              this.updateAvailabilityInMongoDB({
+                online: '1',
+              });
             })
             .catch(e => {
               console.log(e.message);
@@ -504,7 +512,9 @@ class ProDashboardScreen extends Component {
           usersRef
             .set(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB(userData);
+              this.updateAvailabilityInMongoDB({
+                online: '1',
+              });
             })
             .catch(e => {
               console.log(e.message);
@@ -521,7 +531,9 @@ class ProDashboardScreen extends Component {
           usersRef
             .update(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB(userData);
+              this.updateAvailabilityInMongoDB({
+                online: '1',
+              });
             })
             .catch(e => {
               console.log(e.message);
@@ -530,7 +542,9 @@ class ProDashboardScreen extends Component {
           usersRef
             .set(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB(userData);
+              this.updateAvailabilityInMongoDB({
+                online: '1',
+              });
             })
             .catch(e => {
               console.log(e.message);
@@ -538,7 +552,7 @@ class ProDashboardScreen extends Component {
         }
       });
     } else {
-      const newStatus = providerDetails.status === '1' ? '0' : '1';
+      const newStatus = providerDetails.online === '1' ? '0' : '1';
       let userData = {
         status: newStatus,
       };
@@ -548,7 +562,7 @@ class ProDashboardScreen extends Component {
           usersRef
             .update(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB(userData);
+              this.updateAvailabilityInMongoDB({online: newStatus});
             })
             .catch(e => {
               console.log(e.message);
@@ -557,7 +571,9 @@ class ProDashboardScreen extends Component {
           usersRef
             .set(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB(userData);
+              this.updateAvailabilityInMongoDB({
+                online: newStatus,
+              });
             })
             .catch(e => {
               console.log(e.message);
@@ -1068,13 +1084,14 @@ class ProDashboardScreen extends Component {
       generalInfo: {online, connectivityAvailable},
       userInfo: {providerDetails},
       fetchJobRequestHistory,
+      getPendingJobRequestProvider,
     } = this.props;
     this.setState({
       dataSource: [],
       dataUserSource: [],
       isRecentMessage: false,
       status:
-        online && providerDetails.status === '1' && connectivityAvailable
+        online && providerDetails.online === '1' && connectivityAvailable
           ? 'ONLINE'
           : 'OFFLINE',
       isJobRequest: false,
@@ -1082,6 +1099,7 @@ class ProDashboardScreen extends Component {
     });
     await this.getAllRecentChat();
     await this.getAllRecentUser();
+    await getPendingJobRequestProvider(this.props, providerDetails.providerId);
     await fetchJobRequestHistory(providerDetails.providerId);
     this.springValue = new Animated.Value(100);
     this.setState({refreshing: false});
@@ -1159,11 +1177,7 @@ class ProDashboardScreen extends Component {
               }
               ios_backgroundColor={this.state.availBackground}
               onValueChange={this.changeAvailabilityStaus}
-              value={
-                online &&
-                providerDetails.status === '1' &&
-                connectivityAvailable
-              }
+              value={this.state.status === 'ONLINE'}
             />
             <Text
               style={{
@@ -1171,7 +1185,7 @@ class ProDashboardScreen extends Component {
                 textTransform: 'capitalize',
                 alignSelf: 'center',
               }}>
-              {online && providerDetails.status === '1' && connectivityAvailable
+              {online && providerDetails.online === '1' && connectivityAvailable
                 ? 'ONLINE'
                 : 'OFFLINE'}
             </Text>
@@ -1297,7 +1311,6 @@ class ProDashboardScreen extends Component {
                     Client Review
                   </Text>
                 </View>
-
                 <View style={styles.listView}>
                   {dataWorkSource && dataWorkSource.length > 0 ? (
                     dataWorkSource.map(this.renderWorkItem)
@@ -1474,6 +1487,12 @@ const mapDispatchToProps = dispatch => {
     },
     fetchJobRequestHistory: providerId => {
       dispatch(getAllWorkRequestPro(providerId));
+    },
+    updateProviderDetails: dits => {
+      dispatch(updateProviderDetails(dits));
+    },
+    getPendingJobRequestProvider: (props, providerId, navTo) => {
+      dispatch(getPendingJobRequestProvider(props, providerId, navTo));
     },
   };
 };
