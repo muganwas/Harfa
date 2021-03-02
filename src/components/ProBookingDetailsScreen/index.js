@@ -180,42 +180,48 @@ class ProBookingDetailsScreen extends Component {
         body: this.state.username + ' has given you a review',
       },
     };
-
-    await fetch(REVIEW_RATING, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reviewData),
-    })
-      .then(response => response.json())
-      .then(response => {
-        if (response.result) {
-          this.setState({
-            isErrorToast: false,
-            isLoading: false,
-            isReviewDialogVisible: false,
-            mainId: '',
-          });
-          //ToastAndroid.show("Review submitted", ToastAndroid.show);
-          this.showToast('Review submitted');
-        } else {
-          this.setState({
-            isLoading: false,
-            isErrorToast: true,
-          });
-          //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-          this.showToast('Something went wrong');
-        }
+    try {
+      await fetch(REVIEW_RATING, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
       })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.setState({
-          isLoading: false,
-        });
-      })
-      .done();
+        .then(response => response.json())
+        .then(response => {
+          if (response.result) {
+            this.setState({
+              isErrorToast: false,
+              isLoading: false,
+              isReviewDialogVisible: false,
+              mainId: '',
+            });
+            //ToastAndroid.show("Review submitted", ToastAndroid.show);
+            this.showToast('Review submitted');
+          } else {
+            this.setState({
+              isLoading: false,
+              isErrorToast: true,
+            });
+            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
+            this.showToast('Something went wrong');
+          }
+        })
+        .catch(error => {
+          console.log('Error :' + error);
+          this.setState({
+            isLoading: false,
+          });
+        })
+        .done();
+    } catch (e) {
+      console.log('Error :' + e);
+      this.setState({
+        isLoading: false,
+      });
+    }
   };
 
   showToast = message => {

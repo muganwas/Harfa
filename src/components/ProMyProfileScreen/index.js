@@ -233,42 +233,50 @@ class ProMyProfileScreen extends Component {
       lang: lang,
       invoice: invoice,
     };
-
-    await fetch(PRO_INFO_UPDATE + providerId, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    })
-      .then(response => response.json())
-      .then(async response => {
-        if (response.result) {
-          this.setState({
-            isLoading: false,
-            isErrorToast: false,
-          });
-          //ToastAndroid.show(response.message, ToastAndroid.show);
-          this.showToast(response.message);
-          fetchProviderProfile(providerId, fcmId);
-        } else {
+    try {
+      await fetch(PRO_INFO_UPDATE + providerId, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      })
+        .then(response => response.json())
+        .then(async response => {
+          if (response.result) {
+            this.setState({
+              isLoading: false,
+              isErrorToast: false,
+            });
+            //ToastAndroid.show(response.message, ToastAndroid.show);
+            this.showToast(response.message);
+            fetchProviderProfile(providerId, fcmId);
+          } else {
+            this.setState({
+              isLoading: false,
+              isErrorToast: true,
+            });
+            this.showToast(response.message);
+          }
+        })
+        .catch(error => {
+          console.log('Error :' + error);
           this.setState({
             isLoading: false,
             isErrorToast: true,
           });
-          this.showToast(response.message);
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.setState({
-          isLoading: false,
-          isErrorToast: true,
-        });
-        this.showToast('Something went wrong');
-      })
-      .done();
+          this.showToast('Something went wrong');
+        })
+        .done();
+    } catch (e) {
+      console.log('Error :' + e);
+      this.setState({
+        isLoading: false,
+        isErrorToast: true,
+      });
+      this.showToast('Something went wrong');
+    }
   };
 
   //Image Update

@@ -40,7 +40,6 @@ const MyDrawerNavigator = createDrawerNavigator(
     ForgotPassword: {screen: ForgotPasswordScreen},
     ProForgotPassword: {screen: ProForgotPasswordScreen},
     ProRegister: {screen: ProRegisterScreen},
-    ProDashboard: {screen: () => <ProDrawerNavigator />},
     MapDirection: {screen: MapDirectionScreen},
     AfterSplash: {screen: AfterSplashScreen},
     AccountType: {screen: AccountTypeScreen},

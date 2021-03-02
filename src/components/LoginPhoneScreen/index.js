@@ -163,98 +163,136 @@ class LoginPhoneScreen extends Component {
         fcm_id: fcmToken,
         type: this.state.loginType,
       };
-      Axios.post(REGISTER_URL, {data: JSON.stringify(userData)})
-        .then(async responseJson => {
-          if (responseJson.status === 200 && responseJson.data.createdDate) {
-            const usersRef = database().ref(`users/${responseJson.data.id}`);
-            await usersRef.once('value', snapshot => {
-              const value = snapshot.val();
-              if (value) status = value.status;
-              else {
-                usersRef
-                  .set({status: responseJson.data.status})
-                  .then(() => {
-                    console.log('status set');
-                  })
-                  .catch(e => {
-                    console.log(e.message);
-                  });
-              }
-            });
-            const id = responseJson.data.id;
-            /** get stored profile if exists */
-            fetch(USER_GET_PROFILE + id + '?fcm_id=' + fcmToken, {
-              method: 'GET',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
-            })
-              .then(response => response.json())
-              .then(async response => {
-                this.setState({
-                  isLoading: false,
-                  isErrorToast: true,
-                });
-                if (response && response.result) {
-                  const userId = response.data.id;
-                  const data = {
-                    userId: response.data.id,
-                    accountType: response.data.acc_type,
-                    email: response.data.email,
-                    password: response.data.password,
-                    username: response.data.username,
-                    image: response.data.image,
-                    mobile: response.data.mobile,
-                    dob: response.data.dob,
-                    address: response.data.address,
-                    lat: response.data.lat,
-                    lang: response.data.lang,
-                    firebaseId: this.state.firebaseId,
-                    fcmId: response.data.fcm_id,
-                  };
-                  updateUserDetails(data);
-                  //Store data like sharedPreference
-                  AsyncStorage.setItem('userId', userId);
-                  AsyncStorage.setItem('userType', 'User');
-                  AsyncStorage.setItem('email', response.data.email);
-                  AsyncStorage.setItem('firebaseId', this.state.firebaseId);
-                  //Check if any Ongoing Request
-                  fetchJobRequestHistory(userId);
-                  fetchJobRequests(this.props, userId, 'Home');
-                } else {
-                  const userData = {
-                    userId: responseJson.data.id,
-                    accountType: responseJson.data.acc_type,
-                    email: responseJson.data.email,
-                    password: responseJson.data.password,
-                    username: responseJson.data.username,
-                    image: responseJson.data.image,
-                    mobile: responseJson.data.mobile,
-                    dob: responseJson.data.dob,
-                    address: responseJson.data.address,
-                    lat: responseJson.data.lat,
-                    lang: responseJson.data.lang,
-                    fcmId: responseJson.data.fcm_id,
-                    firebaseId: this.state.firebaseId,
-                  };
-                  updateUserDetails(userData);
-                  //Store data like sharedPreference
-                  AsyncStorage.setItem('userId', id);
-                  AsyncStorage.setItem('userType', 'User');
-                  AsyncStorage.setItem('email', email);
-                  AsyncStorage.setItem('firebaseId', this.state.firebaseId);
-                  fetchJobRequestHistory(id);
-                  fetchJobRequests(this.props, id, 'Home');
+      try {
+        Axios.post(REGISTER_URL, {data: JSON.stringify(userData)})
+          .then(async responseJson => {
+            if (responseJson.status === 200 && responseJson.data.createdDate) {
+              const usersRef = database().ref(`users/${responseJson.data.id}`);
+              await usersRef.once('value', snapshot => {
+                const value = snapshot.val();
+                if (value) status = value.status;
+                else {
+                  usersRef
+                    .set({status: responseJson.data.status})
+                    .then(() => {
+                      console.log('status set');
+                    })
+                    .catch(e => {
+                      console.log(e.message);
+                    });
                 }
-              })
-              .catch(error => {
+              });
+              const id = responseJson.data.id;
+              try {
+                /** get stored profile if exists */
+                fetch(USER_GET_PROFILE + id + '?fcm_id=' + fcmToken, {
+                  method: 'GET',
+                  headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                  },
+                })
+                  .then(response => response.json())
+                  .then(async response => {
+                    this.setState({
+                      isLoading: false,
+                      isErrorToast: true,
+                    });
+                    if (response && response.result) {
+                      const userId = response.data.id;
+                      const data = {
+                        userId: response.data.id,
+                        accountType: response.data.acc_type,
+                        email: response.data.email,
+                        password: response.data.password,
+                        username: response.data.username,
+                        image: response.data.image,
+                        mobile: response.data.mobile,
+                        dob: response.data.dob,
+                        address: response.data.address,
+                        lat: response.data.lat,
+                        lang: response.data.lang,
+                        firebaseId: this.state.firebaseId,
+                        fcmId: response.data.fcm_id,
+                      };
+                      updateUserDetails(data);
+                      //Store data like sharedPreference
+                      AsyncStorage.setItem('userId', userId);
+                      AsyncStorage.setItem('userType', 'User');
+                      AsyncStorage.setItem('email', response.data.email);
+                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      //Check if any Ongoing Request
+                      fetchJobRequestHistory(userId);
+                      fetchJobRequests(this.props, userId, 'Home');
+                    } else {
+                      const userData = {
+                        userId: responseJson.data.id,
+                        accountType: responseJson.data.acc_type,
+                        email: responseJson.data.email,
+                        password: responseJson.data.password,
+                        username: responseJson.data.username,
+                        image: responseJson.data.image,
+                        mobile: responseJson.data.mobile,
+                        dob: responseJson.data.dob,
+                        address: responseJson.data.address,
+                        lat: responseJson.data.lat,
+                        lang: responseJson.data.lang,
+                        fcmId: responseJson.data.fcm_id,
+                        firebaseId: this.state.firebaseId,
+                      };
+                      updateUserDetails(userData);
+                      //Store data like sharedPreference
+                      AsyncStorage.setItem('userId', id);
+                      AsyncStorage.setItem('userType', 'User');
+                      AsyncStorage.setItem('email', email);
+                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      fetchJobRequestHistory(id);
+                      fetchJobRequests(this.props, id, 'Home');
+                    }
+                  })
+                  .catch(error => {
+                    this.setState({
+                      isLoading: false,
+                    });
+                    SimpleToast('Something went wrong', SimpleToast.SHORT);
+                  });
+              } catch (e) {
                 this.setState({
                   isLoading: false,
                 });
-                SimpleToast('Something went wrong', SimpleToast.SHORT);
+                SimpleToast(
+                  'Something went wrong, try again',
+                  SimpleToast.SHORT,
+                );
+              }
+            } else {
+              this.leftButtonActon = () => {
+                this.setState({
+                  isLoading: false,
+                  showDialog: false,
+                  dialogType: null,
+                });
+              };
+              this.rightButtonAction = () => {
+                this.phoneLoginCustomerTask();
+                this.setState({
+                  isLoading: false,
+                  showDialog: false,
+                  dialogType: null,
+                });
+              };
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OOPS!',
+                dialogDesc: responseJson.data.message || 'Something went wrong',
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Retry',
               });
-          } else {
+            }
+          })
+          .catch(error => {
             this.leftButtonActon = () => {
               this.setState({
                 isLoading: false,
@@ -275,39 +313,38 @@ class LoginPhoneScreen extends Component {
               showDialog: true,
               dialogType: 'fb',
               dialogTitle: 'OOPS!',
-              dialogDesc: responseJson.data.message || 'Something went wrong',
+              dialogDesc: 'Something went wrong',
               dialogLeftText: 'Cancel',
               dialogRightText: 'Retry',
             });
-          }
-        })
-        .catch(error => {
-          this.leftButtonActon = () => {
-            this.setState({
-              isLoading: false,
-              showDialog: false,
-              dialogType: null,
-            });
-          };
-          this.rightButtonAction = () => {
-            this.phoneLoginCustomerTask();
-            this.setState({
-              isLoading: false,
-              showDialog: false,
-              dialogType: null,
-            });
-          };
+          })
+          .done();
+      } catch (e) {
+        this.leftButtonActon = () => {
           this.setState({
             isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'OOPS!',
-            dialogDesc: error.message || 'Something went wrong',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Retry',
+            showDialog: false,
+            dialogType: null,
           });
-        })
-        .done();
+        };
+        this.rightButtonAction = () => {
+          this.phoneLoginCustomerTask();
+          this.setState({
+            isLoading: false,
+            showDialog: false,
+            dialogType: null,
+          });
+        };
+        this.setState({
+          isLoading: false,
+          showDialog: true,
+          dialogType: 'fb',
+          dialogTitle: 'OOPS!',
+          dialogDesc: 'Something went wrong, try again.',
+          dialogLeftText: 'Cancel',
+          dialogRightText: 'Retry',
+        });
+      }
     } else {
       this.setState({isLoading: false});
       simpleToast.show(

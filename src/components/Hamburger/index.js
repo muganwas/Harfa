@@ -60,7 +60,7 @@ import SimpleToast from 'react-native-simple-toast';
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
 const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
-
+let notifications = [];
 class Hamburger extends React.Component {
   constructor(props) {
     super();
@@ -70,9 +70,31 @@ class Hamburger extends React.Component {
       availabilityChecked: false,
       availabilityObj: {},
       currentMessage: null,
+      notificationId: null,
     };
     Notifications.registerRemoteNotifications();
   }
+
+  displayNotification = ({title, body, id}) => {
+    const check = id + title;
+    if (![check].includes(notifications)) {
+      this.setState({notificationId: id});
+      Android
+        ? Notifications.postLocalNotification({
+            title,
+            body,
+            extra: 'data',
+          })
+        : Notifications.postLocalNotification({
+            body,
+            title,
+            sound: 'chime.aiff',
+            silent: false,
+            category: 'SOME_CATEGORY',
+            userInfo: {},
+          });
+    }
+  };
   async componentDidMount() {
     const {
       fetchedNotifications,
@@ -85,10 +107,18 @@ class Hamburger extends React.Component {
     const locationRef = database().ref(`liveLocation/${senderId}`);
     await this.checkNoficationsAvailability();
     await this.checkForUserType();
-
+    messaging().setBackgroundMessageHandler(message => {
+      if (message && message.data) {
+        const data = JSON.parse(message.data.data);
+        if (data && data.title && data.body)
+          this.displayNotification({title: data.title, body: data.body});
+      }
+    });
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
-      const {title, body} = data;
+      const {title, body, main_id} = data;
+      const check = main_id + title;
+      notifications.push(check);
       const {
         fetchedNotifications,
         updateActiveRequest,
@@ -100,8 +130,6 @@ class Hamburger extends React.Component {
       } = this.props;
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
-      console.log('message', message);
-      console.log('current message', this.state.currentMessage);
       if (!_.isEqual(this.state.currentMessage, message)) {
         fetchedNotifications({
           type: 'generic',
@@ -115,29 +143,18 @@ class Hamburger extends React.Component {
         if (orderId === obj.order_Id) pos = key;
       });
 
-      if (title == 'Message Recieved') {
-        Android
-          ? Notifications.postLocalNotification({
-              title,
-              body,
-              extra: 'data',
-            })
-          : Notifications.postLocalNotification({
-              body,
-              title,
-              sound: 'chime.aiff',
-              silent: false,
-              category: 'SOME_CATEGORY',
-              userInfo: {},
-            });
-      } else if (title == 'Chat Request Rejected') {
+      if (title.toLowerCase() === 'message recieved') {
+        //this.displayNotification({title, body, id: main_id});
+      } else if (title.toLowerCase() === 'chat request rejected') {
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(
           'The service provider rejected your request. please try again later',
         );
-        navigation.navigate('Dashboard');
-      } else if (title == 'Job Accepted') {
+        navigation.navigate('Home');
+      } else if (title.toLowerCase() === 'job accepted') {
+        //this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -166,15 +183,24 @@ class Hamburger extends React.Component {
         newJobRequests[pos] = pendingJobData;
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job has been accepted.');
-      } else if (title == 'Job Rejected') {
+        navigation.navigate('Home');
+      } else if (title.toLowerCase() === 'job rejected') {
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
+        navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
-      } else if (title == 'Job Completed') {
+      } else if (title.toLowerCase() == 'job completed') {
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job is complete..');
-      } else if (title == 'Chat Request Accepted' && pos != null) {
+        navigation.navigate('Home');
+      } else if (
+        title.toLowerCase() === 'chat request accepted' &&
+        pos != null
+      ) {
+        //this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -208,53 +234,62 @@ class Hamburger extends React.Component {
         getAllWorkRequestClient(senderId);
         this.showToast('Chat request accepted');
         updateActiveRequest(false);
-        navigation.navigate('Dashboard');
+        navigation.navigate('Home');
       } else if (
-        (title == 'No Response' || title == 'Cancelled') &&
+        (title.toLowerCase() === 'No Response' ||
+          title.toLowerCase() === 'cancelled') &&
         pos != null
       ) {
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(
           'The service provider has not responded. please try again later',
         );
+        navigation.navigate('Home');
       }
     });
-
-    await Axios.get(FETCH_MESSAGES + '?sender=' + senderId + '&userType=client')
-      .then(async results => {
-        const {data} = results;
-        let messages = {};
-        let otherUsers = {};
-        // get ids of other users this user has chatted with
-        if (!data.message) {
-          await data.map(msgObj => {
-            const {sender, recipient} = msgObj;
-            if (sender !== senderId) otherUsers[sender] = sender;
-            else if (recipient !== senderId) otherUsers[recipient] = recipient;
-          });
-          // if any user, seperate the different groups of messages
-          if (Object.keys(otherUsers).length > 0) {
-            Object.keys(otherUsers).map(async otherUser => {
-              const thisUsersMessages = [];
-              await data.map(msgObj => {
-                const {sender, recipient} = msgObj;
-                if (otherUser === sender || otherUser === recipient)
-                  thisUsersMessages.push(msgObj);
-              });
-              if (thisUsersMessages.length > 0)
-                messages[otherUser] = thisUsersMessages;
+    try {
+      await Axios.get(
+        FETCH_MESSAGES + '?sender=' + senderId + '&userType=client',
+      )
+        .then(async results => {
+          const {data} = results;
+          let messages = {};
+          let otherUsers = {};
+          // get ids of other users this user has chatted with
+          if (!data.message) {
+            await data.map(msgObj => {
+              const {sender, recipient} = msgObj;
+              if (sender !== senderId) otherUsers[sender] = sender;
+              else if (recipient !== senderId)
+                otherUsers[recipient] = recipient;
             });
+            // if any user, seperate the different groups of messages
+            if (Object.keys(otherUsers).length > 0) {
+              Object.keys(otherUsers).map(async otherUser => {
+                const thisUsersMessages = [];
+                await data.map(msgObj => {
+                  const {sender, recipient} = msgObj;
+                  if (otherUser === sender || otherUser === recipient)
+                    thisUsersMessages.push(msgObj);
+                });
+                if (thisUsersMessages.length > 0)
+                  messages[otherUser] = thisUsersMessages;
+              });
+            }
+            dbMessagesFetched(messages);
+          } else {
+            SimpleToast.show('Something went wrong, please reload app');
           }
-          dbMessagesFetched(messages);
-        } else {
-          SimpleToast.show('Something went wrong, please reload app');
-        }
-      })
-      .catch(e => {
-        console.log('mongo messages error', e);
-        fetchingMessagesError(e.message);
-      });
+        })
+        .catch(e => {
+          console.log('mongo messages error', e);
+          fetchingMessagesError(e.message);
+        });
+    } catch (e) {
+      fetchingMessagesError(e.message);
+    }
     /** fetch users current position and upload it to db */
     this.permissionRequest(() => {
       geolocation.getCurrentPosition(

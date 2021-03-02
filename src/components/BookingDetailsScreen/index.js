@@ -177,40 +177,46 @@ class BookingDetailsScreen extends Component {
         body: this.state.username + ' has given you a review',
       },
     };
-
-    fetch(REVIEW_RATING, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reviewData),
-    })
-      .then(response => response.json())
-      .then(response => {
-        if (response.result) {
+    try {
+      fetch(REVIEW_RATING, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      })
+        .then(response => response.json())
+        .then(response => {
+          if (response.result) {
+            this.setState({
+              isLoading: false,
+              isReviewDialogVisible: false,
+              mainId: '',
+              isErrorToast: false,
+            });
+            this.showToast('Review Submitted');
+          } else {
+            this.setState({
+              isLoading: false,
+              isErrorToast: true,
+            });
+            this.showToast('Something went wrong');
+          }
+        })
+        .catch(error => {
+          console.log('Error :' + error);
           this.setState({
             isLoading: false,
-            isReviewDialogVisible: false,
-            mainId: '',
-            isErrorToast: false,
           });
-          this.showToast('Review Submitted');
-        } else {
-          this.setState({
-            isLoading: false,
-            isErrorToast: true,
-          });
-          this.showToast('Something went wrong');
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.setState({
-          isLoading: false,
-        });
-      })
-      .done();
+        })
+        .done();
+    } catch (e) {
+      console.log('Error :' + e);
+      this.setState({
+        isLoading: false,
+      });
+    }
   };
 
   showToast = message => {
