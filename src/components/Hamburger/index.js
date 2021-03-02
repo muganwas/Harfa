@@ -107,7 +107,13 @@ class Hamburger extends React.Component {
     const locationRef = database().ref(`liveLocation/${senderId}`);
     await this.checkNoficationsAvailability();
     await this.checkForUserType();
-
+    messaging().setBackgroundMessageHandler(message => {
+      if (message && message.data) {
+        const data = JSON.parse(message.data.data);
+        if (data && data.title && data.body)
+          this.displayNotification({title: data.title, body: data.body});
+      }
+    });
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
       const {title, body, main_id} = data;
@@ -138,9 +144,9 @@ class Hamburger extends React.Component {
       });
 
       if (title.toLowerCase() === 'message recieved') {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
       } else if (title.toLowerCase() === 'chat request rejected') {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(
@@ -148,7 +154,7 @@ class Hamburger extends React.Component {
         );
         navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job accepted') {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -179,13 +185,13 @@ class Hamburger extends React.Component {
         this.showToast('Your job has been accepted.');
         navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job rejected') {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
       } else if (title.toLowerCase() == 'job completed') {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job is complete..');
@@ -194,7 +200,7 @@ class Hamburger extends React.Component {
         title.toLowerCase() === 'chat request accepted' &&
         pos != null
       ) {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -234,7 +240,7 @@ class Hamburger extends React.Component {
           title.toLowerCase() === 'cancelled') &&
         pos != null
       ) {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(

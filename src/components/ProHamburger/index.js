@@ -63,10 +63,19 @@ class ProHamburger extends React.Component {
       notificationId: null,
     };
     Notifications.registerRemoteNotifications();
+    /*Notifications.events().registerNotificationReceivedBackground(
+      (notification, completion) => {
+        console.log('Notification Received - Background', notification.payload);
+        //const {title, body, id} = notification.payload;
+        // Calling completion on iOS with `alert: true` will present the native iOS inApp notification.
+        completion({alert: true, sound: true, badge: false});
+      },
+    );*/
   }
 
   displayNotification = ({title, body, id}) => {
     const check = id + title;
+    console.log('title', title);
     if (![check].includes(notifications)) {
       this.setState({notificationId: id});
       Android
@@ -97,6 +106,13 @@ class ProHamburger extends React.Component {
     const receiverId = providerDetails.providerId;
     await this.fetchOthersLocations();
     await this.checkForUserType();
+    messaging().setBackgroundMessageHandler(message => {
+      if (message && message.data) {
+        const data = JSON.parse(message.data.data);
+        if (data && data.title && data.body)
+          this.displayNotification({title: data.title, body: data.body});
+      }
+    });
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
       const {
@@ -120,9 +136,9 @@ class ProHamburger extends React.Component {
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
       if (title.toLowerCase() === 'message recieved') {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
       } else if (title.toLowerCase() === 'booking request') {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         navigation.navigate('ProChatAccept', {
           userId: data.userId,
           serviceName: data.serviceName,
@@ -136,7 +152,7 @@ class ProHamburger extends React.Component {
         title.toLowerCase() === 'job cancelled' ||
         title.toLowerCase() === 'job completed'
       ) {
-        this.displayNotification({title, body, id: main_id});
+        //this.displayNotification({title, body, id: main_id});
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
         navigation.navigate('ProHome');
