@@ -66,7 +66,8 @@ class ProHamburger extends React.Component {
   }
 
   displayNotification = ({title, body, id}) => {
-    if (![id].includes(notifications)) {
+    const check = id + title;
+    if (![check].includes(notifications)) {
       this.setState({notificationId: id});
       Android
         ? Notifications.postLocalNotification({
@@ -105,7 +106,8 @@ class ProHamburger extends React.Component {
         dispatchFetchedProJobRequests,
       } = this.props;
       const {title, body, main_id} = data;
-      notifications.push(main_id);
+      const check = main_id + title;
+      notifications.push(check);
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
       if (!_.isEqual(this.state.currentMessage, message)) {
@@ -134,6 +136,7 @@ class ProHamburger extends React.Component {
         title.toLowerCase() === 'job cancelled' ||
         title.toLowerCase() === 'job completed'
       ) {
+        this.displayNotification({title, body, id: main_id});
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
         navigation.navigate('ProHome');
