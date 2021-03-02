@@ -669,7 +669,7 @@ class ProDashboardScreen extends Component {
     }
   };
 
-  acceptChatRequest = async pos => {
+  acceptChatRequest = async (pos, redirect = true) => {
     const {
       fetchedPendingJobInfo,
       userInfo: {providerDetails},
@@ -697,7 +697,6 @@ class ProDashboardScreen extends Component {
     } = jobRequestsProviders[pos];
 
     dispatchSelectedJobRequest(jobRequestsProviders[pos]);
-
     this.setState({
       isLoading: true,
     });
@@ -773,7 +772,7 @@ class ProDashboardScreen extends Component {
 
             newjobRequestsProviders[pos] = jobData;
             fetchedPendingJobInfo(newjobRequestsProviders);
-            this.props.navigation.navigate('ProAcceptRejectJob');
+            if (redirect) this.props.navigation.navigate('ProAcceptRejectJob');
           } else {
             this.setState({
               isLoading: false,
@@ -889,7 +888,7 @@ class ProDashboardScreen extends Component {
                   : 'Job Accepted'}
               </Text>
             </View>
-            {chat_status == '1' && (
+            {chat_status === '1' && (
               <View style={styles.arrowView}>
                 <Image
                   style={styles.arrow}
@@ -897,10 +896,10 @@ class ProDashboardScreen extends Component {
                 />
               </View>
             )}
-            {chat_status == '0' && (
+            {chat_status === '0' && (
               <TouchableOpacity
                 style={styles.arrowView}
-                onPress={() => this.acceptChatRequest(index)}>
+                onPress={() => this.acceptChatRequest(index, false)}>
                 <View style={styles.viewAccept}>
                   <Text style={styles.textAccept}>Accept</Text>
                 </View>
@@ -1196,7 +1195,7 @@ class ProDashboardScreen extends Component {
             marginBottom:
               jobRequestsProviders && jobRequestsProviders.length === 0
                 ? 0
-                : 45,
+                : 45 * jobRequestsProviders.length,
             backgroundColor: lightGray,
           }}
           refreshControl={

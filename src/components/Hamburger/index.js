@@ -60,7 +60,7 @@ import SimpleToast from 'react-native-simple-toast';
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
 const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
-
+let notifications = [];
 class Hamburger extends React.Component {
   constructor(props) {
     super();
@@ -70,25 +70,29 @@ class Hamburger extends React.Component {
       availabilityChecked: false,
       availabilityObj: {},
       currentMessage: null,
+      notificationId: null,
     };
     Notifications.registerRemoteNotifications();
   }
 
-  displayNotification = ({title, body}) => {
-    Android
-      ? Notifications.postLocalNotification({
-          title,
-          body,
-          extra: 'data',
-        })
-      : Notifications.postLocalNotification({
-          body,
-          title,
-          sound: 'chime.aiff',
-          silent: false,
-          category: 'SOME_CATEGORY',
-          userInfo: {},
-        });
+  displayNotification = ({title, body, id}) => {
+    if (![id].includes(notifications)) {
+      this.setState({notificationId: id});
+      Android
+        ? Notifications.postLocalNotification({
+            title,
+            body,
+            extra: 'data',
+          })
+        : Notifications.postLocalNotification({
+            body,
+            title,
+            sound: 'chime.aiff',
+            silent: false,
+            category: 'SOME_CATEGORY',
+            userInfo: {},
+          });
+    }
   };
   async componentDidMount() {
     const {
@@ -105,7 +109,8 @@ class Hamburger extends React.Component {
 
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
-      const {title, body} = data;
+      const {title, body, main_id} = data;
+      notifications.push(main_id);
       const {
         fetchedNotifications,
         updateActiveRequest,
@@ -131,17 +136,17 @@ class Hamburger extends React.Component {
       });
 
       if (title.toLowerCase() === 'message recieved') {
-        displayNotification({title, body});
+        this.displayNotification({title, body, id: main_id});
       } else if (title.toLowerCase() === 'chat request rejected') {
-        displayNotification({title, body});
+        this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(
           'The service provider rejected your request. please try again later',
         );
-        navigation.navigate('Dashboard');
+        navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job accepted') {
-        displayNotification({title, body});
+        this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -170,14 +175,17 @@ class Hamburger extends React.Component {
         newJobRequests[pos] = pendingJobData;
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job has been accepted.');
+        navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job rejected') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
+        navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
       } else if (title.toLowerCase() == 'job completed') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job is complete..');
+        navigation.navigate('Home');
       } else if (
         title.toLowerCase() === 'chat request accepted' &&
         pos != null
@@ -215,7 +223,7 @@ class Hamburger extends React.Component {
         getAllWorkRequestClient(senderId);
         this.showToast('Chat request accepted');
         updateActiveRequest(false);
-        navigation.navigate('Dashboard');
+        navigation.navigate('Home');
       } else if (
         (title.toLowerCase() === 'No Response' ||
           title.toLowerCase() === 'cancelled') &&
@@ -226,6 +234,7 @@ class Hamburger extends React.Component {
         this.showToast(
           'The service provider has not responded. please try again later',
         );
+        navigation.navigate('Home');
       }
     });
     try {

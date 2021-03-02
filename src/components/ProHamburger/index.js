@@ -52,6 +52,7 @@ import {black, white, red} from '../../Constants/colors';
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
 const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
+let notifications = [];
 
 class ProHamburger extends React.Component {
   constructor() {
@@ -59,25 +60,29 @@ class ProHamburger extends React.Component {
     this.state = {
       fetchedOthersLocations: false,
       currentMessage: null,
+      notificationId: null,
     };
     Notifications.registerRemoteNotifications();
   }
 
-  displayNotification = ({title, body}) => {
-    Android
-      ? Notifications.postLocalNotification({
-          title,
-          body,
-          extra: 'data',
-        })
-      : Notifications.postLocalNotification({
-          body,
-          title,
-          sound: 'chime.aiff',
-          silent: false,
-          category: 'SOME_CATEGORY',
-          userInfo: {},
-        });
+  displayNotification = ({title, body, id}) => {
+    if (![id].includes(notifications)) {
+      this.setState({notificationId: id});
+      Android
+        ? Notifications.postLocalNotification({
+            title,
+            body,
+            extra: 'data',
+          })
+        : Notifications.postLocalNotification({
+            body,
+            title,
+            sound: 'chime.aiff',
+            silent: false,
+            category: 'SOME_CATEGORY',
+            userInfo: {},
+          });
+    }
   };
 
   async componentDidMount() {
@@ -91,7 +96,6 @@ class ProHamburger extends React.Component {
     const receiverId = providerDetails.providerId;
     await this.fetchOthersLocations();
     await this.checkForUserType();
-
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
       const {
@@ -100,7 +104,8 @@ class ProHamburger extends React.Component {
         jobsInfo: {jobRequestsProviders},
         dispatchFetchedProJobRequests,
       } = this.props;
-      const {title, body} = data;
+      const {title, body, main_id} = data;
+      notifications.push(main_id);
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
       if (!_.isEqual(this.state.currentMessage, message)) {
@@ -113,9 +118,9 @@ class ProHamburger extends React.Component {
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
       if (title.toLowerCase() === 'message recieved') {
-        displayNotification({title, body});
+        this.displayNotification({title, body, id: main_id});
       } else if (title.toLowerCase() === 'booking request') {
-        displayNotification({title, body});
+        this.displayNotification({title, body, id: main_id});
         navigation.navigate('ProChatAccept', {
           userId: data.userId,
           serviceName: data.serviceName,
@@ -131,6 +136,7 @@ class ProHamburger extends React.Component {
       ) {
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
+        navigation.navigate('ProHome');
       }
     });
     try {

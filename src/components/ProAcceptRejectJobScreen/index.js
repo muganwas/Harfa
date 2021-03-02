@@ -501,6 +501,7 @@ class ProAcceptRejectJobScreen extends Component {
           const {
             fetchedPendingJobInfo,
             jobsInfo: {jobRequestsProviders},
+            navigation,
           } = this.props;
           const {currRequestPos} = this.state;
           var newjobRequestsProviders = [...jobRequestsProviders];
@@ -511,7 +512,7 @@ class ProAcceptRejectJobScreen extends Component {
             });
             newjobRequestsProviders.splice(currRequestPos, 1);
             fetchedPendingJobInfo(newjobRequestsProviders);
-            this.props.navigation.replace('ProDashboard');
+            navigation.navigate('ProDashboard');
           } else {
             this.setState({
               isLoading: false,
