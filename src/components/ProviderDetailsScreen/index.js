@@ -134,12 +134,6 @@ class ProviderDetailsScreen extends Component {
       });
       this.showToast('Please update mobile first');
       //ToastAndroid.show("Please update your mobile number", ToastAndroid.SHORT);
-    } else if (!this.state.online) {
-      this.setState({
-        isErrorToast: true,
-      });
-      //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
-      this.showToast('Service provider is Offline');
     } else {
       this.setState({
         requestStatus: 'Request Sending...',
@@ -170,96 +164,117 @@ class ProviderDetailsScreen extends Component {
           },
         },
       };
-
-      fetch(BOOKING_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.props.updateActiveRequest(true);
-            this.setState({
-              requestStatus: 'Waiting for acceptance...',
-              isLoading: false,
-            });
-          } else {
-            if (responseJson.message == 'Already Exist') {
-              this.leftButtonActon = null;
-              this.rightButtonAction = () => {
-                this.setState({
-                  isLoading: false,
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
+      if (!this.state.online) {
+        this.setState({
+          isErrorToast: false,
+        });
+        //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
+        this.showToast(
+          'Service provider is Offline and might take a while to respond',
+        );
+      }
+      try {
+        fetch(BOOKING_REQUEST, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
+          .then(response => response.json())
+          .then(responseJson => {
+            if (responseJson.result) {
+              this.props.updateActiveRequest(true);
               this.setState({
+                requestStatus: 'Waiting for acceptance...',
                 isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'JOB REQUEST ALERT!',
-                dialogDesc: 'You already have a running job with this provider',
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok',
-              });
-            } else if (responseJson.message == 'Service provider busy') {
-              this.leftButtonActon = null;
-              this.rightButtonAction = () => this.goBack();
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'Busy!',
-                dialogDesc:
-                  'Service provider is currently busy. please try another service provider',
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok',
-              });
-            } else if (responseJson.message == 'Service provider is offline') {
-              this.leftButtonActon = null;
-              this.rightButtonAction = () => this.goBack();
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'OFFLINE!',
-                dialogDesc:
-                  'Service provider is offline. Book another service provider',
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok',
-              });
-            } else if (responseJson.message == 'No Response') {
-              this.leftButtonActon = null;
-              this.rightButtonAction = () => this.goBack();
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'NO RESPONSE!',
-                dialogDesc:
-                  "Check your internet connection, may be it's too slow",
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok',
               });
             } else {
-              //ToastAndroid.show("Something went wrong", ToastAndroid.SHORT);
-              this.showToast('Something went wrong');
+              if (responseJson.message == 'Already Exist') {
+                this.leftButtonActon = null;
+                this.rightButtonAction = () => {
+                  this.setState({
+                    isLoading: false,
+                    showDialog: false,
+                    dialogType: null,
+                  });
+                };
+                this.setState({
+                  isLoading: false,
+                  showDialog: true,
+                  dialogType: 'fb',
+                  dialogTitle: 'JOB REQUEST ALERT!',
+                  dialogDesc:
+                    'You already have a running job with this provider',
+                  dialogLeftText: 'Cancel',
+                  dialogRightText: 'Ok',
+                });
+              } else if (responseJson.message == 'Service provider busy') {
+                this.leftButtonActon = null;
+                this.rightButtonAction = () => this.goBack();
+                this.setState({
+                  isLoading: false,
+                  showDialog: true,
+                  dialogType: 'fb',
+                  dialogTitle: 'Busy!',
+                  dialogDesc:
+                    'Service provider is currently busy. please try another service provider',
+                  dialogLeftText: 'Cancel',
+                  dialogRightText: 'Ok',
+                });
+              } else if (
+                responseJson.message == 'Service provider is offline'
+              ) {
+                this.leftButtonActon = null;
+                this.rightButtonAction = () => this.goBack();
+                this.setState({
+                  isLoading: false,
+                  showDialog: true,
+                  dialogType: 'fb',
+                  dialogTitle: 'OFFLINE!',
+                  dialogDesc:
+                    'Service provider is offline. Book another service provider',
+                  dialogLeftText: 'Cancel',
+                  dialogRightText: 'Ok',
+                });
+              } else if (responseJson.message == 'No Response') {
+                this.leftButtonActon = null;
+                this.rightButtonAction = () => this.goBack();
+                this.setState({
+                  isLoading: false,
+                  showDialog: true,
+                  dialogType: 'fb',
+                  dialogTitle: 'NO RESPONSE!',
+                  dialogDesc:
+                    "Check your internet connection, may be it's too slow",
+                  dialogLeftText: 'Cancel',
+                  dialogRightText: 'Ok',
+                });
+              } else {
+                //ToastAndroid.show("Something went wrong", ToastAndroid.SHORT);
+                this.showToast('Something went wrong');
+              }
             }
-          }
-        })
-        .catch(error => {
-          this.setState({
-            timer: null,
-            requestStatus: 'No Response',
-            isLoading: false,
+          })
+          .catch(error => {
+            this.setState({
+              timer: null,
+              requestStatus: 'No Response',
+              isLoading: false,
+            });
+            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
+            this.showToast('Something went wrong, try again later');
           });
-          //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-          this.showToast('Something went wrong');
+      } catch (e) {
+        this.setState({
+          timer: null,
+          requestStatus: 'No Response',
+          isLoading: false,
         });
+        //ToastAndroid.show("Something went wrong", ToastAndroid.show);
+        this.showToast('Something went wrong, try again later');
+      }
     }
   };
 
@@ -352,7 +367,7 @@ class ProviderDetailsScreen extends Component {
       this.setState({imageAvailable});
     });
     const onlineUsers = clone(OnlineUsers);
-    const {providerId} = this.state;
+    const providerId = navigation.state.params.providerId;
     const userRef = database().ref(`users/${providerId}`);
 
     userRef.on('child_changed', result => {

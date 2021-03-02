@@ -17,7 +17,7 @@ import {
 //local_alt
 export default class Config {
   static clientId = WEB_CLIENT_ID;
-  static baseURL = BASE_URL_LOCAL_ALT;
+  static baseURL = BASE_URL_CLOUD;
   static apiKey = FIREBASE_API_KEY;
   static authDomain = FIREBASE_AUTH_DOMAIN;
   static databaseURL = FIREBASE_DATABASE_URL;

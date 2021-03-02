@@ -218,39 +218,45 @@ class MyProfileScreen extends Component {
       mobile,
       dob,
     };
-
-    fetch(USER_INFO_UPDATE + userId, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    })
-      .then(response => response.json())
-      .then(response => {
-        if (response.result) {
+    try {
+      fetch(USER_INFO_UPDATE + userId, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      })
+        .then(response => response.json())
+        .then(response => {
+          if (response.result) {
+            this.setState({
+              isLoading: false,
+              isErrorToast: false,
+            });
+            this.showToast(response.message);
+            fetchUserProfile(userId, fcmId);
+          } else {
+            this.setState({
+              isLoading: false,
+              isErrorToast: true,
+            });
+            this.showToast(response.message);
+          }
+        })
+        .catch(error => {
+          console.log('Error :' + error);
           this.setState({
             isLoading: false,
-            isErrorToast: false,
           });
-          this.showToast(response.message);
-          fetchUserProfile(userId, fcmId);
-        } else {
-          this.setState({
-            isLoading: false,
-            isErrorToast: true,
-          });
-          this.showToast(response.message);
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        this.setState({
-          isLoading: false,
-        });
-      })
-      .done();
+        })
+        .done();
+    } catch (e) {
+      console.log('Error :' + e);
+      this.setState({
+        isLoading: false,
+      });
+    }
   };
 
   //Image Update

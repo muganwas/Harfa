@@ -52,6 +52,7 @@ import {black, white, red} from '../../Constants/colors';
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
 const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
+let notifications = [];
 
 class ProHamburger extends React.Component {
   constructor() {
@@ -59,9 +60,40 @@ class ProHamburger extends React.Component {
     this.state = {
       fetchedOthersLocations: false,
       currentMessage: null,
+      notificationId: null,
     };
     Notifications.registerRemoteNotifications();
+    /*Notifications.events().registerNotificationReceivedBackground(
+      (notification, completion) => {
+        console.log('Notification Received - Background', notification.payload);
+        //const {title, body, id} = notification.payload;
+        // Calling completion on iOS with `alert: true` will present the native iOS inApp notification.
+        completion({alert: true, sound: true, badge: false});
+      },
+    );*/
   }
+
+  displayNotification = ({title, body, id}) => {
+    const check = id + title;
+    console.log('title', title);
+    if (![check].includes(notifications)) {
+      this.setState({notificationId: id});
+      Android
+        ? Notifications.postLocalNotification({
+            title,
+            body,
+            extra: 'data',
+          })
+        : Notifications.postLocalNotification({
+            body,
+            title,
+            sound: 'chime.aiff',
+            silent: false,
+            category: 'SOME_CATEGORY',
+            userInfo: {},
+          });
+    }
+  };
 
   async componentDidMount() {
     const {
@@ -74,7 +106,13 @@ class ProHamburger extends React.Component {
     const receiverId = providerDetails.providerId;
     await this.fetchOthersLocations();
     await this.checkForUserType();
-
+    messaging().setBackgroundMessageHandler(message => {
+      if (message && message.data) {
+        const data = JSON.parse(message.data.data);
+        if (data && data.title && data.body)
+          this.displayNotification({title: data.title, body: data.body});
+      }
+    });
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
       const {
@@ -83,7 +121,9 @@ class ProHamburger extends React.Component {
         jobsInfo: {jobRequestsProviders},
         dispatchFetchedProJobRequests,
       } = this.props;
-      const {title, body} = data;
+      const {title, body, main_id} = data;
+      const check = main_id + title;
+      notifications.push(check);
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
       if (!_.isEqual(this.state.currentMessage, message)) {
@@ -95,22 +135,10 @@ class ProHamburger extends React.Component {
         if (orderId === obj.order_Id) pos = key;
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
-      if (title == 'Message Recieved') {
-        Android
-          ? Notifications.postLocalNotification({
-              title,
-              body,
-              extra: 'data',
-            })
-          : Notifications.postLocalNotification({
-              body,
-              title,
-              sound: 'chime.aiff',
-              silent: false,
-              category: 'SOME_CATEGORY',
-              userInfo: {},
-            });
-      } else if (title == 'Booking Request') {
+      if (title.toLowerCase() === 'message recieved') {
+        //this.displayNotification({title, body, id: main_id});
+      } else if (title.toLowerCase() === 'booking request') {
+        //this.displayNotification({title, body, id: main_id});
         navigation.navigate('ProChatAccept', {
           userId: data.userId,
           serviceName: data.serviceName,
@@ -121,51 +149,57 @@ class ProHamburger extends React.Component {
           delivery_lang: data.delivery_lang,
         });
       } else if (
-        title.toLowerCase() == 'job cancelled' ||
-        title.toLowerCase() == 'job completed'
+        title.toLowerCase() === 'job cancelled' ||
+        title.toLowerCase() === 'job completed'
       ) {
+        //this.displayNotification({title, body, id: main_id});
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
+        navigation.navigate('ProHome');
       }
     });
-
-    await Axios.get(
-      FETCH_MESSAGES + '?sender=' + receiverId + '&userType=employee',
-    )
-      .then(async results => {
-        const {data} = results;
-        let messages = {};
-        let otherUsers = {};
-        // get ids of other users this user has chatted with
-        if (!data.message) {
-          await data.map(msgObj => {
-            const {sender, recipient} = msgObj;
-            if (sender !== receiverId) otherUsers[sender] = sender;
-            else if (recipient !== receiverId)
-              otherUsers[recipient] = recipient;
-          });
-          // if any user, seperate the different groups of messages
-          if (Object.keys(otherUsers).length > 0) {
-            Object.keys(otherUsers).map(async otherUser => {
-              const thisUsersMessages = [];
-              await data.map(msgObj => {
-                const {sender, recipient} = msgObj;
-                if (otherUser === sender || otherUser === recipient)
-                  thisUsersMessages.push(msgObj);
-              });
-              if (thisUsersMessages.length > 0)
-                messages[otherUser] = thisUsersMessages;
+    try {
+      await Axios.get(
+        FETCH_MESSAGES + '?sender=' + receiverId + '&userType=employee',
+      )
+        .then(async results => {
+          const {data} = results;
+          let messages = {};
+          let otherUsers = {};
+          // get ids of other users this user has chatted with
+          if (!data.message) {
+            await data.map(msgObj => {
+              const {sender, recipient} = msgObj;
+              if (sender !== receiverId) otherUsers[sender] = sender;
+              else if (recipient !== receiverId)
+                otherUsers[recipient] = recipient;
             });
+            // if any user, seperate the different groups of messages
+            if (Object.keys(otherUsers).length > 0) {
+              Object.keys(otherUsers).map(async otherUser => {
+                const thisUsersMessages = [];
+                await data.map(msgObj => {
+                  const {sender, recipient} = msgObj;
+                  if (otherUser === sender || otherUser === recipient)
+                    thisUsersMessages.push(msgObj);
+                });
+                if (thisUsersMessages.length > 0)
+                  messages[otherUser] = thisUsersMessages;
+              });
+            }
+            dbMessagesFetched(messages);
+          } else {
+            SimpleToast.show('Something went wrong, please reload app');
           }
-          dbMessagesFetched(messages);
-        } else {
-          SimpleToast.show('Something went wrong, please reload app');
-        }
-      })
-      .catch(e => {
-        console.log('mongo messages error', e);
-        fetchingMessagesError(e.message);
-      });
+        })
+        .catch(e => {
+          console.log('mongo messages error', e);
+          fetchingMessagesError(e.message);
+        });
+    } catch (e) {
+      console.log('mongo messages error', e);
+      fetchingMessagesError(e.message);
+    }
 
     database()
       .ref('adminChatting')

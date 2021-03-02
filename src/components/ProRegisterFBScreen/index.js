@@ -140,41 +140,67 @@ class ProRegisterFBScreen extends Component {
       this.setState({
         isLoading: true,
       });
+      try {
+        Axios.post(REGISTER_URL, {data: JSON.stringify(userData)})
+          .then(responseJson => {
+            console.log(responseJson);
+            this.setState({
+              isLoading: false,
+            });
+            if (responseJson.status === 200 && responseJson.data.createdDate) {
+              const id = responseJson.data.id;
+              var providerData = {
+                providerId: responseJson.data.id,
+                name: responseJson.data.username,
+                email: responseJson.data.email,
+                password: responseJson.data.password,
+                imageSource: responseJson.data.image,
+                surname: responseJson.data.surname,
+                mobile: responseJson.data.mobile,
+                services: responseJson.data.services,
+                description: responseJson.data.description,
+                address: responseJson.data.address,
+                lat: responseJson.data.lat,
+                lang: responseJson.data.lang,
+                invoice: responseJson.data.invoice,
+                status: responseJson.data.status,
+                fcmId: responseJson.data.fcm_id,
+                accountType: responseJson.data.account_type,
+              };
+              updateProviderDetails(providerData);
+              //Store data like sharedPreference
+              AsyncStorage.setItem('userId', id);
+              AsyncStorage.setItem('userType', 'Provider');
 
-      Axios.post(REGISTER_URL, {data: JSON.stringify(userData)})
-        .then(responseJson => {
-          console.log(responseJson);
-          this.setState({
-            isLoading: false,
-          });
-          if (responseJson.status === 200 && responseJson.data.createdDate) {
-            const id = responseJson.data.id;
-            var providerData = {
-              providerId: responseJson.data.id,
-              name: responseJson.data.username,
-              email: responseJson.data.email,
-              password: responseJson.data.password,
-              imageSource: responseJson.data.image,
-              surname: responseJson.data.surname,
-              mobile: responseJson.data.mobile,
-              services: responseJson.data.services,
-              description: responseJson.data.description,
-              address: responseJson.data.address,
-              lat: responseJson.data.lat,
-              lang: responseJson.data.lang,
-              invoice: responseJson.data.invoice,
-              status: responseJson.data.status,
-              fcmId: responseJson.data.fcm_id,
-              accountType: responseJson.data.account_type,
-            };
-            updateProviderDetails(providerData);
-            //Store data like sharedPreference
-            AsyncStorage.setItem('userId', id);
-            AsyncStorage.setItem('userType', 'Provider');
-
-            //ToastAndroid.show('Successfully Registered', ToastAndroid.SHORT);
-            this.props.navigation.navigate('ProHome');
-          } else {
+              //ToastAndroid.show('Successfully Registered', ToastAndroid.SHORT);
+              this.props.navigation.navigate('ProHome');
+            } else {
+              this.leftButtonActon = () => {
+                this.setState({
+                  isLoading: false,
+                  showDialog: false,
+                  dialogType: null,
+                });
+              };
+              this.rightButtonAction = async () => {
+                await this.autoLogin(userId, userType, fcmToken);
+                this.setState({
+                  showDialog: false,
+                  dialogType: null,
+                });
+              };
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OOPS!',
+                dialogDesc: responseJson.data.message,
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Retry',
+              });
+            }
+          })
+          .catch(error => {
             this.leftButtonActon = () => {
               this.setState({
                 isLoading: false,
@@ -194,37 +220,36 @@ class ProRegisterFBScreen extends Component {
               showDialog: true,
               dialogType: 'fb',
               dialogTitle: 'OOPS!',
-              dialogDesc: responseJson.data.message,
+              dialogDesc: error.message,
               dialogLeftText: 'Cancel',
               dialogRightText: 'Retry',
             });
-          }
-        })
-        .catch(error => {
-          this.leftButtonActon = () => {
-            this.setState({
-              isLoading: false,
-              showDialog: false,
-              dialogType: null,
-            });
-          };
-          this.rightButtonAction = async () => {
-            await this.autoLogin(userId, userType, fcmToken);
-            this.setState({
-              showDialog: false,
-              dialogType: null,
-            });
-          };
+          });
+      } catch (e) {
+        this.leftButtonActon = () => {
           this.setState({
             isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'OOPS!',
-            dialogDesc: error.message,
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Retry',
+            showDialog: false,
+            dialogType: null,
           });
+        };
+        this.rightButtonAction = async () => {
+          await this.autoLogin(userId, userType, fcmToken);
+          this.setState({
+            showDialog: false,
+            dialogType: null,
+          });
+        };
+        this.setState({
+          isLoading: false,
+          showDialog: true,
+          dialogType: 'fb',
+          dialogTitle: 'OOPS!',
+          dialogDesc: 'Something went wrong, please try again later',
+          dialogLeftText: 'Cancel',
+          dialogRightText: 'Retry',
         });
+      }
     }
   };
 

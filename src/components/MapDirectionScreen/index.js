@@ -143,62 +143,64 @@ class MapDirectionScreen extends Component {
       navigation,
     } = props;
     const currRequestPos = navigation.getParam('currentPos', 0);
-    let jobRequestPos = 0;
-    allJobRequestsClient.map((job, i) => {
-      if (job.employee_id === jobRequests[currRequestPos].employee_id)
-        jobRequestPos = i;
-    });
-    const employeeLatitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].latitude
-      : usersCoordinates.latitude;
-    const employeeLongitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].longitude
-      : usersCoordinates.longitude;
+    if (currRequestPos && jobRequests[currRequestPos]) {
+      let jobRequestPos = 0;
+      allJobRequestsClient.map((job, i) => {
+        if (job.employee_id === jobRequests[currRequestPos].employee_id)
+          jobRequestPos = i;
+      });
+      const employeeLatitude = othersCoordinates[employee_id]
+        ? othersCoordinates[employee_id].latitude
+        : usersCoordinates.latitude;
+      const employeeLongitude = othersCoordinates[employee_id]
+        ? othersCoordinates[employee_id].longitude
+        : usersCoordinates.longitude;
 
-    this.setState({
-      sourceLocation: employeeLatitude + ',' + employeeLongitude,
-      sourceLat: parseFloat(employeeLatitude),
-      sourceLng: parseFloat(employeeLongitude),
-      destinationLocation:
-        usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-      destinationLat: parseFloat(usersCoordinates.latitude),
-      destinationLng: parseFloat(usersCoordinates.longitude),
-      coords: [],
-      isLoading: true,
-      senderId: userDetails.userId,
-      senderImage: userDetails.image,
-      senderName: userDetails.username,
-      inputMessage: '',
-      dataChatSource: [],
-      currRequestPos,
-      jobRequestPos,
-      id: jobRequests[currRequestPos].id,
-      orderId: jobRequests[currRequestPos].order_id,
-      providerId: jobRequests[currRequestPos].employee_id,
-      providerImage: jobRequests[currRequestPos].image,
-      providerfcmId: jobRequests[currRequestPos].fcm_id,
-      providerName:
-        jobRequests[currRequestPos].name +
-        ' ' +
-        jobRequests[currRequestPos].surName,
-      providerMobile: jobRequests[currRequestPos].mobile,
-      providerDescription: jobRequests[currRequestPos].description,
-      providerAddress: jobRequests[currRequestPos].address,
-      providerLat: jobRequests[currRequestPos].lat,
-      providerLang: jobRequests[currRequestPos].lang,
-      serviceName: jobRequests[currRequestPos].service_name,
-      isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
-      titlePage: navigation.state.params.titlePage,
-      mapKey: Math.random(2),
-      fcm_id: jobRequests[currRequestPos].fcm_id,
-      employeeLocationFetched: othersCoordinates[employee_id] ? true : false,
-      showDialog: false,
-      dialogType: null,
-      dialogTitle: '',
-      dialogDesc: '',
-      dialogLeftText: 'Cancel',
-      dialogRightText: 'Retry',
-    });
+      this.setState({
+        sourceLocation: employeeLatitude + ',' + employeeLongitude,
+        sourceLat: parseFloat(employeeLatitude),
+        sourceLng: parseFloat(employeeLongitude),
+        destinationLocation:
+          usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+        destinationLat: parseFloat(usersCoordinates.latitude),
+        destinationLng: parseFloat(usersCoordinates.longitude),
+        coords: [],
+        isLoading: true,
+        senderId: userDetails.userId,
+        senderImage: userDetails.image,
+        senderName: userDetails.username,
+        inputMessage: '',
+        dataChatSource: [],
+        currRequestPos,
+        jobRequestPos,
+        id: jobRequests[currRequestPos].id,
+        orderId: jobRequests[currRequestPos].order_id,
+        providerId: jobRequests[currRequestPos].employee_id,
+        providerImage: jobRequests[currRequestPos].image,
+        providerfcmId: jobRequests[currRequestPos].fcm_id,
+        providerName:
+          jobRequests[currRequestPos].name +
+          ' ' +
+          jobRequests[currRequestPos].surName,
+        providerMobile: jobRequests[currRequestPos].mobile,
+        providerDescription: jobRequests[currRequestPos].description,
+        providerAddress: jobRequests[currRequestPos].address,
+        providerLat: jobRequests[currRequestPos].lat,
+        providerLang: jobRequests[currRequestPos].lang,
+        serviceName: jobRequests[currRequestPos].service_name,
+        isJobAccepted: jobRequests[currRequestPos].status === 'Accepted',
+        titlePage: navigation.state.params.titlePage,
+        mapKey: Math.random(2),
+        fcm_id: jobRequests[currRequestPos].fcm_id,
+        employeeLocationFetched: othersCoordinates[employee_id] ? true : false,
+        showDialog: false,
+        dialogType: null,
+        dialogTitle: '',
+        dialogDesc: '',
+        dialogLeftText: 'Cancel',
+        dialogRightText: 'Retry',
+      });
+    }
   };
 
   componentDidMount() {
@@ -429,93 +431,100 @@ class MapDirectionScreen extends Component {
       jobsInfo: {jobRequests},
       userInfo: {userDetails},
     } = this.props;
-    const {currRequestPos} = this.state;
-    var newJobRequests = [...jobRequests];
-    const data = {
-      main_id: jobRequests[currRequestPos].id,
-      chat_status: '1',
-      status: 'Cancelled',
-      notification: {
-        fcm_id: jobRequests[currRequestPos].fcm_id,
-        title: 'Job Cancelled',
-        type: 'JobCancellation',
-        user_id: userDetails.userId,
-        employee_id: jobRequests[currRequestPos].employee_id,
-        order_id: jobRequests[currRequestPos].order_id,
-        notification_by: 'Customer',
-        save_notification: true,
-        body:
-          'Job request has been cancelled by client' +
-          ' Request Id : ' +
-          jobRequests[currRequestPos].order_id,
-        data: {
-          ProviderId: jobRequests[currRequestPos].employee_id,
-          image: jobRequests[currRequestPos].image
-            ? jobRequests[currRequestPos].image
-            : 'null',
-          fcmId: jobRequests[currRequestPos].fcm_id,
-          name: jobRequests[currRequestPos].name,
-          surname: jobRequests[currRequestPos].surname,
-          mobile: jobRequests[currRequestPos].mobile,
-          description: jobRequests[currRequestPos].description,
-          address: jobRequests[currRequestPos].address,
-          lat: jobRequests[currRequestPos].lat,
-          lang: jobRequests[currRequestPos].lang,
-          serviceName: jobRequests[currRequestPos].service_name,
-          orderId: jobRequests[currRequestPos].order_id,
-          mainId: jobRequests[currRequestPos].id,
-          chat_status: jobRequests[currRequestPos].chat_status,
-          status: 'Cancelled',
-          delivery_address: jobRequests[currRequestPos].delivery_address,
-          delivery_lat: jobRequests[currRequestPos].delivery_lat,
-          delivery_lang: jobRequests[currRequestPos].delivery_lang,
-        },
-      },
-    };
 
-    await fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-            isAcceptJob: true,
-          });
-          newJobRequests.splice(currRequestPos, 1);
-          fetchedPendingJobInfo(newJobRequests);
-          this.props.navigation.navigate('Dashboard');
-        } else {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
-            this.setState({
-              showDialog: false,
-              dialogType: null,
-            });
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'OOPS!',
-            dialogDesc: 'An error has occurred, please try again later',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        }
+    try {
+      const {currRequestPos} = this.state;
+      var newJobRequests = [...jobRequests];
+      const data = {
+        main_id: jobRequests[currRequestPos].id,
+        chat_status: '1',
+        status: 'Cancelled',
+        notification: {
+          fcm_id: jobRequests[currRequestPos].fcm_id,
+          title: 'Job Cancelled',
+          type: 'JobCancellation',
+          user_id: userDetails.userId,
+          employee_id: jobRequests[currRequestPos].employee_id,
+          order_id: jobRequests[currRequestPos].order_id,
+          notification_by: 'Customer',
+          save_notification: true,
+          body:
+            'Job request has been cancelled by client' +
+            ' Request Id : ' +
+            jobRequests[currRequestPos].order_id,
+          data: {
+            ProviderId: jobRequests[currRequestPos].employee_id,
+            image: jobRequests[currRequestPos].image
+              ? jobRequests[currRequestPos].image
+              : 'null',
+            fcmId: jobRequests[currRequestPos].fcm_id,
+            name: jobRequests[currRequestPos].name,
+            surname: jobRequests[currRequestPos].surname,
+            mobile: jobRequests[currRequestPos].mobile,
+            description: jobRequests[currRequestPos].description,
+            address: jobRequests[currRequestPos].address,
+            lat: jobRequests[currRequestPos].lat,
+            lang: jobRequests[currRequestPos].lang,
+            serviceName: jobRequests[currRequestPos].service_name,
+            orderId: jobRequests[currRequestPos].order_id,
+            mainId: jobRequests[currRequestPos].id,
+            chat_status: jobRequests[currRequestPos].chat_status,
+            status: 'Cancelled',
+            delivery_address: jobRequests[currRequestPos].delivery_address,
+            delivery_lat: jobRequests[currRequestPos].delivery_lat,
+            delivery_lang: jobRequests[currRequestPos].delivery_lang,
+          },
+        },
+      };
+      await fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        console.log('Error >>> ' + error);
-        this.setState({
-          isLoading: false,
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+            });
+            newJobRequests.splice(currRequestPos, 1);
+            fetchedPendingJobInfo(newJobRequests);
+            this.props.navigation.navigate('Dashboard');
+          } else {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'OOPS!',
+              dialogDesc: 'An error has occurred, please try again later',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Ok',
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+          });
         });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
       });
+    }
   };
 
   jobCompleteTask = async () => {
@@ -527,95 +536,101 @@ class MapDirectionScreen extends Component {
       jobsInfo: {jobRequests},
       userInfo: {userDetails},
     } = this.props;
-    const {currRequestPos} = this.state;
-    var newJobRequests = cloneDeep(jobRequests);
-    const data = {
-      main_id: jobRequests[currRequestPos].id,
-      chat_status: '1',
-      status: 'Completed',
-      notification: {
-        fcm_id: jobRequests[currRequestPos].fcm_id,
-        title: 'Job Completed',
-        body:
-          'Job Id : ' +
-          jobRequests[currRequestPos].order_id +
-          ' has been reported complete by the client: ' +
-          userDetails.username,
-        type: 'Job Completed',
-        user_id: userDetails.userId,
-        employee_id: jobRequests[currRequestPos].employee_id,
-        order_id: jobRequests[currRequestPos].order_id,
-        notification_by: 'Customer',
-        save_notification: true,
-        data: {
-          ProviderId: jobRequests[currRequestPos].employee_id,
+    try {
+      const {currRequestPos} = this.state;
+      var newJobRequests = cloneDeep(jobRequests);
+      const data = {
+        main_id: jobRequests[currRequestPos].id,
+        chat_status: '1',
+        status: 'Completed',
+        notification: {
+          fcm_id: jobRequests[currRequestPos].fcm_id,
+          title: 'Job Completed',
+          body:
+            'Job Id : ' +
+            jobRequests[currRequestPos].order_id +
+            ' has been reported complete by the client: ' +
+            userDetails.username,
+          type: 'Job Completed',
           user_id: userDetails.userId,
-          image: jobRequests[currRequestPos].image
-            ? jobRequests[currRequestPos].image
-            : 'null',
-          fcmId: jobRequests[currRequestPos].fcm_id,
-          name: jobRequests[currRequestPos].name,
-          surname: jobRequests[currRequestPos].surname,
-          mobile: jobRequests[currRequestPos].mobile,
-          description: jobRequests[currRequestPos].description,
-          address: jobRequests[currRequestPos].address,
-          lat: jobRequests[currRequestPos].lat,
-          lang: jobRequests[currRequestPos].lang,
-          serviceName: jobRequests[currRequestPos].service_name,
-          orderId: jobRequests[currRequestPos].order_id,
-          mainId: jobRequests[currRequestPos].id,
-          chat_status: jobRequests[currRequestPos].chat_status,
-          status: jobRequests[currRequestPos].status,
-          delivery_address: jobRequests[currRequestPos].delivery_address,
-          delivery_lat: jobRequests[currRequestPos].delivery_lat,
-          delivery_lang: jobRequests[currRequestPos].delivery_lang,
+          employee_id: jobRequests[currRequestPos].employee_id,
+          order_id: jobRequests[currRequestPos].order_id,
+          notification_by: 'Customer',
+          save_notification: true,
+          data: {
+            ProviderId: jobRequests[currRequestPos].employee_id,
+            user_id: userDetails.userId,
+            image: jobRequests[currRequestPos].image
+              ? jobRequests[currRequestPos].image
+              : 'null',
+            fcmId: jobRequests[currRequestPos].fcm_id,
+            name: jobRequests[currRequestPos].name,
+            surname: jobRequests[currRequestPos].surname,
+            mobile: jobRequests[currRequestPos].mobile,
+            description: jobRequests[currRequestPos].description,
+            address: jobRequests[currRequestPos].address,
+            lat: jobRequests[currRequestPos].lat,
+            lang: jobRequests[currRequestPos].lang,
+            serviceName: jobRequests[currRequestPos].service_name,
+            orderId: jobRequests[currRequestPos].order_id,
+            mainId: jobRequests[currRequestPos].id,
+            chat_status: jobRequests[currRequestPos].chat_status,
+            status: jobRequests[currRequestPos].status,
+            delivery_address: jobRequests[currRequestPos].delivery_address,
+            delivery_lat: jobRequests[currRequestPos].delivery_lat,
+            delivery_lang: jobRequests[currRequestPos].delivery_lang,
+          },
         },
-      },
-    };
-
-    await fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-            isAcceptJob: true,
-          });
-          newJobRequests.splice(currRequestPos, 1);
-          fetchedPendingJobInfo(newJobRequests);
-          this.props.navigation.navigate('Dashboard');
-        } else {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
-            this.setState({
-              showDialog: false,
-              dialogType: null,
-            });
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'OOPS!',
-            dialogDesc: 'An error has occurred, please try again later',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        }
+      };
+      await fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        console.log('Error >>> ' + error);
-        this.setState({
-          isLoading: false,
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+            });
+            newJobRequests.splice(currRequestPos, 1);
+            fetchedPendingJobInfo(newJobRequests);
+            this.props.navigation.navigate('Dashboard');
+          } else {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'OOPS!',
+              dialogDesc: 'An error has occurred, please try again later',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Ok',
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+          });
         });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
       });
+    }
   };
 
   changeDialogVisibility = () =>

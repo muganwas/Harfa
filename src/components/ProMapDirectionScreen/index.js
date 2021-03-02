@@ -278,7 +278,6 @@ class ProMapDirectionScreen extends Component {
         this.setState({
           isLoading: false,
         });
-        alert(error);
         return error;
       }
     } else {
@@ -348,40 +347,48 @@ class ProMapDirectionScreen extends Component {
       },
     };
     fetchingPendingJobInfo();
-    fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-            isAcceptJob: true,
-            showDialog: false,
-          });
-          newJobRequestsProviders.splice(currentPos, 1);
-          fetchedPendingJobInfo(newJobRequestsProviders);
-          this.props.navigation.navigate('ProDashboard');
-        } else {
-          ToastAndroid.show('Something went wrong', ToastAndroid.show);
-          this.setState({
-            isLoading: false,
-            showDialog: false,
-          });
-        }
+    try {
+      fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        console.log('Error >>> ' + error);
-        this.setState({
-          isLoading: false,
-          showDialog: false,
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+              showDialog: false,
+            });
+            newJobRequestsProviders.splice(currentPos, 1);
+            fetchedPendingJobInfo(newJobRequestsProviders);
+            this.props.navigation.navigate('ProDashboard');
+          } else {
+            ToastAndroid.show('Something went wrong', ToastAndroid.show);
+            this.setState({
+              isLoading: false,
+              showDialog: false,
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+            showDialog: false,
+          });
         });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
+        showDialog: false,
       });
+    }
   };
 
   jobCancelTask = () => {
@@ -436,41 +443,49 @@ class ProMapDirectionScreen extends Component {
     };
 
     fetchingPendingJobInfo();
-    fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-            isAcceptJob: true,
-            showDialog: false,
-          });
-
-          newJobRequestsProviders.splice(this.state.currentPos, 1);
-          fetchedPendingJobInfo(newJobRequestsProviders);
-          this.props.navigation.navigate('ProDashboard');
-        } else {
-          ToastAndroid.show('Something went wrong', ToastAndroid.show);
-          this.setState({
-            isLoading: false,
-            showDialog: false,
-          });
-        }
+    try {
+      fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       })
-      .catch(error => {
-        console.log('Error >>> ' + error);
-        this.setState({
-          isLoading: false,
-          showDialog: false,
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+              showDialog: false,
+            });
+
+            newJobRequestsProviders.splice(this.state.currentPos, 1);
+            fetchedPendingJobInfo(newJobRequestsProviders);
+            this.props.navigation.navigate('ProDashboard');
+          } else {
+            ToastAndroid.show('Something went wrong', ToastAndroid.show);
+            this.setState({
+              isLoading: false,
+              showDialog: false,
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+            showDialog: false,
+          });
         });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
+        showDialog: false,
       });
+    }
   };
 
   changeWaitingDialogVisibility = bool => {

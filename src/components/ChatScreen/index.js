@@ -398,29 +398,56 @@ class ChatScreen extends Component {
         },
       },
     };
+    try {
+      fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+              isAcceptJob: true,
+            });
 
-    fetch(REJECT_ACCEPT_REQUEST, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(responseJson => {
-        if (responseJson.result) {
-          this.setState({
-            isLoading: false,
-            isAcceptJob: true,
-          });
-
-          newJobRequests.splice(currRequestPos, 1);
-          fetchedPendingJobInfo(newJobRequests);
-          this.props.navigation.navigate('Dashboard');
-        } else {
-          this.leftButtonActon = null;
+            newJobRequests.splice(currRequestPos, 1);
+            fetchedPendingJobInfo(newJobRequests);
+            this.props.navigation.navigate('Dashboard');
+          } else {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'OOPS!',
+              dialogDesc: 'Something went wrong, try again later',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Ok',
+            });
+          }
+        })
+        .catch(error => {
+          console.log('cancellation error', error);
+          this.leftButtonActon = () => {
+            this.setState({
+              isLoading: false,
+              showDialog: false,
+              dialogType: null,
+            });
+          };
           this.rightButtonAction = () => {
+            this.jobCancelTask();
             this.setState({
               showDialog: false,
               dialogType: null,
@@ -431,38 +458,37 @@ class ChatScreen extends Component {
             showDialog: true,
             dialogType: 'fb',
             dialogTitle: 'OOPS!',
-            dialogDesc: 'Something went wrong, try again later',
+            dialogDesc: 'Something went wrong!',
             dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
+            dialogRightText: 'Retry',
           });
-        }
-      })
-      .catch(error => {
-        console.log('cancellation error', error);
-        this.leftButtonActon = () => {
-          this.setState({
-            isLoading: false,
-            showDialog: false,
-            dialogType: null,
-          });
-        };
-        this.rightButtonAction = () => {
-          this.jobCancelTask();
-          this.setState({
-            showDialog: false,
-            dialogType: null,
-          });
-        };
+        });
+    } catch (e) {
+      console.log('cancellation error', e);
+      this.leftButtonActon = () => {
         this.setState({
           isLoading: false,
-          showDialog: true,
-          dialogType: 'fb',
-          dialogTitle: 'OOPS!',
-          dialogDesc: 'Something went wrong!',
-          dialogLeftText: 'Cancel',
-          dialogRightText: 'Retry',
+          showDialog: false,
+          dialogType: null,
         });
+      };
+      this.rightButtonAction = () => {
+        this.jobCancelTask();
+        this.setState({
+          showDialog: false,
+          dialogType: null,
+        });
+      };
+      this.setState({
+        isLoading: false,
+        showDialog: true,
+        dialogType: 'fb',
+        dialogTitle: 'OOPS!',
+        dialogDesc: 'Something went wrong!',
+        dialogLeftText: 'Cancel',
+        dialogRightText: 'Retry',
       });
+    }
   };
 
   handleBackButtonClick = () => {
