@@ -260,7 +260,14 @@ class ProDashboardScreen extends Component {
 
   renderRecentMessageItem = (item, index) => {
     if (item) {
-      const {dispatchSelectedJobRequest} = this.props;
+      const {
+        dispatchSelectedJobRequest,
+        jobsInfo: {allJobRequestsProviders},
+      } = this.props;
+      let currentPos;
+      allJobRequestsProviders.map((request, index) => {
+        if (String(request.user_id) === String(item.id)) currentPos = index;
+      });
       return (
         <TouchableOpacity
           key={index}
@@ -269,7 +276,7 @@ class ProDashboardScreen extends Component {
             dispatchSelectedJobRequest({user_id: item.id});
             setTimeout(() => {
               this.props.navigation.navigate('ProChat', {
-                currentPos: index,
+                currentPos,
                 userId: item.id,
                 name: item.name,
                 image: item.image,
