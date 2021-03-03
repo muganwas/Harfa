@@ -245,6 +245,8 @@ class ProChatScreen extends Component {
     }
   };
 
+  attachFile = () => {};
+
   sendMessageTask = async () => {
     const {
       inputMessage,
@@ -358,6 +360,7 @@ class ProChatScreen extends Component {
             <MessagesFooter
               inputMesage={this.state.inputMessage}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
+              attachFileTask={this.attachFile}
               sendMessageTask={this.sendMessageTask}
               showButton={showButton}
             />

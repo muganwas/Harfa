@@ -251,6 +251,8 @@ class ProAcceptRejectJobScreen extends Component {
     }
   };
 
+  attachFile = () => {};
+
   sendMessageTask = async () => {
     const {
       inputMessage,
@@ -631,6 +633,7 @@ class ProAcceptRejectJobScreen extends Component {
             <MessagesFooter
               inputMesage={this.state.inputMessage}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
+              attachFileTask={this.attachFile}
               sendMessageTask={this.sendMessageTask}
               showButton={this.state.showButton}
             />

@@ -28,6 +28,7 @@ import {
 import moment from 'moment';
 import {cloneDeep, clone} from 'lodash';
 import database from '@react-native-firebase/database';
+import DocumentPicker from 'react-native-document-picker';
 import DialogComponent from '../DialogComponent';
 import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
 import Config from '../Config';
@@ -272,6 +273,12 @@ class ChatScreen extends Component {
         showButton: true,
       });
     }
+  };
+
+  attachFile = async () => {
+    await DocumentPicker.pick().then(info => {
+      console.log('file info', info);
+    });
   };
 
   sendMessageTask = async () => {
@@ -616,6 +623,7 @@ class ChatScreen extends Component {
             <MessagesFooter
               sendMessageTask={this.sendMessageTask}
               showButton={showButton}
+              attachFileTask={this.attachFile}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
               inputMesage={this.state.inputMessage}
             />
