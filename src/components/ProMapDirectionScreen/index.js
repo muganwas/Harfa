@@ -741,7 +741,6 @@ class ProMapDirectionScreen extends Component {
                         source={require('../../icons/call.png')}
                       />
                     </TouchableOpacity>
-
                     <TouchableOpacity
                       style={{
                         width: 40,
