@@ -27,8 +27,9 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import {cloneDeep, clone} from 'lodash';
+import SimpleToast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
-import DocumentPicker from 'react-native-document-picker';
+import FilePickerManager from 'react-native-file-picker';
 import DialogComponent from '../DialogComponent';
 import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
 import Config from '../Config';
@@ -78,6 +79,7 @@ class ChatScreen extends Component {
       dialogDesc: '',
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
+      uploadingImage: false,
     };
     this.leftButtonActon = null;
     this.rightButtonAction = null;
@@ -276,12 +278,55 @@ class ChatScreen extends Component {
   };
 
   attachFile = async () => {
-    await DocumentPicker.pick().then(info => {
-      console.log('file info', info);
-    });
+    try {
+      FilePickerManager.showFilePicker(null, async response => {
+        this.setState({uploadingImage: true});
+        let urlText = response.uri;
+        const ext = response.fileName.split('.').pop();
+        const altMessage = {
+          name: response.fileName,
+          ext,
+          fileType: response.type,
+          uri: urlText,
+        };
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            local: true,
+            time,
+            type: 'image',
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            local: true,
+            type: 'image',
+            time,
+            date,
+          });
+        }
+        dbMessagesFetched(newMessages);
+        const newUrlText = await uploadAttachment(response);
+        altMessage.uri = newUrlText;
+        if (newUrlText) {
+          this.sendMessageTask('image', altMessage);
+          this.setState({uploadingImage: false});
+        }
+      });
+    } catch (e) {
+      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
+    }
   };
 
-  sendMessageTask = async () => {
+  sendMessageTask = async (type = 'text', altMessage) => {
     const {
       inputMessage,
       senderId,
@@ -307,11 +352,12 @@ class ChatScreen extends Component {
       inputMessage: '',
       showButton: false,
     });
-    if (inputMessage.length > 0) {
+    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
-        type: 'text',
+        type,
         userType: 'client',
-        textMessage: inputMessage,
+        textMessage: inputMessage || altMessage.uri,
+        file: altMessage,
         senderId,
         senderName,
         senderImage,
@@ -324,25 +370,31 @@ class ChatScreen extends Component {
         time,
         date,
       };
-      if (newMessages[receiverId])
-        newMessages[receiverId].push({
-          message: inputMessage,
-          recipient: receiverId,
-          sender: senderId,
-          time,
-          date,
-        });
-      else {
-        newMessages[receiverId] = [];
-        newMessages[receiverId].push({
-          message: inputMessage,
-          recipient: receiverId,
-          sender: senderId,
-          time,
-          date,
-        });
+      if (type === 'text') {
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            type,
+            file: altMessage,
+            message: inputMessage || altMessage.uri,
+            recipient: receiverId,
+            sender: senderId,
+            time,
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            type,
+            file: altMessage,
+            message: inputMessage || altMessage.uri,
+            recipient: receiverId,
+            sender: senderId,
+            time,
+            date,
+          });
+        }
+        dbMessagesFetched(newMessages);
       }
-      dbMessagesFetched(newMessages);
       socket.emit('sent-message', messageObj);
     }
   };
@@ -559,6 +611,7 @@ class ChatScreen extends Component {
             receiverImage={this.state.receiverImage}
             receiverName={this.state.receiverName}
             online={online}
+            uploadingImage={this.state.uploadingImage}
             handleBackButtonClick={this.handleBackButtonClick}
           />
           <ScrollView

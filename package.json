@@ -38,6 +38,7 @@
     "react-native-exit-app": "^1.1.0",
     "react-native-fbsdk": "^1.1.2",
     "react-native-file-picker": "^0.0.19",
+    "react-native-fs": "^2.16.6",
     "react-native-geocoding": "^0.4.0",
     "react-native-geolocation-service": "^3.1.0",
     "react-native-gesture-handler": "^1.4.1",

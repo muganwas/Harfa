@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import {cloneDeep} from 'lodash';
+import FilePickerManager from 'react-native-file-picker';
 import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
 import database from '@react-native-firebase/database';
 import Config from '../Config';

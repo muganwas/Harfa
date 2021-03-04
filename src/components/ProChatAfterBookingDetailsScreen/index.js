@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import {cloneDeep} from 'lodash';
+import FilePickerManager from 'react-native-file-picker';
 import moment from 'moment';
 import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
 import Config from '../Config';

@@ -25,7 +25,7 @@ import {
   notificationsFetched,
   notificationError,
 } from '../../Redux/Actions/notificationActions';
-import {imageExists, chatDate} from '../../misc/helpers';
+import {imageExists} from '../../misc/helpers';
 import {uploadAttachment} from '../../controllers/storage';
 import Config from '../Config';
 import {lightGray, colorBg, white} from '../../Constants/colors';
@@ -34,7 +34,7 @@ import {
   MessagesHeader,
   MessagesView,
 } from '../MessagesComponents';
-import style from './styles';
+import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
@@ -253,18 +253,65 @@ class ChatAfterBookingDetailsScreen extends Component {
   };
 
   attachFile = async () => {
+    const {senderId, receiverId} = this.state;
+    const {dbMessagesFetched, messagesInfo} = this.props;
+    let newMessages = cloneDeep(messagesInfo.messages);
+    const time = moment().toISOString();
+    const date =
+      new Date().getDate() +
+      '/' +
+      (new Date().getMonth() + 1) +
+      '/' +
+      new Date().getFullYear();
+    this.setState({
+      inputMessage: '',
+      showButton: false,
+    });
     try {
       FilePickerManager.showFilePicker(null, async response => {
         this.setState({uploadingImage: true});
-        const urlText = await uploadAttachment(response);
-        console.log('url text', urlText);
-        if (urlText) {
-          this.sendMessageTask('image', urlText);
+        let urlText = response.uri;
+        const ext = response.fileName.split('.').pop();
+        const altMessage = {
+          name: response.fileName,
+          ext,
+          fileType: response.type,
+          uri: urlText,
+        };
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            local: true,
+            time,
+            type: 'image',
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            local: true,
+            type: 'image',
+            time,
+            date,
+          });
+        }
+        dbMessagesFetched(newMessages);
+        const newUrlText = await uploadAttachment(response);
+        altMessage.uri = newUrlText;
+        if (newUrlText) {
+          this.sendMessageTask('image', altMessage);
           this.setState({uploadingImage: false});
         }
       });
     } catch (e) {
-      console.log('select upload error', e);
+      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
     }
   };
 
@@ -294,11 +341,12 @@ class ChatAfterBookingDetailsScreen extends Component {
       inputMessage: '',
       showButton: false,
     });
-    if (inputMessage.length > 0 || (altMessage && altMessage.length > 0)) {
+    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
         type,
         userType: 'client',
-        textMessage: inputMessage || altMessage,
+        textMessage: inputMessage || altMessage.uri,
+        file: altMessage,
         senderId,
         senderName,
         senderImage,
@@ -311,97 +359,31 @@ class ChatAfterBookingDetailsScreen extends Component {
         time,
         date,
       };
-      if (newMessages[receiverId])
-        newMessages[receiverId].push({
-          message: inputMessage || altMessage,
-          recipient: receiverId,
-          sender: senderId,
-          time,
-          type,
-          date,
-        });
-      else {
-        newMessages[receiverId] = [];
-        newMessages[receiverId].push({
-          message: inputMessage || altMessage,
-          recipient: receiverId,
-          sender: senderId,
-          type,
-          time,
-          date,
-        });
+      if (type === 'text') {
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            message: inputMessage,
+            recipient: receiverId,
+            sender: senderId,
+            time,
+            type,
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            message: inputMessage,
+            recipient: receiverId,
+            sender: senderId,
+            type,
+            time,
+            date,
+          });
+        }
+        dbMessagesFetched(newMessages);
       }
-      dbMessagesFetched(newMessages);
       socket.emit('sent-message', messageObj);
     }
-  };
-
-  renderMessages = () => {
-    const {senderId, receiverId} = this.state;
-    const {
-      messagesInfo: {messages},
-    } = this.props;
-    return (
-      <View
-        style={{
-          width: screenWidth,
-          flex: 1,
-          alignContent: 'flex-start',
-          justifyContent: 'flex-start',
-          alignItems: 'flex-start',
-        }}>
-        {Object.keys(messages).map(key => {
-          const usersMessages = messages[key];
-          // display messages from selected user
-          if (String(key) === String(receiverId)) {
-            return (
-              <View key={key} style={style.messagesSubContainer}>
-                {Object.keys(usersMessages).map(key => {
-                  const sender = usersMessages[key].sender;
-                  const message = usersMessages[key].message;
-                  const time = usersMessages[key].time;
-                  if (String(sender) === String(receiverId)) {
-                    return (
-                      <View key={key} style={style.recievedContainer}>
-                        <View style={style.recievedMsgContainer}>
-                          <Text style={style.chatTime}>{chatDate(time)}</Text>
-                          {message.type === 'text' ||
-                            (!message.type && (
-                              <Text style={style.recievedMsg}>{message}</Text>
-                            ))}
-                          {message.type == 'image' && (
-                            <TouchableOpacity style={style.fileMessage}>
-                              <Text>- File -</Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      </View>
-                    );
-                  } else if (String(sender) === String(senderId)) {
-                    return (
-                      <View key={key} style={style.sentContainer}>
-                        <View style={style.sentMsgContainer}>
-                          <Text style={style.chatTime}>{chatDate(time)}</Text>
-                          {message.type === 'text' ||
-                            (!message.type && (
-                              <Text style={style.sentMsg}>{message}</Text>
-                            ))}
-                          {message.type == 'image' && (
-                            <TouchableOpacity style={style.fileMessage}>
-                              <Text>- File -</Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      </View>
-                    );
-                  } else return;
-                })}
-              </View>
-            );
-          }
-        })}
-      </View>
-    );
   };
 
   renderSeparator = () => {
@@ -440,7 +422,11 @@ class ChatAfterBookingDetailsScreen extends Component {
             }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag">
-            <MessagesView receiverId={receiverId} senderId={senderId} />
+            <MessagesView
+              receiverId={receiverId}
+              senderId={senderId}
+              uploadingImage={this.state.uploadingImage}
+            />
           </ScrollView>
           {this.state.isLoading && (
             <View style={styles.loaderStyle}>

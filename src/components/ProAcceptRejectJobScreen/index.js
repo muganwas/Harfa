@@ -16,6 +16,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import {withNavigation} from 'react-navigation';
+import FilePickerManager from 'react-native-file-picker';
 import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
