@@ -85,11 +85,10 @@ class DashboardScreen extends Component {
   };
 
   //Get All Services
-  async componentDidMount() {
-    await this.onRefresh(this.props);
+  componentDidMount = () => {
     const {navigation} = this.props;
     navigation.addListener('willFocus', async () => {
-      await this.onRefresh(this.props);
+      this.onRefresh();
       BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
     });
     navigation.addListener('willBlur', () => {
@@ -98,7 +97,7 @@ class DashboardScreen extends Component {
         this.handleBackButton,
       );
     });
-  }
+  };
 
   _spring = () => {
     this.setState({backClickCount: 1}, () => {
@@ -227,18 +226,19 @@ class DashboardScreen extends Component {
     return <View style={{height: 1, width: '100%', backgroundColor: black}} />;
   };
 
-  onRefresh = async props => {
+  onRefresh = async () => {
     const {
       getAllWorkRequestClient,
       getPendingJobRequest,
       userInfo: {userDetails},
-    } = props;
+    } = this.props;
     if (
       !this.state.dataSource ||
       (this.state.dataSource && this.state.dataSource.length === 0)
     ) {
+      this.setState({isLoading: true});
       try {
-        fetch(SERVICES_URL)
+        await fetch(SERVICES_URL)
           .then(response => response.json())
           .then(responseJson => {
             this.setState({
@@ -256,7 +256,6 @@ class DashboardScreen extends Component {
             );
           });
       } catch (e) {
-        console.log(e);
         this.setState({
           isLoading: false,
         });
@@ -267,9 +266,9 @@ class DashboardScreen extends Component {
         isLoading: false,
       });
     }
-    await getPendingJobRequest(this.props, userDetails.userId);
     await getAllWorkRequestClient(userDetails.userId);
-    return true;
+    await getPendingJobRequest(this.props, userDetails.userId);
+    this.setState({isLoading: false});
   };
 
   goToNextPage = (chat_status, jobInfo) => {

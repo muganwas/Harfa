@@ -122,7 +122,6 @@ class ProDashboardScreen extends Component {
   componentDidMount = () => {
     this.initiateProps();
     const {navigation} = this.props;
-    this.onRefresh();
     navigation.addListener('willFocus', () => {
       this.initiateProps();
       this.onRefresh();

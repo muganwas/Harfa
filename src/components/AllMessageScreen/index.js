@@ -15,7 +15,6 @@ import {
   Platform,
   Animated,
 } from 'react-native';
-import _ from 'lodash';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -312,6 +311,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
+    marginVertical: 2,
     shadowRadius: 5,
     borderRadius: 5,
     elevation: 5,
