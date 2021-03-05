@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {connect} from 'react-redux';
 import {
   View,
@@ -7,7 +7,12 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import _ from 'lodash';
+import RNFS from 'react-native-fs';
+import AsyncStorage from '@react-native-community/async-storage';
+import RNFetchBlob from 'rn-fetch-blob';
 import {chatDate} from '../../misc/helpers';
 import XlsIcon from '../../images/svg/xls.svg';
 import PdfIcon from '../../images/svg/pdf.svg';
@@ -22,8 +27,11 @@ import TextIcon from '../../images/svg/txt.svg';
 import ZipIcon from '../../images/svg/zip.svg';
 import style from './styles';
 import PropTypes from 'prop-types';
+import SimpleToast from 'react-native-simple-toast';
+import {white} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
+const Android = Platform.OS === 'android';
 
 const ProMessagesComponent = ({
   senderId,
@@ -31,32 +39,132 @@ const ProMessagesComponent = ({
   messagesInfo,
   uploadingImage,
 }) => {
-  const downloadFile = () => {};
+  const [downloading, updateDownloading] = useState({});
+  const downloadFile = ({name, fileType, url, key, index}) => {
+    let newDownloading = _.cloneDeep(downloading);
+    let path = RNFS.DocumentDirectoryPath + '/' + name;
+    let DownloadFileOptions = {
+      fromUrl: url,
+      toFile: path,
+      //headers: Headers,
+      background: true,
+      cacheable: true,
+      progressDivider: 1,
+      discretionary: true,
+      begin: res => {
+        let {statusCode} = res;
+        if (statusCode === 200) {
+          let newDownloading = _.cloneDeep(downloading);
+          if (newDownloading[key]) {
+            newDownloading[key][index] = {
+              percentage: 1,
+              path,
+              name,
+            };
+          } else {
+            newDownloading[key] = {
+              [index]: {
+                percentage: 1,
+                path,
+                name,
+              },
+            };
+          }
+          updateDownloading(newDownloading);
+        }
+      },
+      progress: prog => {
+        let newDownloading = _.cloneDeep(downloading);
+        let {bytesWritten, contentLength} = prog;
+        let percentage = (bytesWritten / contentLength) * 100;
+        if (newDownloading[key]) {
+          if (newDownloading[key][index])
+            newDownloading[key][index].percentage = percentage;
+          else newDownloading[key][index] = {percentage, path, name};
+        } else {
+          newDownloading[key] = {
+            [index]: {percentage, path, name},
+          };
+        }
+        console.log('download info', newDownloading);
+        updateDownloading(newDownloading);
+      },
+    };
+    if (
+      !newDownloading[key] ||
+      (newDownloading[key] && !newDownloading[key][index])
+    ) {
+      RNFS.downloadFile(DownloadFileOptions)
+        .promise.then(async () => {
+          let newDownloading = _.cloneDeep(downloading);
+          let newPath = !Android ? 'file:////' + path : path;
+          /** Some small files don't record progress so manual progress update is required */
+          if (newDownloading[key] && newDownloading[key][index]) {
+            newDownloading[key][index].percentage = 100;
+          }
+          await AsyncStorage.getItem('downloadedFiles').then(
+            async downloadedInfo => {
+              if (!downloadedInfo) {
+                let newDownloadedInfo = {
+                  name: newPath,
+                };
+                await AsyncStorage.setItem(
+                  'downloadedFiles',
+                  JSON.stringify(newDownloadedInfo),
+                );
+              } else {
+                let newDownloadedInfo = JSON.parse(downloadedInfo);
+                newDownloadedInfo[name] = newPath;
+                await AsyncStorage.setItem(
+                  'downloadedFiles',
+                  JSON.stringify(newDownloadedInfo),
+                );
+                /** Open file for Android onlhy */
+                Android
+                  ? RNFetchBlob.android.actionViewIntent(newPath, fileType)
+                  : null;
+              }
+            },
+          );
+        })
+        .catch(err => {
+          let newDownloading = _.cloneDeep(downloading);
+          if (newDownloading[key]) {
+            if (newDownloading[key][index]) delete newDownloading[key][index];
+          }
+          updateDownloading(newDownloading);
+          SimpleToast.show(
+            'Something went wrong with the download, try again later.',
+            SimpleToast.SHORT,
+          );
+        });
+    }
+  };
   const renderIcon = (ext, message) => {
     return (
       <>
         {ext === 'pdf' ? (
-          <PdfIcon fill={'white'} />
+          <PdfIcon fill={white} />
         ) : ext === 'doc' ? (
           ext === 'docx' ? (
-            <DocXIcon fill={'white'} />
+            <DocXIcon fill={white} />
           ) : ext === 'txt' || ext === 'rtf' ? (
-            <TextIcon fill={'white'} />
+            <TextIcon fill={white} />
           ) : (
-            <DocIcon fill={'white'} />
+            <DocIcon fill={white} />
           )
         ) : ext === 'xls' ? (
-          <XlsIcon fill={'white'} />
+          <XlsIcon fill={white} />
         ) : ext === 'zip' || ext === 'rar' ? (
-          <ZipIcon fill={'white'} />
+          <ZipIcon fill={white} />
         ) : ext === 'MP4' ? (
-          <Mp4Icon fill={'white'} />
+          <Mp4Icon fill={white} />
         ) : ext === 'MOV' ? (
-          <MovIcon fill={'white'} />
+          <MovIcon fill={white} />
         ) : ext === 'ppt' || ext === 'pptx' ? (
-          <PptIcon fill={'white'} />
+          <PptIcon fill={white} />
         ) : ext === 'tif' || ext == 'tiff' ? (
-          <TiffIcon fill={'white'} />
+          <TiffIcon fill={white} />
         ) : ext === 'jpg' || ext === 'png' || ext === 'gif' ? (
           <Image
             source={{
@@ -66,7 +174,7 @@ const ProMessagesComponent = ({
             resizeMode={'contain'}
           />
         ) : (
-          <GenericDocIcon fill={'white'} />
+          <GenericDocIcon fill={white} />
         )}
       </>
     );
@@ -90,18 +198,22 @@ const ProMessagesComponent = ({
             if (String(key) === String(receiverId)) {
               return (
                 <View key={key} style={style.messagesSubContainer}>
-                  {Object.keys(usersMessages).map(key => {
-                    const sender = usersMessages[key].sender;
-                    const local = usersMessages[key].local;
-                    const type = usersMessages[key].type;
-                    const file = usersMessages[key].file;
+                  {usersMessages.map((messageInfo, index) => {
+                    const {
+                      sender,
+                      local,
+                      type,
+                      notUploaded,
+                      file,
+                      message,
+                      time,
+                    } = messageInfo;
                     const file_name = file && file.name;
                     const ext = file && file.ext;
-                    const message = usersMessages[key].message;
-                    const time = usersMessages[key].time;
+                    //console.log('message --', messageInfo);
                     if (String(sender) === String(receiverId)) {
                       return (
-                        <View key={key} style={style.recievedContainer}>
+                        <View key={index} style={style.recievedContainer}>
                           <View style={style.recievedMsgContainer}>
                             <Text style={style.chatTime}>{chatDate(time)}</Text>
                             {(type === 'text' || !type) && (
@@ -109,9 +221,57 @@ const ProMessagesComponent = ({
                             )}
                             {type === 'image' && (
                               <>
-                                <TouchableOpacity onPress={downloadFile}>
+                                <TouchableOpacity
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    width: 100,
+                                    marginHorizontal: 3,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                  onPress={() => {
+                                    if (
+                                      downloading[key] &&
+                                      downloading[key][index] &&
+                                      downloading[key][index].percentage > 90
+                                    )
+                                      Android
+                                        ? RNFetchBlob.android.actionViewIntent(
+                                            downloading[key][index].path,
+                                            file.fileType,
+                                          )
+                                        : null;
+                                    else
+                                      downloadFile({
+                                        name: file_name,
+                                        fileType: file.fileType,
+                                        url: message,
+                                        key,
+                                        index,
+                                      });
+                                  }}>
                                   {renderIcon(ext, message)}
                                 </TouchableOpacity>
+                                {downloading[key] &&
+                                  downloading[key][index] &&
+                                  downloading[key][index].percentage > 0 &&
+                                  downloading[key][index].percentage < 90 && (
+                                    <View
+                                      style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        width: 100,
+                                        marginHorizontal: 3,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                      }}>
+                                      <ActivityIndicator
+                                        color="white"
+                                        size="small"
+                                      />
+                                    </View>
+                                  )}
                                 {file_name && (
                                   <Text style={style.recievedMsg}>
                                     {file_name.length > 10
@@ -126,7 +286,7 @@ const ProMessagesComponent = ({
                       );
                     } else if (String(sender) === String(senderId)) {
                       return (
-                        <View key={key} style={style.sentContainer}>
+                        <View key={index} style={style.sentContainer}>
                           <View style={style.sentMsgContainer}>
                             <Text style={style.chatTime}>{chatDate(time)}</Text>
                             {(type === 'text' || !type) && (
@@ -134,7 +294,7 @@ const ProMessagesComponent = ({
                             )}
                             {type === 'image' && (
                               <>
-                                {local && uploadingImage ? (
+                                {local && notUploaded && uploadingImage ? (
                                   <ActivityIndicator
                                     style={{height: 80}}
                                     color="red"
@@ -142,9 +302,61 @@ const ProMessagesComponent = ({
                                   />
                                 ) : (
                                   <>
-                                    <TouchableOpacity onPress={downloadFile}>
+                                    <TouchableOpacity
+                                      style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        width: 100,
+                                        marginHorizontal: 3,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                      }}
+                                      onPress={() => {
+                                        if (
+                                          local ||
+                                          (downloading[key] &&
+                                            downloading[key][index] &&
+                                            downloading[key][index].percentage >
+                                              90)
+                                        )
+                                          Android
+                                            ? RNFetchBlob.android.actionViewIntent(
+                                                downloading[key][index].path ||
+                                                  file.path,
+                                                file.fileType,
+                                              )
+                                            : null;
+                                        else
+                                          downloadFile({
+                                            name: file_name,
+                                            fileType: file.fileType,
+                                            url: message,
+                                            key,
+                                            index,
+                                          });
+                                      }}>
                                       {renderIcon(ext, message)}
                                     </TouchableOpacity>
+                                    {downloading[key] &&
+                                      downloading[key][index] &&
+                                      downloading[key][index].percentage > 0 &&
+                                      downloading[key][index].percentage <
+                                        90 && (
+                                        <View
+                                          style={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            width: 100,
+                                            marginHorizontal: 3,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                          }}>
+                                          <ActivityIndicator
+                                            color="white"
+                                            size="small"
+                                          />
+                                        </View>
+                                      )}
                                     {file_name && (
                                       <Text style={style.sentMsg}>
                                         {file_name.length > 10

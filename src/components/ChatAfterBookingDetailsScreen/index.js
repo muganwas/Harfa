@@ -277,6 +277,7 @@ class ChatAfterBookingDetailsScreen extends Component {
           ext,
           fileType: response.type,
           uri: urlText,
+          path: response.path,
         };
         if (newMessages[receiverId])
           newMessages[receiverId].push({
@@ -285,6 +286,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             recipient: receiverId,
             sender: senderId,
             local: true,
+            notUploaded: true,
             time,
             type: 'image',
             date,
@@ -296,6 +298,7 @@ class ChatAfterBookingDetailsScreen extends Component {
             file: altMessage,
             recipient: receiverId,
             sender: senderId,
+            notUploaded: true,
             local: true,
             type: 'image',
             time,
@@ -303,6 +306,7 @@ class ChatAfterBookingDetailsScreen extends Component {
           });
         }
         dbMessagesFetched(newMessages);
+        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
         const newUrlText = await uploadAttachment(response);
         altMessage.uri = newUrlText;
         if (newUrlText) {
@@ -380,8 +384,13 @@ class ChatAfterBookingDetailsScreen extends Component {
             date,
           });
         }
+      } else {
+        newMessages[receiverId][
+          newMessages[receiverId].length - 1
+        ].notUploaded = false;
         dbMessagesFetched(newMessages);
       }
+      dbMessagesFetched(newMessages);
       socket.emit('sent-message', messageObj);
     }
   };
@@ -420,12 +429,16 @@ class ChatAfterBookingDetailsScreen extends Component {
               alignItems: 'center',
               alwaysBounceVertical: true,
             }}
+            onContentSizeChange={(contentWidth, contentHeight) => {
+              this.scrollView.scrollToEnd({animated: true});
+            }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag">
             <MessagesView
               receiverId={receiverId}
               senderId={senderId}
               uploadingImage={this.state.uploadingImage}
+              messagesInfo={this.props.messagesInfo}
             />
           </ScrollView>
           {this.state.isLoading && (

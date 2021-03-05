@@ -31,7 +31,9 @@ const MessagesFooter = ({
           }
         />
         {showButton && (
-          <TouchableOpacity style={style.sendButton} onPress={sendMessageTask}>
+          <TouchableOpacity
+            style={style.sendButton}
+            onPress={() => sendMessageTask('text')}>
             <Image
               style={style.sendButtonImg}
               source={require('../../images/png/paper-plane-thicc.png')}

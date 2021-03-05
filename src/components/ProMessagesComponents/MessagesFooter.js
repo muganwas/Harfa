@@ -31,7 +31,9 @@ const MessagesFooter = ({
           }}
         />
         {showButton && (
-          <TouchableOpacity style={style.sendButton} onPress={sendMessageTask}>
+          <TouchableOpacity
+            style={style.sendButton}
+            onPress={() => sendMessageTask('text')}>
             <Image
               style={style.sendButtonImg}
               source={require('../../images/png/paper-plane-thicc.png')}
@@ -47,7 +49,7 @@ MessagesFooter.propTypes = {
   inputMesage: PropTypes.string,
   textChangeAction: PropTypes.func.isRequired,
   sendMessageTask: PropTypes.func.isRequired,
-  attachFileTast: PropTypes.func.isRequired,
+  attachFileTask: PropTypes.func.isRequired,
   showButton: PropTypes.bool.isRequired,
 };
 

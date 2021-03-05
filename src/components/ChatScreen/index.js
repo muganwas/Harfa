@@ -278,6 +278,20 @@ class ChatScreen extends Component {
   };
 
   attachFile = async () => {
+    const {senderId, receiverId} = this.state;
+    const {dbMessagesFetched, messagesInfo} = this.props;
+    let newMessages = cloneDeep(messagesInfo.messages);
+    const time = moment().toISOString();
+    const date =
+      new Date().getDate() +
+      '/' +
+      (new Date().getMonth() + 1) +
+      '/' +
+      new Date().getFullYear();
+    this.setState({
+      inputMessage: '',
+      showButton: false,
+    });
     try {
       FilePickerManager.showFilePicker(null, async response => {
         this.setState({uploadingImage: true});
@@ -288,6 +302,7 @@ class ChatScreen extends Component {
           ext,
           fileType: response.type,
           uri: urlText,
+          path: response.path,
         };
         if (newMessages[receiverId])
           newMessages[receiverId].push({
@@ -296,6 +311,7 @@ class ChatScreen extends Component {
             recipient: receiverId,
             sender: senderId,
             local: true,
+            notUploaded: true,
             time,
             type: 'image',
             date,
@@ -307,6 +323,7 @@ class ChatScreen extends Component {
             file: altMessage,
             recipient: receiverId,
             sender: senderId,
+            notUploaded: true,
             local: true,
             type: 'image',
             time,
@@ -314,6 +331,7 @@ class ChatScreen extends Component {
           });
         }
         dbMessagesFetched(newMessages);
+        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
         const newUrlText = await uploadAttachment(response);
         altMessage.uri = newUrlText;
         if (newUrlText) {
@@ -340,7 +358,7 @@ class ChatScreen extends Component {
       orderId,
     } = this.state;
     const {dbMessagesFetched, messagesInfo} = this.props;
-    const newMessages = cloneDeep(messagesInfo.messages);
+    let newMessages = cloneDeep(messagesInfo.messages);
     const time = moment().toISOString();
     const date =
       new Date().getDate() +
@@ -373,28 +391,30 @@ class ChatScreen extends Component {
       if (type === 'text') {
         if (newMessages[receiverId])
           newMessages[receiverId].push({
-            type,
-            file: altMessage,
-            message: inputMessage || altMessage.uri,
+            message: inputMessage,
             recipient: receiverId,
             sender: senderId,
             time,
+            type,
             date,
           });
         else {
           newMessages[receiverId] = [];
           newMessages[receiverId].push({
-            type,
-            file: altMessage,
-            message: inputMessage || altMessage.uri,
+            message: inputMessage,
             recipient: receiverId,
             sender: senderId,
+            type,
             time,
             date,
           });
         }
-        dbMessagesFetched(newMessages);
+      } else {
+        newMessages[receiverId][
+          newMessages[receiverId].length - 1
+        ].notUploaded = false;
       }
+      dbMessagesFetched(newMessages);
       socket.emit('sent-message', messageObj);
     }
   };

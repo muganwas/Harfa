@@ -236,6 +236,7 @@ class DashboardScreen extends Component {
       !this.state.dataSource ||
       (this.state.dataSource && this.state.dataSource.length === 0)
     ) {
+      this.setState({isLoading: true});
       try {
         await fetch(SERVICES_URL)
           .then(response => response.json())
@@ -267,6 +268,7 @@ class DashboardScreen extends Component {
     }
     await getAllWorkRequestClient(userDetails.userId);
     await getPendingJobRequest(this.props, userDetails.userId);
+    this.setState({isLoading: false});
   };
 
   goToNextPage = (chat_status, jobInfo) => {

@@ -82,6 +82,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
       selectedStatus: '0',
       liveChatStatus: OnlineUsers[user_id] ? OnlineUsers[user_id].status : '0',
       online: false,
+      uploadingImage: false,
     };
   }
 
@@ -234,9 +235,74 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
   };
 
-  attachFile = () => {};
+  attachFile = async () => {
+    const {senderId, receiverId} = this.state;
+    const {dbMessagesFetched, messagesInfo} = this.props;
+    let newMessages = cloneDeep(messagesInfo.messages);
+    const time = moment().toISOString();
+    const date =
+      new Date().getDate() +
+      '/' +
+      (new Date().getMonth() + 1) +
+      '/' +
+      new Date().getFullYear();
+    this.setState({
+      inputMessage: '',
+      showButton: false,
+    });
+    try {
+      FilePickerManager.showFilePicker(null, async response => {
+        this.setState({uploadingImage: true});
+        let urlText = response.uri;
+        const ext = response.fileName.split('.').pop();
+        const altMessage = {
+          name: response.fileName,
+          ext,
+          fileType: response.type,
+          uri: urlText,
+          path: response.path,
+        };
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            local: true,
+            notUploaded: true,
+            time,
+            type: 'image',
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            notUploaded: true,
+            local: true,
+            type: 'image',
+            time,
+            date,
+          });
+        }
+        dbMessagesFetched(newMessages);
+        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
+        const newUrlText = await uploadAttachment(response);
+        altMessage.uri = newUrlText;
+        if (newUrlText) {
+          this.sendMessageTask('image', altMessage);
+          this.setState({uploadingImage: false});
+        }
+      });
+    } catch (e) {
+      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
+    }
+  };
 
-  sendMessageTask = async () => {
+  sendMessageTask = async (type = 'text', altMessage) => {
     const {
       inputMessage,
       senderId,
@@ -262,7 +328,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
       (new Date().getMonth() + 1) +
       '/' +
       new Date().getFullYear();
-    if (inputMessage.length > 0) {
+    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
         type: 'text',
         userType: 'employee',
@@ -276,26 +342,35 @@ class ProChatAfterBookingDetailsScreen extends Component {
         receiverName,
         serviceName,
         orderId,
+        type,
         time,
         date,
       };
-      if (newMessages[receiverId])
-        newMessages[receiverId].push({
-          message: inputMessage,
-          recipient: receiverId,
-          sender: senderId,
-          time,
-          date,
-        });
-      else {
-        newMessages[receiverId] = [];
-        newMessages[receiverId].push({
-          message: inputMessage,
-          recipient: receiverId,
-          sender: senderId,
-          time,
-          date,
-        });
+      if (type === 'text') {
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            message: inputMessage,
+            recipient: receiverId,
+            sender: senderId,
+            type,
+            time,
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            message: inputMessage,
+            recipient: receiverId,
+            sender: senderId,
+            type,
+            time,
+            date,
+          });
+        }
+      } else {
+        newMessages[receiverId][
+          newMessages[receiverId].length - 1
+        ].notUploaded = false;
       }
       dbMessagesFetched(newMessages);
       socket.emit('sent-message', messageObj);
@@ -329,10 +404,18 @@ class ProChatAfterBookingDetailsScreen extends Component {
               alignItems: 'center',
               alwaysBounceVertical: true,
             }}
+            onContentSizeChange={(contentWidth, contentHeight) => {
+              this.scrollView.scrollToEnd({animated: true});
+            }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag">
             <View style={{flexDirection: 'column', marginBottom: 45}}>
-              <MessagesView senderId={senderId} receiverId={receiverId} />
+              <MessagesView
+                senderId={senderId}
+                receiverId={receiverId}
+                uploadingImage={this.state.uploadingImage}
+                messagesInfo={this.props.messagesInfo}
+              />
             </View>
           </ScrollView>
 
