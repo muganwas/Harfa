@@ -104,8 +104,6 @@ class ProHamburger extends React.Component {
       userInfo: {providerDetails},
     } = this.props;
     const receiverId = providerDetails.providerId;
-    await this.fetchOthersLocations();
-    await this.checkForUserType();
     messaging().setBackgroundMessageHandler(message => {
       if (message && message.data) {
         const data = JSON.parse(message.data.data);
@@ -131,7 +129,7 @@ class ProHamburger extends React.Component {
       }
       const orderId = data.order_id;
       let pos = 0;
-      await jobRequestsProviders.map((obj, key) => {
+      jobRequestsProviders.map((obj, key) => {
         if (orderId === obj.order_Id) pos = key;
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
@@ -158,6 +156,8 @@ class ProHamburger extends React.Component {
         navigation.navigate('ProHome');
       }
     });
+    await this.fetchOthersLocations();
+    await this.checkForUserType();
     try {
       await Axios.get(
         FETCH_MESSAGES + '?sender=' + receiverId + '&userType=employee',

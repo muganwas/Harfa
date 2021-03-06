@@ -105,8 +105,6 @@ class Hamburger extends React.Component {
     } = this.props;
     const senderId = userDetails.userId;
     const locationRef = database().ref(`liveLocation/${senderId}`);
-    await this.checkNoficationsAvailability();
-    await this.checkForUserType();
     messaging().setBackgroundMessageHandler(message => {
       if (message && message.data) {
         const data = JSON.parse(message.data.data);
@@ -139,7 +137,7 @@ class Hamburger extends React.Component {
       let newJobRequests = cloneDeep(jobRequests);
       const orderId = data.orderId;
       let pos = 0;
-      await jobRequests.map((obj, key) => {
+      jobRequests.map((obj, key) => {
         if (orderId === obj.order_Id) pos = key;
       });
 
@@ -249,6 +247,8 @@ class Hamburger extends React.Component {
         navigation.navigate('Home');
       }
     });
+    await this.checkNoficationsAvailability();
+    await this.checkForUserType();
     try {
       await Axios.get(
         FETCH_MESSAGES + '?sender=' + senderId + '&userType=client',

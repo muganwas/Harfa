@@ -15,7 +15,6 @@ import {
   Platform,
   Animated,
 } from 'react-native';
-import _ from 'lodash';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -80,14 +79,17 @@ class AllMessageScreen extends Component {
     await dbRef.once('value', async snapshot => {
       //let key = snapshot.key;
       let message = snapshot.val();
-      let messageArray = Object.values(message);
-      messageArray.map(async message => {
-        let newMessage = _.cloneDeep(message);
-        const {image} = newMessage;
-        await imageExists(image).then(res => {
-          newMessage.exists = res;
+      let messageArray = [];
+      if (message) {
+        messageArray = Object.values(message);
+        messageArray.map(async message => {
+          let newMessage = _.cloneDeep(message);
+          const {image} = newMessage;
+          await imageExists(image).then(res => {
+            newMessage.exists = res;
+          });
         });
-      });
+      }
       this.setState({
         dataSource: messageArray,
         fullData: messageArray,
@@ -312,6 +314,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.75,
+    marginVertical: 2,
     shadowRadius: 5,
     borderRadius: 5,
     elevation: 5,

@@ -27,7 +27,9 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import {cloneDeep, clone} from 'lodash';
+import SimpleToast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
+import FilePickerManager from 'react-native-file-picker';
 import DialogComponent from '../DialogComponent';
 import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
 import Config from '../Config';
@@ -77,6 +79,7 @@ class ChatScreen extends Component {
       dialogDesc: '',
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
+      uploadingImage: false,
     };
     this.leftButtonActon = null;
     this.rightButtonAction = null;
@@ -274,7 +277,74 @@ class ChatScreen extends Component {
     }
   };
 
-  sendMessageTask = async () => {
+  attachFile = async () => {
+    const {senderId, receiverId} = this.state;
+    const {dbMessagesFetched, messagesInfo} = this.props;
+    let newMessages = cloneDeep(messagesInfo.messages);
+    const time = moment().toISOString();
+    const date =
+      new Date().getDate() +
+      '/' +
+      (new Date().getMonth() + 1) +
+      '/' +
+      new Date().getFullYear();
+    this.setState({
+      inputMessage: '',
+      showButton: false,
+    });
+    try {
+      FilePickerManager.showFilePicker(null, async response => {
+        this.setState({uploadingImage: true});
+        let urlText = response.uri;
+        const ext = response.fileName.split('.').pop();
+        const altMessage = {
+          name: response.fileName,
+          ext,
+          fileType: response.type,
+          uri: urlText,
+          path: response.path,
+        };
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            local: true,
+            notUploaded: true,
+            time,
+            type: 'image',
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            message: urlText,
+            file: altMessage,
+            recipient: receiverId,
+            sender: senderId,
+            notUploaded: true,
+            local: true,
+            type: 'image',
+            time,
+            date,
+          });
+        }
+        dbMessagesFetched(newMessages);
+        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
+        const newUrlText = await uploadAttachment(response);
+        altMessage.uri = newUrlText;
+        if (newUrlText) {
+          this.sendMessageTask('image', altMessage);
+          this.setState({uploadingImage: false});
+        }
+      });
+    } catch (e) {
+      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
+    }
+  };
+
+  sendMessageTask = async (type = 'text', altMessage) => {
     const {
       inputMessage,
       senderId,
@@ -288,7 +358,7 @@ class ChatScreen extends Component {
       orderId,
     } = this.state;
     const {dbMessagesFetched, messagesInfo} = this.props;
-    const newMessages = cloneDeep(messagesInfo.messages);
+    let newMessages = cloneDeep(messagesInfo.messages);
     const time = moment().toISOString();
     const date =
       new Date().getDate() +
@@ -300,11 +370,12 @@ class ChatScreen extends Component {
       inputMessage: '',
       showButton: false,
     });
-    if (inputMessage.length > 0) {
+    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
-        type: 'text',
+        type,
         userType: 'client',
-        textMessage: inputMessage,
+        textMessage: inputMessage || altMessage.uri,
+        file: altMessage,
         senderId,
         senderName,
         senderImage,
@@ -317,23 +388,31 @@ class ChatScreen extends Component {
         time,
         date,
       };
-      if (newMessages[receiverId])
-        newMessages[receiverId].push({
-          message: inputMessage,
-          recipient: receiverId,
-          sender: senderId,
-          time,
-          date,
-        });
-      else {
-        newMessages[receiverId] = [];
-        newMessages[receiverId].push({
-          message: inputMessage,
-          recipient: receiverId,
-          sender: senderId,
-          time,
-          date,
-        });
+      if (type === 'text') {
+        if (newMessages[receiverId])
+          newMessages[receiverId].push({
+            message: inputMessage,
+            recipient: receiverId,
+            sender: senderId,
+            time,
+            type,
+            date,
+          });
+        else {
+          newMessages[receiverId] = [];
+          newMessages[receiverId].push({
+            message: inputMessage,
+            recipient: receiverId,
+            sender: senderId,
+            type,
+            time,
+            date,
+          });
+        }
+      } else {
+        newMessages[receiverId][
+          newMessages[receiverId].length - 1
+        ].notUploaded = false;
       }
       dbMessagesFetched(newMessages);
       socket.emit('sent-message', messageObj);
@@ -552,6 +631,7 @@ class ChatScreen extends Component {
             receiverImage={this.state.receiverImage}
             receiverName={this.state.receiverName}
             online={online}
+            uploadingImage={this.state.uploadingImage}
             handleBackButtonClick={this.handleBackButtonClick}
           />
           <ScrollView
@@ -616,6 +696,7 @@ class ChatScreen extends Component {
             <MessagesFooter
               sendMessageTask={this.sendMessageTask}
               showButton={showButton}
+              attachFileTask={this.attachFile}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
               inputMesage={this.state.inputMessage}
             />

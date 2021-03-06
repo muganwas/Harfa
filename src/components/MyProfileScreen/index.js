@@ -25,7 +25,6 @@ import AsyncStorage from '@react-native-community/async-storage';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
-import database from '@react-native-firebase/database';
 import {cloneDeep} from 'lodash';
 import {sanitizeMobileNumber} from '../../misc/helpers';
 import Toast from 'react-native-simple-toast';
