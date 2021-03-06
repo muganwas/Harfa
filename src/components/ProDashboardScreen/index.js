@@ -747,7 +747,7 @@ class ProDashboardScreen extends Component {
         body: JSON.stringify(data),
       })
         .then(response => response.json())
-        .then(responseJson => {
+        .then(async responseJson => {
           if (responseJson.result) {
             this.setState({
               isLoading: false,
@@ -772,7 +772,7 @@ class ProDashboardScreen extends Component {
               delivery_lang,
             };
 
-            imageExists(image).then(res => {
+            await imageExists(image).then(res => {
               jobData.imageAvailable = res;
             });
 
@@ -811,6 +811,7 @@ class ProDashboardScreen extends Component {
         service_name,
         chat_status,
         status,
+        imageAvailable,
         order_id,
       } = item;
       return (
@@ -850,7 +851,7 @@ class ProDashboardScreen extends Component {
                 borderRadius: 200,
               }}
               source={
-                image
+                image && imageAvailable
                   ? {uri: image}
                   : require('../../images/generic_avatar.png')
               }

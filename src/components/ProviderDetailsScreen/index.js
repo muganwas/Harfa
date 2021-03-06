@@ -325,7 +325,7 @@ class ProviderDetailsScreen extends Component {
     });
   }
 
-  initialRender = () => {
+  initialRender = async () => {
     const {
       navigation,
       generalInfo: {OnlineUsers},
@@ -363,7 +363,7 @@ class ProviderDetailsScreen extends Component {
       data: '',
     });
     const {image} = this.props.navigation.state.params;
-    imageExists(image).then(imageAvailable => {
+    await imageExists(image).then(imageAvailable => {
       this.setState({imageAvailable});
     });
     const onlineUsers = clone(OnlineUsers);

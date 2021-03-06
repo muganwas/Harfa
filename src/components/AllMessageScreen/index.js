@@ -15,6 +15,7 @@ import {
   Platform,
   Animated,
 } from 'react-native';
+import _ from 'lodash';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -82,12 +83,13 @@ class AllMessageScreen extends Component {
       let messageArray = [];
       if (message) {
         messageArray = Object.values(message);
-        messageArray.map(async message => {
-          let newMessage = _.cloneDeep(message);
+        messageArray.map(async (inf, index) => {
+          let newMessage = _.cloneDeep(inf);
           const {image} = newMessage;
           await imageExists(image).then(res => {
             newMessage.exists = res;
           });
+          messageArray[index] = newMessage;
         });
       }
       this.setState({
@@ -116,6 +118,7 @@ class AllMessageScreen extends Component {
   };
 
   renderRecentMessageItem = (item, index) => {
+    console.log('item', item);
     const {dispatchSelectedJobRequest} = this.props;
     return (
       <TouchableOpacity
@@ -137,7 +140,7 @@ class AllMessageScreen extends Component {
           <Image
             style={{width: 40, height: 40, borderRadius: 100}}
             source={
-              item.image
+              item.image && item.exists
                 ? {uri: item.image}
                 : require('../../images/generic_avatar.png')
             }

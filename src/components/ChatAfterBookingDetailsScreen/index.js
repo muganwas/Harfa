@@ -95,7 +95,7 @@ class ChatAfterBookingDetailsScreen extends Component {
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     const {
       fetchedNotifications,
       navigation,
@@ -106,7 +106,7 @@ class ChatAfterBookingDetailsScreen extends Component {
     } = this.props;
     const providerId = employee_id;
     fetchedNotifications({type: 'messages', value: 0});
-    imageExists(this.props.navigation.state.params.providerImage).then(
+    await imageExists(this.props.navigation.state.params.providerImage).then(
       proImageAvailable => {
         this.setState({proImageAvailable});
       },

@@ -29,11 +29,11 @@ class CustomMenuLayout extends Component {
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     const {
       userInfo: {userDetails},
     } = this.props;
-    imageExists(userDetails.image).then(result => {
+    await imageExists(userDetails.image).then(result => {
       this.setState({imageExists: result});
     });
   }

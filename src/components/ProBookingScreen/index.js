@@ -13,6 +13,7 @@ import {
   Animated,
 } from 'react-native';
 import {connect} from 'react-redux';
+import _ from 'lodash';
 import RNExitApp from 'react-native-exit-app';
 import Toast from 'react-native-simple-toast';
 import ViewPager from '@react-native-community/viewpager';
@@ -20,9 +21,9 @@ import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../ProHamburger';
 import {font_size} from '../../Constants/metrics';
+import {imageExists} from '../../misc/helpers';
 import {
   colorPrimary,
-  colorPrimaryDark,
   white,
   themeRed,
   black,
@@ -125,18 +126,23 @@ class ProBookingScreen extends Component {
       try {
         fetch(BOOKING_HISTORY + providerDetails.providerId + '/bookings')
           .then(response => response.json())
-          .then(responseJson => {
-            if (responseJson.result) {
-              for (let i = 0; i < responseJson.data.length; i++) {
-                if (responseJson.data[i].chat_status == '1') {
-                  if (responseJson.data[i].status == 'Completed') {
-                    bookingCompleteData.push(responseJson.data[i]);
-                  } else if (responseJson.data[i].status == 'Rejected') {
-                    bookingRejectData.push(responseJson.data[i]);
+          .then(async responseJson => {
+            if (responseJson.result && responseJson.data) {
+              let newData = _.cloneDeep(responseJson.data);
+              for (let i = 0; i < newData.length; i++) {
+                await imageExists(newData[i].user_details.image).then(res => {
+                  if (newData[i].user_details)
+                    newData[i].user_details.imageAvailable = res;
+                });
+                if (newData[i].chat_status == '1') {
+                  if (newData[i].status == 'Completed') {
+                    bookingCompleteData.push(newData[i]);
+                  } else if (newData[i].status == 'Rejected') {
+                    bookingRejectData.push(newData[i]);
                   }
                 } else {
-                  if (responseJson.data[i].status == 'Rejected') {
-                    bookingRejectData.push(responseJson.data[i]);
+                  if (newData[i].status == 'Rejected') {
+                    bookingRejectData.push(newData[i]);
                   }
                 }
               }
@@ -193,6 +199,7 @@ class ProBookingScreen extends Component {
   };
 
   renderBookingHistoryItem = (item, index) => {
+    console.log('item', item);
     return (
       <TouchableOpacity
         key={index}
@@ -221,7 +228,7 @@ class ProBookingScreen extends Component {
               borderRadius: 100,
             }}
             source={
-              item.user_details.image
+              item.user_details.image && item.user_details.imageAvailable
                 ? {uri: item.user_details.image}
                 : require('../../images/generic_avatar.png')
             }

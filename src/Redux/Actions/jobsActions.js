@@ -137,7 +137,7 @@ export const getPendingJobRequest = (props, userId, navTo) => {
           let newJobRequest = [];
           if (responseJson.result) {
             //const id = responseJson.data.id;
-            responseJson.data.map((job, index) => {
+            responseJson.data.map(async (job, index) => {
               var jobData = {
                 id: job._id,
                 order_id: job.order_id,
@@ -158,7 +158,7 @@ export const getPendingJobRequest = (props, userId, navTo) => {
               };
               //PendingJobRequest.Request = jobData;
               //check if image is reachable
-              imageExists(job.employee_details.image).then(res => {
+              await imageExists(job.employee_details.image).then(res => {
                 jobData.imageAvailable = res;
               });
               newJobRequest.push(jobData);
@@ -189,18 +189,18 @@ export const getAllWorkRequestClient = clientId => {
     try {
       fetch(CUSTOMER_BOOKING_HISTORY + clientId + '/null')
         .then(response => response.json())
-        .then(responseJson => {
+        .then(async responseJson => {
           let newAllClientDetails = responseJson.data
             ? cloneDeep(responseJson.data)
             : [];
           let dataWorkSource = [];
           if (responseJson.result) {
             for (let i = 0; i < responseJson.data.length; i++) {
-              imageExists(responseJson.data[i].employee_details.image).then(
-                res => {
-                  newAllClientDetails[i].imageAvailable = res;
-                },
-              );
+              await imageExists(
+                responseJson.data[i].employee_details.image,
+              ).then(res => {
+                newAllClientDetails[i].imageAvailable = res;
+              });
               if (responseJson.data[i].chat_status == '1') {
                 dataWorkSource.push(responseJson.data[i]);
               } else if (responseJson.data[i].chat_status == '0') {
@@ -231,16 +231,18 @@ export const getAllWorkRequestPro = providerId => {
     try {
       fetch(BOOKING_HISTORY + providerId + '/Cancelled')
         .then(response => response.json())
-        .then(responseJson => {
+        .then(async responseJson => {
           let newAllProvidersDetails = responseJson.data
             ? cloneDeep(responseJson.data)
             : [];
           let dataWorkSource = [];
           if (responseJson.result) {
             for (let i = 0; i < responseJson.data.length; i++) {
-              imageExists(responseJson.data[i].user_details.image).then(res => {
-                newAllProvidersDetails[i].imageAvailable = res;
-              });
+              await imageExists(responseJson.data[i].user_details.image).then(
+                res => {
+                  newAllProvidersDetails[i].imageAvailable = res;
+                },
+              );
               if (responseJson.data[i].chat_status === '1') {
                 dataWorkSource.push(responseJson.data[i]);
               } else if (responseJson.data[i].chat_status === '0') {
@@ -282,7 +284,7 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
         .then(response => response.json())
         .then(responseJson => {
           if (responseJson.result) {
-            responseJson.data.map((job, index) => {
+            responseJson.data.map(async (job, index) => {
               var jobData = {
                 id: job._id,
                 order_id: job.order_id,
@@ -304,7 +306,7 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
                 customer_details: job.customer_details,
               };
               //check if image is reachable
-              imageExists(job.customer_details.image).then(res => {
+              await imageExists(job.customer_details.image).then(res => {
                 jobData.imageAvailable = res;
               });
               newJobRequestsProviders.push(jobData);
