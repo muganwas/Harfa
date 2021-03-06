@@ -69,7 +69,6 @@ class ProAllMessageScreen extends Component {
   async componentDidMount() {
     const {
       userInfo: {providerDetails},
-      navigation,
     } = this.props;
     let dbRef = database()
       .ref('recentMessage')
@@ -77,14 +76,17 @@ class ProAllMessageScreen extends Component {
     await dbRef.once('value', snapshot => {
       //const key = snapshot.key;
       let message = snapshot.val();
-      let messageArray = Object.values(message);
-      messageArray.map(async message => {
-        let newMessage = _.cloneDeep(message);
-        const {image} = newMessage;
-        await imageExists(image).then(res => {
-          newMessage.exists = res;
+      let messageArray = [];
+      if (message) {
+        messageArray = Object.values(message);
+        messageArray.map(async message => {
+          let newMessage = _.cloneDeep(message);
+          const {image} = newMessage;
+          await imageExists(image).then(res => {
+            newMessage.exists = res;
+          });
         });
-      });
+      }
       this.setState({
         dataSource: messageArray,
         fullData: messageArray,
