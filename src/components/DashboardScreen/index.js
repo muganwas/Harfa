@@ -339,6 +339,7 @@ class DashboardScreen extends Component {
         fcm_id,
         employee_details,
         chat_status,
+        imageAvailable,
         status,
       } = item;
       return (
@@ -384,7 +385,7 @@ class DashboardScreen extends Component {
                 borderRadius: 200,
               }}
               source={
-                image
+                image && imageAvailable
                   ? {uri: image}
                   : require('../../images/generic_avatar.png')
               }

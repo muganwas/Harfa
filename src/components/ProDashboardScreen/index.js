@@ -811,6 +811,7 @@ class ProDashboardScreen extends Component {
         service_name,
         chat_status,
         status,
+        imageAvailable,
         order_id,
       } = item;
       return (
@@ -850,7 +851,7 @@ class ProDashboardScreen extends Component {
                 borderRadius: 200,
               }}
               source={
-                image
+                image && imageAvailable
                   ? {uri: image}
                   : require('../../images/generic_avatar.png')
               }

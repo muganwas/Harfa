@@ -10,12 +10,12 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
-  BackHandler,
   StatusBar,
   Platform,
   Animated,
 } from 'react-native';
 import database from '@react-native-firebase/database';
+import _ from 'lodash';
 import Hamburger from '../ProHamburger';
 import {imageExists} from '../../misc/helpers';
 import {
@@ -130,12 +130,20 @@ class ProAllMessageScreen extends Component {
         <View style={styles.itemImageView}>
           <Image
             style={{width: 40, height: 40, borderRadius: 100}}
-            source={{uri: item.image}}
+            source={
+              item.image && item.exists
+                ? {uri: item.image}
+                : require('../../images/generic_avatar.png')
+            }
           />
         </View>
         <View style={{flexDirection: 'column', justifyContent: 'center'}}>
           <Text
-            style={{fontSize: 14, color: 'black', textAlignVertical: 'center'}}>
+            style={{
+              fontSize: 14,
+              color: 'black',
+              textAlignVertical: 'center',
+            }}>
             {item.name}
           </Text>
           <Text
@@ -153,7 +161,11 @@ class ProAllMessageScreen extends Component {
         </View>
 
         <View
-          style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignContent: 'center',
+          }}>
           <Text style={{alignSelf: 'flex-end', marginRight: 20, fontSize: 8}}>
             {item.date}
           </Text>

@@ -19,6 +19,8 @@ import Toast from 'react-native-simple-toast';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
+import _ from 'lodash';
+import {imageExists} from '../../misc/helpers';
 import {font_size} from '../../Constants/metrics';
 import {
   colorPrimaryDark,
@@ -126,17 +128,22 @@ class BookingScreen extends Component {
       fetch(BOOKING_HISTORY + userDetails.userId + '/bookings')
         .then(response => response.json())
         .then(responseJson => {
-          if (responseJson.result) {
-            for (let i = 0; i < responseJson.data.length; i++) {
-              if (responseJson.data[i].chat_status == '1') {
-                if (responseJson.data[i].status == 'Completed') {
-                  bookingCompleteData.push(responseJson.data[i]);
-                } else if (responseJson.data[i].status == 'Rejected') {
-                  bookingRejectData.push(responseJson.data[i]);
+          if (responseJson.result && responseJson.data) {
+            const newData = _.cloneDeep(responseJson.data);
+            for (let i = 0; i < newData.length; i++) {
+              imageExists(newData[i].employee_details.image).then(res => {
+                if (newData[i].employee_details)
+                  newData[i].employee_details.imageAvailable = res;
+              });
+              if (newData[i].chat_status == '1') {
+                if (newData[i].status == 'Completed') {
+                  bookingCompleteData.push(newData[i]);
+                } else if (newData[i].status == 'Rejected') {
+                  bookingRejectData.push(newData[i]);
                 }
               } else {
-                if (responseJson.data[i].status == 'Rejected') {
-                  bookingRejectData.push(responseJson.data[i]);
+                if (newData[i].status == 'Rejected') {
+                  bookingRejectData.push(newData[i]);
                 }
               }
             }

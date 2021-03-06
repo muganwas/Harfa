@@ -15,6 +15,7 @@ import {
   Platform,
   Animated,
 } from 'react-native';
+import _ from 'lodash';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -137,7 +138,7 @@ class AllMessageScreen extends Component {
           <Image
             style={{width: 40, height: 40, borderRadius: 100}}
             source={
-              item.image
+              item.image && item.exists
                 ? {uri: item.image}
                 : require('../../images/generic_avatar.png')
             }
