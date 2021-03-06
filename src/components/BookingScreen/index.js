@@ -127,11 +127,11 @@ class BookingScreen extends Component {
     try {
       fetch(BOOKING_HISTORY + userDetails.userId + '/bookings')
         .then(response => response.json())
-        .then(responseJson => {
+        .then(async responseJson => {
           if (responseJson.result && responseJson.data) {
             const newData = _.cloneDeep(responseJson.data);
             for (let i = 0; i < newData.length; i++) {
-              imageExists(newData[i].employee_details.image).then(res => {
+              await imageExists(newData[i].employee_details.image).then(res => {
                 if (newData[i].employee_details)
                   newData[i].employee_details.imageAvailable = res;
               });

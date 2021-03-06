@@ -126,11 +126,11 @@ class ProBookingScreen extends Component {
       try {
         fetch(BOOKING_HISTORY + providerDetails.providerId + '/bookings')
           .then(response => response.json())
-          .then(responseJson => {
+          .then(async responseJson => {
             if (responseJson.result && responseJson.data) {
               let newData = _.cloneDeep(responseJson.data);
               for (let i = 0; i < newData.length; i++) {
-                imageExists(newData[i].user_details.image).then(res => {
+                await imageExists(newData[i].user_details.image).then(res => {
                   if (newData[i].user_details)
                     newData[i].user_details.imageAvailable = res;
                 });

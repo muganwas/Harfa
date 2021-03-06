@@ -747,7 +747,7 @@ class ProDashboardScreen extends Component {
         body: JSON.stringify(data),
       })
         .then(response => response.json())
-        .then(responseJson => {
+        .then(async responseJson => {
           if (responseJson.result) {
             this.setState({
               isLoading: false,
@@ -772,7 +772,7 @@ class ProDashboardScreen extends Component {
               delivery_lang,
             };
 
-            imageExists(image).then(res => {
+            await imageExists(image).then(res => {
               jobData.imageAvailable = res;
             });
 
