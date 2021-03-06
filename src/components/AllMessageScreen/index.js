@@ -83,12 +83,13 @@ class AllMessageScreen extends Component {
       let messageArray = [];
       if (message) {
         messageArray = Object.values(message);
-        messageArray.map(async message => {
-          let newMessage = _.cloneDeep(message);
+        messageArray.map(async (inf, index) => {
+          let newMessage = _.cloneDeep(inf);
           const {image} = newMessage;
           await imageExists(image).then(res => {
             newMessage.exists = res;
           });
+          messageArray[index] = newMessage;
         });
       }
       this.setState({
@@ -117,6 +118,7 @@ class AllMessageScreen extends Component {
   };
 
   renderRecentMessageItem = (item, index) => {
+    console.log('item', item);
     const {dispatchSelectedJobRequest} = this.props;
     return (
       <TouchableOpacity
