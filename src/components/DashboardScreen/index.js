@@ -41,12 +41,14 @@ import {
   themeRed,
   white,
   lightGray,
+  darkGray,
   black,
 } from '../../Constants/colors';
 import images from '../../Constants/images';
 
 const screenWidth = Dimensions.get('window').width;
 const SERVICES_URL = Config.baseURL + 'service/getall';
+const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 YellowBox.ignoreWarnings(['']);
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
@@ -117,6 +119,108 @@ class DashboardScreen extends Component {
         this.setState({backClickCount: 0});
       });
     });
+  };
+
+  jobCancelTask = async index => {
+    this.setState({isLoading: true});
+    const {
+      fetchedPendingJobInfo,
+      jobsInfo: {jobRequests},
+      userInfo: {userDetails},
+    } = this.props;
+
+    try {
+      const currRequestPos = index;
+      var newJobRequests = [...jobRequests];
+      const data = {
+        main_id: jobRequests[currRequestPos].id,
+        chat_status: '1',
+        status: 'Cancelled',
+        notification: {
+          fcm_id: jobRequests[currRequestPos].fcm_id,
+          title: 'Job Cancelled',
+          type: 'JobCancellation',
+          user_id: userDetails.userId,
+          employee_id: jobRequests[currRequestPos].employee_id,
+          order_id: jobRequests[currRequestPos].order_id,
+          notification_by: 'Customer',
+          save_notification: true,
+          body:
+            'Job request has been cancelled by client' +
+            ' Request Id : ' +
+            jobRequests[currRequestPos].order_id,
+          data: {
+            ProviderId: jobRequests[currRequestPos].employee_id,
+            image: jobRequests[currRequestPos].image
+              ? jobRequests[currRequestPos].image
+              : 'null',
+            fcmId: jobRequests[currRequestPos].fcm_id,
+            name: jobRequests[currRequestPos].name,
+            surname: jobRequests[currRequestPos].surname,
+            mobile: jobRequests[currRequestPos].mobile,
+            description: jobRequests[currRequestPos].description,
+            address: jobRequests[currRequestPos].address,
+            lat: jobRequests[currRequestPos].lat,
+            lang: jobRequests[currRequestPos].lang,
+            serviceName: jobRequests[currRequestPos].service_name,
+            orderId: jobRequests[currRequestPos].order_id,
+            mainId: jobRequests[currRequestPos].id,
+            chat_status: jobRequests[currRequestPos].chat_status,
+            status: 'Cancelled',
+            delivery_address: jobRequests[currRequestPos].delivery_address,
+            delivery_lat: jobRequests[currRequestPos].delivery_lat,
+            delivery_lang: jobRequests[currRequestPos].delivery_lang,
+          },
+        },
+      };
+      await fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+            });
+            newJobRequests.splice(currRequestPos, 1);
+            fetchedPendingJobInfo(newJobRequests);
+            this.props.navigation.navigate('Dashboard');
+          } else {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'fb',
+              dialogTitle: 'OOPS!',
+              dialogDesc: 'An error has occurred, please try again later',
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Ok',
+            });
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          this.setState({
+            isLoading: false,
+          });
+        });
+    } catch (e) {
+      console.log('Error >>> ' + e);
+      this.setState({
+        isLoading: false,
+      });
+    }
   };
 
   handleBackButton = () => {
@@ -390,7 +494,12 @@ class DashboardScreen extends Component {
                   : require('../../images/generic_avatar.png')
               }
             />
-            <View style={{flexDirection: 'column', justifyContent: 'center'}}>
+            <View
+              style={{
+                flex: 3,
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}>
               <Text
                 style={{
                   color: white,
@@ -425,11 +534,20 @@ class DashboardScreen extends Component {
                   : 'Job Accepted'}
               </Text>
             </View>
-            <View style={styles.arrowView}>
-              <Image
-                style={styles.arrow}
-                source={require('../../icons/arrow_right_animated.gif')}
-              />
+            <View style={styles.pendingRightSide}>
+              {chat_status === '0' && (
+                <TouchableOpacity
+                  style={styles.cancelRequest}
+                  onPress={() => this.jobCancelTask(index)}>
+                  <Text style={styles.cancelRequestText}>Cancel Request</Text>
+                </TouchableOpacity>
+              )}
+              <View style={styles.arrowView}>
+                <Image
+                  style={styles.arrow}
+                  source={require('../../icons/arrow_right_animated.gif')}
+                />
+              </View>
             </View>
           </View>
         </TouchableOpacity>
@@ -736,11 +854,36 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     backgroundColor: 'transparent',
   },
+  pendingRightSide: {
+    flex: 4,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
   arrowView: {
-    flex: 1,
+    flex: 2,
     height: 55,
     alignContent: 'center',
     justifyContent: 'center',
+  },
+  cancelRequest: {
+    flex: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 5,
+    paddingBottom: 5,
+    backgroundColor: white,
+    shadowColor: darkGray,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.75,
+    shadowRadius: 5,
+    elevation: 5,
+    borderRadius: 5,
+    margin: 10,
+  },
+  cancelRequestText: {
+    fontWeight: 'bold',
   },
   arrow: {
     width: 20,
