@@ -89,8 +89,9 @@ class DashboardScreen extends Component {
   //Get All Services
   componentDidMount = () => {
     const {navigation} = this.props;
+    this.onRefresh();
     navigation.addListener('willFocus', async () => {
-      this.onRefresh();
+      //this.onRefresh();
       BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
     });
     navigation.addListener('willBlur', () => {

@@ -121,10 +121,11 @@ class ProDashboardScreen extends Component {
   //Get All Bookings
   componentDidMount = () => {
     this.initiateProps();
+    this.onRefresh();
     const {navigation} = this.props;
     navigation.addListener('willFocus', () => {
       this.initiateProps();
-      this.onRefresh();
+      //this.onRefresh();
       BackHandler.addEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -772,7 +773,7 @@ class ProDashboardScreen extends Component {
               delivery_lang,
             };
 
-            await imageExists(image).then(res => {
+            imageExists(image).then(res => {
               jobData.imageAvailable = res;
             });
 

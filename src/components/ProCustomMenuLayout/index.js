@@ -27,7 +27,7 @@ class CustomMenuLayout extends Component {
     const {
       userInfo: {providerDetails},
     } = this.props;
-    await imageExists(providerDetails.imageSource).then(result => {
+    imageExists(providerDetails.imageSource).then(result => {
       this.setState({imageExists: result});
     });
   }
