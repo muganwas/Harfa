@@ -125,7 +125,7 @@ class ListOfProviderScreen extends Component {
               const {image} = obj;
               let imageAvaliable = true;
               if (image) {
-                await imageExists(image).then(res => {
+                imageExists(image).then(res => {
                   imageAvaliable = res;
                 });
               } else {
@@ -192,7 +192,7 @@ class ListOfProviderScreen extends Component {
         const {_id, image} = obj;
         let imageAvaliable = true;
         if (image) {
-          await imageExists(image).then(res => {
+          imageExists(image).then(res => {
             imageAvaliable = res;
           });
         } else {

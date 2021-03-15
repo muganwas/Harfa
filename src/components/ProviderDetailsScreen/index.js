@@ -363,7 +363,7 @@ class ProviderDetailsScreen extends Component {
       data: '',
     });
     const {image} = this.props.navigation.state.params;
-    await imageExists(image).then(imageAvailable => {
+    imageExists(image).then(imageAvailable => {
       this.setState({imageAvailable});
     });
     const onlineUsers = clone(OnlineUsers);

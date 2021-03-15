@@ -158,7 +158,7 @@ export const getPendingJobRequest = (props, userId, navTo) => {
               };
               //PendingJobRequest.Request = jobData;
               //check if image is reachable
-              await imageExists(job.employee_details.image).then(res => {
+              imageExists(job.employee_details.image).then(res => {
                 jobData.imageAvailable = res;
               });
               newJobRequest.push(jobData);
@@ -196,11 +196,11 @@ export const getAllWorkRequestClient = clientId => {
           let dataWorkSource = [];
           if (responseJson.result) {
             for (let i = 0; i < responseJson.data.length; i++) {
-              await imageExists(
-                responseJson.data[i].employee_details.image,
-              ).then(res => {
-                newAllClientDetails[i].imageAvailable = res;
-              });
+              imageExists(responseJson.data[i].employee_details.image).then(
+                res => {
+                  newAllClientDetails[i].imageAvailable = res;
+                },
+              );
               if (responseJson.data[i].chat_status == '1') {
                 dataWorkSource.push(responseJson.data[i]);
               } else if (responseJson.data[i].chat_status == '0') {
@@ -238,11 +238,9 @@ export const getAllWorkRequestPro = providerId => {
           let dataWorkSource = [];
           if (responseJson.result) {
             for (let i = 0; i < responseJson.data.length; i++) {
-              await imageExists(responseJson.data[i].user_details.image).then(
-                res => {
-                  newAllProvidersDetails[i].imageAvailable = res;
-                },
-              );
+              imageExists(responseJson.data[i].user_details.image).then(res => {
+                newAllProvidersDetails[i].imageAvailable = res;
+              });
               if (responseJson.data[i].chat_status === '1') {
                 dataWorkSource.push(responseJson.data[i]);
               } else if (responseJson.data[i].chat_status === '0') {
@@ -306,7 +304,7 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
                 customer_details: job.customer_details,
               };
               //check if image is reachable
-              await imageExists(job.customer_details.image).then(res => {
+              imageExists(job.customer_details.image).then(res => {
                 jobData.imageAvailable = res;
               });
               newJobRequestsProviders.push(jobData);

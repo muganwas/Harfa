@@ -224,7 +224,7 @@ class Hamburger extends React.Component {
           delivery_lat: data.delivery_lat,
           delivery_lang: data.delivery_lang,
         };
-        await imageExists(providerData.imageSource).then(res => {
+        imageExists(providerData.imageSource).then(res => {
           pendingJobData.imageAvailable = res;
         });
         newJobRequests[pos] = pendingJobData;

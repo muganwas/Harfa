@@ -131,7 +131,7 @@ class BookingScreen extends Component {
           if (responseJson.result && responseJson.data) {
             const newData = _.cloneDeep(responseJson.data);
             for (let i = 0; i < newData.length; i++) {
-              await imageExists(newData[i].employee_details.image).then(res => {
+              imageExists(newData[i].employee_details.image).then(res => {
                 if (newData[i].employee_details)
                   newData[i].employee_details.imageAvailable = res;
               });

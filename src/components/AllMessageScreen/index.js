@@ -86,7 +86,7 @@ class AllMessageScreen extends Component {
         messageArray.map(async (inf, index) => {
           let newMessage = _.cloneDeep(inf);
           const {image} = newMessage;
-          await imageExists(image).then(res => {
+          imageExists(image).then(res => {
             newMessage.exists = res;
           });
           messageArray[index] = newMessage;
