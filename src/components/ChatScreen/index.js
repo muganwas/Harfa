@@ -108,7 +108,7 @@ class ChatScreen extends Component {
     const {
       userInfo: {userDetails},
       jobsInfo: {
-        allJobRequestsClient,
+        jobRequests,
         selectedJobRequest: {employee_id},
       },
       messagesInfo: {dataChatSource, fetched},
@@ -119,7 +119,7 @@ class ChatScreen extends Component {
     const onlineUsers = clone(OnlineUsers);
     const providerId =
       navigation.getParam('providerId', null) ||
-      allJobRequestsClient[currRequestPos].employee_id;
+      jobRequests[currRequestPos].employee_id;
     this.setState({
       senderId: userDetails.userId,
       senderImage: userDetails.image,
@@ -130,30 +130,26 @@ class ChatScreen extends Component {
       isLoading: !fetched,
       isUploading: false,
       isJobAccepted:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].status === 'Accepted',
+        jobRequests[currRequestPos] &&
+        jobRequests[currRequestPos].status === 'Accepted',
       requestStatus:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].status,
+        jobRequests[currRequestPos] && jobRequests[currRequestPos].status,
       receiverId:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].employee_id,
+        jobRequests[currRequestPos] && jobRequests[currRequestPos].employee_id,
       receiverName:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].employee_details.username,
+        jobRequests[currRequestPos] &&
+        jobRequests[currRequestPos].employee_details.username,
       receiverImage:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].employee_details.image,
+        jobRequests[currRequestPos] &&
+        jobRequests[currRequestPos].employee_details.image,
       serviceName:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].service_details.service_name,
+        jobRequests[currRequestPos] && jobRequests[currRequestPos].service_name,
       orderId:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].order_id,
+        jobRequests[currRequestPos] && jobRequests[currRequestPos].order_id,
       titlePage: navigation.state.params.titlePage,
       provider_FCM_id:
-        allJobRequestsClient[currRequestPos] &&
-        allJobRequestsClient[currRequestPos].employee_details.fcm_id,
+        jobRequests[currRequestPos] &&
+        jobRequests[currRequestPos].employee_details.fcm_id,
       dataChatSourceSynced: false,
       liveChatStatus: OnlineUsers[providerId]
         ? OnlineUsers[providerId].status
@@ -209,7 +205,7 @@ class ChatScreen extends Component {
       messagesInfo: {fetched, dataChatSource},
       jobsInfo: {
         selectedJobRequest: {employee_id},
-        allJobRequestsClient,
+        jobRequests,
       },
       generalInfo: {OnlineUsers},
       navigation,
@@ -217,7 +213,7 @@ class ChatScreen extends Component {
     const currRequestPos = navigation.getParam('currentPosition');
     const providerId =
       navigation.getParam('providerId', null) ||
-      allJobRequestsClient[currRequestPos].employee_id;
+      jobRequests[currRequestPos].employee_id;
     const {
       isLoading,
       dataChatSourceSynced,

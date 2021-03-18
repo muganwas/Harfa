@@ -548,6 +548,7 @@ class ProMyProfileScreen extends Component {
                   onPress={() =>
                     this.props.navigation.navigate('ProServiceSelect', {
                       onGoBack: this.getDataFromServiceScreen,
+                      from: 'profile-screen',
                     })
                   }>
                   {this.state.services}
@@ -595,6 +596,7 @@ class ProMyProfileScreen extends Component {
                   onPress={() =>
                     this.props.navigation.navigate('SelectAddress', {
                       onGoBack: this.getDataFromAddAddressScreen,
+                      from: 'profile-screen',
                     })
                   }>
                   {this.state.address}

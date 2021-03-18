@@ -198,6 +198,7 @@ class Hamburger extends React.Component {
         title.toLowerCase() === 'chat request accepted' &&
         pos != null
       ) {
+        console.log('position', pos);
         //this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
