@@ -392,14 +392,15 @@ class DashboardScreen extends Component {
         service_name,
         name,
         employee_id,
+        currentPos,
       } = jobInfo;
       const nameArr = name.split(' ');
       const username = nameArr[0];
       const surname = nameArr.pop();
-      let currentPostInAllJobs;
-      allJobRequestsClient.map((request, index) => {
+      let currentPostInAllJobs = currentPos;
+      /*allJobRequestsClient.map((request, index) => {
         if (request.order_id === order_id) currentPostInAllJobs = index;
-      });
+      });*/
       dispatchSelectedJobRequest(jobInfo);
       if (jobInfo.status.toLowerCase() === 'pending') {
         this.props.navigation.navigate('Chat', {

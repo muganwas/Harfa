@@ -139,17 +139,26 @@ export default class ProServiceSelectScreen extends Component {
   }
 
   checkValidation = () => {
+    const {navigation} = this.props;
+    const origin = navigation.getParam('from');
+    const onGoBack = navigation.getParam('onGoBack');
     if (this.state.selectedServiceId.length > 0) {
       this.props.navigation.state.params.onGoBack(
         this.state.selectedServiceId + '/' + this.state.selectedServiceName,
       );
-      this.props.navigation.goBack();
+      if (origin === 'profile-screen') {
+        this.props.navigation.navigate('ProMyProfile', {
+          onGoBack,
+          from: 'service-select',
+        });
+      } else this.props.navigation.goBack();
     } else {
       ToastAndroid.show('Select atleast one services', ToastAndroid.SHORT);
     }
   };
 
   render() {
+    const {navigation} = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -172,7 +181,16 @@ export default class ProServiceSelectScreen extends Component {
                 alignSelf: 'center',
                 justifyContent: 'center',
               }}
-              onPress={() => this.props.navigation.goBack()}>
+              onPress={() => {
+                const origin = navigation.getParam('from');
+                const onGoBack = navigation.getParam('onGoBack');
+                if (origin === 'profile-screen') {
+                  this.props.navigation.navigate('ProMyProfile', {
+                    onGoBack,
+                    from: 'service-select',
+                  });
+                } else this.props.navigation.goBack();
+              }}>
               <Image
                 style={{
                   width: 20,

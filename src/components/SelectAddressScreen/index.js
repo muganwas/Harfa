@@ -78,7 +78,15 @@ export default class SelectAddressScreen extends Component {
   }
 
   handleBackButtonClick = () => {
-    this.props.navigation.goBack();
+    const {navigation} = this.props;
+    const from = navigation.getParam('from');
+    const onGoBack = navigation.getParam('onGoBack');
+    if (from === 'profile-screen') {
+      this.props.navigation.navigate('ProMyProfile', {
+        onGoBack,
+        from: 'address-screen',
+      });
+    } else navigation.goBack();
     return true;
   };
 
@@ -123,20 +131,25 @@ export default class SelectAddressScreen extends Component {
       fetch(LAT_LNG_URL + placeId)
         .then(response => response.json())
         .then(responseJson => {
-          console.log(
-            'Response : ' +
-              JSON.stringify(responseJson.result.geometry.location.lat),
-          );
+          const {navigation} = this.props;
+          const from = navigation.getParam('from');
+          const onGoBack = navigation.getParam('onGoBack');
           this.setState({
             isLoading: false,
             address: description,
             lat: responseJson.result.geometry.location.lat,
             lng: responseJson.result.geometry.location.lng,
           });
-          this.props.navigation.state.params.onGoBack(
+          onGoBack(
             this.state.address + '/' + this.state.lat + '/' + this.state.lng,
           );
-          this.props.navigation.goBack();
+
+          if (from === 'profile-screen') {
+            this.props.navigation.navigate('ProMyProfile', {
+              onGoBack,
+              from: 'address-screen',
+            });
+          } else navigation.goBack();
         })
         .catch(error => {
           console.log(error);
@@ -190,7 +203,17 @@ export default class SelectAddressScreen extends Component {
                 alignSelf: 'center',
                 justifyContent: 'center',
               }}
-              onPress={() => this.props.navigation.goBack()}>
+              onPress={() => {
+                const {navigation} = this.props;
+                const from = navigation.getParam('from');
+                const onGoBack = navigation.getParam('onGoBack');
+                if (from === 'profile-screen') {
+                  this.props.navigation.navigate('ProMyProfile', {
+                    onGoBack,
+                    from: 'address-screen',
+                  });
+                } else navigation.goBack();
+              }}>
               <Image
                 style={{
                   width: 20,

@@ -138,32 +138,35 @@ export const getPendingJobRequest = (props, userId, navTo) => {
           if (responseJson.result) {
             //const id = responseJson.data.id;
             responseJson.data.map(async (job, index) => {
-              var jobData = {
-                id: job._id,
-                order_id: job.order_id,
-                employee_id: job.employee_details._id,
-                image: job.employee_details.image,
-                fcm_id: job.employee_details.fcm_id,
-                name: job.employee_details.username,
-                surName: job.employee_details.surname,
-                status: job.status,
-                chat_status: job.chat_status,
-                mobile: job.employee_details.mobile,
-                description: job.employee_details.description,
-                address: job.employee_details.address,
-                lat: job.employee_details.lat,
-                lang: job.employee_details.lang,
-                service_name: job.service_details.service_name,
-                employee_details: job.employee_details,
-              };
-              //PendingJobRequest.Request = jobData;
-              //check if image is reachable
-              imageExists(job.employee_details.image).then(res => {
-                jobData.imageAvailable = res;
-              });
-              newJobRequest.push(jobData);
+              if (job && job.employee_details) {
+                var jobData = {
+                  id: job._id,
+                  order_id: job.order_id,
+                  employee_id: job.employee_details && job.employee_details._id,
+                  image: job.employee_details && job.employee_details.image,
+                  fcm_id: job.employee_details && job.employee_details.fcm_id,
+                  name: job.employee_details && job.employee_details.username,
+                  surName: job.employee_details && job.employee_details.surname,
+                  status: job.status,
+                  chat_status: job.chat_status,
+                  mobile: job.employee_details && job.employee_details.mobile,
+                  description:
+                    job.employee_details && job.employee_details.description,
+                  address: job.employee_details && job.employee_details.address,
+                  lat: job.employee_details && job.employee_details.lat,
+                  lang: job.employee_details && job.employee_details.lang,
+                  service_name: job.service_details.service_name,
+                  employee_details: job.employee_details,
+                };
+                //PendingJobRequest.Request = jobData;
+                //check if image is reachable
+                job.employee_details &&
+                  imageExists(job.employee_details.image).then(res => {
+                    jobData.imageAvailable = res;
+                  });
+                newJobRequest.push(jobData);
+              }
             });
-
             dispatch(fetchedJobCustomerInfo(newJobRequest));
             /** navigate away */
             console.log('before navigating...');
@@ -196,16 +199,19 @@ export const getAllWorkRequestClient = clientId => {
           let dataWorkSource = [];
           if (responseJson.result) {
             for (let i = 0; i < responseJson.data.length; i++) {
-              imageExists(responseJson.data[i].employee_details.image).then(
-                res => {
-                  newAllClientDetails[i].imageAvailable = res;
-                },
-              );
-              if (responseJson.data[i].chat_status == '1') {
-                dataWorkSource.push(responseJson.data[i]);
-              } else if (responseJson.data[i].chat_status == '0') {
-                if (responseJson.data[i].status != 'Pending') {
+              if (responseJson.data[i]) {
+                responseJson.data[i].employee_details &&
+                  imageExists(responseJson.data[i].employee_details.image).then(
+                    res => {
+                      newAllClientDetails[i].imageAvailable = res;
+                    },
+                  );
+                if (responseJson.data[i].chat_status == '1') {
                   dataWorkSource.push(responseJson.data[i]);
+                } else if (responseJson.data[i].chat_status == '0') {
+                  if (responseJson.data[i].status != 'Pending') {
+                    dataWorkSource.push(responseJson.data[i]);
+                  }
                 }
               }
             }
@@ -283,31 +289,34 @@ export const getPendingJobRequestProvider = (props, providerId, navTo) => {
         .then(responseJson => {
           if (responseJson.result) {
             responseJson.data.map(async (job, index) => {
-              var jobData = {
-                id: job._id,
-                order_id: job.order_id,
-                user_id: job.customer_details._id,
-                image: job.customer_details.image,
-                fcm_id: job.customer_details.fcm_id,
-                name: job.customer_details.username,
-                mobile: job.customer_details.mobile,
-                dob: job.customer_details.dob,
-                address: job.customer_details.address,
-                lat: job.customer_details.lat,
-                lang: job.customer_details.lang,
-                service_name: job.service_details.service_name,
-                chat_status: job.chat_status,
-                status: job.status,
-                delivery_address: job.delivery_address,
-                delivery_lat: job.delivery_lat,
-                delivery_lang: job.delivery_lang,
-                customer_details: job.customer_details,
-              };
-              //check if image is reachable
-              imageExists(job.customer_details.image).then(res => {
-                jobData.imageAvailable = res;
-              });
-              newJobRequestsProviders.push(jobData);
+              if (job && job.customer_details) {
+                var jobData = {
+                  id: job._id,
+                  order_id: job.order_id,
+                  user_id: job.customer_details && job.customer_details._id,
+                  image: job.customer_details && job.customer_details.image,
+                  fcm_id: job.customer_details && job.customer_details.fcm_id,
+                  name: job.customer_details && job.customer_details.username,
+                  mobile: job.customer_details && job.customer_details.mobile,
+                  dob: job.customer_details && job.customer_details.dob,
+                  address: job.customer_details && job.customer_details.address,
+                  lat: job.customer_details && job.customer_details.lat,
+                  lang: job.customer_details && job.customer_details.lang,
+                  service_name: job.service_details.service_name,
+                  chat_status: job.chat_status,
+                  status: job.status,
+                  delivery_address: job.delivery_address,
+                  delivery_lat: job.delivery_lat,
+                  delivery_lang: job.delivery_lang,
+                  customer_details: job.customer_details,
+                };
+                //check if image is reachable
+                job.customer_details &&
+                  imageExists(job.customer_details.image).then(res => {
+                    jobData.imageAvailable = res;
+                  });
+                newJobRequestsProviders.push(jobData);
+              }
             });
             dispatch(fetchedJobProviderInfo(newJobRequestsProviders));
             if (navigation && navTo) navigation.navigate(navTo);
