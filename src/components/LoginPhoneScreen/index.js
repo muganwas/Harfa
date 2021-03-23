@@ -109,7 +109,20 @@ class LoginPhoneScreen extends Component {
   }
 
   handleBackButtonClick = () => {
-    this.props.navigation.goBack();
+    const {
+      updateMobileNumber,
+      updateNumberSent,
+      updateValidationCode,
+      updateConfirmationObject,
+      validationInfo: {confirmation, numberSent},
+    } = this.props;
+    updateMobileNumber('');
+    updateNumberSent(false);
+    updateValidationCode('');
+    updateConfirmationObject(null);
+    if (!confirmation && !numberSent) {
+      this.props.navigation.goBack();
+    }
     return true;
   };
 
@@ -348,7 +361,7 @@ class LoginPhoneScreen extends Component {
     } else {
       this.setState({isLoading: false});
       simpleToast.show(
-        'Something went wrong, try again later',
+        'Something went wrong, we could not retrieve your fcm token, restart app and try again',
         simpleToast.SHORT,
       );
     }
@@ -484,7 +497,7 @@ class LoginPhoneScreen extends Component {
                   marginLeft: 5,
                   marginTop: 15,
                 }}
-                onPress={() => this.props.navigation.goBack()}>
+                onPress={this.handleBackButtonClick}>
                 <Image
                   style={{
                     width: 20,
@@ -546,7 +559,7 @@ class LoginPhoneScreen extends Component {
                       this.input = ref;
                     }}
                     keyboardType="phone-pad"
-                    placeholder={`${countryCode} 000 000 000`}
+                    placeholder={`${countryCode || '+231'} 000 000 000`}
                     value={mobile}
                     onChangeText={phoneNumberInput => {
                       this.setState({
@@ -554,7 +567,7 @@ class LoginPhoneScreen extends Component {
                       });
                       updateMobileNumber(phoneNumberInput);
                     }}
-                    mask={`${countryCode} [000] [000] [000]`}
+                    mask={`${countryCode || '+231'} [000] [000] [000]`}
                   />
                 )}
               </View>

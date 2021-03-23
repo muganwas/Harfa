@@ -33,7 +33,7 @@ import {
   fetchProviderProfile,
 } from '../../Redux/Actions/userActions';
 import {white, themeRed, black, colorBg} from '../../Constants/colors';
-import {sanitizeMobileNumber} from '../../misc/helpers';
+import {phoneNumberCheck, sanitizeMobileNumber} from '../../misc/helpers';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -123,7 +123,7 @@ class ProMyProfileScreen extends Component {
       navigation,
     } = this.props;
     const {mobile} = this.state;
-    let newMobile = await sanitizeMobileNumber(mobile, countryCode);
+    let newMobile = await sanitizeMobileNumber(mobile, countryCode, false);
     this.setState({mobile: newMobile});
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
@@ -221,7 +221,10 @@ class ProMyProfileScreen extends Component {
       lang,
       invoice,
     } = this.state;
-    const {fetchProviderProfile} = this.props;
+    const {
+      fetchProviderProfile,
+      validationInfo: {countryAlpha2},
+    } = this.props;
     const userData = {
       username: name,
       surname: surname,
@@ -233,50 +236,57 @@ class ProMyProfileScreen extends Component {
       lang: lang,
       invoice: invoice,
     };
-    try {
-      await fetch(PRO_INFO_UPDATE + providerId, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      })
-        .then(response => response.json())
-        .then(async response => {
-          if (response.result) {
-            this.setState({
-              isLoading: false,
-              isErrorToast: false,
-            });
-            //ToastAndroid.show(response.message, ToastAndroid.show);
-            this.showToast(response.message);
-            fetchProviderProfile(providerId, fcmId);
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast(response.message);
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
+    phoneNumberCheck(mobile, countryAlpha2).then(async isValid => {
+      if (!isValid) {
+        this.setState({isLoading: false});
+        Toast('Your phone number is invalid', Toast.LONG);
+      } else {
+        try {
+          await fetch(PRO_INFO_UPDATE + providerId, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          })
+            .then(response => response.json())
+            .then(async response => {
+              if (response.result) {
+                this.setState({
+                  isLoading: false,
+                  isErrorToast: false,
+                });
+                //ToastAndroid.show(response.message, ToastAndroid.show);
+                this.showToast(response.message);
+                fetchProviderProfile(providerId, fcmId);
+              } else {
+                this.setState({
+                  isLoading: false,
+                  isErrorToast: true,
+                });
+                this.showToast(response.message);
+              }
+            })
+            .catch(error => {
+              console.log('Error :' + error);
+              this.setState({
+                isLoading: false,
+                isErrorToast: true,
+              });
+              this.showToast('Something went wrong');
+            })
+            .done();
+        } catch (e) {
+          console.log('Error :' + e);
           this.setState({
             isLoading: false,
             isErrorToast: true,
           });
           this.showToast('Something went wrong');
-        })
-        .done();
-    } catch (e) {
-      console.log('Error :' + e);
-      this.setState({
-        isLoading: false,
-        isErrorToast: true,
-      });
-      this.showToast('Something went wrong');
-    }
+        }
+      }
+    });
   };
 
   //Image Update

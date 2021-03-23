@@ -26,7 +26,7 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
 import {cloneDeep} from 'lodash';
-import {sanitizeMobileNumber} from '../../misc/helpers';
+import {phoneNumberCheck, sanitizeMobileNumber} from '../../misc/helpers';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
@@ -106,7 +106,7 @@ class MyProfileScreen extends Component {
       validationInfo: {countryCode},
     } = this.props;
     const {mobile} = this.state;
-    let newMobile = await sanitizeMobileNumber(mobile, countryCode);
+    let newMobile = await sanitizeMobileNumber(mobile, countryCode, false);
     this.setState({mobile: newMobile});
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
@@ -208,7 +208,9 @@ class MyProfileScreen extends Component {
   //Information Update
   updateInformation = userId => {
     const {fcmId, username, mobile, dob} = this.state;
-    const {fetchUserProfile} = this.props;
+    const {
+      validationInfo: {countryAlpha2},
+    } = this.props;
     this.setState({
       isLoading: true,
     });
@@ -217,45 +219,52 @@ class MyProfileScreen extends Component {
       mobile,
       dob,
     };
-    try {
-      fetch(USER_INFO_UPDATE + userId, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      })
-        .then(response => response.json())
-        .then(response => {
-          if (response.result) {
-            this.setState({
-              isLoading: false,
-              isErrorToast: false,
-            });
-            this.showToast(response.message);
-            fetchUserProfile(userId, fcmId);
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast(response.message);
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
+    phoneNumberCheck(mobile, countryAlpha2).then(async isValid => {
+      if (!isValid) {
+        this.setState({isLoading: false});
+        Toast('Your phone number is invalid', Toast.LONG);
+      } else {
+        try {
+          await fetch(USER_INFO_UPDATE + userId, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          })
+            .then(response => response.json())
+            .then(response => {
+              if (response.result) {
+                this.setState({
+                  isLoading: false,
+                  isErrorToast: false,
+                });
+                this.showToast(response.message);
+                fetchUserProfile(userId, fcmId);
+              } else {
+                this.setState({
+                  isLoading: false,
+                  isErrorToast: true,
+                });
+                this.showToast(response.message);
+              }
+            })
+            .catch(error => {
+              console.log('Error :' + error);
+              this.setState({
+                isLoading: false,
+              });
+            })
+            .done();
+        } catch (e) {
+          console.log('Error :' + e);
           this.setState({
             isLoading: false,
           });
-        })
-        .done();
-    } catch (e) {
-      console.log('Error :' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
+        }
+      }
+    });
   };
 
   //Image Update
