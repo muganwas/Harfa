@@ -136,20 +136,25 @@ class LoginPhoneScreen extends Component {
           updateConfirmationObject(confirmation);
         });
     } catch (e) {
+      const message =
+        e.message && e.message.indexOf('Unable to resolve')
+          ? 'Please check your interenet connection and try again.'
+          : 'Something went wrong, try again later.';
       this.leftButtonActon = () => {
+        this.props.updateNumberSent(false);
         this.setState({
           isLoading: false,
           showDialog: false,
           dialogType: null,
         });
       };
-      this.rightButtonAction = this.phoneConfirmationTask(number);
+      this.rightButtonAction = () => this.phoneConfirmationTask(number);
       this.setState({
         isLoading: false,
         showDialog: true,
         dialogType: 'fb',
         dialogTitle: 'OOPS!',
-        dialogDesc: e.message,
+        dialogDesc: message,
         dialogLeftText: 'Cancel',
         dialogRightText: 'Retry',
       });
@@ -280,6 +285,7 @@ class LoginPhoneScreen extends Component {
               }
             } else {
               this.leftButtonActon = () => {
+                this.props.updateNumberSent(false);
                 this.setState({
                   isLoading: false,
                   showDialog: false,
@@ -307,6 +313,7 @@ class LoginPhoneScreen extends Component {
           })
           .catch(error => {
             this.leftButtonActon = () => {
+              this.props.updateNumberSent(false);
               this.setState({
                 isLoading: false,
                 showDialog: false,
@@ -334,6 +341,7 @@ class LoginPhoneScreen extends Component {
           .done();
       } catch (e) {
         this.leftButtonActon = () => {
+          this.props.updateNumberSent(false);
           this.setState({
             isLoading: false,
             showDialog: false,
@@ -370,10 +378,12 @@ class LoginPhoneScreen extends Component {
   checkValidation = async () => {
     const wrongPhoneNumberFormat = 'Please enter a proper phone number';
     const noPhoneNumber = 'Please fill in your phone number';
+    const noCountryCode = 'Please check your internet connection';
     const {
       validationInfo: {mobile, countryCode, countryAlpha2},
     } = this.props;
-    if (String(mobile.trim()) === String(countryCode.trim()))
+    if (!countryCode) this.setState({error: noCountryCode});
+    else if (String(mobile.trim()) === String(countryCode.trim()))
       this.setState({error: noPhoneNumber});
     else {
       const number = await sanitizeMobileNumber(mobile, countryCode, false);
@@ -394,10 +404,6 @@ class LoginPhoneScreen extends Component {
       confirmation
         .confirm(code)
         .then(response => {
-          /*const {
-            additionalUserInfo: {isNewUser},
-            user: {_user},
-          } = response;*/
           if (response) this.phoneLoginCustomerTask();
         })
         .catch(e => {
