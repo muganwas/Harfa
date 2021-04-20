@@ -172,6 +172,7 @@ class LoginPhoneScreen extends Component {
         fetchJobRequestHistory,
         updateUserDetails,
         validationInfo: {mobile, countryCode},
+        updateNumberSent,
       } = this.props;
       const newMobile = await sanitizeMobileNumber(mobile, countryCode, false);
       const userData = {
@@ -285,7 +286,6 @@ class LoginPhoneScreen extends Component {
               }
             } else {
               this.leftButtonActon = () => {
-                this.props.updateNumberSent(false);
                 this.setState({
                   isLoading: false,
                   showDialog: false,
@@ -313,7 +313,7 @@ class LoginPhoneScreen extends Component {
           })
           .catch(error => {
             this.leftButtonActon = () => {
-              this.props.updateNumberSent(false);
+              updateNumberSent(false);
               this.setState({
                 isLoading: false,
                 showDialog: false,
@@ -341,7 +341,7 @@ class LoginPhoneScreen extends Component {
           .done();
       } catch (e) {
         this.leftButtonActon = () => {
-          this.props.updateNumberSent(false);
+          updateNumberSent(false);
           this.setState({
             isLoading: false,
             showDialog: false,
