@@ -768,7 +768,11 @@ class MapDirectionScreen extends Component {
               title={userDetails.username}
               description="Vous">
               <Image
-                style={{width: 35, height: 35, backgroundColor: 'transparent'}}
+                style={{
+                  width: 35,
+                  height: 35,
+                  backgroundColor: 'transparent',
+                }}
                 source={require('../../icons/home_marker.png')}
               />
             </MapView.Marker>
@@ -781,7 +785,11 @@ class MapDirectionScreen extends Component {
               title="Fournisseur"
               description={providerName}>
               <Image
-                style={{width: 35, height: 35, backgroundColor: 'transparent'}}
+                style={{
+                  width: 35,
+                  height: 35,
+                  backgroundColor: 'transparent',
+                }}
                 source={require('../../icons/car_marker.png')}
               />
             </MapView.Marker>
@@ -931,7 +939,7 @@ class MapDirectionScreen extends Component {
                             OrderId: jobRequests[currRequestPos].order_id,
                             fcmId: jobRequests[currRequestPos].fcm_id,
                             titlePage: 'MapDirection',
-                            currentPosition: this.state.jobRequestPos,
+                            currentPosition: currRequestPos,
                           })
                         }>
                         <Image

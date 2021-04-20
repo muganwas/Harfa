@@ -93,6 +93,8 @@ class ChatAfterBookingDetailsScreen extends Component {
       uploadingImage: false,
       online: false,
     };
+    this.leftButtonActon = null;
+    this.rightButtonAction = null;
   }
 
   async componentDidMount() {

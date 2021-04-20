@@ -138,11 +138,15 @@ class ChatScreen extends Component {
       receiverId:
         jobRequests[currRequestPos] && jobRequests[currRequestPos].employee_id,
       receiverName:
-        jobRequests[currRequestPos] &&
-        jobRequests[currRequestPos].employee_details.username,
+        (jobRequests[currRequestPos] &&
+          jobRequests[currRequestPos].employee_details.name) ||
+        (jobRequests[currRequestPos] &&
+          jobRequests[currRequestPos].employee_details.username),
       receiverImage:
-        jobRequests[currRequestPos] &&
-        jobRequests[currRequestPos].employee_details.image,
+        (jobRequests[currRequestPos] &&
+          jobRequests[currRequestPos].employee_details.imageSource) ||
+        (jobRequests[currRequestPos] &&
+          jobRequests[currRequestPos].employee_details.image),
       serviceName:
         jobRequests[currRequestPos] && jobRequests[currRequestPos].service_name,
       orderId:
@@ -602,6 +606,7 @@ class ChatScreen extends Component {
       dialogLeftText,
       dialogRightText,
     } = this.state;
+    console.log('sender id', senderId, 'receiver ', receiverId);
     return (
       <KeyboardAvoidingView
         style={styles.container}

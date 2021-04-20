@@ -85,10 +85,11 @@ class ProChatAfterBookingDetailsScreen extends Component {
       online: false,
       uploadingImage: false,
     };
+    this.leftButtonActon = null;
+    this.rightButtonAction = null;
   }
 
   componentDidMount() {
-    console.log('...after booking');
     const {
       fetchedNotifications,
       navigation,
