@@ -41,6 +41,7 @@ import {
   colorGreen,
 } from '../../Constants/colors';
 import SimpleToast from 'react-native-simple-toast';
+import {imageExists} from '../../misc/helpers';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -71,6 +72,7 @@ class ProChatAcceptScreen extends Component {
       userId: '',
       userName: '',
       userImage: '',
+      imageAvailable: false,
       userMobile: '',
       userDob: '',
       userAddress: '',
@@ -120,13 +122,23 @@ class ProChatAcceptScreen extends Component {
         },
       })
         .then(response => response.json())
-        .then(responseJson => {
+        .then(async responseJson => {
+          let imageAvailable =
+            responseJson.data.image &&
+            !responseJson.data.image !== 'no-image.jpg'
+              ? true
+              : false;
+          if (imageAvailable)
+            await imageExists(responseJson.data.image).then(res => {
+              imageAvailable = res;
+            });
           if (responseJson.result) {
             const id = responseJson.data.id;
             this.setState({
               userId: responseJson.data.id,
               userName: responseJson.data.username,
               userImage: responseJson.data.image,
+              imageAvailable,
               userMobile: responseJson.data.mobile,
               userDob: responseJson.data.dob,
               userAddress: responseJson.data.address,
@@ -478,6 +490,7 @@ class ProChatAcceptScreen extends Component {
     const {
       userInfo: {providerDetails},
     } = this.props;
+    const {imageAvailable} = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -525,7 +538,11 @@ class ProChatAcceptScreen extends Component {
                     marginTop: 20,
                   }}>
                   <Text
-                    style={{color: 'black', fontWeight: 'bold', fontSize: 18}}>
+                    style={{
+                      color: 'black',
+                      fontWeight: 'bold',
+                      fontSize: 18,
+                    }}>
                     Hello,
                   </Text>
                   <Text style={{color: 'black', fontSize: 16, marginLeft: 5}}>
@@ -542,7 +559,11 @@ class ProChatAcceptScreen extends Component {
                   }}>
                   <Image
                     style={{width: 80, height: 80, borderRadius: 100}}
-                    source={{uri: this.state.userImage}}
+                    source={
+                      imageAvailable
+                        ? {uri: this.state.userImage}
+                        : require('../../images/generic_avatar.png')
+                    }
                   />
                 </View>
 
@@ -628,7 +649,11 @@ class ProChatAcceptScreen extends Component {
                         source={require('../../icons/mobile.png')}
                       />
                       <Text
-                        style={{fontSize: 14, marginLeft: 10, color: white}}>
+                        style={{
+                          fontSize: 14,
+                          marginLeft: 10,
+                          color: white,
+                        }}>
                         {this.state.userMobile}
                       </Text>
                     </View>

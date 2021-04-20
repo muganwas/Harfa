@@ -40,6 +40,7 @@ import {
   MessagesHeader,
   MessagesFooter,
 } from '../ProMessagesComponents';
+import {uploadAttachment} from '../../controllers/storage';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
 import {
@@ -348,9 +349,10 @@ class ProAcceptRejectJobScreen extends Component {
       new Date().getFullYear();
     if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
-        type: 'text',
+        type,
         userType: 'employee',
-        textMessage: inputMessage,
+        textMessage: inputMessage || altMessage.uri,
+        file: altMessage,
         senderId,
         senderName,
         senderImage,

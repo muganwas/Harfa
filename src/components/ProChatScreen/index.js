@@ -28,6 +28,7 @@ import {
   messagesFetched,
   messagesError,
 } from '../../Redux/Actions/messageActions';
+import {uploadAttachment} from '../../controllers/storage';
 import {lightGray, colorBg, white} from '../../Constants/colors';
 import {
   MessagesView,
@@ -100,6 +101,7 @@ class ProChatScreen extends Component {
   }
 
   componentDidMount() {
+    console.log('chat --');
     const {
       navigation,
       jobsInfo: {
@@ -342,11 +344,12 @@ class ProChatScreen extends Component {
       new Date().getFullYear();
     if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
-        type: 'text',
+        type,
         userType: 'employee',
-        textMessage: inputMessage,
+        textMessage: inputMessage || altMessage.uri,
         senderId,
         senderName,
+        file: altMessage,
         senderImage,
         receiverId,
         receiverImage,

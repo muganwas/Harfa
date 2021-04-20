@@ -404,6 +404,7 @@ class Hamburger extends React.Component {
       updateLiveChatUsers(users);
     });
     socket.on('chat-message', data => {
+      console.log('data --', data);
       const {sender} = cloneDeep(data);
       const {notificationsInfo, messagesInfo, dbMessagesFetched} = this.props;
       let newMessages = cloneDeep(messagesInfo.messages);
@@ -417,7 +418,9 @@ class Hamburger extends React.Component {
       else {
         let newMessagesCount = currentMessagesCount + 1;
         fetchedNotifications({type: 'messages', value: newMessagesCount});
-        newMessages[sender].push(data);
+        newMessages[sender]
+          ? newMessages[sender].push(data)
+          : (newMessages[sender] = [data]);
         dbMessagesFetched(newMessages);
       }
     });

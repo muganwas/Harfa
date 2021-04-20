@@ -23,6 +23,7 @@ import {
   notificationError,
 } from '../../Redux/Actions/notificationActions';
 import {lightGray, colorBg, white} from '../../Constants/colors';
+import {uploadAttachment} from '../../controllers/storage';
 import {
   MessagesView,
   MessagesHeader,
@@ -87,6 +88,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
   }
 
   componentDidMount() {
+    console.log('...after booking');
     const {
       fetchedNotifications,
       navigation,
@@ -330,9 +332,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
       new Date().getFullYear();
     if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
-        type: 'text',
+        type,
         userType: 'employee',
-        textMessage: inputMessage,
+        textMessage: inputMessage || altMessage.uri,
+        file: altMessage,
         senderId,
         senderName,
         senderImage,

@@ -277,7 +277,9 @@ class ProHamburger extends React.Component {
       else {
         const newMessagesCount = currentMessagesCount + 1;
         fetchedNotifications({type: 'messages', value: newMessagesCount});
-        newMessages[sender].push(data);
+        newMessages[sender]
+          ? newMessages[sender].push(data)
+          : (newMessages[sender] = [data]);
         dbMessagesFetched(newMessages);
       }
     });

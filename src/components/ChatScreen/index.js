@@ -32,6 +32,7 @@ import database from '@react-native-firebase/database';
 import FilePickerManager from 'react-native-file-picker';
 import DialogComponent from '../DialogComponent';
 import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
+import {uploadAttachment} from '../../controllers/storage';
 import Config from '../Config';
 import {
   MessagesFooter,

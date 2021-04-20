@@ -321,7 +321,9 @@ const ProMessagesComponent = ({
                                         )
                                           Android
                                             ? RNFetchBlob.android.actionViewIntent(
-                                                downloading[key][index].path ||
+                                                (downloading[key] &&
+                                                  downloading[key][index]
+                                                    .path) ||
                                                   file.path,
                                                 file.fileType,
                                               )

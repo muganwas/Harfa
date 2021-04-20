@@ -180,7 +180,7 @@ class ListOfProviderScreen extends Component {
     this.calculateDistance();
   }
 
-  calculateDistance = () => {
+  calculateDistance = async () => {
     const {dataSource, distCalculated} = this.state;
     var distInfo = {};
     var tempDatasource = [...dataSource];
@@ -190,13 +190,11 @@ class ListOfProviderScreen extends Component {
     if (dataSource.length > 0 && !distCalculated) {
       dataSource.map(async (obj, key) => {
         const {_id, image} = obj;
-        let imageAvaliable = true;
-        if (image) {
-          imageExists(image).then(res => {
+        let imageAvaliable = image && image !== 'no-image.jpg' ? true : false;
+        if (image && imageAvaliable) {
+          await imageExists(image).then(res => {
             imageAvaliable = res;
           });
-        } else {
-          imageAvaliable = false;
         }
         tempDatasource[key].imageAvailable = imageAvaliable;
         database()
