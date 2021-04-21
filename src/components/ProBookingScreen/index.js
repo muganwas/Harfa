@@ -199,7 +199,6 @@ class ProBookingScreen extends Component {
   };
 
   renderBookingHistoryItem = (item, index) => {
-    console.log('item', item);
     return (
       <TouchableOpacity
         key={index}

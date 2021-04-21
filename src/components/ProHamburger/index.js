@@ -13,6 +13,7 @@ import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-community/async-storage';
 import {cloneDeep} from 'lodash';
 import {DrawerActions} from 'react-navigation-drawer';
+import {MAPS_API_KEY} from 'react-native-dotenv';
 import {NavigationEvents} from 'react-navigation';
 import {exitApp} from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
@@ -63,14 +64,6 @@ class ProHamburger extends React.Component {
       notificationId: null,
     };
     Notifications.registerRemoteNotifications();
-    /*Notifications.events().registerNotificationReceivedBackground(
-      (notification, completion) => {
-        console.log('Notification Received - Background', notification.payload);
-        //const {title, body, id} = notification.payload;
-        // Calling completion on iOS with `alert: true` will present the native iOS inApp notification.
-        completion({alert: true, sound: true, badge: false});
-      },
-    );*/
   }
 
   displayNotification = ({title, body, id}) => {
@@ -264,7 +257,7 @@ class ProHamburger extends React.Component {
       }
     });
     socket.on('chat-message', data => {
-      const {sender} = data;
+      const {sender} = cloneDeep(data);
       const {notificationsInfo, messagesInfo, dbMessagesFetched} = this.props;
       let newMessages = cloneDeep(messagesInfo.messages);
       const currentMessagesCount = notificationsInfo.messages;
@@ -289,10 +282,14 @@ class ProHamburger extends React.Component {
     this.permissionRequest(() => {
       /** get pros current position and upload it to db */
       geolocation.getCurrentPosition(
-        info => {
+        async info => {
           const {
             coords: {latitude, longitude},
           } = info;
+          const addressInfo = await this.returnCoordDetails({
+            lat: latitude.toString(),
+            lng: longitude.toString(),
+          });
           const {
             fetchingCoordinates,
             fetchedCoordinates,
@@ -303,6 +300,7 @@ class ProHamburger extends React.Component {
             .update({
               latitude,
               longitude,
+              address: addressInfo.msg === 'ok' && addressInfo.address,
             })
             .then(() => {
               fetchedCoordinates({
@@ -318,11 +316,14 @@ class ProHamburger extends React.Component {
         error => {
           console.log(error);
         },
+        {
+          enableHighAccuracy: true,
+        },
       );
 
       /** look out for pros changing position */
       geolocation.watchPosition(
-        info => {
+        async info => {
           const {
             fetchingCoordinates,
             fetchedCoordinates,
@@ -331,11 +332,16 @@ class ProHamburger extends React.Component {
           const {
             coords: {latitude, longitude},
           } = info;
+          const addressInfo = await this.returnCoordDetails({
+            lat: latitude.toString(),
+            lng: longitude.toString(),
+          });
           fetchingCoordinates();
           userRef
             .update({
               latitude,
               longitude,
+              address: addressInfo.msg === 'ok' && addressInfo.address,
             })
             .then(() => {
               fetchedCoordinates({
@@ -357,6 +363,25 @@ class ProHamburger extends React.Component {
       );
     });
   }
+
+  returnCoordDetails = async ({lat = '', lng = ''}) => {
+    let url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_API_KEY}`;
+    let msg = {};
+    lat &&
+      lng &&
+      (await fetch(url)
+        .then(resp => resp.json())
+        .then(resp => {
+          if (resp.status.toLowerCase() === 'ok')
+            msg = {address: resp?.results[0]?.formatted_address, msg: 'ok'};
+          else msg = {msg: 'error'};
+        })
+        .catch(e => {
+          console.log('address error ', e);
+          msg = {msg: 'error'};
+        }));
+    return msg;
+  };
 
   checkForUserType = async () => {
     await AsyncStorage.getItem('userType').then(result => {
@@ -408,12 +433,12 @@ class ProHamburger extends React.Component {
 
   fetchOthersLocations = async () => {
     const {
-      jobsInfo: {jobRequestsProviders},
+      jobsInfo: {allJobRequestsProviders},
       fetchingOthersCoordinates,
       fetchedOthersCoordinates,
       fetchOthersCoordinatesError,
     } = this.props;
-    await jobRequestsProviders.map(async obj => {
+    await allJobRequestsProviders.map(async obj => {
       const {user_id} = obj;
       /** lookout for users changed position */
       database()

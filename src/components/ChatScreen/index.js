@@ -606,7 +606,6 @@ class ChatScreen extends Component {
       dialogLeftText,
       dialogRightText,
     } = this.state;
-    console.log('sender id', senderId, 'receiver ', receiverId);
     return (
       <KeyboardAvoidingView
         style={styles.container}

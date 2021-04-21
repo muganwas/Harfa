@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Text,
+  ActivityIndicator,
   Dimensions,
   FlatList,
   BackHandler,
@@ -60,6 +61,7 @@ class ListOfProviderScreen extends Component {
       showClasses: false,
       distanceOrder: true,
       reviewOrder: true,
+      refreshing: false,
     };
   }
 
@@ -200,7 +202,7 @@ class ListOfProviderScreen extends Component {
         database()
           .ref(`liveLocation/${_id}`)
           .once('value', result => {
-            const {latitude, longitude} = result.val();
+            const {latitude, longitude, address} = result.val();
             const dist = getDistance(
               latitude,
               longitude,
@@ -210,13 +212,18 @@ class ListOfProviderScreen extends Component {
             );
             distInfo[_id] = parseFloat(dist).toFixed(1);
             tempDatasource[key].hash = parseFloat(dist).toFixed(1);
+            tempDatasource[key].currentAddress = address;
             this.setState({distInfo});
           })
           .catch(e => {
             console.log(e.message);
           });
       });
-      this.setState({distCalculated: true, dataSource: tempDatasource});
+      this.setState({
+        distCalculated: true,
+        dataSource: tempDatasource,
+        refreshing: false,
+      });
     }
   };
 
@@ -250,7 +257,7 @@ class ListOfProviderScreen extends Component {
                   mobile: item.mobile,
                   avgRating: item.avgRating,
                   distance: item.hash,
-                  address: item.address,
+                  address: item.currentAddress || item.address,
                   description: item.description,
                   status: item.status,
                   fcmId: item.fcm_id,
@@ -300,35 +307,52 @@ class ListOfProviderScreen extends Component {
                 width: screenWidth - 130,
                 marginLeft: 10,
               }}>
-              <Text style={{fontWeight: 'bold', color: 'black', fontSize: 16}}>
+              <Text
+                style={{
+                  fontWeight: 'bold',
+                  color: 'black',
+                  fontSize: 16,
+                }}>
                 {item.username + ' ' + item.surname}
               </Text>
               <Text>
-                <Text style={{fontWeight: 'bold'}}>Address: </Text>
+                <Text style={{fontWeight: 'bold'}}>Current Location: </Text>
                 <Text
                   style={{
                     width: screenWidth - 120,
                     color: 'black',
                     fontSize: 12,
                   }}>
-                  {item.address}
+                  {item.currentAddress || item.address}
                 </Text>
               </Text>
 
-              <Text style={{marginTop: 5}}>
-                <Text
-                  style={{fontWeight: 'bold', color: 'black', fontSize: 14}}>
-                  Distance from you:{' '}
-                </Text>
+              <View style={{marginTop: 5, flexDirection: 'row'}}>
                 <Text
                   style={{
+                    fontWeight: 'bold',
                     color: 'black',
-                    width: screenWidth - 120,
                     fontSize: 14,
                   }}>
-                  {item.hash && item.hash !== 'NaN' ? `${item.hash} Km` : ' - '}
+                  Distance from you:{' '}
                 </Text>
-              </Text>
+                {item.hash && item.hash !== 'NaN' ? (
+                  <Text
+                    style={{
+                      color: 'black',
+                      width: screenWidth - 120,
+                      fontSize: 14,
+                    }}>
+                    {`${item.hash} Km`}
+                  </Text>
+                ) : (
+                  <ActivityIndicator
+                    style={styles.smActivityIndicator}
+                    color="#C00"
+                    size="small"
+                  />
+                )}
+              </View>
             </View>
           </View>
         </TouchableOpacity>
@@ -455,6 +479,8 @@ class ListOfProviderScreen extends Component {
               keyExtractor={(item, index) => index.toString()}
               showsVerticalScrollIndicator={false}
               extraData={this.state}
+              refreshing={this.state.refreshing}
+              onRefresh={this.calculateDistance}
             />
           </View>
         )}
@@ -531,6 +557,9 @@ const styles = StyleSheet.create({
     padding: 5,
     elevation: Platform.OS === 'android' ? 3 : 0,
     zIndex: 2,
+  },
+  smActivityIndicator: {
+    height: 20,
   },
   itemMainContainer: {
     flex: 1,

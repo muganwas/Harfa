@@ -191,7 +191,6 @@ class SplashScreen extends Component {
             let status;
             if (responseJson && responseJson.result) {
               const id = responseJson.data.id;
-              console.log('info', responseJson.data);
               const usersRef = database().ref(`users/${id}`);
               await usersRef.once('value', snapshot => {
                 const value = snapshot.val();

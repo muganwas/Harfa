@@ -329,7 +329,7 @@ class ProAcceptRejectJobScreen extends Component {
       senderImage,
       receiverId,
       receiverImage,
-      client_FCM_id,
+      receiverFcmId,
       receiverName,
       serviceName,
       orderId,
@@ -358,7 +358,7 @@ class ProAcceptRejectJobScreen extends Component {
         senderImage,
         receiverId,
         receiverImage,
-        fcm_id: client_FCM_id,
+        fcm_id: receiverFcmId,
         receiverName,
         serviceName,
         orderId,
@@ -404,19 +404,28 @@ class ProAcceptRejectJobScreen extends Component {
     const {
       userInfo: {providerDetails},
     } = this.props;
-    const {receiverId} = this.state;
+    const {
+      receiverId,
+      receiverFcmId,
+      orderId,
+      delivertAddress,
+      deliveryLat,
+      deliveryLang,
+      serviceName,
+      mainId,
+    } = this.state;
     const data = {
       main_id: this.state.mainId,
       chat_status: '1',
       status: 'Accepted',
       notification: {
-        fcm_id: this.state.receiverFcmId,
+        fcm_id: receiverFcmId,
         title: 'Job Accepted',
         type: 'JobAcceptence',
         notification_by: 'Employee',
         user_id: receiverId,
         employee_id: providerDetails.providerId,
-        order_id: this.state.orderId,
+        order_id: orderId,
         save_notification: true,
         body:
           'Your request has been accepted by ' +
@@ -424,7 +433,7 @@ class ProAcceptRejectJobScreen extends Component {
           ' ' +
           providerDetails.surname +
           ' Request Id : ' +
-          this.state.orderId,
+          orderId,
         data: {
           ProviderId: providerDetails.providerId,
           image: providerDetails.imageSource,
@@ -437,14 +446,14 @@ class ProAcceptRejectJobScreen extends Component {
           address: providerDetails.address,
           lat: providerDetails.lat,
           lang: providerDetails.lang,
-          serviceName: this.state.serviceName,
-          orderId: this.state.orderId,
-          mainId: this.state.mainId,
+          serviceName: serviceName,
+          orderId: orderId,
+          mainId: mainId,
           chat_status: '1',
           status: 'Accepted',
-          delivery_address: this.state.delivertAddress,
-          delivery_lat: this.state.deliveryLat,
-          delivery_lang: this.state.deliveryLang,
+          delivery_address: delivertAddress,
+          delivery_lat: deliveryLat,
+          delivery_lang: deliveryLang,
         },
       },
     };

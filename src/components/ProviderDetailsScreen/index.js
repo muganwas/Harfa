@@ -599,26 +599,30 @@ class ProviderDetailsScreen extends Component {
               />
             </View>
           </View>
-          <View style={{flexDirection: 'column', marginLeft: 20}}>
+          <View style={{flex: 1, flexDirection: 'column', marginLeft: 20}}>
             <Text>
               <Text style={{color: darkGray, fontWeight: 'bold'}}>
                 Account Type:{' '}
               </Text>
               <Text>{this.state.accountType}</Text>
             </Text>
-            <Text>
+            <View style={{flexDirection: 'row'}}>
               <Text style={{color: darkGray, fontWeight: 'bold'}}>
                 Distance from you:{' '}
               </Text>
-              <Text>
-                {this.state.distance !== 'NaN'
-                  ? this.state.distance + ' Km'
-                  : ' - '}
-              </Text>
-            </Text>
+              {this.state.distance !== 'NaN' ? (
+                <Text>{this.state.distance + ' Km'}</Text>
+              ) : (
+                <ActivityIndicator
+                  style={styles.smActivityIndicator}
+                  color="#C00"
+                  size="small"
+                />
+              )}
+            </View>
             <Text>
               <Text style={{color: darkGray, fontWeight: 'bold'}}>
-                Address:{' '}
+                Current Location:{' '}
               </Text>
               <Text>{this.state.address}</Text>
             </Text>
@@ -826,6 +830,9 @@ const styles = StyleSheet.create({
     elevation: 5,
     backgroundColor: 'white',
     borderRadius: 2,
+  },
+  smActivityIndicator: {
+    height: 20,
   },
   text: {
     fontSize: 16,

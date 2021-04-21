@@ -118,14 +118,19 @@ class AllMessageScreen extends Component {
   };
 
   renderRecentMessageItem = (item, index) => {
-    console.log('item', item);
-    const {dispatchSelectedJobRequest} = this.props;
+    const {
+      dispatchSelectedJobRequest,
+      jobsInfo: {allJobRequestsClient},
+    } = this.props;
+    const selectedJobReq = allJobRequestsClient.find(
+      jobInfo => jobInfo.employee_id === item.id,
+    );
     return (
       <TouchableOpacity
         key={index}
         style={styles.itemMainContainer}
         onPress={() => {
-          dispatchSelectedJobRequest({employee_id: item.id});
+          dispatchSelectedJobRequest(selectedJobReq);
           this.props.navigation.navigate('ChatAfterBookingDetails', {
             providerId: item.id,
             providerName: item.name,
@@ -134,6 +139,7 @@ class AllMessageScreen extends Component {
             orderId: item.orderId,
             serviceName: item.serviceName,
             pageTitle: 'AllMessage',
+            fcmId: selectedJobReq.employee_details.fcm_id,
           });
         }}>
         <View style={styles.itemImageView}>
@@ -245,7 +251,7 @@ class AllMessageScreen extends Component {
           </View>
         </View>
 
-        {this.state.dataSource.length != 0 && (
+        {this.state.dataSource.length !== 0 && (
           <ScrollView>
             <View style={styles.listView}>
               {this.state.dataSource.map(this.renderRecentMessageItem)}
@@ -253,7 +259,7 @@ class AllMessageScreen extends Component {
           </ScrollView>
         )}
 
-        {this.state.dataSource.length == 0 && !this.state.isLoading && (
+        {this.state.dataSource.length === 0 && !this.state.isLoading && (
           <View style={styles.noDataStyle}>
             <Text style={{color: 'black', fontSize: 20}}>
               You have no messages!
@@ -275,6 +281,7 @@ const mapStateToProps = state => {
   return {
     notificationsInfo: state.notificationsInfo,
     userInfo: state.userInfo,
+    jobsInfo: state.jobsInfo,
   };
 };
 

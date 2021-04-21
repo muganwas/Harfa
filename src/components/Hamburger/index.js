@@ -21,6 +21,7 @@ import geolocation from '@react-native-community/geolocation';
 import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-community/async-storage';
+import {MAPS_API_KEY} from 'react-native-dotenv';
 import {cloneDeep} from 'lodash';
 import {Notifications} from 'react-native-notifications';
 import Axios from 'axios';
@@ -294,7 +295,7 @@ class Hamburger extends React.Component {
     /** fetch users current position and upload it to db */
     this.permissionRequest(() => {
       geolocation.getCurrentPosition(
-        info => {
+        async info => {
           const {
             coords: {latitude, longitude},
           } = info;
@@ -303,17 +304,22 @@ class Hamburger extends React.Component {
             fetchedCoordinates,
             fetchCoordinatesError,
           } = this.props;
-          fetchedCoordinates({
-            latitude,
-            longitude,
+          const addressInfo = await this.returnCoordDetails({
+            lat: latitude.toString(),
+            lng: longitude.toString(),
           });
+          fetchingCoordinates();
           locationRef
             .update({
               latitude,
               longitude,
+              address: addressInfo.msg === 'ok' && addressInfo.address,
             })
             .then(() => {
-              //updated loc
+              fetchedCoordinates({
+                latitude,
+                longitude,
+              });
             })
             .catch(e => {
               console.log(e.message);
@@ -323,11 +329,14 @@ class Hamburger extends React.Component {
         error => {
           console.log(error);
         },
+        {
+          enableHighAccuracy: true,
+        },
       );
 
       /** lookout for users changing position start */
       geolocation.watchPosition(
-        info => {
+        async info => {
           const {
             coords: {latitude, longitude},
           } = info;
@@ -336,17 +345,19 @@ class Hamburger extends React.Component {
             fetchedCoordinates,
             fetchCoordinatesError,
           } = this.props;
-          fetchedCoordinates({
-            latitude,
-            longitude,
+          const addressInfo = await this.returnCoordDetails({
+            lat: latitude.toString(),
+            lng: longitude.toString(),
           });
+          fetchingCoordinates();
           locationRef
             .update({
               latitude,
               longitude,
+              address: addressInfo.msg === 'ok' && addressInfo.address,
             })
             .then(() => {
-              //fetchedCoordinates({ latitude, longitude });
+              fetchedCoordinates({latitude, longitude});
             })
             .catch(e => {
               console.log(e.message);
@@ -404,7 +415,6 @@ class Hamburger extends React.Component {
       updateLiveChatUsers(users);
     });
     socket.on('chat-message', data => {
-      console.log('data --', data);
       const {sender} = cloneDeep(data);
       const {notificationsInfo, messagesInfo, dbMessagesFetched} = this.props;
       let newMessages = cloneDeep(messagesInfo.messages);
@@ -439,6 +449,25 @@ class Hamburger extends React.Component {
     });
     socket.open();
   }
+
+  returnCoordDetails = async ({lat = '', lng = ''}) => {
+    let url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_API_KEY}`;
+    let msg = {};
+    lat &&
+      lng &&
+      (await fetch(url)
+        .then(resp => resp.json())
+        .then(resp => {
+          if (resp.status.toLowerCase() === 'ok')
+            msg = {address: resp?.results[0]?.formatted_address, msg: 'ok'};
+          else msg = {msg: 'error'};
+        })
+        .catch(e => {
+          console.log('address error ', e);
+          msg = {msg: 'error'};
+        }));
+    return msg;
+  };
 
   componentDidUpdate() {
     const {
@@ -538,9 +567,9 @@ class Hamburger extends React.Component {
       fetchingOthersCoordinates,
       fetchedOthersCoordinates,
       fetchOthersCoordinatesError,
-      jobsInfo: {jobRequests},
+      jobsInfo: {allJobRequestsClient},
     } = this.props;
-    jobRequests.map(obj => {
+    allJobRequestsClient.map(obj => {
       const {employee_id} = obj;
       database()
         .ref(`liveLocation/${employee_id}`)

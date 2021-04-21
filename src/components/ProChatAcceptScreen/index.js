@@ -368,7 +368,7 @@ class ProChatAcceptScreen extends Component {
               isLoading: false,
               isErrorToast: true,
             });
-            this.showToast('Quelque chose a mal tourné');
+            this.showToast('Something went wrong');
           }
           this.getBackFromProAcceptRejectJob();
         })

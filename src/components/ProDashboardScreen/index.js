@@ -39,7 +39,7 @@ import {
   getAllWorkRequestPro,
   getPendingJobRequestProvider,
 } from '../../Redux/Actions/jobsActions';
-import _ from 'lodash';
+import _, {cloneDeep} from 'lodash';
 import {updateProviderDetails} from '../../Redux/Actions/userActions';
 import {
   colorBg,
@@ -676,6 +676,90 @@ class ProDashboardScreen extends Component {
     }
   };
 
+  rejectJob = (pos, redirect = true) => {
+    const {
+      fetchedPendingJobInfo,
+      userInfo: {providerDetails},
+      jobsInfo: {jobRequestsProviders},
+    } = this.props;
+    let newjobRequestsProviders = cloneDeep(jobRequestsProviders);
+    const {
+      id,
+      user_id,
+      fcm_id,
+      service_name,
+      order_id,
+    } = newjobRequestsProviders[pos];
+    const data = {
+      main_id: id,
+      chat_status: '0',
+      status: 'Rejected',
+      notification: {
+        fcm_id: fcm_id,
+        title: 'Chat Request Rejected',
+        type: 'JobRejection',
+        notification_by: 'Employee',
+        save_notification: true,
+        user_id: user_id,
+        employee_id: providerDetails.providerId,
+        order_id: order_id,
+        body:
+          'Chat request has been accepted by ' +
+          providerDetails.name +
+          ' Request Id : ' +
+          order_id,
+        data: {
+          providerId: providerDetails.id,
+          serviceName: service_name,
+          orderId: order_id,
+          mainId: id,
+        },
+      },
+    };
+
+    this.setState({
+      isLoading: true,
+    });
+    try {
+      fetch(REJECT_ACCEPT_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            this.setState({
+              isLoading: false,
+            });
+            newjobRequestsProviders.splice(pos, 1);
+            fetchedPendingJobInfo(newjobRequestsProviders);
+          } else {
+            this.setState({
+              isLoading: false,
+              isErrorToast: true,
+            });
+            this.showToast('Something went wrong');
+          }
+          if (redirect) this.props.navigation.navigate('ProAcceptRejectJob');
+        })
+        .catch(error => {
+          console.log('reject error', error);
+          this.setState({
+            isLoading: false,
+          });
+        });
+    } catch (e) {
+      console.log('reject error', e);
+      this.setState({
+        isLoading: false,
+      });
+    }
+  };
+
   acceptChatRequest = async (pos, redirect = true) => {
     const {
       fetchedPendingJobInfo,
@@ -683,7 +767,7 @@ class ProDashboardScreen extends Component {
       jobsInfo: {jobRequestsProviders},
       dispatchSelectedJobRequest,
     } = this.props;
-    var newjobRequestsProviders = [...jobRequestsProviders];
+    const newjobRequestsProviders = [...jobRequestsProviders];
     const {
       id,
       user_id,
@@ -785,7 +869,6 @@ class ProDashboardScreen extends Component {
               isLoading: false,
               isErrorToast: true,
             });
-
             this.showToast('Something went wrong');
           }
         })
@@ -905,13 +988,22 @@ class ProDashboardScreen extends Component {
               </View>
             )}
             {chat_status === '0' && (
-              <TouchableOpacity
-                style={styles.arrowView}
-                onPress={() => this.acceptChatRequest(index, false)}>
-                <View style={styles.viewAccept}>
-                  <Text style={styles.textAccept}>Accept</Text>
-                </View>
-              </TouchableOpacity>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.arrowView}
+                  onPress={() => this.rejectJob(index, false)}>
+                  <View style={styles.viewAccept}>
+                    <Text style={styles.textAccept}>Reject Chat</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.arrowView}
+                  onPress={() => this.acceptChatRequest(index, false)}>
+                  <View style={styles.viewAccept}>
+                    <Text style={styles.textAccept}>Accept Chat</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </TouchableOpacity>
@@ -1825,8 +1917,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  buttonContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-between',
+  },
   buttonView: {
-    width: '100%',
+    flex: 1,
     flexDirection: 'row',
   },
 });

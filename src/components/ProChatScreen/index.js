@@ -101,7 +101,6 @@ class ProChatScreen extends Component {
   }
 
   componentDidMount() {
-    console.log('chat --');
     const {
       navigation,
       jobsInfo: {
@@ -324,7 +323,7 @@ class ProChatScreen extends Component {
       senderImage,
       receiverId,
       receiverImage,
-      client_FCM_id,
+      customer_FCM_id,
       receiverName,
       serviceName,
       orderId,
@@ -353,7 +352,7 @@ class ProChatScreen extends Component {
         senderImage,
         receiverId,
         receiverImage,
-        fcm_id: client_FCM_id,
+        fcm_id: customer_FCM_id,
         receiverName,
         serviceName,
         orderId,
