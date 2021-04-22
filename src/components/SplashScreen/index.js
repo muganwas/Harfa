@@ -12,6 +12,7 @@ import {
 import {createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import RNExitApp from 'react-native-exit-app';
 import firebaseAuth from '@react-native-firebase/auth';
 import messaging from '@react-native-firebase/messaging';
@@ -72,7 +73,8 @@ class SplashScreen extends Component {
   }
 
   componentDidMount() {
-    setTimeout(this.splashTimeOut, 3000);
+    rNES.setItem('kaweta', 'kaweta');
+    setTimeout(() => this.splashTimeOut(), 3000);
     const {fetchCountryCodes} = this.props;
     fetchCountryCodes();
   }
@@ -89,8 +91,16 @@ class SplashScreen extends Component {
       this.setState({isLoading: false});
   }
 
-  splashTimeOut = () => {
-    AsyncStorage.getItem('userId').then(userId => this.getUserType(userId));
+  splashTimeOut = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      rNES.getItem('kaweta').then(res => {
+        console.log('what? ', res);
+      });
+      this.getUserType(userId);
+    } catch (e) {
+      SimpleToast('Something went wrong, try again.');
+    }
   };
 
   getUserType = async userId => {
@@ -142,11 +152,14 @@ class SplashScreen extends Component {
   getFCMToken = async userId => {
     messaging()
       .getToken()
-      .then(fcmToken => {
+      .then(async fcmToken => {
         if (fcmToken) {
-          AsyncStorage.getItem('userType').then(userType =>
-            this.autoLogin(userId, userType, fcmToken),
-          );
+          try {
+            const userType = await AsyncStorage.getItem('userType');
+            this.autoLogin(userId, userType, fcmToken);
+          } catch (e) {
+            SimpleToast('Something went wrong, try again.');
+          }
         }
       })
       .catch(error => {
