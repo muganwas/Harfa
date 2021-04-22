@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ShakingText from 'react-native-shaking-text';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import 'react-native-gesture-handler';
 import messaging from '@react-native-firebase/messaging';
 import {
@@ -242,10 +242,10 @@ class LoginPhoneScreen extends Component {
                       };
                       updateProviderDetails(data);
                       //Store data like sharedPreference
-                      AsyncStorage.setItem('userId', id);
-                      AsyncStorage.setItem('userType', 'Provider');
-                      AsyncStorage.setItem('email', response.data.email);
-                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      rNES.setItem('userId', id);
+                      rNES.setItem('userType', 'Provider');
+                      rNES.setItem('email', response.data.email);
+                      rNES.setItem('firebaseId', this.state.firebaseId);
                       fetchJobRequestHistory(id);
                       fetchProvidersJobRequests(this.props, id, 'ProHome');
                     } else {
@@ -273,10 +273,10 @@ class LoginPhoneScreen extends Component {
                       };
                       updateProviderDetails(providerData);
                       //Store data like sharedPreference
-                      AsyncStorage.setItem('userId', id);
-                      AsyncStorage.setItem('userType', 'Provider');
-                      AsyncStorage.setItem('email', responseJson.data.email);
-                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      rNES.setItem('userId', id);
+                      rNES.setItem('userType', 'Provider');
+                      rNES.setItem('email', responseJson.data.email);
+                      rNES.setItem('firebaseId', this.state.firebaseId);
                       fetchJobRequestHistory(id);
                       fetchProvidersJobRequests(this.props, id, 'ProHome');
                     }

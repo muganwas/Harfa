@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ShakingText from 'react-native-shaking-text';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import 'react-native-gesture-handler';
 import messaging from '@react-native-firebase/messaging';
 import {
@@ -236,10 +236,10 @@ class LoginPhoneScreen extends Component {
                       };
                       updateUserDetails(data);
                       //Store data like sharedPreference
-                      AsyncStorage.setItem('userId', userId);
-                      AsyncStorage.setItem('userType', 'User');
-                      AsyncStorage.setItem('email', response.data.email);
-                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      rNES.setItem('userId', userId);
+                      rNES.setItem('userType', 'User');
+                      rNES.setItem('email', response.data.email);
+                      rNES.setItem('firebaseId', this.state.firebaseId);
                       //Check if any Ongoing Request
                       fetchJobRequestHistory(userId);
                       fetchJobRequests(this.props, userId, 'Home');
@@ -261,10 +261,10 @@ class LoginPhoneScreen extends Component {
                       };
                       updateUserDetails(userData);
                       //Store data like sharedPreference
-                      AsyncStorage.setItem('userId', id);
-                      AsyncStorage.setItem('userType', 'User');
-                      AsyncStorage.setItem('email', email);
-                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      rNES.setItem('userId', id);
+                      rNES.setItem('userType', 'User');
+                      rNES.setItem('email', email);
+                      rNES.setItem('firebaseId', this.state.firebaseId);
                       fetchJobRequestHistory(id);
                       fetchJobRequests(this.props, id, 'Home');
                     }

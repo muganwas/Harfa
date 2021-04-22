@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import _ from 'lodash';
 import RNFS from 'react-native-fs';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import RNFetchBlob from 'rn-fetch-blob';
 import {chatDate} from '../../misc/helpers';
 import XlsIcon from '../../images/svg/xls.svg';
@@ -102,30 +102,28 @@ const ProMessagesComponent = ({
           if (newDownloading[key] && newDownloading[key][index]) {
             newDownloading[key][index].percentage = 100;
           }
-          await AsyncStorage.getItem('downloadedFiles').then(
-            async downloadedInfo => {
-              if (!downloadedInfo) {
-                let newDownloadedInfo = {
-                  name: newPath,
-                };
-                await AsyncStorage.setItem(
-                  'downloadedFiles',
-                  JSON.stringify(newDownloadedInfo),
-                );
-              } else {
-                let newDownloadedInfo = JSON.parse(downloadedInfo);
-                newDownloadedInfo[name] = newPath;
-                await AsyncStorage.setItem(
-                  'downloadedFiles',
-                  JSON.stringify(newDownloadedInfo),
-                );
-                /** Open file for Android onlhy */
-                Android
-                  ? RNFetchBlob.android.actionViewIntent(newPath, fileType)
-                  : null;
-              }
-            },
-          );
+          await rNES.getItem('downloadedFiles').then(async downloadedInfo => {
+            if (!downloadedInfo) {
+              let newDownloadedInfo = {
+                name: newPath,
+              };
+              await rNES.setItem(
+                'downloadedFiles',
+                JSON.stringify(newDownloadedInfo),
+              );
+            } else {
+              let newDownloadedInfo = JSON.parse(downloadedInfo);
+              newDownloadedInfo[name] = newPath;
+              await rNES.setItem(
+                'downloadedFiles',
+                JSON.stringify(newDownloadedInfo),
+              );
+              /** Open file for Android onlhy */
+              Android
+                ? RNFetchBlob.android.actionViewIntent(newPath, fileType)
+                : null;
+            }
+          });
         })
         .catch(err => {
           let newDownloading = _.cloneDeep(downloading);

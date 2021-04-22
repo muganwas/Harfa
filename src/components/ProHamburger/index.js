@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import {cloneDeep} from 'lodash';
 import {DrawerActions} from 'react-navigation-drawer';
 import {MAPS_API_KEY} from 'react-native-dotenv';
@@ -384,7 +384,7 @@ class ProHamburger extends React.Component {
   };
 
   checkForUserType = async () => {
-    await AsyncStorage.getItem('userType').then(result => {
+    await rNES.getItem('userType').then(result => {
       if (!result) this.props.navigation.navigate('AfterSplash');
     });
   };

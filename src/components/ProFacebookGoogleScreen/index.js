@@ -15,7 +15,7 @@ import {
 import {connect} from 'react-redux';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ShakingText from 'react-native-shaking-text';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import 'react-native-gesture-handler';
 import firebaseAuth from '@react-native-firebase/auth';
 import messaging from '@react-native-firebase/messaging';
@@ -256,10 +256,10 @@ class FacebookGoogleScreen extends Component {
                       };
                       updateProviderDetails(data);
                       //Store data like sharedPreference
-                      AsyncStorage.setItem('userId', id);
-                      AsyncStorage.setItem('userType', 'Provider');
-                      AsyncStorage.setItem('email', response.data.email);
-                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      rNES.setItem('userId', id);
+                      rNES.setItem('userType', 'Provider');
+                      rNES.setItem('email', response.data.email);
+                      rNES.setItem('firebaseId', this.state.firebaseId);
                       fetchJobRequestHistory(id);
                       fetchProvidersJobRequests(this.props, id, 'ProHome');
                     } else {
@@ -285,10 +285,10 @@ class FacebookGoogleScreen extends Component {
                       };
                       updateProviderDetails(providerData);
                       //Store data like sharedPreference
-                      AsyncStorage.setItem('userId', id);
-                      AsyncStorage.setItem('userType', 'Provider');
-                      AsyncStorage.setItem('email', responseJson.data.email);
-                      AsyncStorage.setItem('firebaseId', this.state.firebaseId);
+                      rNES.setItem('userId', id);
+                      rNES.setItem('userType', 'Provider');
+                      rNES.setItem('email', responseJson.data.email);
+                      rNES.setItem('firebaseId', this.state.firebaseId);
                       fetchJobRequestHistory(id);
                       fetchProvidersJobRequests(this.props, id, 'ProHome');
                     }
@@ -530,14 +530,14 @@ class FacebookGoogleScreen extends Component {
                     };
                     updateProviderDetails(providerData);
                     //Store data like sharedPreference
-                    AsyncStorage.setItem('userId', id);
-                    AsyncStorage.setItem('userType', 'Provider');
+                    rNES.setItem('userId', id);
+                    rNES.setItem('userType', 'Provider');
                     const auth = {
                       email: this.state.email,
                       password: this.state.password,
                     };
-                    AsyncStorage.setItem('auth', JSON.stringify(auth));
-                    AsyncStorage.setItem('firebaseId', uid);
+                    rNES.setItem('auth', JSON.stringify(auth));
+                    rNES.setItem('firebaseId', uid);
                     fetchJobRequestHistory(id);
                     fetchProvidersJobRequests(this.props, id, 'ProHome');
                   } else {

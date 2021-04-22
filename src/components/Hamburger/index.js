@@ -20,7 +20,7 @@ import Config from '../Config';
 import geolocation from '@react-native-community/geolocation';
 import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import {MAPS_API_KEY} from 'react-native-dotenv';
 import {cloneDeep} from 'lodash';
 import {Notifications} from 'react-native-notifications';
@@ -500,7 +500,7 @@ class Hamburger extends React.Component {
   }
 
   checkForUserType = async () => {
-    await AsyncStorage.getItem('userType').then(result => {
+    await rNES.getItem('userType').then(result => {
       if (!result) this.props.navigation.navigate('AfterSplash');
     });
   };

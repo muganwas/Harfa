@@ -14,7 +14,7 @@ import {
 import ShakingText from 'react-native-shaking-text';
 import messaging from '@react-native-firebase/messaging';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import Config from '../Config';
 import {updateUserDetails} from '../../Redux/Actions/userActions';
 import {getPendingJobRequest} from '../../Redux/Actions/jobsActions';
@@ -109,8 +109,8 @@ class VerificationScreen extends Component {
                 const id = responseJson.data.id;
 
                 //Store data like sharedPreference
-                AsyncStorage.setItem('userId', id);
-                AsyncStorage.setItem('userType', 'User');
+                rNES.setItem('userId', id);
+                rNES.setItem('userType', 'User');
 
                 this.getProfile(id);
               } else {

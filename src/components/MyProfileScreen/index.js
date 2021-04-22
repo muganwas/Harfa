@@ -21,7 +21,7 @@ import ImagePicker from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import axios from 'axios';
 import storage from '@react-native-firebase/storage';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
@@ -163,9 +163,9 @@ class MyProfileScreen extends Component {
             galleryCameraImage: 'galleryCamera',
             isLoading: true,
           });
-          AsyncStorage.getItem('userId').then(providerId =>
-            this.updateImageTask(providerId, response),
-          );
+          rNES
+            .getItem('userId')
+            .then(providerId => this.updateImageTask(providerId, response));
         }
       });
     } catch (error) {
@@ -200,9 +200,9 @@ class MyProfileScreen extends Component {
       isLoading: true,
     });
 
-    AsyncStorage.getItem('userId').then(providerId =>
-      this.updateInformation(providerId),
-    );
+    rNES
+      .getItem('userId')
+      .then(providerId => this.updateInformation(providerId));
   };
 
   //Information Update

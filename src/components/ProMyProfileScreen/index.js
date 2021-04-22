@@ -14,10 +14,9 @@ import {
   Modal,
 } from 'react-native';
 import {connect} from 'react-redux';
-import database from '@react-native-firebase/database';
 import RNExitApp from 'react-native-exit-app';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import ShakingText from 'react-native-shaking-text';
 import TextInputMask from 'react-native-text-input-mask';
 import axios from 'axios';
@@ -109,9 +108,9 @@ class ProMyProfileScreen extends Component {
           galleryCameraImage: 'galleryCamera',
           isLoading: true,
         });
-        AsyncStorage.getItem('userId').then(providerId =>
-          this.updateImageTask(providerId, response),
-        );
+        rNES
+          .getItem('userId')
+          .then(providerId => this.updateImageTask(providerId, response));
       }
     });
   };
@@ -203,9 +202,9 @@ class ProMyProfileScreen extends Component {
     this.setState({
       isLoading: true,
     });
-    AsyncStorage.getItem('userId').then(
-      async providerId => await this.updateInformation(providerId),
-    );
+    rNES
+      .getItem('userId')
+      .then(async providerId => await this.updateInformation(providerId));
   };
 
   updateInformation = async providerId => {

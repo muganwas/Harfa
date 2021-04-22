@@ -12,7 +12,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-community/async-storage';
+import rNES from 'react-native-encrypted-storage';
 import ShakingText from 'react-native-shaking-text';
 import messaging from '@react-native-firebase/messaging';
 import Config from '../Config';
@@ -109,8 +109,8 @@ class ProVerificationScreen extends Component {
                 const id = responseJson.data.id;
 
                 //Store data like sharedPreference
-                AsyncStorage.setItem('userId', id);
-                AsyncStorage.setItem('userType', 'Provider');
+                rNES.setItem('userId', id);
+                rNES.setItem('userType', 'Provider');
 
                 var providerData = {
                   providerId: responseJson.data.id,

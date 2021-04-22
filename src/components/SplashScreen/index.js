@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import {createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
-import AsyncStorage from '@react-native-community/async-storage';
 import rNES from 'react-native-encrypted-storage';
 import RNExitApp from 'react-native-exit-app';
 import firebaseAuth from '@react-native-firebase/auth';
@@ -73,7 +72,6 @@ class SplashScreen extends Component {
   }
 
   componentDidMount() {
-    rNES.setItem('kaweta', 'kaweta');
     setTimeout(() => this.splashTimeOut(), 3000);
     const {fetchCountryCodes} = this.props;
     fetchCountryCodes();
@@ -93,10 +91,7 @@ class SplashScreen extends Component {
 
   splashTimeOut = async () => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      rNES.getItem('kaweta').then(res => {
-        console.log('what? ', res);
-      });
+      const userId = await rNES.getItem('userId');
       this.getUserType(userId);
     } catch (e) {
       SimpleToast('Something went wrong, try again.');
@@ -155,7 +150,7 @@ class SplashScreen extends Component {
       .then(async fcmToken => {
         if (fcmToken) {
           try {
-            const userType = await AsyncStorage.getItem('userType');
+            const userType = await rNES.getItem('userType');
             this.autoLogin(userId, userType, fcmToken);
           } catch (e) {
             SimpleToast('Something went wrong, try again.');
@@ -377,7 +372,8 @@ class SplashScreen extends Component {
       this.setState({
         isLoading: true,
       });
-      AsyncStorage.getItem('auth')
+      rNES
+        .getItem('auth')
         .then(storedInfo => {
           if (storedInfo) {
             const {email, password} = JSON.parse(storedInfo);
@@ -394,7 +390,7 @@ class SplashScreen extends Component {
           } else this.inhouseLogin(userId, userType, fcmToken);
         })
         .catch(e => {
-          console.log('asyncstorage error', e);
+          console.log('storage error', e);
         });
     } else {
       console.log('No Logged User');
