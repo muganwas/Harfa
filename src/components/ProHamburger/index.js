@@ -33,6 +33,7 @@ import {
   messagesFetched,
   messagesError,
   dbMessagesFetched,
+  fetchEmployeeMessages,
 } from '../../Redux/Actions/messageActions';
 import {
   updatingCoordinates,
@@ -91,8 +92,7 @@ class ProHamburger extends React.Component {
   async componentDidMount() {
     const {
       fetchedNotifications,
-      dbMessagesFetched,
-      fetchingMessagesError,
+      fetchEmployeeMessages,
       updateLiveChatUsers,
       userInfo: {providerDetails},
     } = this.props;
@@ -151,49 +151,7 @@ class ProHamburger extends React.Component {
     });
     await this.fetchOthersLocations();
     await this.checkForUserType();
-    try {
-      await Axios.get(
-        FETCH_MESSAGES + '?sender=' + receiverId + '&userType=employee',
-      )
-        .then(async results => {
-          const {data} = results;
-          let messages = {};
-          let otherUsers = {};
-          // get ids of other users this user has chatted with
-          if (!data.message) {
-            await data.map(msgObj => {
-              const {sender, recipient} = msgObj;
-              if (sender !== receiverId) otherUsers[sender] = sender;
-              else if (recipient !== receiverId)
-                otherUsers[recipient] = recipient;
-            });
-            // if any user, seperate the different groups of messages
-            if (Object.keys(otherUsers).length > 0) {
-              Object.keys(otherUsers).map(async otherUser => {
-                const thisUsersMessages = [];
-                await data.map(msgObj => {
-                  const {sender, recipient} = msgObj;
-                  if (otherUser === sender || otherUser === recipient)
-                    thisUsersMessages.push(msgObj);
-                });
-                if (thisUsersMessages.length > 0)
-                  messages[otherUser] = thisUsersMessages;
-              });
-            }
-            dbMessagesFetched(messages);
-          } else {
-            SimpleToast.show('Something went wrong, please reload app');
-          }
-        })
-        .catch(e => {
-          console.log('mongo messages error', e);
-          fetchingMessagesError(e.message);
-        });
-    } catch (e) {
-      console.log('mongo messages error', e);
-      fetchingMessagesError(e.message);
-    }
-
+    await fetchEmployeeMessages(receiverId);
     database()
       .ref('adminChatting')
       .child(receiverId)
@@ -571,6 +529,9 @@ const mapDispatchToProps = dispatch => {
     },
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
+    },
+    fetchEmployeeMessages: eId => {
+      dispatch(fetchEmployeeMessages({receiverId: eId}));
     },
   };
 };

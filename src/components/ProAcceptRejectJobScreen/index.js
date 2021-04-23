@@ -22,7 +22,10 @@ import Toast from 'react-native-simple-toast';
 import Geolocation from 'react-native-geolocation-service';
 import moment from 'moment';
 import {cloneDeep} from 'lodash';
-import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
+import {
+  dbMessagesFetched,
+  fetchEmployeeMessages,
+} from '../../Redux/Actions/messageActions';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -323,9 +326,14 @@ class ProAcceptRejectJobScreen extends Component {
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    const {
+      userInfo: {providerDetails},
+      fetchEmployeeMessages,
+    } = this.props;
     if (!socket.connected) {
       socket.close();
       socket.connect();
+      await fetchEmployeeMessages(providerDetails.providerId);
     }
     const {
       inputMessage,
@@ -666,7 +674,9 @@ class ProAcceptRejectJobScreen extends Component {
       imageAvailable,
       receiverImage,
       receiverName,
+      uploadingImage,
     } = this.state;
+    const {messagesInfo} = this.props;
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -699,8 +709,8 @@ class ProAcceptRejectJobScreen extends Component {
               <MessagesView
                 senderId={senderId}
                 receiverId={receiverId}
-                uploadingImage={this.state.uploadingImage}
-                messagesInfo={this.props.messagesInfo}
+                uploadingImage={uploadingImage}
+                messagesInfo={messagesInfo}
               />
             </View>
           </ScrollView>
@@ -1012,6 +1022,9 @@ const mapDispatchToProps = dispatch => {
     },
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
+    },
+    fetchEmployeeMessages: receiverId => {
+      dispatch(fetchEmployeeMessages({receiverId}));
     },
   };
 };

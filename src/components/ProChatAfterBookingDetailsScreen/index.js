@@ -15,7 +15,10 @@ import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
 import FilePickerManager from 'react-native-file-picker';
 import moment from 'moment';
-import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
+import {
+  dbMessagesFetched,
+  fetchEmployeeMessages,
+} from '../../Redux/Actions/messageActions';
 import Config from '../Config';
 import database from '@react-native-firebase/database';
 import {
@@ -98,7 +101,14 @@ class ProChatAfterBookingDetailsScreen extends Component {
         selectedJobRequest: {user_id},
       },
       generalInfo: {OnlineUsers},
+      userInfo: {providerDetails},
+      fetchEmployeeMessages,
     } = this.props;
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+      fetchEmployeeMessages(providerDetails.providerId);
+    }
     fetchedNotifications({type: 'messages', value: 0});
     navigation.addListener('willFocus', async () => {
       this.reInit();
@@ -307,9 +317,14 @@ class ProChatAfterBookingDetailsScreen extends Component {
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    const {
+      userInfo: {providerDetails},
+      fetchEmployeeMessages,
+    } = this.props;
     if (!socket.connected) {
       socket.close();
       socket.connect();
+      await fetchEmployeeMessages(providerDetails.providerId);
     }
     const {
       inputMessage,
@@ -537,6 +552,9 @@ const mapDispatchToProps = dispatch => {
     },
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
+    },
+    fetchEmployeeMessages: receiverId => {
+      dispatch(fetchEmployeeMessages({receiverId}));
     },
   };
 };

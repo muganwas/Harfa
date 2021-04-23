@@ -15,7 +15,10 @@ import {
 import moment from 'moment';
 import {cloneDeep} from 'lodash';
 import FilePickerManager from 'react-native-file-picker';
-import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
+import {
+  dbMessagesFetched,
+  fetchEmployeeMessages,
+} from '../../Redux/Actions/messageActions';
 import database from '@react-native-firebase/database';
 import Config from '../Config';
 import {
@@ -316,9 +319,14 @@ class ProChatScreen extends Component {
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    const {
+      userInfo: {providerDetails},
+      fetchEmployeeMessages,
+    } = this.props;
     if (!socket.connected) {
       socket.close();
       socket.connect();
+      await fetchEmployeeMessages(providerDetails.providerId);
     }
     const {
       inputMessage,
@@ -568,6 +576,9 @@ const mapDispatchToProps = dispatch => {
     },
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
+    },
+    fetchEmployeeMessages: receiverId => {
+      dispatch(fetchEmployeeMessages({receiverId}));
     },
   };
 };
