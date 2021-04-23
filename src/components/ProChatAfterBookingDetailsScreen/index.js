@@ -174,7 +174,13 @@ class ProChatAfterBookingDetailsScreen extends Component {
       },
       navigation,
       userInfo: {providerDetails},
+      fetchEmployeeMessages,
     } = this.props;
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+      fetchEmployeeMessages(providerDetails.providerId);
+    }
     this.setState({
       showButton: false,
       senderId: providerDetails.providerId,

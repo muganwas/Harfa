@@ -123,7 +123,13 @@ class ProAcceptRejectJobScreen extends Component {
       messagesInfo: {dataChatSource, fetched},
       generalInfo: {OnlineUsers},
       navigation,
+      fetchEmployeeMessages,
     } = props;
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+      fetchEmployeeMessages(providerDetails.providerId);
+    }
     let currRequestPos = navigation.getParam('currentPos', 0);
     this.setState({
       senderId: providerDetails.providerId,
