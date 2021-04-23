@@ -82,6 +82,7 @@ class ProAcceptRejectJobScreen extends Component {
       online: false,
       receiverName: '',
       receiverImage: '',
+      imageAvailable: false,
       receiverId: '',
       senderId: '',
       showButton: false,
@@ -150,7 +151,7 @@ class ProAcceptRejectJobScreen extends Component {
       deliveryLang: jobRequestsProviders[currRequestPos].delivery_lang,
       chatStatus: jobRequestsProviders[currRequestPos].chat_status,
       status: jobRequestsProviders[currRequestPos].status,
-      userImageExists: jobRequestsProviders[currRequestPos].imageAvailable,
+      imageAvailable: jobRequestsProviders[currRequestPos].imageAvailable,
       currRequestPos,
       selectedStatus: '0',
       liveChatStatus: OnlineUsers[user_id] ? OnlineUsers[user_id].status : '0',
@@ -317,11 +318,15 @@ class ProAcceptRejectJobScreen extends Component {
         }
       });
     } catch (e) {
-      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
+      this.showToast('Something went wrong, try again later', Toast.SHORT);
     }
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+    }
     const {
       inputMessage,
       senderId,
@@ -336,10 +341,6 @@ class ProAcceptRejectJobScreen extends Component {
     } = this.state;
     const {dbMessagesFetched, messagesInfo} = this.props;
     let newMessages = cloneDeep(messagesInfo.messages);
-    this.setState({
-      inputMessage: '',
-      showButton: false,
-    });
     const time = moment().toISOString();
     const date =
       new Date().getDate() +
@@ -392,8 +393,19 @@ class ProAcceptRejectJobScreen extends Component {
           newMessages[receiverId].length - 1
         ].notUploaded = false;
       }
-      dbMessagesFetched(newMessages);
-      socket.emit('sent-message', messageObj);
+      if (socket.connected) {
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        });
+        dbMessagesFetched(newMessages);
+        socket.emit('sent-message', messageObj);
+      } else {
+        this.showToast(
+          'No connection, wait a few seconds and send again or check your internet connection.',
+          Toast.LONG,
+        );
+      }
     }
   };
 
@@ -630,8 +642,14 @@ class ProAcceptRejectJobScreen extends Component {
     });
   };
 
-  showToast = message => {
-    Toast.show(message);
+  showToast = (message, duration) => {
+    if (
+      typeof duration === 'number' ||
+      duration === Toast.LONG ||
+      duration === Toast.SHORT
+    )
+      Toast.show(message, duration);
+    else Toast.show(message);
   };
 
   changeWaitingDialogVisibility = bool => {
@@ -641,7 +659,14 @@ class ProAcceptRejectJobScreen extends Component {
   };
 
   render() {
-    const {online, senderId, receiverId} = this.state;
+    const {
+      online,
+      senderId,
+      receiverId,
+      imageAvailable,
+      receiverImage,
+      receiverName,
+    } = this.state;
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -649,8 +674,9 @@ class ProAcceptRejectJobScreen extends Component {
         <StatusBarPlaceHolder />
         <MessagesHeader
           online={online}
-          receiverImage={this.state.receiverImage}
-          receiverName={this.state.receiverName}
+          imageAvailable={imageAvailable}
+          receiverImage={receiverImage}
+          receiverName={receiverName}
           handleBackButtonClick={this.handleBackButtonClick}
         />
         <ImageBackground

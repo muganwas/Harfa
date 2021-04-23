@@ -34,7 +34,7 @@ import {
   MessagesHeader,
   MessagesView,
 } from '../MessagesComponents';
-import SimpleToast from 'react-native-simple-toast';
+import Toast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
@@ -97,7 +97,7 @@ class ChatAfterBookingDetailsScreen extends Component {
     this.rightButtonAction = null;
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     const {
       fetchedNotifications,
       navigation,
@@ -317,11 +317,15 @@ class ChatAfterBookingDetailsScreen extends Component {
         }
       });
     } catch (e) {
-      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
+      this.showToast('Something went wrong, try again later', Toast.SHORT);
     }
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+    }
     const {
       inputMessage,
       senderId,
@@ -343,10 +347,6 @@ class ChatAfterBookingDetailsScreen extends Component {
       (new Date().getMonth() + 1) +
       '/' +
       new Date().getFullYear();
-    this.setState({
-      inputMessage: '',
-      showButton: false,
-    });
     if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
         type,
@@ -392,9 +392,30 @@ class ChatAfterBookingDetailsScreen extends Component {
         ].notUploaded = false;
         dbMessagesFetched(newMessages);
       }
-      dbMessagesFetched(newMessages);
-      socket.emit('sent-message', messageObj);
+      if (socket.connected) {
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        });
+        dbMessagesFetched(newMessages);
+        socket.emit('sent-message', messageObj);
+      } else {
+        this.showToast(
+          'No connection, wait a few seconds and send again or check your internet connection.',
+          Toast.LONG,
+        );
+      }
     }
+  };
+
+  showToast = (message, duration) => {
+    if (
+      typeof duration === 'number' ||
+      duration === Toast.LONG ||
+      duration === Toast.SHORT
+    )
+      Toast.show(message, duration);
+    else Toast.show(message);
   };
 
   renderSeparator = () => {
@@ -408,6 +429,7 @@ class ChatAfterBookingDetailsScreen extends Component {
       receiverId,
       senderId,
       receiverName,
+      proImageAvailable,
       online,
     } = this.state;
     return (
@@ -420,6 +442,7 @@ class ChatAfterBookingDetailsScreen extends Component {
           source={require('../../icons/bg_chat.png')}>
           <MessagesHeader
             receiverImage={receiverImage}
+            imageAvailable={proImageAvailable}
             receiverName={receiverName}
             online={online}
             handleBackButtonClick={this.handleBackButtonClick}

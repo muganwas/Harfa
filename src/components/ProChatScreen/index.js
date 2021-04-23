@@ -316,6 +316,10 @@ class ProChatScreen extends Component {
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+    }
     const {
       inputMessage,
       senderId,
@@ -330,10 +334,6 @@ class ProChatScreen extends Component {
     } = this.state;
     const {dbMessagesFetched, messagesInfo} = this.props;
     let newMessages = cloneDeep(messagesInfo.messages);
-    this.setState({
-      inputMessage: '',
-      showButton: false,
-    });
     const time = moment().toISOString();
     const date =
       new Date().getDate() +
@@ -386,9 +386,30 @@ class ProChatScreen extends Component {
           newMessages[receiverId].length - 1
         ].notUploaded = false;
       }
-      dbMessagesFetched(newMessages);
-      socket.emit('sent-message', messageObj);
+      if (socket.connected) {
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        });
+        dbMessagesFetched(newMessages);
+        socket.emit('sent-message', messageObj);
+      } else {
+        this.showToast(
+          'No connection, wait a few seconds and send again or check your internet connection.',
+          Toast.LONG,
+        );
+      }
     }
+  };
+
+  showToast = (message, duration) => {
+    if (
+      typeof duration === 'number' ||
+      duration === Toast.LONG ||
+      duration === Toast.SHORT
+    )
+      Toast.show(message, duration);
+    else Toast.show(message);
   };
 
   renderSeparator = () => {

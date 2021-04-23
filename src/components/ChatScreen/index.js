@@ -27,7 +27,7 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import {cloneDeep, clone} from 'lodash';
-import SimpleToast from 'react-native-simple-toast';
+import Toast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
 import FilePickerManager from 'react-native-file-picker';
 import DialogComponent from '../DialogComponent';
@@ -159,6 +159,9 @@ class ChatScreen extends Component {
       liveChatStatus: OnlineUsers[providerId]
         ? OnlineUsers[providerId].status
         : '0',
+      imageAvailable:
+        jobRequests[currRequestPos] &&
+        jobRequests[currRequestPos].imageAvailable,
       selectedStatus: '0',
       showDialog: false,
       dialogType: null,
@@ -341,11 +344,15 @@ class ChatScreen extends Component {
         }
       });
     } catch (e) {
-      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
+      this.showToast('Something went wrong, try again later', Toast.SHORT);
     }
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+    }
     const {
       inputMessage,
       senderId,
@@ -367,10 +374,6 @@ class ChatScreen extends Component {
       (new Date().getMonth() + 1) +
       '/' +
       new Date().getFullYear();
-    this.setState({
-      inputMessage: '',
-      showButton: false,
-    });
     if (inputMessage.length > 0 || (altMessage && type === 'image')) {
       const messageObj = {
         type,
@@ -415,9 +418,30 @@ class ChatScreen extends Component {
           newMessages[receiverId].length - 1
         ].notUploaded = false;
       }
-      dbMessagesFetched(newMessages);
-      socket.emit('sent-message', messageObj);
+      if (socket.connected) {
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        });
+        dbMessagesFetched(newMessages);
+        socket.emit('sent-message', messageObj);
+      } else {
+        this.showToast(
+          'No connection, wait a few seconds and send again or check your internet connection.',
+          Toast.LONG,
+        );
+      }
     }
+  };
+
+  showToast = (message, duration) => {
+    if (
+      typeof duration === 'number' ||
+      duration === Toast.LONG ||
+      duration === Toast.SHORT
+    )
+      Toast.show(message, duration);
+    else Toast.show(message);
   };
 
   jobCancelTask = () => {
@@ -605,6 +629,10 @@ class ChatScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
+      imageAvailable,
+      receiverImage,
+      receiverName,
+      uploadingImage,
     } = this.state;
     return (
       <KeyboardAvoidingView
@@ -629,10 +657,11 @@ class ChatScreen extends Component {
           style={styles.container}
           source={require('../../icons/bg_chat.png')}>
           <MessagesHeader
-            receiverImage={this.state.receiverImage}
-            receiverName={this.state.receiverName}
+            receiverImage={receiverImage}
+            imageAvailable={imageAvailable}
+            receiverName={receiverName}
             online={online}
-            uploadingImage={this.state.uploadingImage}
+            uploadingImage={uploadingImage}
             handleBackButtonClick={this.handleBackButtonClick}
           />
           <ScrollView

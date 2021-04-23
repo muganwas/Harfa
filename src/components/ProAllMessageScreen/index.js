@@ -66,20 +66,20 @@ class ProAllMessageScreen extends Component {
     this.springValue = new Animated.Value(100);
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     const {
       userInfo: {providerDetails},
     } = this.props;
     let dbRef = database()
       .ref('recentMessage')
       .child(providerDetails.providerId);
-    await dbRef.once('value', snapshot => {
+    dbRef.once('value', snapshot => {
       //const key = snapshot.key;
       let message = snapshot.val();
       let messageArray = [];
       if (message) {
         messageArray = Object.values(message);
-        messageArray.map(async (inf, index) => {
+        messageArray.map((inf, index) => {
           let newMessage = _.cloneDeep(inf);
           const {image} = newMessage;
           imageExists(image).then(res => {

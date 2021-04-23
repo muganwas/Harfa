@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import {cloneDeep} from 'lodash';
+import Toast from 'react-native-simple-toast';
 import FilePickerManager from 'react-native-file-picker';
 import moment from 'moment';
 import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
@@ -306,6 +307,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+    }
     const {
       inputMessage,
       senderId,
@@ -320,10 +325,6 @@ class ProChatAfterBookingDetailsScreen extends Component {
     } = this.state;
     const {dbMessagesFetched, messagesInfo} = this.props;
     let newMessages = cloneDeep(messagesInfo.messages);
-    this.setState({
-      inputMessage: '',
-      showButton: false,
-    });
     const time = moment().toISOString();
     const date =
       new Date().getDate() +
@@ -376,9 +377,30 @@ class ProChatAfterBookingDetailsScreen extends Component {
           newMessages[receiverId].length - 1
         ].notUploaded = false;
       }
-      dbMessagesFetched(newMessages);
-      socket.emit('sent-message', messageObj);
+      if (socket.connected) {
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        });
+        dbMessagesFetched(newMessages);
+        socket.emit('sent-message', messageObj);
+      } else {
+        this.showToast(
+          'No connection, wait a few seconds and send again or check your internet connection.',
+          Toast.LONG,
+        );
+      }
     }
+  };
+
+  showToast = (message, duration) => {
+    if (
+      typeof duration === 'number' ||
+      duration === Toast.LONG ||
+      duration === Toast.SHORT
+    )
+      Toast.show(message, duration);
+    else Toast.show(message);
   };
 
   renderSeparator = () => {
@@ -386,7 +408,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
   };
 
   render() {
-    let {showButton, senderId, receiverId, online} = this.state;
+    let {showButton, senderId, receiverId, online, imageAvailable} = this.state;
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -398,6 +420,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
           <MessagesHeader
             online={online}
             receiverImage={this.state.receiverImage}
+            imageAvailable={imageAvailable}
             receiverName={this.state.receiverName}
             handleBackButtonClick={() => this.props.navigation.goBack()}
           />
