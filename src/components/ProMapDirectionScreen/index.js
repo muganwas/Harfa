@@ -511,6 +511,7 @@ class ProMapDirectionScreen extends Component {
       currentModal,
       showDialog,
     } = this.state;
+    const {fetchedNotifications} = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -754,12 +755,16 @@ class ProMapDirectionScreen extends Component {
                         elevation: 5,
                         padding: 10,
                       }}
-                      onPress={() =>
+                      onPress={() => {
+                        fetchedNotifications({
+                          type: 'messages',
+                          value: 0,
+                        });
                         this.props.navigation.navigate('ProAcceptRejectJob', {
                           pageTitle: 'ProMapDirection',
                           currentPos: this.state.currentPos,
-                        })
-                      }>
+                        });
+                      }}>
                       <Image
                         style={[styles.call, {tintColor: themeRed}]}
                         source={require('../../icons/chat.png')}

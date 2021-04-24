@@ -24,7 +24,6 @@ import rNES from 'react-native-encrypted-storage';
 import {MAPS_API_KEY} from 'react-native-dotenv';
 import {cloneDeep} from 'lodash';
 import {Notifications} from 'react-native-notifications';
-import Axios from 'axios';
 import {imageExists} from '../../misc/helpers';
 import {
   startFetchingNotification,
@@ -61,7 +60,6 @@ import SimpleToast from 'react-native-simple-toast';
 
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
-const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
 let notifications = [];
 class Hamburger extends React.Component {
   constructor(props) {
@@ -102,8 +100,6 @@ class Hamburger extends React.Component {
       fetchedNotifications,
       updateLiveChatUsers,
       userInfo: {userDetails},
-      dbMessagesFetched,
-      fetchingMessagesError,
       fetchClientMessages,
     } = this.props;
     const senderId = userDetails.userId;
@@ -144,10 +140,7 @@ class Hamburger extends React.Component {
         if (orderId === obj.order_Id) pos = key;
       });
 
-      if (title.toLowerCase() === 'message recieved') {
-        //this.displayNotification({title, body, id: main_id});
-      } else if (title.toLowerCase() === 'chat request rejected') {
-        //this.displayNotification({title, body, id: main_id});
+      if (title.toLowerCase() === 'chat request rejected') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(
@@ -155,7 +148,6 @@ class Hamburger extends React.Component {
         );
         navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job accepted') {
-        //this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -186,13 +178,11 @@ class Hamburger extends React.Component {
         this.showToast('Your job has been accepted.');
         navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job rejected') {
-        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
       } else if (title.toLowerCase() == 'job completed') {
-        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast('Your job is complete..');
@@ -201,8 +191,6 @@ class Hamburger extends React.Component {
         title.toLowerCase() === 'chat request accepted' &&
         pos != null
       ) {
-        console.log('position', pos);
-        //this.displayNotification({title, body, id: main_id});
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -242,7 +230,6 @@ class Hamburger extends React.Component {
           title.toLowerCase() === 'cancelled') &&
         pos != null
       ) {
-        //this.displayNotification({title, body, id: main_id});
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(

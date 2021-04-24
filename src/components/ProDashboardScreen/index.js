@@ -250,6 +250,7 @@ class ProDashboardScreen extends Component {
       const {
         dispatchSelectedJobRequest,
         jobsInfo: {allJobRequestsProviders},
+        fetchedNotifications,
       } = this.props;
       let currentPos;
       allJobRequestsProviders.map((request, index) => {
@@ -262,6 +263,7 @@ class ProDashboardScreen extends Component {
           onPress={() => {
             dispatchSelectedJobRequest({user_id: item.id});
             setTimeout(() => {
+              fetchedNotifications({type: 'messages', value: 0});
               this.props.navigation.navigate('ProChat', {
                 currentPos,
                 userId: item.id,
@@ -1153,7 +1155,6 @@ class ProDashboardScreen extends Component {
       this.setState({
         isErrorToast: true,
       });
-      // ToastAndroid.show("You have already asked, Please wait for customer feedback", ToastAndroid.show);
       this.showToast(
         'You have already asked, Please wait for customer feedback',
       );

@@ -644,6 +644,7 @@ class MapDirectionScreen extends Component {
         selectedJobRequest: {employee_id},
       },
       generalInfo: {othersCoordinates},
+      fetchedNotifications,
     } = this.props;
     const {
       currRequestPos,
@@ -927,7 +928,11 @@ class MapDirectionScreen extends Component {
                           elevation: 5,
                           padding: 10,
                         }}
-                        onPress={() =>
+                        onPress={() => {
+                          fetchedNotifications({
+                            type: 'messages',
+                            value: 0,
+                          });
                           this.props.navigation.navigate('Chat', {
                             providerId: jobRequests[currRequestPos].employee_id,
                             providerName: jobRequests[currRequestPos].name,
@@ -940,8 +945,8 @@ class MapDirectionScreen extends Component {
                             fcmId: jobRequests[currRequestPos].fcm_id,
                             titlePage: 'MapDirection',
                             currentPosition: currRequestPos,
-                          })
-                        }>
+                          });
+                        }}>
                         <Image
                           style={[styles.call, {tintColor: themeRed}]}
                           source={require('../../icons/chat.png')}

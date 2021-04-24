@@ -377,10 +377,7 @@ class DashboardScreen extends Component {
   };
 
   goToNextPage = (chat_status, jobInfo) => {
-    const {
-      dispatchSelectedJobRequest,
-      jobsInfo: {allJobRequestsClient},
-    } = this.props;
+    const {dispatchSelectedJobRequest, fetchedNotifications} = this.props;
     if (chat_status === '0') {
       this.showToast('Your chat request has been accepted yet. Please wait...');
     } else {
@@ -398,11 +395,9 @@ class DashboardScreen extends Component {
       const username = nameArr[0];
       const surname = nameArr.pop();
       let currentPostInAllJobs = currentPos;
-      /*allJobRequestsClient.map((request, index) => {
-        if (request.order_id === order_id) currentPostInAllJobs = index;
-      });*/
       dispatchSelectedJobRequest(jobInfo);
       if (jobInfo.status.toLowerCase() === 'pending') {
+        fetchedNotifications({type: 'messages', value: 0});
         this.props.navigation.navigate('Chat', {
           providerId: employee_id,
           fcmId: fcm_id,

@@ -21,7 +21,6 @@ import geolocation from '@react-native-community/geolocation';
 import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
 import {Notifications} from 'react-native-notifications';
-import Axios from 'axios';
 import SimpleToast from 'react-native-simple-toast';
 import {
   startFetchingNotification,
@@ -53,7 +52,6 @@ import {black, white, red} from '../../Constants/colors';
 
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
-const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
 let notifications = [];
 
 class ProHamburger extends React.Component {
@@ -69,7 +67,6 @@ class ProHamburger extends React.Component {
 
   displayNotification = ({title, body, id}) => {
     const check = id + title;
-    console.log('title', title);
     if (![check].includes(notifications)) {
       this.setState({notificationId: id});
       Android
@@ -112,7 +109,7 @@ class ProHamburger extends React.Component {
         jobsInfo: {jobRequestsProviders},
         dispatchFetchedProJobRequests,
       } = this.props;
-      const {title, body, main_id} = data;
+      const {title, main_id} = data;
       const check = main_id + title;
       notifications.push(check);
       const currentGenericCount = notificationsInfo.generic;
@@ -126,10 +123,7 @@ class ProHamburger extends React.Component {
         if (orderId === obj.order_Id) pos = key;
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
-      if (title.toLowerCase() === 'message recieved') {
-        //this.displayNotification({title, body, id: main_id});
-      } else if (title.toLowerCase() === 'booking request') {
-        //this.displayNotification({title, body, id: main_id});
+      if (title.toLowerCase() === 'booking request') {
         navigation.navigate('ProChatAccept', {
           userId: data.userId,
           serviceName: data.serviceName,
@@ -143,7 +137,6 @@ class ProHamburger extends React.Component {
         title.toLowerCase() === 'job cancelled' ||
         title.toLowerCase() === 'job completed'
       ) {
-        //this.displayNotification({title, body, id: main_id});
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
         navigation.navigate('ProHome');
