@@ -114,13 +114,7 @@ class ProBookingDetailsScreen extends Component {
   };
 
   //Call also from ReviewDialog
-  changeDialogVisibility = async (
-    bool,
-    text,
-    bookingDetails,
-    rating,
-    review,
-  ) => {
+  changeDialogVisibility = async (bool, text, rating, review) => {
     if (this.state.bookingDetails.employee_rating == '') {
       if (rating != '') {
         if (text == '') {

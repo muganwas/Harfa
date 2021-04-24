@@ -143,6 +143,7 @@ class Hamburger extends React.Component {
       if (title.toLowerCase() === 'chat request rejected') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
+        getAllWorkRequestClient(senderId);
         this.showToast(
           'The service provider rejected your request. please try again later',
         );
@@ -175,6 +176,7 @@ class Hamburger extends React.Component {
         };
         newJobRequests[pos] = pendingJobData;
         fetchedPendingJobInfo(newJobRequests);
+        getAllWorkRequestClient(senderId);
         this.showToast('Your job has been accepted.');
         navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job rejected') {
@@ -185,11 +187,12 @@ class Hamburger extends React.Component {
       } else if (title.toLowerCase() == 'job completed') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
+        getAllWorkRequestClient(senderId);
         this.showToast('Your job is complete..');
         navigation.navigate('Home');
       } else if (
         title.toLowerCase() === 'chat request accepted' &&
-        pos != null
+        pos !== null
       ) {
         const providerData =
           typeof data.ProviderData === 'string'
@@ -216,7 +219,7 @@ class Hamburger extends React.Component {
           delivery_lat: data.delivery_lat,
           delivery_lang: data.delivery_lang,
         };
-        imageExists(providerData.imageSource).then(res => {
+        await imageExists(providerData.imageSource).then(res => {
           pendingJobData.imageAvailable = res;
         });
         newJobRequests[pos] = pendingJobData;

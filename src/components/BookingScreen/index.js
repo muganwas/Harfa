@@ -224,7 +224,7 @@ class BookingScreen extends Component {
               borderRadius: 100,
             }}
             source={
-              item.employee_details.image
+              item.employee_details.imageAvailable
                 ? {uri: item.employee_details.image}
                 : require('../../images/generic_avatar.png')
             }

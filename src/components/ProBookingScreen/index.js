@@ -166,7 +166,6 @@ class ProBookingScreen extends Component {
             this.showToast(
               'Something went wrong, check your internet connection',
             );
-            //ToastAndroid.show('Something went wrong, Check your internet connection', ToastAndroid.SHORT);
           });
       } catch (e) {
         console.log(e);
@@ -227,7 +226,7 @@ class ProBookingScreen extends Component {
               borderRadius: 100,
             }}
             source={
-              item.user_details.image && item.user_details.imageAvailable
+              item?.user_details?.imageAvailable
                 ? {uri: item.user_details.image}
                 : require('../../images/generic_avatar.png')
             }

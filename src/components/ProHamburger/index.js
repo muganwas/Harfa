@@ -45,7 +45,10 @@ import {
   updateOnlineStatus,
   updateLiveChatUsers,
 } from '../../Redux/Actions/generalActions';
-import {fetchedJobProviderInfo} from '../../Redux/Actions/jobsActions';
+import {
+  fetchedJobProviderInfo,
+  getAllWorkRequestPro,
+} from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
 import _ from 'lodash';
 import {black, white, red} from '../../Constants/colors';
@@ -108,6 +111,7 @@ class ProHamburger extends React.Component {
         navigation,
         jobsInfo: {jobRequestsProviders},
         dispatchFetchedProJobRequests,
+        getAllWorkRequestPro,
       } = this.props;
       const {title, main_id} = data;
       const check = main_id + title;
@@ -139,6 +143,7 @@ class ProHamburger extends React.Component {
       ) {
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
+        getAllWorkRequestPro(receiverId);
         navigation.navigate('ProHome');
       }
     });
@@ -525,6 +530,9 @@ const mapDispatchToProps = dispatch => {
     },
     fetchEmployeeMessages: eId => {
       dispatch(fetchEmployeeMessages({receiverId: eId}));
+    },
+    getAllWorkRequestPro: proId => {
+      dispatch(getAllWorkRequestPro(proId));
     },
   };
 };
