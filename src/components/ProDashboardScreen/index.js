@@ -178,36 +178,23 @@ class ProDashboardScreen extends Component {
     let dbRef = database()
       .ref('recentMessage')
       .child(providerDetails.providerId);
-    dbRef.once('value', snapshot => {
-      const key = snapshot.key;
-      const message = snapshot.val();
 
-      this.setState({
-        isLoading: true,
+    dbRef.on('child_added', async val => {
+      const {dataSource} = this.state;
+      let message = val.val();
+      await imageExists(message.image).then(res => {
+        message.exists = res;
       });
-
-      if (message != null) {
-        dbRef.on('child_added', val => {
-          const {dataSource} = this.state;
-
-          let message = val.val();
-          let present = false;
-          dataSource.map(obj => {
-            if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
-          });
-          if (!present) {
-            this.setState(prevState => ({
-              dataSource: [...prevState.dataSource, message],
-              isLoading: false,
-              isRecentMessage: true,
-            }));
-          }
-        });
-      } else {
-        this.setState({
+      let present = false;
+      dataSource.map(obj => {
+        if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
+      });
+      if (message && !present) {
+        this.setState(prevState => ({
+          dataSource: [...prevState.dataSource, message],
           isLoading: false,
-          isRecentMessage: false,
-        });
+          isRecentMessage: true,
+        }));
       }
     });
   };

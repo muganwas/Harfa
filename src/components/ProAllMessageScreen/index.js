@@ -73,27 +73,24 @@ class ProAllMessageScreen extends Component {
     let dbRef = database()
       .ref('recentMessage')
       .child(providerDetails.providerId);
-    dbRef.once('value', snapshot => {
-      //const key = snapshot.key;
-      let message = snapshot.val();
-      let messageArray = [];
-      if (message) {
-        messageArray = Object.values(message);
-        messageArray.map((inf, index) => {
-          let newMessage = _.cloneDeep(inf);
-          const {image} = newMessage;
-          imageExists(image).then(res => {
-            newMessage.exists = res;
-          });
-          messageArray[index] = newMessage;
-        });
-      }
-      this.setState({
-        dataSource: messageArray,
-        fullData: messageArray,
-        isLoading: false,
-        isRecentMessage: true,
+    dbRef.on('child_added', async val => {
+      const {dataSource} = this.state;
+      let message = val.val();
+      await imageExists(message.image).then(res => {
+        message.exists = res;
       });
+      let present = false;
+      dataSource.map(obj => {
+        if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
+      });
+      if (message && !present) {
+        this.setState(prevState => ({
+          dataSource: [...prevState.dataSource, message],
+          fullData: [...prevState.dataSource, message],
+          isLoading: false,
+          isRecentMessage: true,
+        }));
+      }
     });
   }
 
