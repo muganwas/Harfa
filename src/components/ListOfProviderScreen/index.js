@@ -82,7 +82,7 @@ class ListOfProviderScreen extends Component {
     });
   }
 
-  initialize = () => {
+  initialize = async () => {
     const {navigation} = this.props;
     this.setState({
       serviceName: navigation.state.params.serviceName,
@@ -97,10 +97,10 @@ class ListOfProviderScreen extends Component {
       distanceOrder: true,
       reviewOrder: true,
     });
-    this.getAllProviders();
+    await this.getAllProviders();
   };
 
-  getAllProviders = () => {
+  getAllProviders = async () => {
     const {
       userInfo: {userDetails},
       navigation,
@@ -111,7 +111,7 @@ class ListOfProviderScreen extends Component {
     };
     const serviceId = navigation.getParam('serviceId', null);
     try {
-      fetch(GET_ALL_PROVIDER_URL + serviceId, {
+      await fetch(GET_ALL_PROVIDER_URL + serviceId, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -123,11 +123,11 @@ class ListOfProviderScreen extends Component {
         .then(async responseJson => {
           if (responseJson.result) {
             let dataSource = responseJson.data;
-            dataSource.map(async (obj, key) => {
+            await dataSource.map(async (obj, key) => {
               const {image} = obj;
               let imageAvaliable = true;
               if (image) {
-                imageExists(image).then(res => {
+                await imageExists(image).then(res => {
                   imageAvaliable = res;
                 });
               } else {
@@ -135,8 +135,8 @@ class ListOfProviderScreen extends Component {
               }
               dataSource[key].imageAvailable = imageAvaliable;
             });
+            await this.calculateDistance(dataSource);
             this.setState({
-              dataSource,
               isLoading: false,
               isNoData: false,
               isData: true,
@@ -163,7 +163,6 @@ class ListOfProviderScreen extends Component {
       });
       this.showToast('Something went wrong, try again');
     }
-    this.calculateDistance();
   };
 
   calculateRating = async id => {
@@ -178,19 +177,14 @@ class ListOfProviderScreen extends Component {
     return avg;
   };
 
-  componentDidUpdate() {
-    this.calculateDistance();
-  }
-
-  calculateDistance = async () => {
-    const {dataSource, distCalculated} = this.state;
+  calculateDistance = async dataSource => {
     var distInfo = {};
     var tempDatasource = [...dataSource];
     const {
       generalInfo: {usersCoordinates},
     } = this.props;
-    if (dataSource.length > 0 && !distCalculated) {
-      dataSource.map(async (obj, key) => {
+    if (dataSource.length > 0) {
+      await dataSource.map(async (obj, key) => {
         const {_id, image} = obj;
         let imageAvaliable = image && image !== 'no-image.jpg' ? true : false;
         if (image && imageAvaliable) {
