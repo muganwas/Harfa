@@ -328,9 +328,12 @@ class ProChatAfterBookingDetailsScreen extends Component {
       fetchEmployeeMessages,
     } = this.props;
     if (!socket.connected) {
+      this.setState({isLoading: true});
       socket.close();
       socket.connect();
-      await fetchEmployeeMessages(providerDetails.providerId);
+      await fetchEmployeeMessages(providerDetails.providerId, () =>
+        setTimeout(() => this.setState({isLoading: false}), 200),
+      );
     }
     const {
       inputMessage,
@@ -559,8 +562,8 @@ const mapDispatchToProps = dispatch => {
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
     },
-    fetchEmployeeMessages: receiverId => {
-      dispatch(fetchEmployeeMessages({receiverId}));
+    fetchEmployeeMessages: (receiverId, callBack) => {
+      dispatch(fetchEmployeeMessages({receiverId, callBack}));
     },
   };
 };

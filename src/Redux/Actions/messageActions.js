@@ -38,7 +38,7 @@ export const messagesError = payload => {
   };
 };
 
-export const fetchEmployeeMessages = ({receiverId}) => {
+export const fetchEmployeeMessages = ({receiverId, callBack}) => {
   return async dispatch => {
     try {
       await Axios.get(
@@ -70,17 +70,21 @@ export const fetchEmployeeMessages = ({receiverId}) => {
               });
             }
             dispatch(dbMessagesFetched(messages));
+            callBack && callBack();
           } else {
+            callBack && callBack();
             Toast.show('Something went wrong, please reload app');
           }
         })
         .catch(e => {
           console.log('mongo messages error', e);
           dispatch(messagesError(e.message));
+          callBack && callBack();
         });
     } catch (e) {
       console.log('mongo messages error', e);
       dispatch(messagesError(e.message));
+      callBack && callBack();
     }
   };
 };
