@@ -231,7 +231,6 @@ class ProMapDirectionScreen extends Component {
   };
 
   handleBackButtonClick = () => {
-    console.log('pressed', this.state.pageTitle);
     if (this.state.pageTitle == 'ProDashboard')
       this.props.navigation.navigate('ProDashboard');
     else if (this.state.pageTitle == 'ProAcceptRejectJob')
@@ -504,6 +503,7 @@ class ProMapDirectionScreen extends Component {
       routeCoordinates,
       userName,
       userImage,
+      proImageAvailable,
       serviceName,
       status,
       currentModal,
@@ -677,7 +677,7 @@ class ProMapDirectionScreen extends Component {
                       borderRadius: 200,
                     }}
                     source={
-                      userImage
+                      proImageAvailable
                         ? {uri: userImage}
                         : require('../../images/generic_avatar.png')
                     }

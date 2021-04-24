@@ -19,6 +19,11 @@ import MapView from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import {
+  startFetchingNotification,
+  notificationsFetched,
+  notificationError,
+} from '../../Redux/Actions/notificationActions';
+import {
   startFetchingJobCustomer,
   fetchedJobCustomerInfo,
   fetchCustomerJobInfoError,
@@ -77,10 +82,10 @@ class MapDirectionScreen extends Component {
         jobRequestPos = i;
     });
     const employeeLatitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].latitude
+      ? othersCoordinates[employee_id]?.latitude
       : usersCoordinates.latitude;
     const employeeLongitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].longitude
+      ? othersCoordinates[employee_id]?.longitude
       : usersCoordinates.longitude;
 
     this.state = {
@@ -150,10 +155,10 @@ class MapDirectionScreen extends Component {
           jobRequestPos = i;
       });
       const employeeLatitude = othersCoordinates[employee_id]
-        ? othersCoordinates[employee_id].latitude
+        ? othersCoordinates[employee_id]?.latitude
         : usersCoordinates.latitude;
       const employeeLongitude = othersCoordinates[employee_id]
-        ? othersCoordinates[employee_id].longitude
+        ? othersCoordinates[employee_id]?.longitude
         : usersCoordinates.longitude;
 
       this.setState({
@@ -212,10 +217,10 @@ class MapDirectionScreen extends Component {
       navigation,
     } = this.props;
     const employeeLatitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].latitude
+      ? othersCoordinates[employee_id]?.latitude
       : usersCoordinates.latitude;
     const employeeLongitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].longitude
+      ? othersCoordinates[employee_id]?.longitude
       : usersCoordinates.longitude;
 
     const destination =
@@ -260,10 +265,10 @@ class MapDirectionScreen extends Component {
     ) {
       this.reInit(this.props);
       const employeeLatitude = othersCoordinates[employee_id]
-        ? othersCoordinates[employee_id].latitude
+        ? othersCoordinates[employee_id]?.latitude
         : usersCoordinates.latitude;
       const employeeLongitude = othersCoordinates[employee_id]
-        ? othersCoordinates[employee_id].longitude
+        ? othersCoordinates[employee_id]?.longitude
         : usersCoordinates.longitude;
       const destination =
         usersCoordinates.latitude + ',' + usersCoordinates.longitude;
@@ -642,7 +647,7 @@ class MapDirectionScreen extends Component {
         jobRequests,
         selectedJobRequest: {employee_id},
       },
-      generalInfo: {othersCoordinates},
+      generalInfo: {usersCoordinates, othersCoordinates},
       fetchedNotifications,
     } = this.props;
     const {
@@ -664,12 +669,11 @@ class MapDirectionScreen extends Component {
       dialogRightText,
     } = this.state;
     const employeeLatitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].latitude
-      : undefined;
+      ? othersCoordinates[employee_id]?.latitude
+      : usersCoordinates.latitude;
     const employeeLongitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id].longitude
-      : undefined;
-    console.log('location ', othersCoordinates[employee_id]);
+      ? othersCoordinates[employee_id]?.longitude
+      : usersCoordinates.longitude;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -846,7 +850,8 @@ class MapDirectionScreen extends Component {
                         borderRadius: 200,
                       }}
                       source={
-                        jobRequests[currRequestPos].image
+                        jobRequests[currRequestPos] &&
+                        jobRequests[currRequestPos].imageAvailable
                           ? {uri: jobRequests[currRequestPos].image}
                           : require('../../images/generic_avatar.png')
                       }
