@@ -19,6 +19,7 @@ import RNExitApp from 'react-native-exit-app';
 import {cloneDeep} from 'lodash';
 import Config from '../Config';
 import SwipeableButton from '../SwipeableBtn';
+import {imageExists} from '../../misc/helpers';
 import Hamburger from '../Hamburger';
 import {
   startFetchingNotification,
@@ -26,7 +27,6 @@ import {
   notificationError,
 } from '../../Redux/Actions/notificationActions';
 import {
-  colorPrimaryDark,
   lightGray,
   white,
   themeRed,
@@ -195,7 +195,6 @@ class NotificationsScreen extends Component {
     this.setState({
       isLoading: true,
     });
-
     const {
       userInfo: {userDetails},
     } = this.props;
@@ -204,11 +203,18 @@ class NotificationsScreen extends Component {
         .then(response => response.json())
         .then(responseJson => {
           //console.log('notification', responseJson)
+
           if (responseJson.result) {
+            let dataSource = cloneDeep(responseJson.data);
+            dataSource?.map((item, i) => {
+              imageExists(item.employee_details.image).then(res => {
+                dataSource[i].employee_details.imageAvailable = res;
+              });
+            });
             this.setState({
-              dataSource: responseJson.data,
+              dataSource,
               isLoading: false,
-              isNoData: !responseJson.data || responseJson.data.length === 0,
+              isNoData: !dataSource || dataSource.length === 0,
             });
           } else {
             this.setState({
@@ -278,7 +284,7 @@ class NotificationsScreen extends Component {
                   alignItems: 'center',
                 }}
                 source={
-                  item.employee_details && item.employee_details.image
+                  item.employee_details && item.employee_details.imageAvailable
                     ? {uri: item.employee_details.image}
                     : require('../../images/generic_avatar.png')
                 }

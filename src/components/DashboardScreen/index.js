@@ -372,7 +372,7 @@ class DashboardScreen extends Component {
       });
     }
     await getAllWorkRequestClient(userDetails.userId);
-    await getPendingJobRequest(this.props, userDetails.userId);
+    //await getPendingJobRequest(this.props, userDetails.userId);
     this.setState({isLoading: false});
   };
 

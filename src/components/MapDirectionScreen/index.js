@@ -242,7 +242,6 @@ class MapDirectionScreen extends Component {
       jobsInfo: {
         selectedJobRequest: {employee_id},
       },
-      userInfo: {userDetails},
     } = this.props;
     if (
       (othersCoordinates &&
@@ -670,6 +669,7 @@ class MapDirectionScreen extends Component {
     const employeeLongitude = othersCoordinates[employee_id]
       ? othersCoordinates[employee_id].longitude
       : undefined;
+    console.log('location ', othersCoordinates[employee_id]);
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />

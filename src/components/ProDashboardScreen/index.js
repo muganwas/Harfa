@@ -1186,7 +1186,7 @@ class ProDashboardScreen extends Component {
     });
     await this.getAllRecentChat();
     await this.getAllRecentUser();
-    await getPendingJobRequestProvider(this.props, providerDetails.providerId);
+    //await getPendingJobRequestProvider(this.props, providerDetails.providerId);
     await fetchJobRequestHistory(providerDetails.providerId);
     this.springValue = new Animated.Value(100);
     this.setState({refreshing: false});

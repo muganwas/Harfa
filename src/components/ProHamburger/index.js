@@ -364,14 +364,6 @@ class ProHamburger extends React.Component {
     }
   };
 
-  async componentDidUpdate() {
-    const {
-      jobsInfo: {jobRequestsProviders},
-    } = this.props;
-    if (jobRequestsProviders.length && !this.state.fetchedOthersLocations)
-      await this.fetchOthersLocations();
-  }
-
   componentWillUnmount() {
     const {
       userInfo: {providerDetails},
@@ -396,6 +388,20 @@ class ProHamburger extends React.Component {
     } = this.props;
     await allJobRequestsProviders.map(async obj => {
       const {user_id} = obj;
+      /**fetch users current position */
+      database()
+        .ref(`liveLocation/${user_id}`)
+        .once('value', result => {
+          const {
+            generalInfo: {othersCoordinates},
+          } = this.props;
+          let newOthersCoordinates = Object.assign({}, othersCoordinates);
+          newOthersCoordinates[user_id] = result.val();
+          fetchedOthersCoordinates(newOthersCoordinates);
+        })
+        .catch(e => {
+          fetchOthersCoordinatesError(e.message);
+        });
       /** lookout for users changed position */
       database()
         .ref(`liveLocation/${user_id}`)
@@ -414,21 +420,6 @@ class ProHamburger extends React.Component {
             .catch(e => {
               fetchOthersCoordinatesError(e.message);
             });
-        });
-
-      /**fetch users current position */
-      database()
-        .ref(`liveLocation/${user_id}`)
-        .once('value', result => {
-          const {
-            generalInfo: {othersCoordinates},
-          } = this.props;
-          let newOthersCoordinates = Object.assign({}, othersCoordinates);
-          newOthersCoordinates[user_id] = result.val();
-          fetchedOthersCoordinates(newOthersCoordinates);
-        })
-        .catch(e => {
-          fetchOthersCoordinatesError(e.message);
         });
     });
     this.setState({fetchedOthersLocations: true});

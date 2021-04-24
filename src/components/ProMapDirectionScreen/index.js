@@ -77,18 +77,17 @@ class ProMapDirectionScreen extends Component {
     } = props;
     let currentPos = navigation.getParam('currentPos', 0);
     const currentRequest = jobRequestsProviders[currentPos] || {};
-    console.log('user coordinates --', usersCoordinates);
     this.state = {
       sourcesourceLocation:
         usersCoordinates.latitude + ',' + usersCoordinates.longitude,
       sourceLat: parseFloat(usersCoordinates.latitude),
       sourceLng: parseFloat(usersCoordinates.longitude),
       destinationLocation:
-        othersCoordinates[user_id].latitude +
+        othersCoordinates[user_id]?.latitude +
         ',' +
-        othersCoordinates[user_id].longitude,
-      destinationLat: parseFloat(othersCoordinates[user_id].latitude),
-      destinationLng: parseFloat(othersCoordinates[user_id].longitude),
+        othersCoordinates[user_id]?.longitude,
+      destinationLat: parseFloat(othersCoordinates[user_id]?.latitude),
+      destinationLng: parseFloat(othersCoordinates[user_id]?.longitude),
       routeCoordinates: [],
       isLoading: othersCoordinates[user_id],
       pageTitle: navigation.state.params.pageTitle,
@@ -126,9 +125,9 @@ class ProMapDirectionScreen extends Component {
       navigation,
     } = this.props;
     const destination =
-      othersCoordinates[user_id].latitude +
+      othersCoordinates[user_id]?.latitude +
       ',' +
-      othersCoordinates[user_id].longitude;
+      othersCoordinates[user_id]?.longitude;
     this.getDirections(
       usersCoordinates.latitude + ',' + usersCoordinates.longitude,
       destination,
@@ -150,7 +149,6 @@ class ProMapDirectionScreen extends Component {
   componentDidUpdate(oldProps) {
     const {
       generalInfo: {usersCoordinates, othersCoordinates},
-      userInfo: {providerDetails},
       jobsInfo: {
         selectedJobRequest: {user_id},
       },
@@ -191,11 +189,11 @@ class ProMapDirectionScreen extends Component {
       sourceLat: parseFloat(usersCoordinates.latitude),
       sourceLng: parseFloat(usersCoordinates.longitude),
       destinationLocation:
-        othersCoordinates[user_id].latitude +
+        othersCoordinates[user_id]?.latitude +
         ',' +
-        othersCoordinates[user_id].longitude,
-      destinationLat: parseFloat(othersCoordinates[user_id].latitude),
-      destinationLng: parseFloat(othersCoordinates[user_id].longitude),
+        othersCoordinates[user_id]?.longitude,
+      destinationLat: parseFloat(othersCoordinates[user_id]?.latitude),
+      destinationLng: parseFloat(othersCoordinates[user_id]?.longitude),
       routeCoordinates: [],
       isLoading: othersCoordinates[user_id],
       pageTitle: navigation.state.params.pageTitle,
@@ -223,9 +221,9 @@ class ProMapDirectionScreen extends Component {
       currentModal: null,
     });
     const destination =
-      othersCoordinates[user_id].latitude +
+      othersCoordinates[user_id]?.latitude +
       ',' +
-      othersCoordinates[user_id].longitude;
+      othersCoordinates[user_id]?.longitude;
     this.getDirections(
       usersCoordinates.latitude + ',' + usersCoordinates.longitude,
       destination,

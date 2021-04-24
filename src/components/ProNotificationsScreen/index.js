@@ -19,6 +19,7 @@ import {cloneDeep} from 'lodash';
 import Config from '../Config';
 import Hamburger from '../ProHamburger';
 import SwipeableButton from '../SwipeableBtn';
+import {imageExists} from '../../misc/helpers';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -26,7 +27,6 @@ import {
 } from '../../Redux/Actions/notificationActions';
 import {
   lightGray,
-  colorPrimaryDark,
   white,
   themeRed,
   colorGray,
@@ -180,10 +180,16 @@ class ProNotificationsScreen extends Component {
         .then(response => response.json())
         .then(responseJson => {
           if (responseJson.result) {
+            let dataSource = cloneDeep(responseJson.data);
+            dataSource?.map((item, i) => {
+              imageExists(item.customer_details.image).then(res => {
+                dataSource[i].customer_details.imageAvailable = res;
+              });
+            });
             this.setState({
-              dataSource: responseJson.data,
+              dataSource,
               isLoading: false,
-              isNoData: !responseJson.data || responseJson.data.length === 0,
+              isNoData: !dataSource || dataSource.length === 0,
             });
           } else {
             this.setState({
@@ -269,7 +275,7 @@ class ProNotificationsScreen extends Component {
             <Image
               style={{width: 45, height: 45, borderRadius: 100}}
               source={
-                item.customer_details && item.customer_details.image
+                item.customer_details && item.customer_details.imageAvailable
                   ? {uri: item.customer_details.image}
                   : require('../../images/generic_avatar.png')
               }
