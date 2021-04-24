@@ -31,7 +31,10 @@ import Toast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
 import FilePickerManager from 'react-native-file-picker';
 import DialogComponent from '../DialogComponent';
-import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
+import {
+  dbMessagesFetched,
+  fetchClientMessages,
+} from '../../Redux/Actions/messageActions';
 import {uploadAttachment} from '../../controllers/storage';
 import Config from '../Config';
 import {
@@ -78,6 +81,7 @@ class ChatScreen extends Component {
       dialogType: null,
       dialogTitle: '',
       dialogDesc: '',
+      isLoading: true,
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
       uploadingImage: false,
@@ -114,8 +118,14 @@ class ChatScreen extends Component {
       },
       messagesInfo: {dataChatSource, fetched},
       generalInfo: {OnlineUsers},
+      fetchClientMessages,
       navigation,
     } = props;
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+      fetchClientMessages(userDetails.userId);
+    }
     const currRequestPos = navigation.getParam('currentPosition');
     const onlineUsers = clone(OnlineUsers);
     const providerId =
@@ -349,9 +359,17 @@ class ChatScreen extends Component {
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    const {
+      userInfo: {userDetails},
+      fetchClientMessages,
+    } = this.props;
     if (!socket.connected) {
+      this.setState({isLoading: true});
       socket.close();
       socket.connect();
+      await fetchClientMessages(userDetails.userId, () =>
+        setTimeout(() => this.setState({isLoading: false}), 200),
+      );
     }
     const {
       inputMessage,
@@ -633,6 +651,7 @@ class ChatScreen extends Component {
       receiverImage,
       receiverName,
       uploadingImage,
+      isLoading,
     } = this.state;
     return (
       <KeyboardAvoidingView
@@ -679,11 +698,11 @@ class ChatScreen extends Component {
             keyboardDismissMode="on-drag">
             <MessagesView senderId={senderId} receiverId={receiverId} />
           </ScrollView>
-          {this.state.isLoading && (
+          {isLoading && (
             <View style={styles.loaderStyle}>
               <ActivityIndicator
                 style={{height: 80}}
-                color="#C00"
+                color="red"
                 size="large"
               />
             </View>
@@ -982,6 +1001,9 @@ const mapDispatchToProps = dispatch => {
     },
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
+    },
+    fetchClientMessages: (senderId, callBack) => {
+      dispatch(fetchClientMessages({senderId, callBack}));
     },
   };
 };

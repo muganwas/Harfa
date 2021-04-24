@@ -36,6 +36,7 @@ import {
   messagesFetched,
   messagesError,
   dbMessagesFetched,
+  fetchClientMessages,
 } from '../../Redux/Actions/messageActions';
 import {
   startFetchingJobCustomer,
@@ -103,6 +104,7 @@ class Hamburger extends React.Component {
       userInfo: {userDetails},
       dbMessagesFetched,
       fetchingMessagesError,
+      fetchClientMessages,
     } = this.props;
     const senderId = userDetails.userId;
     const locationRef = database().ref(`liveLocation/${senderId}`);
@@ -251,47 +253,7 @@ class Hamburger extends React.Component {
     });
     await this.checkNoficationsAvailability();
     await this.checkForUserType();
-    try {
-      await Axios.get(
-        FETCH_MESSAGES + '?sender=' + senderId + '&userType=client',
-      )
-        .then(async results => {
-          const {data} = results;
-          let messages = {};
-          let otherUsers = {};
-          // get ids of other users this user has chatted with
-          if (!data.message) {
-            await data.map(msgObj => {
-              const {sender, recipient} = msgObj;
-              if (sender !== senderId) otherUsers[sender] = sender;
-              else if (recipient !== senderId)
-                otherUsers[recipient] = recipient;
-            });
-            // if any user, seperate the different groups of messages
-            if (Object.keys(otherUsers).length > 0) {
-              Object.keys(otherUsers).map(async otherUser => {
-                const thisUsersMessages = [];
-                await data.map(msgObj => {
-                  const {sender, recipient} = msgObj;
-                  if (otherUser === sender || otherUser === recipient)
-                    thisUsersMessages.push(msgObj);
-                });
-                if (thisUsersMessages.length > 0)
-                  messages[otherUser] = thisUsersMessages;
-              });
-            }
-            dbMessagesFetched(messages);
-          } else {
-            SimpleToast.show('Something went wrong, please reload app');
-          }
-        })
-        .catch(e => {
-          console.log('mongo messages error', e);
-          fetchingMessagesError(e.message);
-        });
-    } catch (e) {
-      fetchingMessagesError(e.message);
-    }
+    await fetchClientMessages(senderId);
     /** fetch users current position and upload it to db */
     this.permissionRequest(() => {
       geolocation.getCurrentPosition(
@@ -722,6 +684,9 @@ const mapDispatchToProps = dispatch => {
     },
     getAllWorkRequestClient: userId => {
       dispatch(getAllWorkRequestClient(userId));
+    },
+    fetchClientMessages: (senderId, callBack) => {
+      dispatch(fetchClientMessages({senderId, callBack}));
     },
   };
 };

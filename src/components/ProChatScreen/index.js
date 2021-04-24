@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import {cloneDeep} from 'lodash';
+import Toast from 'react-native-simple-toast';
 import FilePickerManager from 'react-native-file-picker';
 import {
   dbMessagesFetched,
@@ -211,15 +212,15 @@ class ProChatScreen extends Component {
 
   componentDidUpdate() {
     const {
-      messagesInfo: {fetched, dataChatSource},
+      messagesInfo: {dataChatSource},
       jobsInfo: {
         selectedJobRequest: {user_id},
       },
       generalInfo: {OnlineUsers},
     } = this.props;
-    const {isLoading, liveChatStatus, selectedStatus} = this.state;
+    const {liveChatStatus, selectedStatus} = this.state;
     const localDataChatSource = this.state.dataChatSource;
-    if (fetched && isLoading) this.setState({isLoading: false});
+    //if (fetched && isLoading) this.setState({isLoading: false});
     if (
       JSON.stringify(dataChatSource[user_id]) !==
       JSON.stringify(localDataChatSource)
@@ -326,7 +327,7 @@ class ProChatScreen extends Component {
         }
       });
     } catch (e) {
-      SimpleToast('Something went wrong, try again later', SimpleToast.SHORT);
+      this.showToast('Something went wrong, try again later', Toast.SHORT);
     }
   };
 
@@ -480,7 +481,7 @@ class ProChatScreen extends Component {
             <View style={styles.loaderStyle}>
               <ActivityIndicator
                 style={{height: 80}}
-                color="#C00"
+                color="red"
                 size="large"
               />
             </View>

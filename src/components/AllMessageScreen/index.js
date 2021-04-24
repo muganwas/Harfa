@@ -138,6 +138,7 @@ class AllMessageScreen extends Component {
             providerImage: item.image,
             orderId: item.orderId,
             serviceName: item.serviceName,
+            imageAvailable: item.exists,
             pageTitle: 'AllMessage',
             fcmId: selectedJobReq.employee_details.fcm_id,
           });

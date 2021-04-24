@@ -14,6 +14,7 @@ import {
   Platform,
   Modal,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from 'react-native';
 import {withNavigation} from 'react-navigation';
 import FilePickerManager from 'react-native-file-picker';
@@ -723,7 +724,15 @@ class ProAcceptRejectJobScreen extends Component {
               />
             </View>
           </ScrollView>
-
+          {this.state.isLoading && (
+            <View style={styles.loaderStyle}>
+              <ActivityIndicator
+                style={{height: 80}}
+                color="red"
+                size="large"
+              />
+            </View>
+          )}
           <View style={styles.footerContainer}>
             {!this.state.isAcceptJob && !this.state.isRejectJob && (
               <View

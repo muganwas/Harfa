@@ -18,7 +18,10 @@ import {
 import {cloneDeep} from 'lodash';
 import FilePickerManager from 'react-native-file-picker';
 import database from '@react-native-firebase/database';
-import {dbMessagesFetched} from '../../Redux/Actions/messageActions';
+import {
+  dbMessagesFetched,
+  fetchClientMessages,
+} from '../../Redux/Actions/messageActions';
 import moment from 'moment';
 import {
   startFetchingNotification,
@@ -82,11 +85,11 @@ class ChatAfterBookingDetailsScreen extends Component {
         ' ' +
         props.navigation.state.params.providerSurname,
       receiverImage: props.navigation.state.params.providerImage,
+      imageAvailable: props.navigation.state.params.imageAvailable,
       serviceName: props.navigation.state.params.serviceName,
       orderId: props.navigation.state.params.orderId,
       titlePage: props.navigation.state.params.pageTitle,
       isJobAccepted: props.navigation.state.params.isJobAccepted,
-      proImageAvailable: null,
       provider_FCM_id: props.navigation.state.params.fcmId,
       selectedStatus: '0',
       liveChatStatus: '0',
@@ -105,14 +108,16 @@ class ChatAfterBookingDetailsScreen extends Component {
         selectedJobRequest: {employee_id},
       },
       generalInfo: {OnlineUsers},
+      userInfo: {userDetails},
+      fetchClientMessages,
     } = this.props;
     const providerId = employee_id;
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+      fetchClientMessages(userDetails.userId);
+    }
     fetchedNotifications({type: 'messages', value: 0});
-    imageExists(this.props.navigation.state.params.providerImage).then(
-      proImageAvailable => {
-        this.setState({proImageAvailable});
-      },
-    );
     navigation.addListener('willFocus', async () => {
       this.reInit();
       BackHandler.addEventListener(
@@ -171,7 +176,13 @@ class ChatAfterBookingDetailsScreen extends Component {
       jobsInfo: {
         selectedJobRequest: {employee_id},
       },
+      fetchClientMessages,
     } = props;
+    if (!socket.connected) {
+      socket.close();
+      socket.connect();
+      fetchClientMessages(userDetails.userId);
+    }
     this.setState({
       senderId: userDetails.userId,
       senderImage: userDetails.image,
@@ -187,11 +198,11 @@ class ChatAfterBookingDetailsScreen extends Component {
         ' ' +
         props.navigation.state.params.providerSurname,
       receiverImage: props.navigation.state.params.providerImage,
+      imageAvailable: props.navigation.state.params.imageAvailable,
       serviceName: props.navigation.state.params.serviceName,
       orderId: props.navigation.state.params.orderId,
       titlePage: props.navigation.state.params.pageTitle,
       isJobAccepted: props.navigation.state.params.isJobAccepted,
-      proImageAvailable: null,
       provider_FCM_id: props.navigation.state.params.fcmId,
     });
   };
@@ -204,10 +215,10 @@ class ChatAfterBookingDetailsScreen extends Component {
       },
       generalInfo: {OnlineUsers},
     } = this.props;
-    const {isLoading, liveChatStatus, selectedStatus} = this.state;
+    const {liveChatStatus, selectedStatus} = this.state;
     const providerId = employee_id;
     const localDataChatSource = this.state.dataChatSource;
-    if (fetched && isLoading) this.setState({isLoading: false});
+    //if (fetched && isLoading) this.setState({isLoading: false});
     if (
       JSON.stringify(dataChatSource[employee_id]) !==
       JSON.stringify(localDataChatSource)
@@ -322,9 +333,17 @@ class ChatAfterBookingDetailsScreen extends Component {
   };
 
   sendMessageTask = async (type = 'text', altMessage) => {
+    const {
+      userInfo: {userDetails},
+      fetchClientMessages,
+    } = this.props;
     if (!socket.connected) {
+      this.setState({isLoading: true});
       socket.close();
       socket.connect();
+      await fetchClientMessages(userDetails.userId, () =>
+        setTimeout(() => this.setState({isLoading: false}), 200),
+      );
     }
     const {
       inputMessage,
@@ -429,9 +448,11 @@ class ChatAfterBookingDetailsScreen extends Component {
       receiverId,
       senderId,
       receiverName,
-      proImageAvailable,
+      imageAvailable,
       online,
+      isLoading,
     } = this.state;
+    console.log('is loading', isLoading);
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -442,7 +463,7 @@ class ChatAfterBookingDetailsScreen extends Component {
           source={require('../../icons/bg_chat.png')}>
           <MessagesHeader
             receiverImage={receiverImage}
-            imageAvailable={proImageAvailable}
+            imageAvailable={imageAvailable}
             receiverName={receiverName}
             online={online}
             handleBackButtonClick={this.handleBackButtonClick}
@@ -550,6 +571,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 5,
   },
+  loaderStyle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   footerContainer: {
     width: screenWidth,
     minHeight: 50,
@@ -629,6 +659,9 @@ const mapDispatchToProps = dispatch => {
     },
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
+    },
+    fetchClientMessages: (senderId, callBack) => {
+      dispatch(fetchClientMessages({senderId, callBack}));
     },
   };
 };
