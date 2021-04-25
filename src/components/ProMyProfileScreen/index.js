@@ -32,7 +32,11 @@ import {
   fetchProviderProfile,
 } from '../../Redux/Actions/userActions';
 import {white, themeRed, black, colorBg} from '../../Constants/colors';
-import {phoneNumberCheck, sanitizeMobileNumber} from '../../misc/helpers';
+import {
+  phoneNumberCheck,
+  sanitizeMobileNumber,
+  emailCheck,
+} from '../../misc/helpers';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -75,6 +79,7 @@ class ProMyProfileScreen extends Component {
       fcmId: providerDetails.fcmId,
       imageSource: providerDetails.imageSource,
       email: providerDetails.email,
+      emailDisabled: !!providerDetails.email,
       name: providerDetails.name,
       surname: providerDetails.surname,
       mobile: providerDetails.mobile,
@@ -213,6 +218,7 @@ class ProMyProfileScreen extends Component {
       fcmId,
       surname,
       mobile,
+      email,
       serviceIds,
       description,
       address,
@@ -226,64 +232,76 @@ class ProMyProfileScreen extends Component {
     } = this.props;
     const userData = {
       username: name,
-      surname: surname,
-      mobile: mobile,
+      surname,
+      mobile,
+      email,
       services: serviceIds,
-      description: description,
-      address: address,
-      lat: lat,
-      lang: lang,
-      invoice: invoice,
+      description,
+      address,
+      lat,
+      lang,
+      invoice,
     };
     phoneNumberCheck(mobile, countryAlpha2).then(async isValid => {
       if (!isValid) {
-        this.setState({isLoading: false});
-        Toast('Your phone number is invalid', Toast.LONG);
+        this.setState({
+          error: 'Your phone number is invalid',
+          isLoading: false,
+        });
       } else {
-        try {
-          await fetch(PRO_INFO_UPDATE + providerId, {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
+        email &&
+          (await emailCheck(
+            email,
+            () => this.setState({error: ''}),
+            error => {
+              this.setState({error, isLoading: false});
             },
-            body: JSON.stringify(userData),
-          })
-            .then(response => response.json())
-            .then(async response => {
-              if (response.result) {
-                this.setState({
-                  isLoading: false,
-                  isErrorToast: false,
-                });
-                //ToastAndroid.show(response.message, ToastAndroid.show);
-                this.showToast(response.message);
-                fetchProviderProfile(providerId, fcmId);
-              } else {
+          ));
+        if (!this.state.error)
+          try {
+            await fetch(PRO_INFO_UPDATE + providerId, {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(userData),
+            })
+              .then(response => response.json())
+              .then(async response => {
+                if (response.result) {
+                  this.setState({
+                    isLoading: false,
+                    isErrorToast: false,
+                  });
+                  //ToastAndroid.show(response.message, ToastAndroid.show);
+                  this.showToast(response.message);
+                  fetchProviderProfile(providerId, fcmId);
+                } else {
+                  this.setState({
+                    isLoading: false,
+                    isErrorToast: true,
+                  });
+                  this.showToast(response.message);
+                }
+              })
+              .catch(error => {
+                console.log('Error :' + error);
                 this.setState({
                   isLoading: false,
                   isErrorToast: true,
                 });
-                this.showToast(response.message);
-              }
-            })
-            .catch(error => {
-              console.log('Error :' + error);
-              this.setState({
-                isLoading: false,
-                isErrorToast: true,
-              });
-              this.showToast('Something went wrong');
-            })
-            .done();
-        } catch (e) {
-          console.log('Error :' + e);
-          this.setState({
-            isLoading: false,
-            isErrorToast: true,
-          });
-          this.showToast('Something went wrong');
-        }
+                this.showToast('Something went wrong');
+              })
+              .done();
+          } catch (e) {
+            console.log('Error :' + e);
+            this.setState({
+              isLoading: false,
+              isErrorToast: true,
+            });
+            this.showToast('Something went wrong');
+          }
       }
     });
   };
@@ -360,7 +378,7 @@ class ProMyProfileScreen extends Component {
   };
 
   render() {
-    const {mobile} = this.state;
+    const {mobile, emailDisabled} = this.state;
     const {
       validationInfo: {countryCode},
     } = this.props;
@@ -505,15 +523,29 @@ class ProMyProfileScreen extends Component {
                   style={{width: 15, height: 15, marginLeft: 5}}
                   source={require('../../icons/email.png')}
                 />
-                <Text
-                  style={{
-                    width: screenWidth - 85,
-                    marginLeft: 10,
-                    textAlignVertical: 'center',
-                    alignSelf: 'center',
-                  }}>
-                  {this.state.email}
-                </Text>
+                {emailDisabled ? (
+                  <Text
+                    style={{
+                      width: screenWidth - 85,
+                      marginLeft: 10,
+                      textAlignVertical: 'center',
+                      alignSelf: 'center',
+                    }}>
+                    {this.state.email}
+                  </Text>
+                ) : (
+                  <TextInput
+                    style={{
+                      width: screenWidth - 85,
+                      marginLeft: 10,
+                      textAlignVertical: 'center',
+                      alignSelf: 'center',
+                    }}
+                    placeholder="Your email address"
+                    value={this.state.email}
+                    onChangeText={email => this.setState({error: '', email})}
+                  />
+                )}
               </View>
 
               <View style={styles.textInputView}>

@@ -40,7 +40,7 @@ export const sanitizeMobileNumber = async (
   return pN;
 };
 
-export const emailCheck = (
+export const emailCheck = async (
   email = '',
   setEmail = () => {},
   setError = () => {},
