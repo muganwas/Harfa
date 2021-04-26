@@ -89,6 +89,8 @@ class MyProfileScreen extends Component {
       image: userDetails.image,
       email: userDetails.email,
       emailDisabled: !!userDetails.email,
+      mobileDisabled: !!userDetails.mobile,
+      emailSet: false,
       username: userDetails.username,
       mobile: userDetails.mobile,
       dob: userDetails.dob == '' ? 'Date of Birth' : userDetails.dob,
@@ -254,6 +256,7 @@ class MyProfileScreen extends Component {
               .then(response => {
                 if (response.result) {
                   this.setState({
+                    emailSet: userData && userData.email,
                     isLoading: false,
                     isErrorToast: false,
                   });
@@ -356,7 +359,7 @@ class MyProfileScreen extends Component {
       userInfo: {userDetails},
       validationInfo: {countryCode},
     } = this.props;
-    const {mobile, emailDisabled} = this.state;
+    const {mobile, emailDisabled, emailSet, mobileDisabled} = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -512,27 +515,17 @@ class MyProfileScreen extends Component {
                   style={{width: 15, height: 15, marginLeft: 5}}
                   source={require('../../icons/email.png')}
                 />
-                {emailDisabled ? (
-                  <Text
-                    style={{
-                      width: screenWidth - 85,
-                      marginLeft: 10,
-                      textAlignVertical: 'center',
-                    }}>
-                    {this.state.email}
-                  </Text>
-                ) : (
-                  <TextInput
-                    style={{
-                      width: screenWidth - 85,
-                      marginLeft: 10,
-                      textAlignVertical: 'center',
-                    }}
-                    placeholder="Your email address"
-                    value={this.state.email}
-                    onChangeText={email => this.setState({error: '', email})}
-                  />
-                )}
+                <TextInput
+                  style={{
+                    width: screenWidth - 85,
+                    marginLeft: 10,
+                    textAlignVertical: 'center',
+                  }}
+                  editable={!emailDisabled && !emailSet}
+                  placeholder="Your email address"
+                  value={this.state.email}
+                  onChangeText={email => this.setState({error: '', email})}
+                />
               </View>
 
               <View style={styles.textInputView}>
@@ -552,6 +545,7 @@ class MyProfileScreen extends Component {
                   keyboardType="phone-pad"
                   placeholder={`${countryCode} 000 000 000`}
                   value={mobile}
+                  editable={!mobileDisabled}
                   onChangeText={mobileInput =>
                     this.setState({error: '', mobile: mobileInput})
                   }

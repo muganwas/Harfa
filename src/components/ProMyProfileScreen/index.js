@@ -80,6 +80,8 @@ class ProMyProfileScreen extends Component {
       imageSource: providerDetails.imageSource,
       email: providerDetails.email,
       emailDisabled: !!providerDetails.email,
+      mobileDisabled: !!providerDetails.mobile,
+      emailSet: false,
       name: providerDetails.name,
       surname: providerDetails.surname,
       mobile: providerDetails.mobile,
@@ -271,6 +273,7 @@ class ProMyProfileScreen extends Component {
               .then(async response => {
                 if (response.result) {
                   this.setState({
+                    emailSet: userData && userData.email,
                     isLoading: false,
                     isErrorToast: false,
                   });
@@ -378,7 +381,7 @@ class ProMyProfileScreen extends Component {
   };
 
   render() {
-    const {mobile, emailDisabled} = this.state;
+    const {mobile, emailDisabled, emailSet, mobileDisabled} = this.state;
     const {
       validationInfo: {countryCode},
     } = this.props;
@@ -523,29 +526,18 @@ class ProMyProfileScreen extends Component {
                   style={{width: 15, height: 15, marginLeft: 5}}
                   source={require('../../icons/email.png')}
                 />
-                {emailDisabled ? (
-                  <Text
-                    style={{
-                      width: screenWidth - 85,
-                      marginLeft: 10,
-                      textAlignVertical: 'center',
-                      alignSelf: 'center',
-                    }}>
-                    {this.state.email}
-                  </Text>
-                ) : (
-                  <TextInput
-                    style={{
-                      width: screenWidth - 85,
-                      marginLeft: 10,
-                      textAlignVertical: 'center',
-                      alignSelf: 'center',
-                    }}
-                    placeholder="Your email address"
-                    value={this.state.email}
-                    onChangeText={email => this.setState({error: '', email})}
-                  />
-                )}
+                <TextInput
+                  style={{
+                    width: screenWidth - 85,
+                    marginLeft: 10,
+                    textAlignVertical: 'center',
+                    alignSelf: 'center',
+                  }}
+                  editable={!emailDisabled && !emailSet}
+                  placeholder="Your email address"
+                  value={this.state.email}
+                  onChangeText={email => this.setState({error: '', email})}
+                />
               </View>
 
               <View style={styles.textInputView}>
@@ -562,6 +554,7 @@ class ProMyProfileScreen extends Component {
                   refInput={ref => {
                     this.input = ref;
                   }}
+                  editable={!mobileDisabled}
                   keyboardType="phone-pad"
                   placeholder={`${countryCode} 000 000 000`}
                   value={mobile}
