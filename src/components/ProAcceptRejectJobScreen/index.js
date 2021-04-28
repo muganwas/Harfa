@@ -38,6 +38,7 @@ import {
   fetchProviderJobInfoError,
   setSelectedJobRequest,
   getAllWorkRequestPro,
+  fetchedDataWorkSource,
 } from '../../Redux/Actions/jobsActions';
 import {
   MessagesView,
@@ -156,7 +157,7 @@ class ProAcceptRejectJobScreen extends Component {
       orderId: jobRequestsProviders[currRequestPos].order_id,
       serviceName: jobRequestsProviders[currRequestPos].service_name,
       mainId: jobRequestsProviders[currRequestPos].id,
-      delivertAddress: jobRequestsProviders[currRequestPos].delivery_address,
+      deliveryAddress: jobRequestsProviders[currRequestPos].delivery_address,
       deliveryLat: jobRequestsProviders[currRequestPos].delivery_lat,
       deliveryLang: jobRequestsProviders[currRequestPos].delivery_lang,
       chatStatus: jobRequestsProviders[currRequestPos].chat_status,
@@ -427,23 +428,30 @@ class ProAcceptRejectJobScreen extends Component {
     }
   };
 
-  acceptJobTask = () => {
+  acceptJobTask = async () => {
     this.setState({
       isLoading: true,
     });
     const {
       userInfo: {providerDetails},
+      jobsInfo: {dataWorkSource},
+      fetchedDataWorkSource,
     } = this.props;
     const {
       receiverId,
       receiverFcmId,
       orderId,
-      delivertAddress,
+      deliveryAddress,
       deliveryLat,
       deliveryLang,
       serviceName,
       mainId,
     } = this.state;
+    let newDWS = cloneDeep(dataWorkSource);
+    let dataWSPos;
+    await newDWS.map((wks, i) => {
+      if (wks.order_id === orderId) dataWSPos = i;
+    });
     const data = {
       main_id: this.state.mainId,
       chat_status: '1',
@@ -465,23 +473,15 @@ class ProAcceptRejectJobScreen extends Component {
           ' Request Id : ' +
           orderId,
         data: {
-          ProviderId: providerDetails.providerId,
-          image: providerDetails.imageSource,
-          fcmId: providerDetails.fcmId,
-          name: providerDetails.name,
-          surname: providerDetails.surname,
-          mobile: providerDetails.mobile,
+          userId: receiverId,
+          providerId: providerDetails.providerId,
           ProviderData: providerDetails,
-          description: providerDetails.description,
-          address: providerDetails.address,
-          lat: providerDetails.lat,
-          lang: providerDetails.lang,
           serviceName: serviceName,
           orderId: orderId,
           mainId: mainId,
           chat_status: '1',
           status: 'Accepted',
-          delivery_address: delivertAddress,
+          delivery_address: deliveryAddress,
           delivery_lat: deliveryLat,
           delivery_lang: deliveryLang,
         },
@@ -510,7 +510,10 @@ class ProAcceptRejectJobScreen extends Component {
               isLoading: false,
               isAcceptJob: true,
             });
-
+            if (dataWSPos || dataWSPos === 0) {
+              newDWS[dataWSPos].status = 'Accepted';
+              fetchedDataWorkSource(newDWS);
+            }
             newjobRequestsProviders[currRequestPos].chat_status =
               responseJson.data.chat_status;
             newjobRequestsProviders[currRequestPos].status =
@@ -519,7 +522,6 @@ class ProAcceptRejectJobScreen extends Component {
             getAllWorkRequestPro(providerDetails.providerId);
             //Send Location to Firebase for tracking
             Geolocation.getCurrentPosition(position => {
-              //console.log("Position : " + JSON.stringify(position));
               let locationData = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
@@ -556,14 +558,20 @@ class ProAcceptRejectJobScreen extends Component {
     }
   };
 
-  rejectJobTask = () => {
+  rejectJobTask = async () => {
     this.setState({
       isLoading: true,
     });
     const {
-      userInfo: {providerDetails},
+      fetchedDataWorkSource,
+      userInfo: {providerDetails, dataWorkSource},
     } = this.props;
-    const {receiverId, orderId} = this.state;
+    let newDWS = cloneDeep(dataWorkSource);
+    let dataWSPos;
+    const {orderId, receiverId} = this.state;
+    await newDWS.map((wks, i) => {
+      if (wks.order_id === orderId) dataWSPos = i;
+    });
     const data = {
       main_id: this.state.mainId,
       chat_status: '1',
@@ -600,7 +608,7 @@ class ProAcceptRejectJobScreen extends Component {
           mainId: this.state.mainId,
           chat_status: '0',
           status: 'Rejected',
-          delivery_address: this.state.delivertAddress,
+          delivery_address: this.state.deliveryAddress,
           delivery_lat: this.state.deliveryLat,
           delivery_lang: this.state.deliveryLang,
         },
@@ -623,12 +631,16 @@ class ProAcceptRejectJobScreen extends Component {
             navigation,
           } = this.props;
           const {currRequestPos} = this.state;
-          var newjobRequestsProviders = [...jobRequestsProviders];
+          var newjobRequestsProviders = cloneDeep(jobRequestsProviders);
           if (responseJson.result) {
             this.setState({
               isLoading: false,
               isRejectJob: true,
             });
+            if (dataWSPos || dataWSPos === 0) {
+              newDWS.splice(dataWSPos, 1);
+              fetchedDataWorkSource(newDWS);
+            }
             newjobRequestsProviders.splice(currRequestPos, 1);
             fetchedPendingJobInfo(newjobRequestsProviders);
             navigation.navigate('ProDashboard');
@@ -1040,6 +1052,9 @@ const mapDispatchToProps = dispatch => {
     },
     dbMessagesFetched: messages => {
       dispatch(dbMessagesFetched(messages));
+    },
+    fetchedDataWorkSource: dws => {
+      dispatch(fetchedDataWorkSource(dws));
     },
     fetchEmployeeMessages: (receiverId, callBack) => {
       dispatch(fetchEmployeeMessages({receiverId, callBack}));

@@ -182,12 +182,12 @@ class BookingScreen extends Component {
   };
 
   selectPage = title => {
-    if (title == 'Completed') {
+    if (title === 'Completed') {
       this.viewPager.setPage(0);
       this.setState({
         currentPage: 0,
       });
-    } else if (title == 'Rejected') {
+    } else if (title === 'Rejected') {
       this.viewPager.setPage(1);
       this.setState({
         currentPage: 1,

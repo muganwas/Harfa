@@ -61,11 +61,21 @@ export const fetchCountryCodes = () => {
   return dispatch => {
     const countryCodeRef = database().ref('constants/countryCode');
     const countryAlpha2Ref = database().ref('constants/countryAlpha2');
-    countryCodeRef.once('value').then(code => {
-      dispatch(updateCountryCode(code.val()));
-    });
-    countryAlpha2Ref.once('value').then(code => {
-      dispatch(updateCountryAlpha2(code.val()));
-    });
+    countryCodeRef
+      .once('value')
+      .then(code => {
+        dispatch(updateCountryCode(code.val()));
+      })
+      .catch(e => {
+        console.log(e?.code, e?.message);
+      });
+    countryAlpha2Ref
+      .once('value')
+      .then(code => {
+        dispatch(updateCountryAlpha2(code.val()));
+      })
+      .catch(e => {
+        console.log(e?.code, e?.message);
+      });
   };
 };

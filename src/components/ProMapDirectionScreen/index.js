@@ -33,6 +33,7 @@ import {
   fetchedJobProviderInfo,
   fetchProviderJobInfoError,
   setSelectedJobRequest,
+  fetchedDataWorkSource,
 } from '../../Redux/Actions/jobsActions';
 import {
   colorBg,
@@ -183,51 +184,53 @@ class ProMapDirectionScreen extends Component {
     } = props;
     let currentPos = navigation.getParam('currentPos', 0);
     const currentRequest = jobRequestsProviders[currentPos] || {};
-    this.setState({
-      sourcesourceLocation:
-        usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-      sourceLat: parseFloat(usersCoordinates.latitude),
-      sourceLng: parseFloat(usersCoordinates.longitude),
-      destinationLocation:
+    if (currentPos || (currentPos === 0 && jobRequestsProviders[currentPos])) {
+      this.setState({
+        sourcesourceLocation:
+          usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+        sourceLat: parseFloat(usersCoordinates.latitude),
+        sourceLng: parseFloat(usersCoordinates.longitude),
+        destinationLocation:
+          othersCoordinates[user_id]?.latitude +
+          ',' +
+          othersCoordinates[user_id]?.longitude,
+        destinationLat: parseFloat(othersCoordinates[user_id]?.latitude),
+        destinationLng: parseFloat(othersCoordinates[user_id]?.longitude),
+        routeCoordinates: [],
+        isLoading: othersCoordinates[user_id],
+        pageTitle: navigation.state.params.pageTitle,
+        currentPos,
+        userId: currentRequest.user_id,
+        userName: currentRequest.name,
+        userImage: currentRequest.image,
+        userMobile: currentRequest.mobile,
+        userDob: currentRequest.dob,
+        userAddress: currentRequest.address,
+        userLat: currentRequest.lat,
+        userLang: currentRequest.lang,
+        userFcmId: currentRequest.fcm_id,
+        orderId: currentRequest.order_id,
+        serviceName: currentRequest.service_name,
+        mainId: currentRequest.id,
+        delivertAddress: currentRequest.delivery_address,
+        deliveryLat: currentRequest.delivery_lat,
+        deliveryLang: currentRequest.delivery_lang,
+        chatStatus: currentRequest.chat_status,
+        status: currentRequest.status,
+        proImageAvailable: currentRequest.imageAvailable,
+        isJobAccepted: currentRequest.status === 'Accepted',
+        showDialog: false,
+        currentModal: null,
+      });
+      const destination =
         othersCoordinates[user_id]?.latitude +
         ',' +
-        othersCoordinates[user_id]?.longitude,
-      destinationLat: parseFloat(othersCoordinates[user_id]?.latitude),
-      destinationLng: parseFloat(othersCoordinates[user_id]?.longitude),
-      routeCoordinates: [],
-      isLoading: othersCoordinates[user_id],
-      pageTitle: navigation.state.params.pageTitle,
-      currentPos,
-      userId: currentRequest.user_id,
-      userName: currentRequest.name,
-      userImage: currentRequest.image,
-      userMobile: currentRequest.mobile,
-      userDob: currentRequest.dob,
-      userAddress: currentRequest.address,
-      userLat: currentRequest.lat,
-      userLang: currentRequest.lang,
-      userFcmId: currentRequest.fcm_id,
-      orderId: currentRequest.order_id,
-      serviceName: currentRequest.service_name,
-      mainId: currentRequest.id,
-      delivertAddress: currentRequest.delivery_address,
-      deliveryLat: currentRequest.delivery_lat,
-      deliveryLang: currentRequest.delivery_lang,
-      chatStatus: currentRequest.chat_status,
-      status: currentRequest.status,
-      proImageAvailable: currentRequest.imageAvailable,
-      isJobAccepted: currentRequest.status === 'Accepted',
-      showDialog: false,
-      currentModal: null,
-    });
-    const destination =
-      othersCoordinates[user_id]?.latitude +
-      ',' +
-      othersCoordinates[user_id]?.longitude;
-    this.getDirections(
-      usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-      destination,
-    );
+        othersCoordinates[user_id]?.longitude;
+      this.getDirections(
+        usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+        destination,
+      );
+    }
   };
 
   handleBackButtonClick = () => {
@@ -388,16 +391,22 @@ class ProMapDirectionScreen extends Component {
     }
   };
 
-  jobCancelTask = () => {
+  jobCancelTask = async () => {
     this.setState({isLoading: true});
     const {
       fetchingPendingJobInfo,
       fetchedPendingJobInfo,
-      jobsInfo: {jobRequestsProviders},
+      fetchedDataWorkSource,
+      jobsInfo: {jobRequestsProviders, dataWorkSource},
       userInfo: {providerDetails},
     } = this.props;
-    let newJobRequestsProviders = [...jobRequestsProviders];
+    let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
+    let newDWS = cloneDeep(dataWorkSource);
+    let dataWSPos;
     const {orderId, userId} = this.state;
+    await newDWS.map((wks, i) => {
+      if (wks.order_id === orderId) dataWSPos = i;
+    });
     const data = {
       main_id: this.state.mainId,
       chat_status: '1',
@@ -457,7 +466,10 @@ class ProMapDirectionScreen extends Component {
               isAcceptJob: true,
               showDialog: false,
             });
-
+            if (dataWSPos || dataWSPos === 0) {
+              newDWS.splice(dataWSPos, 1);
+              fetchedDataWorkSource(newDWS);
+            }
             newJobRequestsProviders.splice(this.state.currentPos, 1);
             fetchedPendingJobInfo(newJobRequestsProviders);
             this.props.navigation.navigate('ProDashboard');
@@ -994,6 +1006,9 @@ const mapDispatchToProps = dispatch => {
     },
     dispatchSelectedJobRequest: job => {
       dispatch(setSelectedJobRequest(job));
+    },
+    fetchedDataWorkSource: dws => {
+      dispatch(fetchedDataWorkSource(dws));
     },
   };
 };

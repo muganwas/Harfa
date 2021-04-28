@@ -26,7 +26,11 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
 import {cloneDeep} from 'lodash';
-import {phoneNumberCheck, sanitizeMobileNumber} from '../../misc/helpers';
+import {
+  phoneNumberCheck,
+  sanitizeMobileNumber,
+  emailCheck,
+} from '../../misc/helpers';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
@@ -84,6 +88,9 @@ class MyProfileScreen extends Component {
       fcmId: userDetails.fcmId,
       image: userDetails.image,
       email: userDetails.email,
+      emailDisabled: !!userDetails.email,
+      mobileDisabled: !!userDetails.mobile,
+      emailSet: false,
       username: userDetails.username,
       mobile: userDetails.mobile,
       dob: userDetails.dob == '' ? 'Date of Birth' : userDetails.dob,
@@ -207,7 +214,7 @@ class MyProfileScreen extends Component {
 
   //Information Update
   updateInformation = userId => {
-    const {fcmId, username, mobile, dob} = this.state;
+    const {fcmId, username, email, mobile, dob} = this.state;
     const {
       validationInfo: {countryAlpha2},
     } = this.props;
@@ -216,53 +223,66 @@ class MyProfileScreen extends Component {
     });
     const userData = {
       username,
+      email,
       mobile,
       dob,
     };
     phoneNumberCheck(mobile, countryAlpha2).then(async isValid => {
       if (!isValid) {
-        this.setState({isLoading: false});
-        Toast('Your phone number is invalid', Toast.LONG);
+        this.setState({
+          isLoading: false,
+          error: 'Your phone number is invalid',
+        });
       } else {
-        try {
-          await fetch(USER_INFO_UPDATE + userId, {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
+        email &&
+          (await emailCheck(
+            email,
+            () => this.setState({error: ''}),
+            error => {
+              this.setState({error, isLoading: false});
             },
-            body: JSON.stringify(userData),
-          })
-            .then(response => response.json())
-            .then(response => {
-              if (response.result) {
+          ));
+        if (!this.state.error)
+          try {
+            await fetch(USER_INFO_UPDATE + userId, {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(userData),
+            })
+              .then(response => response.json())
+              .then(response => {
+                if (response.result) {
+                  this.setState({
+                    emailSet: userData && userData.email,
+                    isLoading: false,
+                    isErrorToast: false,
+                  });
+                  this.showToast(response.message);
+                  fetchUserProfile(userId, fcmId);
+                } else {
+                  this.setState({
+                    isLoading: false,
+                    isErrorToast: true,
+                  });
+                  this.showToast(response.message);
+                }
+              })
+              .catch(error => {
+                console.log('Error :' + error);
                 this.setState({
                   isLoading: false,
-                  isErrorToast: false,
                 });
-                this.showToast(response.message);
-                fetchUserProfile(userId, fcmId);
-              } else {
-                this.setState({
-                  isLoading: false,
-                  isErrorToast: true,
-                });
-                this.showToast(response.message);
-              }
-            })
-            .catch(error => {
-              console.log('Error :' + error);
-              this.setState({
-                isLoading: false,
-              });
-            })
-            .done();
-        } catch (e) {
-          console.log('Error :' + e);
-          this.setState({
-            isLoading: false,
-          });
-        }
+              })
+              .done();
+          } catch (e) {
+            console.log('Error :' + e);
+            this.setState({
+              isLoading: false,
+            });
+          }
       }
     });
   };
@@ -339,7 +359,7 @@ class MyProfileScreen extends Component {
       userInfo: {userDetails},
       validationInfo: {countryCode},
     } = this.props;
-    const {mobile} = this.state;
+    const {mobile, emailDisabled, emailSet, mobileDisabled} = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -495,14 +515,17 @@ class MyProfileScreen extends Component {
                   style={{width: 15, height: 15, marginLeft: 5}}
                   source={require('../../icons/email.png')}
                 />
-                <Text
+                <TextInput
                   style={{
                     width: screenWidth - 85,
                     marginLeft: 10,
                     textAlignVertical: 'center',
-                  }}>
-                  {this.state.email}
-                </Text>
+                  }}
+                  editable={!emailDisabled && !emailSet}
+                  placeholder="Your email address"
+                  value={this.state.email}
+                  onChangeText={email => this.setState({error: '', email})}
+                />
               </View>
 
               <View style={styles.textInputView}>
@@ -522,6 +545,7 @@ class MyProfileScreen extends Component {
                   keyboardType="phone-pad"
                   placeholder={`${countryCode} 000 000 000`}
                   value={mobile}
+                  editable={!mobileDisabled}
                   onChangeText={mobileInput =>
                     this.setState({error: '', mobile: mobileInput})
                   }

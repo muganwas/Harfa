@@ -8,6 +8,8 @@ import {
   BASE_URL_LOCAL_ALT_2,
   FIREBASE_API_KEY,
   FIREBASE_APP_ID,
+  DEFAULT_COUNTRY_CODE,
+  DEFAULT_COUNTRY_ALPHA2,
   FIREBASE_AUTH_DOMAIN,
   FIREBASE_DATABASE_URL,
   FIREBASE_PROJECT_ID,
@@ -19,6 +21,8 @@ export default class Config {
   static clientId = WEB_CLIENT_ID;
   static baseURL = BASE_URL_CLOUD;
   static apiKey = FIREBASE_API_KEY;
+  static defaultCCode = DEFAULT_COUNTRY_CODE;
+  static defaultAlpha2 = DEFAULT_COUNTRY_ALPHA2;
   static authDomain = FIREBASE_AUTH_DOMAIN;
   static databaseURL = FIREBASE_DATABASE_URL;
   static projectId = FIREBASE_PROJECT_ID;

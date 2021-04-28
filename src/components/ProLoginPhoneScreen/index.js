@@ -36,7 +36,7 @@ import {
   updateNumberSent,
   updateValidationCode,
   updateMobileNumber,
-} from '../../Redux/Actions/validateionActions';
+} from '../../Redux/Actions/validationActions';
 import WaitingDialog from '../WaitingDialog';
 import firebaseAuth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';

@@ -7,12 +7,13 @@ import {
   UPDATE_COUNTRY_CODE,
   UPDATE_COUNTRY_ALPHA_2,
 } from '../types';
+import Config from '../../components/Config';
 
 const initialState = {
   validationCode: '',
   mobile: '',
-  countryCode: null,
-  countryAlpha2: null,
+  countryCode: Config.defaultCCode,
+  countryAlpha2: Config.defaultAlpha2,
   numberSent: false,
   confirmation: null,
 };
@@ -54,6 +55,8 @@ const validationReducer = (state = initialState, action) => {
         validationCode: '',
         numberSent: false,
         confirmation: null,
+        countryCode: Config.defaultCCode,
+        countryAlpha2: Config.defaultAlpha2,
       };
     default:
       return {

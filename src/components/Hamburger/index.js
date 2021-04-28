@@ -113,7 +113,7 @@ class Hamburger extends React.Component {
     });
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
-      const {title, body, main_id} = data;
+      const {title, main_id} = data;
       const check = main_id + title;
       notifications.push(check);
       const {
@@ -135,12 +135,14 @@ class Hamburger extends React.Component {
       }
       let newJobRequests = cloneDeep(jobRequests);
       const orderId = data.orderId;
-      let pos = 0;
-      jobRequests.map((obj, key) => {
-        if (orderId === obj.order_Id) pos = key;
+      let pos;
+      await jobRequests.map((obj, i) => {
+        if (orderId === obj.order_id) pos = i;
       });
-
-      if (title.toLowerCase() === 'chat request rejected') {
+      if (
+        title.toLowerCase() === 'chat request rejected' &&
+        pos !== undefined
+      ) {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
@@ -148,7 +150,7 @@ class Hamburger extends React.Component {
           'The service provider rejected your request. please try again later',
         );
         navigation.navigate('Home');
-      } else if (title.toLowerCase() === 'job accepted') {
+      } else if (title.toLowerCase() === 'job accepted' && pos !== undefined) {
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -156,17 +158,17 @@ class Hamburger extends React.Component {
         const pendingJobData = {
           id: data.mainId,
           order_id: data.orderId,
-          employee_id: data.ProviderId,
-          image: data.image,
-          fcm_id: data.fcmId,
-          name: data.name,
-          surName: data.surname,
-          mobile: data.mobile,
-          description: data.description,
+          employee_id: providerData.ProviderId,
+          image: providerData.imageSource,
+          fcm_id: providerData.fcmId,
+          name: providerData.name,
+          surName: providerData.surname,
+          mobile: providerData.mobile,
+          description: providerData.description,
           employee_details: providerData,
-          address: data.address,
-          lat: data.lat,
-          lang: data.lang,
+          address: providerData.address,
+          lat: providerData.lat,
+          lang: providerData.lang,
           service_name: data.serviceName,
           chat_status: data.chat_status,
           status: data.status,
@@ -174,26 +176,26 @@ class Hamburger extends React.Component {
           delivery_lat: data.delivery_lat,
           delivery_lang: data.delivery_lang,
         };
+        imageExists(providerData.imageSource).then(res => {
+          pendingJobData.imageAvailable = res;
+        });
         newJobRequests[pos] = pendingJobData;
         fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
         this.showToast('Your job has been accepted.');
         navigation.navigate('Home');
-      } else if (title.toLowerCase() === 'job rejected') {
+      } else if (title.toLowerCase() === 'job rejected' && pos !== undefined) {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
-      } else if (title.toLowerCase() == 'job completed') {
+      } else if (title.toLowerCase() === 'job completed' && pos !== undefined) {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
         this.showToast('Your job is complete..');
         navigation.navigate('Home');
-      } else if (
-        title.toLowerCase() === 'chat request accepted' &&
-        pos !== null
-      ) {
+      } else if (title.toLowerCase() === 'chat request accepted') {
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -219,10 +221,10 @@ class Hamburger extends React.Component {
           delivery_lat: data.delivery_lat,
           delivery_lang: data.delivery_lang,
         };
-        await imageExists(providerData.imageSource).then(res => {
+        imageExists(providerData.imageSource).then(res => {
           pendingJobData.imageAvailable = res;
         });
-        newJobRequests[pos] = pendingJobData;
+        newJobRequests.push(pendingJobData);
         fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
         this.showToast('Chat request accepted');
@@ -230,13 +232,14 @@ class Hamburger extends React.Component {
         navigation.navigate('Home');
       } else if (
         (title.toLowerCase() === 'No Response' ||
-          title.toLowerCase() === 'cancelled') &&
-        pos != null
+          title.toLowerCase() === 'cancelled' ||
+          title.toLowerCase() === 'job cancelled') &&
+        pos !== undefined
       ) {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         this.showToast(
-          'The service provider has not responded. please try again later',
+          'The service provider is nolonger available. please try again later',
         );
         navigation.navigate('Home');
       }
@@ -424,9 +427,7 @@ class Hamburger extends React.Component {
   componentDidUpdate() {
     const {
       jobsInfo: {jobRequests},
-      generalInfo,
     } = this.props;
-    //console.log('gen info', generalInfo)
     if (jobRequests && !this.state.employeesLocationsFetched)
       this.fetchEmployeeLocations();
   }
@@ -540,7 +541,7 @@ class Hamburger extends React.Component {
 
       database()
         .ref(`liveLocation/${employee_id}`)
-        .on('child_changed', () => {
+        .on('child_changed', result => {
           const {
             generalInfo: {othersCoordinates},
           } = this.props;
