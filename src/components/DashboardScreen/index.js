@@ -22,10 +22,11 @@ import {
   notificationError,
 } from '../../Redux/Actions/notificationActions';
 import RNExitApp from 'react-native-exit-app';
-import Config from '../Config';
+import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
+import Config from '../Config';
 import {
   startFetchingJobCustomer,
   fetchedJobCustomerInfo,
@@ -132,7 +133,7 @@ class DashboardScreen extends Component {
 
     try {
       const currRequestPos = index;
-      var newJobRequests = [...jobRequests];
+      let newJobRequests = cloneDeep(jobRequests);
       const data = {
         main_id: jobRequests[currRequestPos].id,
         chat_status: '1',
@@ -334,7 +335,6 @@ class DashboardScreen extends Component {
   onRefresh = async () => {
     const {
       getAllWorkRequestClient,
-      getPendingJobRequest,
       userInfo: {userDetails},
     } = this.props;
     if (
@@ -430,7 +430,7 @@ class DashboardScreen extends Component {
   };
 
   renderPendingJobRequests = (item, index) => {
-    if (item) {
+    if (item && typeof item === 'object') {
       const {
         image,
         name,
@@ -634,11 +634,11 @@ class DashboardScreen extends Component {
           </View>
         </ScrollView>
         {/** show pending requests */}
-        {requestsFetched && jobRequests.length > 0 ? (
+        {requestsFetched && jobRequests.length > 0 && (
           <View style={styles.pendingJobsContainer}>
             {jobRequests.map(this.renderPendingJobRequests)}
           </View>
-        ) : null}
+        )}
 
         <Animated.View
           style={[

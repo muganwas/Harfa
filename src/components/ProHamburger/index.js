@@ -141,6 +141,11 @@ class ProHamburger extends React.Component {
         title.toLowerCase() === 'job cancelled' ||
         title.toLowerCase() === 'job completed'
       ) {
+        SimpleToast.show(
+          title.toLowerCase() === 'job cancelled'
+            ? 'Job was cancelled by client'
+            : 'Job was completed by client',
+        );
         newJobRequestsProviders.splice(pos, 1);
         dispatchFetchedProJobRequests(newJobRequestsProviders);
         getAllWorkRequestPro(receiverId);

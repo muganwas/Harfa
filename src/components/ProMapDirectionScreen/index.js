@@ -658,7 +658,6 @@ class ProMapDirectionScreen extends Component {
         ) : (
           <ActivityIndicator size={30} color={'#000'} />
         )}
-
         <SlidingPanel
           headerLayoutHeight={140}
           headerLayout={() => (

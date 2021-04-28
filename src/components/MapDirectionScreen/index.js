@@ -422,91 +422,95 @@ class MapDirectionScreen extends Component {
 
     try {
       const {currRequestPos} = this.state;
-      var newJobRequests = [...jobRequests];
-      const data = {
-        main_id: jobRequests[currRequestPos].id,
-        chat_status: '1',
-        status: 'Cancelled',
-        notification: {
-          fcm_id: jobRequests[currRequestPos].fcm_id,
-          title: 'Job Cancelled',
-          type: 'JobCancellation',
-          user_id: userDetails.userId,
-          employee_id: jobRequests[currRequestPos].employee_id,
-          order_id: jobRequests[currRequestPos].order_id,
-          notification_by: 'Customer',
-          save_notification: true,
-          body:
-            'Job request has been cancelled by client' +
-            ' Request Id : ' +
-            jobRequests[currRequestPos].order_id,
-          data: {
-            ProviderId: jobRequests[currRequestPos].employee_id,
-            image: jobRequests[currRequestPos].image
-              ? jobRequests[currRequestPos].image
-              : 'null',
-            fcmId: jobRequests[currRequestPos].fcm_id,
-            name: jobRequests[currRequestPos].name,
-            surname: jobRequests[currRequestPos].surname,
-            mobile: jobRequests[currRequestPos].mobile,
-            description: jobRequests[currRequestPos].description,
-            address: jobRequests[currRequestPos].address,
-            lat: jobRequests[currRequestPos].lat,
-            lang: jobRequests[currRequestPos].lang,
-            serviceName: jobRequests[currRequestPos].service_name,
-            orderId: jobRequests[currRequestPos].order_id,
-            mainId: jobRequests[currRequestPos].id,
-            chat_status: jobRequests[currRequestPos].chat_status,
-            status: 'Cancelled',
-            delivery_address: jobRequests[currRequestPos].delivery_address,
-            delivery_lat: jobRequests[currRequestPos].delivery_lat,
-            delivery_lang: jobRequests[currRequestPos].delivery_lang,
+      let newJobRequests = cloneDeep(jobRequests);
+      if (jobRequests[currRequestPos]) {
+        const data = {
+          main_id: jobRequests[currRequestPos].id,
+          chat_status: '1',
+          status: 'Cancelled',
+          notification: {
+            fcm_id: jobRequests[currRequestPos].fcm_id,
+            title: 'Job Cancelled',
+            type: 'JobCancellation',
+            user_id: userDetails.userId,
+            employee_id: jobRequests[currRequestPos].employee_id,
+            order_id: jobRequests[currRequestPos].order_id,
+            notification_by: 'Customer',
+            save_notification: true,
+            body:
+              'Job request has been cancelled by client' +
+              ' Request Id : ' +
+              jobRequests[currRequestPos].order_id,
+            data: {
+              ProviderId: jobRequests[currRequestPos].employee_id,
+              image: jobRequests[currRequestPos].image
+                ? jobRequests[currRequestPos].image
+                : 'null',
+              fcmId: jobRequests[currRequestPos].fcm_id,
+              name: jobRequests[currRequestPos].name,
+              surname: jobRequests[currRequestPos].surname,
+              mobile: jobRequests[currRequestPos].mobile,
+              description: jobRequests[currRequestPos].description,
+              address: jobRequests[currRequestPos].address,
+              lat: jobRequests[currRequestPos].lat,
+              lang: jobRequests[currRequestPos].lang,
+              serviceName: jobRequests[currRequestPos].service_name,
+              orderId: jobRequests[currRequestPos].order_id,
+              mainId: jobRequests[currRequestPos].id,
+              chat_status: jobRequests[currRequestPos].chat_status,
+              status: 'Cancelled',
+              delivery_address: jobRequests[currRequestPos].delivery_address,
+              delivery_lat: jobRequests[currRequestPos].delivery_lat,
+              delivery_lang: jobRequests[currRequestPos].delivery_lang,
+            },
           },
-        },
-      };
-      await fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-              isAcceptJob: true,
-            });
-            newJobRequests.splice(currRequestPos, 1);
-            fetchedPendingJobInfo(newJobRequests);
-            this.props.navigation.navigate('Dashboard');
-          } else {
-            this.leftButtonActon = null;
-            this.rightButtonAction = () => {
-              this.setState({
-                showDialog: false,
-                dialogType: null,
-              });
-            };
-            this.setState({
-              isLoading: false,
-              showDialog: true,
-              dialogType: 'fb',
-              dialogTitle: 'OOPS!',
-              dialogDesc: 'An error has occurred, please try again later',
-              dialogLeftText: 'Cancel',
-              dialogRightText: 'Ok',
-            });
-          }
+        };
+        await fetch(REJECT_ACCEPT_REQUEST, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
         })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            isLoading: false,
+          .then(response => response.json())
+          .then(responseJson => {
+            if (responseJson.result) {
+              this.setState({
+                isLoading: false,
+                isAcceptJob: true,
+              });
+              newJobRequests.splice(currRequestPos, 1);
+              fetchedPendingJobInfo(newJobRequests);
+              this.props.navigation.navigate('Dashboard');
+            } else {
+              this.leftButtonActon = null;
+              this.rightButtonAction = () => {
+                this.setState({
+                  showDialog: false,
+                  dialogType: null,
+                });
+              };
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OOPS!',
+                dialogDesc: 'An error has occurred, please try again later',
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok',
+              });
+            }
+          })
+          .catch(error => {
+            console.log('Error >>> ' + error);
+            this.setState({
+              isLoading: false,
+            });
           });
-        });
+      } else {
+        simpleToast.show('Something went wrong, please try again later');
+      }
     } catch (e) {
       console.log('Error >>> ' + e);
       this.setState({
@@ -526,93 +530,97 @@ class MapDirectionScreen extends Component {
     } = this.props;
     try {
       const {currRequestPos} = this.state;
-      var newJobRequests = cloneDeep(jobRequests);
-      const data = {
-        main_id: jobRequests[currRequestPos].id,
-        chat_status: '1',
-        status: 'Completed',
-        notification: {
-          fcm_id: jobRequests[currRequestPos].fcm_id,
-          title: 'Job Completed',
-          body:
-            'Job Id : ' +
-            jobRequests[currRequestPos].order_id +
-            ' has been reported complete by the client: ' +
-            userDetails.username,
-          type: 'Job Completed',
-          user_id: userDetails.userId,
-          employee_id: jobRequests[currRequestPos].employee_id,
-          order_id: jobRequests[currRequestPos].order_id,
-          notification_by: 'Customer',
-          save_notification: true,
-          data: {
-            ProviderId: jobRequests[currRequestPos].employee_id,
+      let newJobRequests = cloneDeep(jobRequests);
+      if (jobRequests[currRequestPos]) {
+        const data = {
+          main_id: jobRequests[currRequestPos].id,
+          chat_status: '1',
+          status: 'Completed',
+          notification: {
+            fcm_id: jobRequests[currRequestPos].fcm_id,
+            title: 'Job Completed',
+            body:
+              'Job Id : ' +
+              jobRequests[currRequestPos].order_id +
+              ' has been reported complete by the client: ' +
+              userDetails.username,
+            type: 'Job Completed',
             user_id: userDetails.userId,
-            image: jobRequests[currRequestPos].image
-              ? jobRequests[currRequestPos].image
-              : 'null',
-            fcmId: jobRequests[currRequestPos].fcm_id,
-            name: jobRequests[currRequestPos].name,
-            surname: jobRequests[currRequestPos].surname,
-            mobile: jobRequests[currRequestPos].mobile,
-            description: jobRequests[currRequestPos].description,
-            address: jobRequests[currRequestPos].address,
-            lat: jobRequests[currRequestPos].lat,
-            lang: jobRequests[currRequestPos].lang,
-            serviceName: jobRequests[currRequestPos].service_name,
-            orderId: jobRequests[currRequestPos].order_id,
-            mainId: jobRequests[currRequestPos].id,
-            chat_status: jobRequests[currRequestPos].chat_status,
-            status: jobRequests[currRequestPos].status,
-            delivery_address: jobRequests[currRequestPos].delivery_address,
-            delivery_lat: jobRequests[currRequestPos].delivery_lat,
-            delivery_lang: jobRequests[currRequestPos].delivery_lang,
+            employee_id: jobRequests[currRequestPos].employee_id,
+            order_id: jobRequests[currRequestPos].order_id,
+            notification_by: 'Customer',
+            save_notification: true,
+            data: {
+              ProviderId: jobRequests[currRequestPos].employee_id,
+              user_id: userDetails.userId,
+              image: jobRequests[currRequestPos].image
+                ? jobRequests[currRequestPos].image
+                : 'null',
+              fcmId: jobRequests[currRequestPos].fcm_id,
+              name: jobRequests[currRequestPos].name,
+              surname: jobRequests[currRequestPos].surname,
+              mobile: jobRequests[currRequestPos].mobile,
+              description: jobRequests[currRequestPos].description,
+              address: jobRequests[currRequestPos].address,
+              lat: jobRequests[currRequestPos].lat,
+              lang: jobRequests[currRequestPos].lang,
+              serviceName: jobRequests[currRequestPos].service_name,
+              orderId: jobRequests[currRequestPos].order_id,
+              mainId: jobRequests[currRequestPos].id,
+              chat_status: jobRequests[currRequestPos].chat_status,
+              status: jobRequests[currRequestPos].status,
+              delivery_address: jobRequests[currRequestPos].delivery_address,
+              delivery_lat: jobRequests[currRequestPos].delivery_lat,
+              delivery_lang: jobRequests[currRequestPos].delivery_lang,
+            },
           },
-        },
-      };
-      await fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-              isAcceptJob: true,
-            });
-            newJobRequests.splice(currRequestPos, 1);
-            fetchedPendingJobInfo(newJobRequests);
-            this.props.navigation.navigate('Dashboard');
-          } else {
-            this.leftButtonActon = null;
-            this.rightButtonAction = () => {
-              this.setState({
-                showDialog: false,
-                dialogType: null,
-              });
-            };
-            this.setState({
-              isLoading: false,
-              showDialog: true,
-              dialogType: 'fb',
-              dialogTitle: 'OOPS!',
-              dialogDesc: 'An error has occurred, please try again later',
-              dialogLeftText: 'Cancel',
-              dialogRightText: 'Ok',
-            });
-          }
+        };
+        await fetch(REJECT_ACCEPT_REQUEST, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
         })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            isLoading: false,
+          .then(response => response.json())
+          .then(responseJson => {
+            if (responseJson.result) {
+              this.setState({
+                isLoading: false,
+                isAcceptJob: true,
+              });
+              newJobRequests.splice(currRequestPos, 1);
+              fetchedPendingJobInfo(newJobRequests);
+              this.props.navigation.navigate('Dashboard');
+            } else {
+              this.leftButtonActon = null;
+              this.rightButtonAction = () => {
+                this.setState({
+                  showDialog: false,
+                  dialogType: null,
+                });
+              };
+              this.setState({
+                isLoading: false,
+                showDialog: true,
+                dialogType: 'fb',
+                dialogTitle: 'OOPS!',
+                dialogDesc: 'An error has occurred, please try again later',
+                dialogLeftText: 'Cancel',
+                dialogRightText: 'Ok',
+              });
+            }
+          })
+          .catch(error => {
+            console.log('Error >>> ' + error);
+            this.setState({
+              isLoading: false,
+            });
           });
-        });
+      } else {
+        simpleToast.show('Something went wrong, try again later');
+      }
     } catch (e) {
       console.log('Error >>> ' + e);
       this.setState({
@@ -786,174 +794,180 @@ class MapDirectionScreen extends Component {
         ) : (
           <ActivityIndicator size={30} color={'#000'} />
         )}
-        <SlidingPanel
-          headerLayoutHeight={140}
-          headerLayout={() => (
-            <View style={styles.headerLayoutStyle}>
-              <View
-                style={{
-                  flex: 1,
-                  flexDirection: 'column',
-                  width: screenWidth,
-                }}>
+        {jobRequests && jobRequests[currRequestPos] && (
+          <SlidingPanel
+            headerLayoutHeight={140}
+            headerLayout={() => (
+              <View style={styles.headerLayoutStyle}>
                 <View
                   style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignContent: 'center',
-                    marginTop: 5,
+                    flex: 1,
+                    flexDirection: 'column',
+                    width: screenWidth,
                   }}>
-                  <Image
-                    style={{width: 20, height: 20}}
-                    source={require('../../icons/up_arrow.gif')}
-                  />
-                </View>
-                <View style={{flexDirection: 'row', flex: 1}}>
-                  <Image
-                    style={{
-                      height: 55,
-                      width: 55,
-                      justifyContent: 'center',
-                      alignSelf: 'center',
-                      alignContent: 'flex-start',
-                      marginLeft: 10,
-                      borderRadius: 200,
-                    }}
-                    source={
-                      jobRequests[currRequestPos] &&
-                      jobRequests[currRequestPos].imageAvailable
-                        ? {uri: jobRequests[currRequestPos].image}
-                        : require('../../images/generic_avatar.png')
-                    }
-                  />
                   <View
                     style={{
-                      flexDirection: 'column',
+                      flexDirection: 'row',
                       justifyContent: 'center',
+                      alignContent: 'center',
+                      marginTop: 5,
                     }}>
-                    <Text
-                      style={{
-                        marginRight: 200,
-                        color: white,
-                        fontSize: 18,
-                        marginLeft: 10,
-                        fontWeight: 'bold',
-                        textAlignVertical: 'center',
-                      }}
-                      numberOfLines={1}>
-                      {jobRequests[currRequestPos].name +
-                        ' ' +
-                        jobRequests[currRequestPos].surName}
-                    </Text>
-                    <Text
-                      style={{
-                        color: white,
-                        fontSize: 14,
-                        marginLeft: 10,
-                        textAlignVertical: 'center',
-                      }}>
-                      {jobRequests[currRequestPos].service_name}
-                    </Text>
-                    <Text
-                      style={{
-                        color: white,
-                        fontSize: 14,
-                        marginLeft: 10,
-                        textAlignVertical: 'center',
-                        fontWeight: 'bold',
-                      }}>
-                      {jobRequests[currRequestPos].status == 'Pending'
-                        ? 'Chat request accepted'
-                        : 'Job accepted'}
-                    </Text>
+                    <Image
+                      style={{width: 20, height: 20}}
+                      source={require('../../icons/up_arrow.gif')}
+                    />
                   </View>
-
-                  <View style={styles.callView}>
-                    <TouchableOpacity
+                  <View style={{flexDirection: 'row', flex: 1}}>
+                    <Image
                       style={{
-                        width: 40,
-                        height: 40,
-                        backgroundColor: white,
-                        borderRadius: 5,
-                        shadowColor: '#000',
-                        shadowOffset: {width: 0, height: 0},
-                        shadowOpacity: 0.75,
-                        shadowRadius: 5,
-                        elevation: 5,
-                        padding: 10,
-                        marginRight: 15,
+                        height: 55,
+                        width: 55,
+                        justifyContent: 'center',
+                        alignSelf: 'center',
+                        alignContent: 'flex-start',
+                        marginLeft: 10,
+                        borderRadius: 200,
                       }}
-                      onPress={this.callPhoneTask}>
-                      <Image
-                        style={[styles.call, {tintColor: themeRed}]}
-                        source={require('../../icons/call.png')}
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
+                      source={
+                        jobRequests[currRequestPos] &&
+                        jobRequests[currRequestPos].imageAvailable
+                          ? {uri: jobRequests[currRequestPos].image}
+                          : require('../../images/generic_avatar.png')
+                      }
+                    />
+                    <View
                       style={{
-                        width: 40,
-                        height: 40,
-                        backgroundColor: white,
-                        borderRadius: 5,
-                        shadowColor: '#000',
-                        shadowOffset: {width: 0, height: 0},
-                        shadowOpacity: 0.75,
-                        shadowRadius: 5,
-                        elevation: 5,
-                        padding: 10,
-                      }}
-                      onPress={() => {
-                        fetchedNotifications({
-                          type: 'messages',
-                          value: 0,
-                        });
-                        this.props.navigation.navigate('Chat', {
-                          providerId: jobRequests[currRequestPos].employee_id,
-                          providerName: jobRequests[currRequestPos].name,
-                          providerSurname: jobRequests[currRequestPos].surName,
-                          providerImage: jobRequests[currRequestPos].image,
-                          serviceName: jobRequests[currRequestPos].service_name,
-                          OrderId: jobRequests[currRequestPos].order_id,
-                          fcmId: jobRequests[currRequestPos].fcm_id,
-                          titlePage: 'MapDirection',
-                          currentPosition: currRequestPos,
-                        });
+                        flexDirection: 'column',
+                        justifyContent: 'center',
                       }}>
-                      <Image
-                        style={[styles.call, {tintColor: themeRed}]}
-                        source={require('../../icons/chat.png')}
-                      />
-                    </TouchableOpacity>
+                      <Text
+                        style={{
+                          marginRight: 200,
+                          color: white,
+                          fontSize: 18,
+                          marginLeft: 10,
+                          fontWeight: 'bold',
+                          textAlignVertical: 'center',
+                        }}
+                        numberOfLines={1}>
+                        {jobRequests[currRequestPos].name +
+                          ' ' +
+                          jobRequests[currRequestPos].surName}
+                      </Text>
+                      <Text
+                        style={{
+                          color: white,
+                          fontSize: 14,
+                          marginLeft: 10,
+                          textAlignVertical: 'center',
+                        }}>
+                        {jobRequests[currRequestPos].service_name}
+                      </Text>
+                      <Text
+                        style={{
+                          color: white,
+                          fontSize: 14,
+                          marginLeft: 10,
+                          textAlignVertical: 'center',
+                          fontWeight: 'bold',
+                        }}>
+                        {jobRequests[currRequestPos].status == 'Pending'
+                          ? 'Chat request accepted'
+                          : 'Job accepted'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.callView}>
+                      <TouchableOpacity
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: white,
+                          borderRadius: 5,
+                          shadowColor: '#000',
+                          shadowOffset: {width: 0, height: 0},
+                          shadowOpacity: 0.75,
+                          shadowRadius: 5,
+                          elevation: 5,
+                          padding: 10,
+                          marginRight: 15,
+                        }}
+                        onPress={this.callPhoneTask}>
+                        <Image
+                          style={[styles.call, {tintColor: themeRed}]}
+                          source={require('../../icons/call.png')}
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: white,
+                          borderRadius: 5,
+                          shadowColor: '#000',
+                          shadowOffset: {width: 0, height: 0},
+                          shadowOpacity: 0.75,
+                          shadowRadius: 5,
+                          elevation: 5,
+                          padding: 10,
+                        }}
+                        onPress={() => {
+                          fetchedNotifications({
+                            type: 'messages',
+                            value: 0,
+                          });
+                          this.props.navigation.navigate('Chat', {
+                            providerId: jobRequests[currRequestPos].employee_id,
+                            providerName: jobRequests[currRequestPos].name,
+                            providerSurname:
+                              jobRequests[currRequestPos].surName,
+                            providerImage: jobRequests[currRequestPos].image,
+                            serviceName:
+                              jobRequests[currRequestPos].service_name,
+                            OrderId: jobRequests[currRequestPos].order_id,
+                            fcmId: jobRequests[currRequestPos].fcm_id,
+                            titlePage: 'MapDirection',
+                            currentPosition: currRequestPos,
+                          });
+                        }}>
+                        <Image
+                          style={[styles.call, {tintColor: themeRed}]}
+                          source={require('../../icons/chat.png')}
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          )}
-          slidingPanelLayout={() => (
-            <View style={styles.slidingPanelLayoutStyle}>
-              <View style={styles.containerSlide}>
-                {this.state.isJobAccepted && (
+            )}
+            slidingPanelLayout={() => (
+              <View style={styles.slidingPanelLayoutStyle}>
+                <View style={styles.containerSlide}>
+                  {this.state.isJobAccepted && (
+                    <TouchableOpacity
+                      style={styles.buttonContainer}
+                      onPress={this.openCompleteConfirmation}>
+                      <Text style={[styles.text, {color: colorGreen}]}>
+                        Completed
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
                   <TouchableOpacity
                     style={styles.buttonContainer}
-                    onPress={this.openCompleteConfirmation}>
-                    <Text style={[styles.text, {color: colorGreen}]}>
-                      Completed
+                    onPress={this.openCancelConfirmation}>
+                    <Text style={[styles.text, {color: themeRed}]}>
+                      {this.state.isJobAccepted
+                        ? 'Cancel Job'
+                        : 'Reject Request'}
                     </Text>
                   </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={styles.buttonContainer}
-                  onPress={this.openCancelConfirmation}>
-                  <Text style={[styles.text, {color: themeRed}]}>
-                    {this.state.isJobAccepted ? 'Cancel Job' : 'Reject Request'}
-                  </Text>
-                </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
-        />
+            )}
+          />
+        )}
       </View>
     );
   }
