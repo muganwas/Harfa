@@ -38,6 +38,7 @@ import {
   setSelectedJobRequest,
   getAllWorkRequestPro,
   getPendingJobRequestProvider,
+  fetchedDataWorkSource,
 } from '../../Redux/Actions/jobsActions';
 import _, {cloneDeep} from 'lodash';
 import {updateProviderDetails} from '../../Redux/Actions/userActions';
@@ -81,7 +82,6 @@ class ProDashboardScreen extends Component {
   constructor(props) {
     super();
     const {
-      jobsInfo: {dataWorkSource},
       generalInfo: {online, connectivityAvailable},
       userInfo: {providerDetails},
     } = props;
@@ -101,7 +101,6 @@ class ProDashboardScreen extends Component {
           : 'red',
       dataSource: [],
       dataUserSource: [],
-      dataWorkSource: dataWorkSource || [],
       isDialogLogoutVisible: false,
       isRecentMessage: false,
       isWorkRequest: false,
@@ -140,10 +139,7 @@ class ProDashboardScreen extends Component {
   };
 
   initiateProps = () => {
-    const {
-      jobsInfo: {dataWorkSource},
-    } = this.props;
-    this.setState({dataWorkSource, isLoading: false, isWorkRequest: true});
+    this.setState({isLoading: false, isWorkRequest: true});
   };
 
   componentDidUpdate() {
@@ -665,7 +661,7 @@ class ProDashboardScreen extends Component {
     }
   };
 
-  rejectJob = (pos, redirect = true) => {
+  rejectJob = async (pos, redirect = true) => {
     const {
       fetchedPendingJobInfo,
       userInfo: {providerDetails},
@@ -1171,7 +1167,7 @@ class ProDashboardScreen extends Component {
       generalInfo: {online, connectivityAvailable},
       userInfo: {providerDetails},
       fetchJobRequestHistory,
-      getPendingJobRequestProvider,
+      //getPendingJobRequestProvider,
     } = this.props;
     this.setState({
       dataSource: [],
@@ -1577,6 +1573,9 @@ const mapDispatchToProps = dispatch => {
     },
     updateProviderDetails: dits => {
       dispatch(updateProviderDetails(dits));
+    },
+    fetchedDataWorkSource: dws => {
+      dispatch(fetchedDataWorkSource(dws));
     },
     getPendingJobRequestProvider: (props, providerId, navTo) => {
       dispatch(getPendingJobRequestProvider(props, providerId, navTo));

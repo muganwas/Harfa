@@ -33,6 +33,7 @@ import {
   fetchedJobProviderInfo,
   fetchProviderJobInfoError,
   setSelectedJobRequest,
+  fetchedDataWorkSource,
 } from '../../Redux/Actions/jobsActions';
 import {
   colorBg,
@@ -390,16 +391,22 @@ class ProMapDirectionScreen extends Component {
     }
   };
 
-  jobCancelTask = () => {
+  jobCancelTask = async () => {
     this.setState({isLoading: true});
     const {
       fetchingPendingJobInfo,
       fetchedPendingJobInfo,
-      jobsInfo: {jobRequestsProviders},
+      fetchedDataWorkSource,
+      jobsInfo: {jobRequestsProviders, dataWorkSource},
       userInfo: {providerDetails},
     } = this.props;
-    let newJobRequestsProviders = [...jobRequestsProviders];
+    let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
+    let newDWS = cloneDeep(dataWorkSource);
+    let dataWSPos;
     const {orderId, userId} = this.state;
+    await newDWS.map((wks, i) => {
+      if (wks.order_id === orderId) dataWSPos = i;
+    });
     const data = {
       main_id: this.state.mainId,
       chat_status: '1',
@@ -459,7 +466,10 @@ class ProMapDirectionScreen extends Component {
               isAcceptJob: true,
               showDialog: false,
             });
-
+            if (dataWSPos || dataWSPos === 0) {
+              newDWS.splice(dataWSPos, 1);
+              fetchedDataWorkSource(newDWS);
+            }
             newJobRequestsProviders.splice(this.state.currentPos, 1);
             fetchedPendingJobInfo(newJobRequestsProviders);
             this.props.navigation.navigate('ProDashboard');
@@ -996,6 +1006,9 @@ const mapDispatchToProps = dispatch => {
     },
     dispatchSelectedJobRequest: job => {
       dispatch(setSelectedJobRequest(job));
+    },
+    fetchedDataWorkSource: dws => {
+      dispatch(fetchedDataWorkSource(dws));
     },
   };
 };

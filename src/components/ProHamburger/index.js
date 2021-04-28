@@ -122,9 +122,9 @@ class ProHamburger extends React.Component {
         fetchedNotifications({type: 'generic', value: currentGenericCount + 1});
       }
       const orderId = data.order_id;
-      let pos = 0;
-      jobRequestsProviders.map((obj, key) => {
-        if (orderId === obj.order_Id) pos = key;
+      let pos;
+      await jobRequestsProviders.map((obj, key) => {
+        if (orderId === obj.order_id) pos = key;
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
       if (title.toLowerCase() === 'booking request') {
