@@ -367,11 +367,11 @@ class ProDashboardScreen extends Component {
               style={{
                 fontSize: 12,
                 fontWeight: 'bold',
-                ...(item.status == 'Pending'
+                ...(item.status === 'Pending'
                   ? styles.colorYellow
-                  : item.status == 'Accepted'
+                  : item.status === 'Accepted'
                   ? styles.colorGreen
-                  : item.status == 'Completed'
+                  : item.status === 'Completed'
                   ? styles.colorBlack
                   : styles.colorRed),
               }}>

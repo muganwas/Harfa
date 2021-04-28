@@ -70,22 +70,16 @@ class MapDirectionScreen extends Component {
       generalInfo: {usersCoordinates, othersCoordinates},
       jobsInfo: {
         jobRequests,
-        allJobRequestsClient,
         selectedJobRequest: {employee_id},
       },
       navigation,
     } = props;
     const currRequestPos = navigation.getParam('currentPos', 0);
-    let jobRequestPos = 0;
-    allJobRequestsClient.map((job, i) => {
-      if (job.employee_id === jobRequests[currRequestPos].employee_id)
-        jobRequestPos = i;
-    });
     const employeeLatitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id]?.latitude
+      ? othersCoordinates[employee_id].latitude
       : usersCoordinates.latitude;
     const employeeLongitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id]?.longitude
+      ? othersCoordinates[employee_id].longitude
       : usersCoordinates.longitude;
 
     this.state = {
@@ -104,7 +98,6 @@ class MapDirectionScreen extends Component {
       inputMessage: '',
       dataChatSource: [],
       currRequestPos,
-      jobRequestPos,
       id: jobRequests[currRequestPos].id,
       orderId: jobRequests[currRequestPos].order_id,
       providerId: jobRequests[currRequestPos].employee_id,
@@ -142,23 +135,17 @@ class MapDirectionScreen extends Component {
       generalInfo: {usersCoordinates, othersCoordinates},
       jobsInfo: {
         jobRequests,
-        allJobRequestsClient,
         selectedJobRequest: {employee_id},
       },
       navigation,
     } = props;
     const currRequestPos = navigation.getParam('currentPos', 0);
     if (currRequestPos && jobRequests[currRequestPos]) {
-      let jobRequestPos = 0;
-      allJobRequestsClient.map((job, i) => {
-        if (job.employee_id === jobRequests[currRequestPos].employee_id)
-          jobRequestPos = i;
-      });
       const employeeLatitude = othersCoordinates[employee_id]
-        ? othersCoordinates[employee_id]?.latitude
+        ? othersCoordinates[employee_id].latitude
         : usersCoordinates.latitude;
       const employeeLongitude = othersCoordinates[employee_id]
-        ? othersCoordinates[employee_id]?.longitude
+        ? othersCoordinates[employee_id].longitude
         : usersCoordinates.longitude;
 
       this.setState({
@@ -177,7 +164,6 @@ class MapDirectionScreen extends Component {
         inputMessage: '',
         dataChatSource: [],
         currRequestPos,
-        jobRequestPos,
         id: jobRequests[currRequestPos].id,
         orderId: jobRequests[currRequestPos].order_id,
         providerId: jobRequests[currRequestPos].employee_id,
@@ -643,11 +629,7 @@ class MapDirectionScreen extends Component {
   render() {
     const {
       userInfo: {userDetails},
-      jobsInfo: {
-        jobRequests,
-        selectedJobRequest: {employee_id},
-      },
-      generalInfo: {usersCoordinates, othersCoordinates},
+      jobsInfo: {jobRequests},
       fetchedNotifications,
     } = this.props;
     const {
@@ -668,12 +650,6 @@ class MapDirectionScreen extends Component {
       dialogLeftText,
       dialogRightText,
     } = this.state;
-    const employeeLatitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id]?.latitude
-      : usersCoordinates.latitude;
-    const employeeLongitude = othersCoordinates[employee_id]
-      ? othersCoordinates[employee_id]?.longitude
-      : usersCoordinates.longitude;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -730,91 +706,84 @@ class MapDirectionScreen extends Component {
             </Text>
           </View>
         </View>
-        {employeeLatitude &&
-        employeeLongitude &&
-        destinationLat &&
-        destinationLng ? (
-          <MapView
-            key={mapKey}
-            style={styles.map}
-            region={{
+        <MapView
+          key={mapKey}
+          style={styles.map}
+          region={{
+            latitude: destinationLat,
+            longitude: destinationLng,
+            latitudeDelta: 0.00922,
+            longitudeDelta: 0.00121,
+          }}
+          zoomEnabled={true}
+          minZoomLevel={1}
+          maxZoomLevel={20}>
+          {Platform.OS === 'ios' && (
+            <View style={styles.header}>
+              <View style={{flex: 1, flexDirection: 'row', margin: 5}}>
+                <TouchableOpacity
+                  style={{
+                    width: 35,
+                    height: 35,
+                    alignSelf: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onPress={() => this.props.navigation.goBack()}>
+                  <Image
+                    style={{width: 20, height: 20, alignSelf: 'center'}}
+                    source={require('../../icons/back_arrow_double.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          <MapView.Marker
+            coordinate={{
+              latitude: sourceLat,
+              longitude: sourceLng,
+            }}
+            title={userDetails.username}
+            description="Vous">
+            <Image
+              style={{
+                width: 35,
+                height: 35,
+                backgroundColor: 'transparent',
+              }}
+              source={require('../../icons/home_marker.png')}
+            />
+          </MapView.Marker>
+
+          <MapView.Marker
+            coordinate={{
               latitude: destinationLat,
               longitude: destinationLng,
-              latitudeDelta: 0.00922,
-              longitudeDelta: 0.00121,
             }}
-            zoomEnabled={true}
-            minZoomLevel={1}
-            maxZoomLevel={20}>
-            {Platform.OS === 'ios' && (
-              <View style={styles.header}>
-                <View style={{flex: 1, flexDirection: 'row', margin: 5}}>
-                  <TouchableOpacity
-                    style={{
-                      width: 35,
-                      height: 35,
-                      alignSelf: 'center',
-                      justifyContent: 'center',
-                    }}
-                    onPress={() => this.props.navigation.goBack()}>
-                    <Image
-                      style={{width: 20, height: 20, alignSelf: 'center'}}
-                      source={require('../../icons/back_arrow_double.png')}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-            <MapView.Marker
-              coordinate={{
-                latitude: sourceLat,
-                longitude: sourceLng,
+            title="Fournisseur"
+            description={providerName}>
+            <Image
+              style={{
+                width: 35,
+                height: 35,
+                backgroundColor: 'transparent',
               }}
-              title={userDetails.username}
-              description="Vous">
-              <Image
-                style={{
-                  width: 35,
-                  height: 35,
-                  backgroundColor: 'transparent',
-                }}
-                source={require('../../icons/home_marker.png')}
-              />
-            </MapView.Marker>
-
-            <MapView.Marker
-              coordinate={{
-                latitude: destinationLat,
-                longitude: destinationLng,
-              }}
-              title="Fournisseur"
-              description={providerName}>
-              <Image
-                style={{
-                  width: 35,
-                  height: 35,
-                  backgroundColor: 'transparent',
-                }}
-                source={require('../../icons/car_marker.png')}
-              />
-            </MapView.Marker>
-            <MapView.Polyline
-              coordinates={coords}
-              strokeColor={themeRed} // fallback for when `strokeColors` is not supported by the map-provider
-              strokeColors={[
-                '#7F0000',
-                black, // no color, creates a "long" gradient between the previous and next coordinate
-                '#B24112',
-                '#E5845C',
-                '#238C23',
-                '#7F0000',
-              ]}
-              strokeWidth={2}
+              source={require('../../icons/car_marker.png')}
             />
-          </MapView>
-        ) : (
-          <ActivityIndicator size={30} color={'#000'} />
-        )}
+          </MapView.Marker>
+          <MapView.Polyline
+            coordinates={coords}
+            strokeColor={themeRed} // fallback for when `strokeColors` is not supported by the map-provider
+            strokeColors={[
+              '#7F0000',
+              black, // no color, creates a "long" gradient between the previous and next coordinate
+              '#B24112',
+              '#E5845C',
+              '#238C23',
+              '#7F0000',
+            ]}
+            strokeWidth={2}
+          />
+        </MapView>
         {jobRequests && jobRequests[currRequestPos] ? (
           <SlidingPanel
             headerLayoutHeight={140}

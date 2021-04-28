@@ -135,13 +135,13 @@ class ProBookingScreen extends Component {
                     newData[i].user_details.imageAvailable = res;
                 });
                 if (newData[i].chat_status == '1') {
-                  if (newData[i].status == 'Completed') {
+                  if (newData[i].status === 'Completed') {
                     bookingCompleteData.push(newData[i]);
                   } else if (newData[i].status == 'Rejected') {
                     bookingRejectData.push(newData[i]);
                   }
                 } else {
-                  if (newData[i].status == 'Rejected') {
+                  if (newData[i].status === 'Rejected') {
                     bookingRejectData.push(newData[i]);
                   }
                 }
@@ -184,12 +184,12 @@ class ProBookingScreen extends Component {
   };
 
   selectPage = title => {
-    if (title == 'Completed') {
+    if (title === 'Completed') {
       this.viewPager.setPage(0);
       this.setState({
         currentPage: 0,
       });
-    } else if (title == 'Rejected') {
+    } else if (title === 'Rejected') {
       this.viewPager.setPage(1);
       this.setState({
         currentPage: 1,

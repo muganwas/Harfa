@@ -184,7 +184,7 @@ class Hamburger extends React.Component {
         fetchedPendingJobInfo(newJobRequests);
         navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
-      } else if (title.toLowerCase() == 'job completed') {
+      } else if (title.toLowerCase() === 'job completed') {
         newJobRequests.splice(pos, 1);
         fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
@@ -540,7 +540,8 @@ class Hamburger extends React.Component {
 
       database()
         .ref(`liveLocation/${employee_id}`)
-        .on('child_changed', () => {
+        .on('child_changed', result => {
+          console.log('update rezat --', result);
           const {
             generalInfo: {othersCoordinates},
           } = this.props;
