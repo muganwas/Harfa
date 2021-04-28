@@ -183,51 +183,53 @@ class ProMapDirectionScreen extends Component {
     } = props;
     let currentPos = navigation.getParam('currentPos', 0);
     const currentRequest = jobRequestsProviders[currentPos] || {};
-    this.setState({
-      sourcesourceLocation:
-        usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-      sourceLat: parseFloat(usersCoordinates.latitude),
-      sourceLng: parseFloat(usersCoordinates.longitude),
-      destinationLocation:
+    if (currentPos || (currentPos === 0 && jobRequestsProviders[currentPos])) {
+      this.setState({
+        sourcesourceLocation:
+          usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+        sourceLat: parseFloat(usersCoordinates.latitude),
+        sourceLng: parseFloat(usersCoordinates.longitude),
+        destinationLocation:
+          othersCoordinates[user_id]?.latitude +
+          ',' +
+          othersCoordinates[user_id]?.longitude,
+        destinationLat: parseFloat(othersCoordinates[user_id]?.latitude),
+        destinationLng: parseFloat(othersCoordinates[user_id]?.longitude),
+        routeCoordinates: [],
+        isLoading: othersCoordinates[user_id],
+        pageTitle: navigation.state.params.pageTitle,
+        currentPos,
+        userId: currentRequest.user_id,
+        userName: currentRequest.name,
+        userImage: currentRequest.image,
+        userMobile: currentRequest.mobile,
+        userDob: currentRequest.dob,
+        userAddress: currentRequest.address,
+        userLat: currentRequest.lat,
+        userLang: currentRequest.lang,
+        userFcmId: currentRequest.fcm_id,
+        orderId: currentRequest.order_id,
+        serviceName: currentRequest.service_name,
+        mainId: currentRequest.id,
+        delivertAddress: currentRequest.delivery_address,
+        deliveryLat: currentRequest.delivery_lat,
+        deliveryLang: currentRequest.delivery_lang,
+        chatStatus: currentRequest.chat_status,
+        status: currentRequest.status,
+        proImageAvailable: currentRequest.imageAvailable,
+        isJobAccepted: currentRequest.status === 'Accepted',
+        showDialog: false,
+        currentModal: null,
+      });
+      const destination =
         othersCoordinates[user_id]?.latitude +
         ',' +
-        othersCoordinates[user_id]?.longitude,
-      destinationLat: parseFloat(othersCoordinates[user_id]?.latitude),
-      destinationLng: parseFloat(othersCoordinates[user_id]?.longitude),
-      routeCoordinates: [],
-      isLoading: othersCoordinates[user_id],
-      pageTitle: navigation.state.params.pageTitle,
-      currentPos,
-      userId: currentRequest.user_id,
-      userName: currentRequest.name,
-      userImage: currentRequest.image,
-      userMobile: currentRequest.mobile,
-      userDob: currentRequest.dob,
-      userAddress: currentRequest.address,
-      userLat: currentRequest.lat,
-      userLang: currentRequest.lang,
-      userFcmId: currentRequest.fcm_id,
-      orderId: currentRequest.order_id,
-      serviceName: currentRequest.service_name,
-      mainId: currentRequest.id,
-      delivertAddress: currentRequest.delivery_address,
-      deliveryLat: currentRequest.delivery_lat,
-      deliveryLang: currentRequest.delivery_lang,
-      chatStatus: currentRequest.chat_status,
-      status: currentRequest.status,
-      proImageAvailable: currentRequest.imageAvailable,
-      isJobAccepted: currentRequest.status === 'Accepted',
-      showDialog: false,
-      currentModal: null,
-    });
-    const destination =
-      othersCoordinates[user_id]?.latitude +
-      ',' +
-      othersCoordinates[user_id]?.longitude;
-    this.getDirections(
-      usersCoordinates.latitude + ',' + usersCoordinates.longitude,
-      destination,
-    );
+        othersCoordinates[user_id]?.longitude;
+      this.getDirections(
+        usersCoordinates.latitude + ',' + usersCoordinates.longitude,
+        destination,
+      );
+    }
   };
 
   handleBackButtonClick = () => {

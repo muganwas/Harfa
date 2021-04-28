@@ -47,7 +47,7 @@ import {
   getAllWorkRequestPro,
   getAllWorkRequestClient,
 } from '../../Redux/Actions/jobsActions';
-import {fetchCountryCodes} from '../../Redux/Actions/validateionActions';
+import {fetchCountryCodes} from '../../Redux/Actions/validationActions';
 import {white} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('screen').width;
