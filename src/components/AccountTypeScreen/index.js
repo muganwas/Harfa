@@ -53,7 +53,7 @@ export default class AccountTypeScreen extends Component {
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={() =>
-            this.props.navigation.navigate('LoginPhoneScreen', {
+            this.props.navigation.navigate('FacebookGoogle', {
               accountType: 'Individual',
             })
           }>
@@ -63,7 +63,7 @@ export default class AccountTypeScreen extends Component {
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={() =>
-            this.props.navigation.navigate('LoginPhoneScreen', {
+            this.props.navigation.navigate('FacebookGoogle', {
               accountType: 'Company',
             })
           }>
