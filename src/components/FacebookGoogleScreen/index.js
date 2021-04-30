@@ -297,13 +297,13 @@ class FacebookGoogleScreen extends Component {
                     this.setState({
                       isLoading: false,
                     });
-                    SimpleToast('Something went wrong', SimpleToast.SHORT);
+                    SimpleToast.show('Something went wrong', SimpleToast.SHORT);
                   });
               } catch (e) {
                 this.setState({
                   isLoading: false,
                 });
-                SimpleToast(
+                SimpleToast.show(
                   'Something went wrong, try again',
                   SimpleToast.SHORT,
                 );

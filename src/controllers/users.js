@@ -21,7 +21,7 @@ export const getFCMToken = async (
           const userType = await rNES.getItem('userType');
           onSuccess(userId, userType, fcmToken);
         } catch (e) {
-          SimpleToast('Something went wrong, try again.');
+          SimpleToast.show('Something went wrong, try again.');
         }
       }
     })
@@ -32,7 +32,6 @@ export const getFCMToken = async (
 
 export const getUserType = async (
   onMessagingEnabled = () => {},
-  onMessagingDisabled = () => {},
   onError = () => {},
 ) => {
   messaging()
@@ -44,7 +43,7 @@ export const getUserType = async (
       if (enabled) {
         onMessagingEnabled();
       } else {
-        onMessagingDisabled();
+        onError();
       }
     })
     .catch(error => {
@@ -67,13 +66,14 @@ export const autoLogin = async (
           const {email, password} = JSON.parse(storedInfo);
           firebaseAuth()
             .signInWithEmailAndPassword(email, password)
-            .then(res => {
+            .then(() => {
               inhouseLogin(userId, userType, fcmToken);
             })
             .catch(error => {
               SimpleToast.show(
                 'Something went wrong, try closing and reopening app',
               );
+              console.log('firebase auth error', error);
             });
         } else inhouseLogin(userId, userType, fcmToken);
       })
@@ -160,17 +160,23 @@ export const inhouseLogin = (
             updateProviderDetails(providerData);
             fetchJobRequestHistoryPro(userId);
             fetchPendingJobProviderInfo(props, userId, 'ProHome');
-          } else onLoginFailure();
+          } else onLoginFailure(responseJson.message);
         })
         .catch(error => {
-          stopLoading();
-          SimpleToast('Something went wrong, try again later');
-          console.log('login error', error);
+          const message =
+            error.message && error.message.indexOf('Network') > -1
+              ? 'Check your internet connection and try again'
+              : 'Something went wrong, try again later';
+          onLoginFailure(message);
+          console.log('login error - 1', error.message);
         });
     } catch (e) {
-      stopLoading();
-      SimpleToast('Something went wrong, try again later');
-      console.log('login error', e);
+      const message =
+        error.message && error.message.indexOf('Network') > -1
+          ? 'Check your internet connection and try again'
+          : 'Something went wrong, try again later';
+      onLoginFailure(message);
+      console.log('login error - 2', e);
     }
   } else if (userType === 'User') {
     try {
@@ -211,17 +217,23 @@ export const inhouseLogin = (
             //Check if any Ongoing Request
             fetchJobRequestHistoryClient(userId);
             fetchPendingJobRequest(props, userId, 'Home');
-          } else onLoginFailure();
+          } else onLoginFailure(responseJson.message);
         })
         .catch(error => {
-          stopLoading();
-          SimpleToast('Something went wrong, try again later');
-          console.log('login error', error);
+          const message =
+            error.message && error.message.indexOf('Network') > -1
+              ? 'Check your internet connection and try again'
+              : 'Something went wrong, try again later';
+          onLoginFailure(message);
+          console.log('login error - 1.1', error);
         });
     } catch (e) {
-      stopLoading();
-      SimpleToast('Something went wrong, try again later');
-      console.log('login error', e);
+      const message =
+        error.message && error.message.indexOf('Network') > -1
+          ? 'Check your internet connection and try again'
+          : 'Something went wrong, try again later';
+      onLoginFailure(message);
+      console.log('login error - 2.1', e);
     }
   }
 };

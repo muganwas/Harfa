@@ -506,7 +506,7 @@ class Hamburger extends React.Component {
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           action();
         } else {
-          SimpleToast('You have denied location permission');
+          SimpleToast.show('You have denied location permission');
           exitApp();
         }
       }

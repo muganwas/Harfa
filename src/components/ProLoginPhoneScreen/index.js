@@ -285,13 +285,13 @@ class LoginPhoneScreen extends Component {
                     this.setState({
                       isLoading: false,
                     });
-                    SimpleToast(error.message, SimpleToast.SHORT);
+                    SimpleToast.show(error.message, SimpleToast.SHORT);
                   });
               } catch (e) {
                 this.setState({
                   isLoading: false,
                 });
-                SimpleToast(e.message, SimpleToast.SHORT);
+                SimpleToast.show(e.message, SimpleToast.SHORT);
               }
             } else {
               this.leftButtonActon = () => {

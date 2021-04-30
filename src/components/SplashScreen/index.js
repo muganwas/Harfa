@@ -90,6 +90,31 @@ class SplashScreen extends Component {
       this.setState({isLoading: false});
   }
 
+  showDialogAction = (
+    {title, message, leftButtonText, rightButtonText, dialogType},
+    leftButtonAction,
+    rightButtonAction,
+  ) => {
+    this.leftButtonActon = leftButtonAction;
+    this.rightButtonAction = rightButtonAction;
+    this.setState({
+      isLoading: false,
+      showDialog: true,
+      dialogType: dialogType || '...',
+      dialogTitle: title,
+      dialogDesc: message,
+      dialogLeftText: leftButtonText,
+      dialogRightText: rightButtonText,
+    });
+  };
+
+  clearDialog = () =>
+    this.setState({
+      isLoading: false,
+      showDialog: false,
+      dialogType: null,
+    });
+
   splashTimeOut = async () => {
     try {
       const {navigation} = this.props;
@@ -105,85 +130,71 @@ class SplashScreen extends Component {
                 (userId, userType, fcmToken) =>
                   inhouseLogin(
                     {userId, userType, fcmToken, props: this.props},
-                    () => {
-                      this.leftButtonActon = null;
-                      this.rightButtonAction = () => {
-                        this.setState({
-                          isLoading: false,
-                          showDialog: false,
-                          dialogType: null,
-                        });
-                      };
-                      this.setState({
-                        isLoading: false,
-                        showDialog: true,
-                        dialogType: '...',
-                        dialogTitle: 'OOPS!',
-                        dialogDesc: responseJson.message,
-                        dialogLeftText: 'Cancel',
-                        dialogRightText: 'Ok',
-                      });
-                    },
+                    message =>
+                      this.showDialogAction(
+                        {
+                          title: 'LOGIN ERROR!',
+                          message,
+                          rightButtonText: 'Ok',
+                          dialogType: 'Alert',
+                        },
+                        null,
+                        () => {
+                          if (Android) BackHandler.exitApp();
+                          else RNExitApp.exitApp();
+                        },
+                      ),
                     () => this.setState({isLoading: false}),
                   ),
                 () => navigation.navigate('AfterSplash'),
               ),
-            e => {
-              this.leftButtonActon = null;
-              this.rightButtonAction = () => {
-                if (Android) BackHandler.exitApp();
-                else RNExitApp.exitApp();
-              };
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: '...',
-                dialogTitle: 'AUTH TOKEN!',
-                dialogDesc:
-                  'Your device has not received an authentication token, check your internet connection and try again later',
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok',
-              });
-              console.log('get token error', e);
+            () =>
+              this.showDialogAction(
+                {
+                  title: 'AUTH TOKEN!',
+                  message:
+                    'Your device has not received an authentication token, check your internet connection and try again later',
+                  rightButtonText: 'Ok',
+                  dialogType: 'Alert',
+                },
+                null,
+                () => {
+                  if (Android) BackHandler.exitApp();
+                  else RNExitApp.exitApp();
+                },
+              ),
+          ),
+        () =>
+          this.showDialogAction(
+            {
+              title: 'ENABLE NOTIFICATIONS!',
+              message:
+                "You don't have permission for notification. Please enable notification then try again",
+              rightButtonText: 'Ok',
+              dialogType: 'Alert',
+            },
+            null,
+            () => {
+              if (Android) BackHandler.exitApp();
+              else RNExitApp.exitApp();
             },
           ),
-        () => {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
-            if (Android) BackHandler.exitApp();
-            else RNExitApp.exitApp();
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: '...',
-            dialogTitle: 'ENABLE NOTIFICATIONS!',
-            dialogDesc:
-              "You don't have permission for notification. Please enable notification then try again",
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        },
-        e => {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
-            if (Android) BackHandler.exitApp();
-            else RNExitApp.exitApp();
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: '...',
-            dialogTitle: 'ENABLE NOTIFICATIONS!',
-            dialogDesc:
-              "You don't have permission for notification. Please enable notification then try again",
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        },
       );
     } catch (e) {
-      SimpleToast('Something went wrong, try again.');
+      this.showDialogAction(
+        {
+          title: 'LOGIN ERROR!',
+          message: 'Something went wrong, try again later',
+          rightButtonText: 'Ok',
+          dialogType: 'Alert',
+        },
+        null,
+        () => {
+          if (Android) BackHandler.exitApp();
+          else RNExitApp.exitApp();
+        },
+      );
+      console.log('login err', e.message);
     }
   };
 
