@@ -174,133 +174,93 @@ export const synchroniseOnlineStatus = async (id, savedStatus) => {
   return status;
 };
 
-export const inhouseLogin = (
-  {userId, userType, fcmToken, props},
+export const inhouseLogin = ({
+  userId,
+  userType,
+  fcmToken,
   onLoginFailure,
-) => {
-  const {
-    fetchPendingJobProviderInfo,
-    fetchJobRequestHistoryPro,
-    fetchJobRequestHistoryClient,
-    fetchPendingJobRequest,
-    updateProviderDetails,
-    updateUserDetails,
-  } = props;
-  if (userType === 'Provider') {
-    try {
-      fetch(PRO_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
+  fetchPendingJobInfo,
+  fetchJobRequestHistory,
+  updateAppUserDetails,
+  props,
+}) => {
+  const home = userType === 'Client' ? 'Home' : 'ProHome';
+  const provider = userType === 'Provider';
+  const fetchProfileUrl = provider ? PRO_GET_PROFILE : USER_GET_PROFILE;
+  try {
+    fetch(fetchProfileUrl + userId + '?fcm_id=' + fcmToken, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => response.json())
+      .then(async responseJson => {
+        let onlineStatus;
+        if (responseJson && responseJson.result) {
+          const id = responseJson.data.id;
+          onlineStatus = await synchroniseOnlineStatus(
+            id,
+            responseJson.data.online,
+          );
+          let data = provider
+            ? {
+                providerId: responseJson.data.id,
+                name: responseJson.data.username,
+                email: responseJson.data.email,
+                password: responseJson.data.password,
+                imageSource: responseJson.data.image,
+                surname: responseJson.data.surname,
+                mobile: responseJson.data.mobile,
+                services: responseJson.data.services,
+                description: responseJson.data.description,
+                address: responseJson.data.address,
+                lat: responseJson.data.lat,
+                lang: responseJson.data.lang,
+                invoice: responseJson.data.invoice,
+                firebaseId: responseJson.data.id,
+                online: onlineStatus,
+                status: responseJson.data.status,
+                fcmId: responseJson.data.fcm_id,
+                accountType: responseJson.data.account_type,
+              }
+            : {
+                userId: responseJson.data.id,
+                accountType: responseJson.data.acc_type,
+                email: responseJson.data.email,
+                password: responseJson.data.password,
+                username: responseJson.data.username,
+                image: responseJson.data.image,
+                mobile: responseJson.data.mobile,
+                dob: responseJson.data.dob,
+                address: responseJson.data.address,
+                lat: responseJson.data.lat,
+                online: onlineStatus,
+                lang: responseJson.data.lang,
+                firebaseId: responseJson.data.id,
+                fcmId: responseJson.data.fcm_id,
+              };
+          updateAppUserDetails(data);
+          fetchJobRequestHistory(userId);
+          fetchPendingJobInfo(props, userId, home);
+        } else onLoginFailure(responseJson.message);
       })
-        .then(response => response.json())
-        .then(async responseJson => {
-          let onlineStatus;
-          if (responseJson && responseJson.result) {
-            const id = responseJson.data.id;
-            onlineStatus = await synchroniseOnlineStatus(
-              id,
-              responseJson.data.online,
-            );
-            let providerData = {
-              providerId: responseJson.data.id,
-              name: responseJson.data.username,
-              email: responseJson.data.email,
-              password: responseJson.data.password,
-              imageSource: responseJson.data.image,
-              surname: responseJson.data.surname,
-              mobile: responseJson.data.mobile,
-              services: responseJson.data.services,
-              description: responseJson.data.description,
-              address: responseJson.data.address,
-              lat: responseJson.data.lat,
-              lang: responseJson.data.lang,
-              invoice: responseJson.data.invoice,
-              firebaseId: responseJson.data.id,
-              online: onlineStatus,
-              status: responseJson.data.status,
-              fcmId: responseJson.data.fcm_id,
-              accountType: responseJson.data.account_type,
-            };
-            updateProviderDetails(providerData);
-            fetchJobRequestHistoryPro(userId);
-            fetchPendingJobProviderInfo(props, userId, 'ProHome');
-          } else onLoginFailure(responseJson.message);
-        })
-        .catch(error => {
-          const message =
-            error.message && error.message.indexOf('Network') > -1
-              ? 'Check your internet connection and try again'
-              : 'Something went wrong, try again later';
-          onLoginFailure(message);
-          console.log('login error - 1', error.message);
-        });
-    } catch (e) {
-      const message =
-        error.message && error.message.indexOf('Network') > -1
-          ? 'Check your internet connection and try again'
-          : 'Something went wrong, try again later';
-      onLoginFailure(message);
-      console.log('login error - 2', e);
-    }
-  } else if (userType === 'User') {
-    try {
-      fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => response.json())
-        .then(async responseJson => {
-          if (responseJson && responseJson.result) {
-            const id = responseJson.data.id;
-            const onlineStatus = await synchroniseOnlineStatus(
-              id,
-              responseJson.data.online,
-            );
-            let userData = {
-              userId: responseJson.data.id,
-              accountType: responseJson.data.acc_type,
-              email: responseJson.data.email,
-              password: responseJson.data.password,
-              username: responseJson.data.username,
-              image: responseJson.data.image,
-              mobile: responseJson.data.mobile,
-              dob: responseJson.data.dob,
-              address: responseJson.data.address,
-              lat: responseJson.data.lat,
-              online: onlineStatus,
-              lang: responseJson.data.lang,
-              firebaseId: responseJson.data.id,
-              fcmId: responseJson.data.fcm_id,
-            };
-
-            updateUserDetails(userData);
-            //Check if any Ongoing Request
-            fetchJobRequestHistoryClient(userId);
-            fetchPendingJobRequest(props, userId, 'Home');
-          } else onLoginFailure(responseJson.message);
-        })
-        .catch(error => {
-          const message =
-            error.message && error.message.indexOf('Network') > -1
-              ? 'Check your internet connection and try again'
-              : 'Something went wrong, try again later';
-          onLoginFailure(message);
-          console.log('login error - 1.1', error);
-        });
-    } catch (e) {
-      const message =
-        error.message && error.message.indexOf('Network') > -1
-          ? 'Check your internet connection and try again'
-          : 'Something went wrong, try again later';
-      onLoginFailure(message);
-      console.log('login error - 2.1', e);
-    }
+      .catch(error => {
+        const message =
+          error.message && error.message.indexOf('Network') > -1
+            ? 'Check your internet connection and try again'
+            : 'Something went wrong, try again later';
+        onLoginFailure(message);
+        console.log('login error - 1', error.message);
+      });
+  } catch (e) {
+    const message =
+      error.message && error.message.indexOf('Network') > -1
+        ? 'Check your internet connection and try again'
+        : 'Something went wrong, try again later';
+    onLoginFailure(message);
+    console.log('login error - 2', e);
   }
 };
 

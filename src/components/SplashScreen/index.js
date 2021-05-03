@@ -117,7 +117,15 @@ class SplashScreen extends Component {
 
   splashTimeOut = async () => {
     try {
-      const {navigation} = this.props;
+      const {
+        navigation,
+        fetchPendingJobProviderInfo,
+        fetchPendingJobRequestInfo,
+        fetchJobRequestHistoryPro,
+        fetchJobRequestHistoryClient,
+        updateUserDetails,
+        updateProviderDetails,
+      } = this.props;
       const userId = await rNES.getItem('userId');
       getUserType(
         () =>
@@ -127,10 +135,22 @@ class SplashScreen extends Component {
               autoLogin(
                 {userId, userType, fcmToken},
                 () => this.setState({isLoading: true}),
-                (userId, userType, fcmToken) =>
-                  inhouseLogin(
-                    {userId, userType, fcmToken, props: this.props},
-                    message =>
+                (userId, userType, fcmToken) => {
+                  const provider = userType === 'Provider';
+                  inhouseLogin({
+                    userId,
+                    userType,
+                    fcmToken,
+                    fetchPendingJobInfo: provider
+                      ? fetchPendingJobProviderInfo
+                      : fetchPendingJobRequestInfo,
+                    fetchJobRequestHistory: provider
+                      ? fetchJobRequestHistoryPro
+                      : fetchJobRequestHistoryClient,
+                    updateAppUserDetails: provider
+                      ? updateProviderDetails
+                      : updateUserDetails,
+                    onLoginFailure: message =>
                       this.showDialogAction(
                         {
                           title: 'LOGIN ERROR!',
@@ -144,8 +164,9 @@ class SplashScreen extends Component {
                           else RNExitApp.exitApp();
                         },
                       ),
-                    () => this.setState({isLoading: false}),
-                  ),
+                    props: this.props,
+                  });
+                },
                 () => navigation.navigate('AfterSplash'),
               ),
             () =>
@@ -252,7 +273,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    fetchPendingJobRequest: (props, uid, navigateTo) => {
+    fetchPendingJobRequestInfo: (props, uid, navigateTo) => {
       dispatch(getPendingJobRequest(props, uid, navigateTo));
     },
     fetchPendingJobProviderInfo: (props, proId, navigateTo) => {
