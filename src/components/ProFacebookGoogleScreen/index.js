@@ -455,7 +455,7 @@ class FacebookGoogleScreen extends Component {
           transparent={true}
           visible={this.state.isLoading}
           animationType="fade"
-          onRequestClose={() => this.changeWaitingDialogVisibility(false)}>
+          onRequestClose={this.changeWaitingDialogVisibility}>
           <WaitingDialog
             changeWaitingDialogVisibility={this.changeWaitingDialogVisibility}
           />

@@ -184,7 +184,7 @@ export const inhouseLogin = ({
   updateAppUserDetails,
   props,
 }) => {
-  const home = userType === 'Client' ? 'Home' : 'ProHome';
+  const home = userType === 'Provider' ? 'ProHome' : 'Home';
   const provider = userType === 'Provider';
   const fetchProfileUrl = provider ? PRO_GET_PROFILE : USER_GET_PROFILE;
   try {
@@ -311,8 +311,9 @@ export const fbGmailLoginTask = async ({
   fetchProfileUrl,
   props,
 }) => {
-  const home = userType === 'Client' ? 'Home' : 'ProHome';
-  const userTypeName = userType === 'Client' ? 'User' : 'Provider';
+  const home = userType === 'Provider' ? 'ProHome' : 'Home';
+  const userTypeName = userType === 'Provider' ? 'Provider' : 'User';
+  const provider = userType === 'Provider';
   toggleLoading();
   const fcmToken = await messaging().getToken();
   if (fcmToken) {
@@ -348,44 +349,43 @@ export const fbGmailLoginTask = async ({
                 .then(async response => {
                   toggleLoading();
                   if (response && response.result) {
-                    const data =
-                      userTypeName === 'User'
-                        ? {
-                            userId: response.data.id,
-                            accountType: response.data.acc_type,
-                            email: response.data.email,
-                            password: response.data.password,
-                            username: response.data.username,
-                            image: response.data.image,
-                            mobile: response.data.mobile,
-                            dob: response.data.dob,
-                            address: response.data.address,
-                            lat: response.data.lat,
-                            online: onlineStatus,
-                            lang: response.data.lang,
-                            firebaseId,
-                            fcmId: response.data.fcm_id,
-                          }
-                        : {
-                            providerId: response.data.id,
-                            name: response.data.username,
-                            email: response.data.email,
-                            password: response.data.password,
-                            imageSource: response.data.image,
-                            surname: response.data.surname,
-                            mobile: response.data.mobile,
-                            services: response.data.services,
-                            description: response.data.description,
-                            address: response.data.address,
-                            lat: response.data.lat,
-                            lang: response.data.lang,
-                            invoice: response.data.invoice,
-                            firebaseId,
-                            online: onlineStatus,
-                            status: response.data.status,
-                            fcmId: response.data.fcm_id,
-                            accountType: responseJson.data.account_type,
-                          };
+                    const data = provider
+                      ? {
+                          providerId: response.data.id,
+                          name: response.data.username,
+                          email: response.data.email,
+                          password: response.data.password,
+                          imageSource: response.data.image,
+                          surname: response.data.surname,
+                          mobile: response.data.mobile,
+                          services: response.data.services,
+                          description: response.data.description,
+                          address: response.data.address,
+                          lat: response.data.lat,
+                          lang: response.data.lang,
+                          invoice: response.data.invoice,
+                          firebaseId,
+                          online: onlineStatus,
+                          status: response.data.status,
+                          fcmId: response.data.fcm_id,
+                          accountType: responseJson.data.account_type,
+                        }
+                      : {
+                          userId: response.data.id,
+                          accountType: response.data.acc_type,
+                          email: response.data.email,
+                          password: response.data.password,
+                          username: response.data.username,
+                          image: response.data.image,
+                          mobile: response.data.mobile,
+                          dob: response.data.dob,
+                          address: response.data.address,
+                          lat: response.data.lat,
+                          online: onlineStatus,
+                          lang: response.data.lang,
+                          firebaseId,
+                          fcmId: response.data.fcm_id,
+                        };
                     updateAppUserDetails(data);
                     //Store data like sharedPreference
                     rNES.setItem('userId', id);
@@ -395,44 +395,43 @@ export const fbGmailLoginTask = async ({
                     fetchJobRequestHistory(id);
                     fetchAppUserJobRequests(props, id, home);
                   } else {
-                    const data =
-                      userTypeName === 'User'
-                        ? {
-                            userId: responseJson.data.id,
-                            accountType: responseJson.data.acc_type,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            username: responseJson.data.username,
-                            image: responseJson.data.image,
-                            mobile: responseJson.data.mobile,
-                            dob: responseJson.data.dob,
-                            address: responseJson.data.address,
-                            online: onlineStatus,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            fcmId: responseJson.data.fcm_id,
-                            firebaseId,
-                          }
-                        : {
-                            providerId: responseJson.data.id,
-                            name: responseJson.data.username,
-                            email: responseJson.data.email,
-                            password: responseJson.data.password,
-                            imageSource: responseJson.data.image,
-                            surname: responseJson.data.surname,
-                            mobile: responseJson.data.mobile,
-                            services: responseJson.data.services,
-                            description: responseJson.data.description,
-                            address: responseJson.data.address,
-                            lat: responseJson.data.lat,
-                            lang: responseJson.data.lang,
-                            invoice: responseJson.data.invoice,
-                            online: onlineStatus,
-                            status: responseJson.data.status,
-                            fcmId: responseJson.data.fcm_id,
-                            accountType: responseJson.data.account_type,
-                            firebaseId,
-                          };
+                    const data = provider
+                      ? {
+                          providerId: responseJson.data.id,
+                          name: responseJson.data.username,
+                          email: responseJson.data.email,
+                          password: responseJson.data.password,
+                          imageSource: responseJson.data.image,
+                          surname: responseJson.data.surname,
+                          mobile: responseJson.data.mobile,
+                          services: responseJson.data.services,
+                          description: responseJson.data.description,
+                          address: responseJson.data.address,
+                          lat: responseJson.data.lat,
+                          lang: responseJson.data.lang,
+                          invoice: responseJson.data.invoice,
+                          online: onlineStatus,
+                          status: responseJson.data.status,
+                          fcmId: responseJson.data.fcm_id,
+                          accountType: responseJson.data.account_type,
+                          firebaseId,
+                        }
+                      : {
+                          userId: responseJson.data.id,
+                          accountType: responseJson.data.acc_type,
+                          email: responseJson.data.email,
+                          password: responseJson.data.password,
+                          username: responseJson.data.username,
+                          image: responseJson.data.image,
+                          mobile: responseJson.data.mobile,
+                          dob: responseJson.data.dob,
+                          address: responseJson.data.address,
+                          online: onlineStatus,
+                          lat: responseJson.data.lat,
+                          lang: responseJson.data.lang,
+                          fcmId: responseJson.data.fcm_id,
+                          firebaseId,
+                        };
                     updateAppUserDetails(data);
                     //Store data like sharedPreference
                     rNES.setItem('userId', id);
@@ -495,9 +494,8 @@ export const authenticateTask = async ({
 }) => {
   toggleLoading();
   const fcmToken = await messaging().getToken();
-  const client = userType === 'Client';
-  const home = userType === 'Client' ? 'Home' : 'ProHome';
-  console.log('auth url ...', authURL);
+  const provider = userType === 'Provider';
+  const home = userType === 'Provider' ? 'ProHome' : 'Home';
   if (fcmToken) {
     firebaseAuth()
       .signInWithEmailAndPassword(email, password)
@@ -531,24 +529,8 @@ export const authenticateTask = async ({
                   );
                   toggleLoading();
                   const id = responseJson.data.id;
-                  const data = client
+                  const data = provider
                     ? {
-                        userId: responseJson.data.id,
-                        accountType: responseJson.data.acc_type,
-                        email: responseJson.data.email,
-                        password: responseJson.data.password,
-                        username: responseJson.data.username,
-                        image: responseJson.data.image,
-                        mobile: responseJson.data.mobile,
-                        dob: responseJson.data.dob,
-                        online: onlineStatus,
-                        address: responseJson.data.address,
-                        lat: responseJson.data.lat,
-                        lang: responseJson.data.lang,
-                        fcmId: responseJson.data.fcm_id,
-                        firebaseId: uid,
-                      }
-                    : {
                         providerId: responseJson.data.id,
                         name: responseJson.data.username,
                         email: responseJson.data.email,
@@ -566,6 +548,22 @@ export const authenticateTask = async ({
                         status: responseJson.data.status,
                         fcmId: responseJson.data.fcm_id,
                         accountType: responseJson.data.account_type,
+                        firebaseId: uid,
+                      }
+                    : {
+                        userId: responseJson.data.id,
+                        accountType: responseJson.data.acc_type,
+                        email: responseJson.data.email,
+                        password: responseJson.data.password,
+                        username: responseJson.data.username,
+                        image: responseJson.data.image,
+                        mobile: responseJson.data.mobile,
+                        dob: responseJson.data.dob,
+                        online: onlineStatus,
+                        address: responseJson.data.address,
+                        lat: responseJson.data.lat,
+                        lang: responseJson.data.lang,
+                        fcmId: responseJson.data.fcm_id,
                         firebaseId: uid,
                       };
                   updateAppUserDetails(data);
