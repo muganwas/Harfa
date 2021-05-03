@@ -48,6 +48,7 @@ export default class ProForgotPasswordScreen extends Component {
       dialogType: null,
       dialogTitle: '',
       dialogDesc: '',
+      emailSent: false,
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
     };
@@ -93,25 +94,20 @@ export default class ProForgotPasswordScreen extends Component {
             this.setState({
               isLoading: false,
               showDialog: true,
-              dialogType: 'fb',
+              dialogType: 'Success',
               dialogTitle: 'Congratulations!',
               dialogDesc:
-                'Your password is sent to your registered Email address',
+                responseJson.message ||
+                'Check you registered email address for further instructions.',
               dialogLeftText: 'Cancel',
+              emailSent: true,
               dialogRightText: 'Ok',
             });
           } else {
-            console.log('Response Else ');
-            this.leftButtonActon = () => {
+            this.leftButtonActon = null;
+            this.rightButtonAction = () => {
               this.setState({
                 isLoading: false,
-                showDialog: false,
-                dialogType: null,
-              });
-            };
-            this.rightButtonAction = () => {
-              this.forgotPasswordTask();
-              this.setState({
                 showDialog: false,
                 dialogType: null,
               });
@@ -119,17 +115,15 @@ export default class ProForgotPasswordScreen extends Component {
             this.setState({
               isLoading: false,
               showDialog: true,
-              dialogType: 'fb',
-              dialogTitle: 'Congratulations!',
-              dialogDesc:
-                'Your password is sent to your registered Email address',
-              dialogLeftText: 'Cancel',
-              dialogRightText: 'Retry',
+              dialogType: 'Error',
+              dialogTitle: 'RESET ERROR!',
+              dialogDesc: responseJson.message,
+              dialogRightText: 'Ok',
             });
           }
         })
         .catch(error => {
-          console.log('Error :' + error);
+          console.log('Error :', error);
           this.leftButtonActon = () => {
             this.setState({
               isLoading: false,
@@ -147,7 +141,7 @@ export default class ProForgotPasswordScreen extends Component {
           this.setState({
             isLoading: false,
             showDialog: true,
-            dialogType: 'fb',
+            dialogType: 'Error',
             dialogTitle: 'OOPS!',
             dialogDesc: 'Something went wrong, Try again later',
             dialogLeftText: 'Cancel',
@@ -174,7 +168,7 @@ export default class ProForgotPasswordScreen extends Component {
       this.setState({
         isLoading: false,
         showDialog: true,
-        dialogType: 'fb',
+        dialogType: '...',
         dialogTitle: 'OOPS!',
         dialogDesc: 'Something went wrong, Try again later',
         dialogLeftText: 'Cancel',
@@ -194,6 +188,7 @@ export default class ProForgotPasswordScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
+      emailSent,
     } = this.state;
     return (
       <View style={styles.container}>
@@ -221,7 +216,11 @@ export default class ProForgotPasswordScreen extends Component {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag">
           <View
-            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
             <View
               style={{
                 height: 200,
@@ -260,7 +259,11 @@ export default class ProForgotPasswordScreen extends Component {
 
             <View style={styles.logincontainer}>
               <ShakingText
-                style={{color: 'red', fontWeight: 'bold', marginBottom: 10}}>
+                style={{
+                  color: 'red',
+                  fontWeight: 'bold',
+                  marginBottom: 10,
+                }}>
                 {this.state.error}
               </ShakingText>
 
@@ -313,7 +316,9 @@ export default class ProForgotPasswordScreen extends Component {
               <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={this.checkValidation}>
-                <Text style={styles.text}>Submit</Text>
+                <Text style={styles.text}>
+                  {`${emailSent ? 'Re-Submit' : 'Submit'}`}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

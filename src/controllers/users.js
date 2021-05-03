@@ -1,4 +1,12 @@
 import messaging from '@react-native-firebase/messaging';
+import {
+  LoginManager,
+  AccessToken,
+  GraphRequest,
+  GraphRequestManager,
+} from 'react-native-fbsdk';
+import Axios from 'axios';
+import {GoogleSignin, statusCodes} from '@react-native-community/google-signin';
 import firebaseAuth from '@react-native-firebase/auth';
 import rNES from 'react-native-encrypted-storage';
 import SimpleToast from 'react-native-simple-toast';
@@ -21,13 +29,22 @@ export const getFCMToken = async (
           const userType = await rNES.getItem('userType');
           onSuccess(userId, userType, fcmToken);
         } catch (e) {
-          SimpleToast.show('Something went wrong, try again.');
+          SimpleToast.show('Something went wrong, please try again.');
         }
       }
     })
     .catch(error => {
       onError(error);
     });
+};
+
+export const checkValidation = (email, password, setErrorMessage, callback) => {
+  !email
+    ? setErrorMessage('Enter valid email')
+    : !password
+    ? setErrorMessage('Enter password')
+    : callback();
+  return;
 };
 
 export const getUserType = async (
@@ -49,6 +66,57 @@ export const getUserType = async (
     .catch(error => {
       onError(error);
     });
+};
+
+export const googleLoginTask = async (
+  setStateVars = (firebaseId, loginType) => {},
+  callback = (name, email, image, loginType) => {},
+) => {
+  try {
+    await GoogleSignin.hasPlayServices();
+    var result = await GoogleSignin.signIn();
+    const {
+      user: {name, email, photo, id},
+    } = result;
+    setStateVars(id, 'google');
+    callback(name, email, photo, 'google');
+  } catch (error) {
+    console.log('Google signin error', e.message);
+    if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      // user cancelled the login flow
+      SimpleToast.show('You cancelled sign in.');
+    } else if (error.code === statusCodes.IN_PROGRESS) {
+      // operation (e.g. sign in) is in progress already
+      SimpleToast.show('Sign in is already in progress.');
+    } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+      SimpleToast.show(
+        'You need to install play services to use this sign in method.',
+      );
+    } else {
+      // some other error happened
+      SimpleToast.show('Something went wrong, please try again.');
+    }
+  }
+};
+
+export const responseFbCallback = (
+  error,
+  result,
+  setStateVars,
+  callback = (name, email, imageURL, loginType) => {},
+) => {
+  if (!error) {
+    const {
+      id,
+      name,
+      email,
+      picture: {
+        data: {url},
+      },
+    } = result;
+    setStateVars(id, 'facebook');
+    callback(name, email, url, 'facebook');
+  }
 };
 
 export const autoLogin = async (
@@ -109,7 +177,6 @@ export const synchroniseOnlineStatus = async (id, savedStatus) => {
 export const inhouseLogin = (
   {userId, userType, fcmToken, props},
   onLoginFailure,
-  stopLoading,
 ) => {
   const {
     fetchPendingJobProviderInfo,
@@ -189,10 +256,9 @@ export const inhouseLogin = (
       })
         .then(response => response.json())
         .then(async responseJson => {
-          let onlineStatus;
           if (responseJson && responseJson.result) {
             const id = responseJson.data.id;
-            onlineStatus = await synchroniseOnlineStatus(
+            const onlineStatus = await synchroniseOnlineStatus(
               id,
               responseJson.data.online,
             );
@@ -235,5 +301,355 @@ export const inhouseLogin = (
       onLoginFailure(message);
       console.log('login error - 2.1', e);
     }
+  }
+};
+
+export const facebookLoginTask = async (updateAuthToken, responseCallback) => {
+  LoginManager.logInWithPermissions(['public_profile', 'email']).then(
+    result => {
+      if (result.isCancelled) {
+        console.log('Login cancelled');
+      } else {
+        AccessToken.getCurrentAccessToken()
+          .then(data => {
+            updateAuthToken(data.accessToken);
+            const infoRequest = new GraphRequest(
+              '/me?fields=email,name,picture',
+              null,
+              responseCallback,
+            );
+            // Start the graph request.
+            new GraphRequestManager().addRequest(infoRequest).start();
+          })
+          .catch(e => {
+            SimpleToast.show('Something went wrong, try again later');
+            console.log('token access error', e);
+          });
+      }
+    },
+    error => {
+      SimpleToast.show('Something went wrong, try again later');
+      console.log('Login fail with error: ' + error);
+    },
+  );
+};
+
+export const fbGmailLoginTask = async ({
+  name,
+  email,
+  image,
+  userType,
+  firebaseId,
+  accountType,
+  loginType,
+  updateAppUserDetails,
+  fetchAppUserJobRequests,
+  fetchJobRequestHistory,
+  onError,
+  toggleLoading,
+  registerUrl,
+  fetchProfileUrl,
+  props,
+}) => {
+  const home = userType === 'Client' ? 'Home' : 'ProHome';
+  const userTypeName = userType === 'Client' ? 'User' : 'Provider';
+  toggleLoading();
+  const fcmToken = await messaging().getToken();
+  if (fcmToken) {
+    const userData = {
+      account_type: accountType,
+      username: name,
+      email: email,
+      image: image,
+      mobile: '',
+      dob: '',
+      fcm_id: fcmToken,
+      type: loginType,
+    };
+    try {
+      Axios.post(registerUrl, {data: JSON.stringify(userData)})
+        .then(async responseJson => {
+          if (responseJson.status === 200 && responseJson.data.createdDate) {
+            const id = responseJson.data.id;
+            const onlineStatus = await synchroniseOnlineStatus(
+              id,
+              responseJson.data.online,
+            );
+            try {
+              const id = responseJson.data.id;
+              fetch(fetchProfileUrl + id + '?fcm_id=' + fcmToken, {
+                method: 'GET',
+                headers: {
+                  Accept: 'application/json',
+                  'Content-Type': 'application/json',
+                },
+              })
+                .then(response => response.json())
+                .then(async response => {
+                  toggleLoading();
+                  if (response && response.result) {
+                    const data =
+                      userTypeName === 'User'
+                        ? {
+                            userId: response.data.id,
+                            accountType: response.data.acc_type,
+                            email: response.data.email,
+                            password: response.data.password,
+                            username: response.data.username,
+                            image: response.data.image,
+                            mobile: response.data.mobile,
+                            dob: response.data.dob,
+                            address: response.data.address,
+                            lat: response.data.lat,
+                            online: onlineStatus,
+                            lang: response.data.lang,
+                            firebaseId,
+                            fcmId: response.data.fcm_id,
+                          }
+                        : {
+                            providerId: response.data.id,
+                            name: response.data.username,
+                            email: response.data.email,
+                            password: response.data.password,
+                            imageSource: response.data.image,
+                            surname: response.data.surname,
+                            mobile: response.data.mobile,
+                            services: response.data.services,
+                            description: response.data.description,
+                            address: response.data.address,
+                            lat: response.data.lat,
+                            lang: response.data.lang,
+                            invoice: response.data.invoice,
+                            firebaseId,
+                            online: onlineStatus,
+                            status: response.data.status,
+                            fcmId: response.data.fcm_id,
+                            accountType: responseJson.data.account_type,
+                          };
+                    updateAppUserDetails(data);
+                    //Store data like sharedPreference
+                    rNES.setItem('userId', id);
+                    rNES.setItem('userType', userTypeName);
+                    rNES.setItem('email', data.email);
+                    rNES.setItem('firebaseId', firebaseId);
+                    fetchJobRequestHistory(id);
+                    fetchAppUserJobRequests(props, id, home);
+                  } else {
+                    const data =
+                      userTypeName === 'User'
+                        ? {
+                            userId: responseJson.data.id,
+                            accountType: responseJson.data.acc_type,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            username: responseJson.data.username,
+                            image: responseJson.data.image,
+                            mobile: responseJson.data.mobile,
+                            dob: responseJson.data.dob,
+                            address: responseJson.data.address,
+                            online: onlineStatus,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            fcmId: responseJson.data.fcm_id,
+                            firebaseId,
+                          }
+                        : {
+                            providerId: responseJson.data.id,
+                            name: responseJson.data.username,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            imageSource: responseJson.data.image,
+                            surname: responseJson.data.surname,
+                            mobile: responseJson.data.mobile,
+                            services: responseJson.data.services,
+                            description: responseJson.data.description,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            invoice: responseJson.data.invoice,
+                            online: onlineStatus,
+                            status: responseJson.data.status,
+                            fcmId: responseJson.data.fcm_id,
+                            accountType: responseJson.data.account_type,
+                            firebaseId,
+                          };
+                    updateAppUserDetails(data);
+                    //Store data like sharedPreference
+                    rNES.setItem('userId', id);
+                    rNES.setItem('userType', userTypeName);
+                    rNES.setItem('email', data.email);
+                    rNES.setItem('firebaseId', firebaseId);
+                    fetchJobRequestHistory(id);
+                    fetchAppUserJobRequests(props, id, home);
+                  }
+                })
+                .catch(error => {
+                  console.log('profile fetch error --', error);
+                  onError(error.message);
+                });
+            } catch (e) {
+              console.log('reg error --', e);
+              onError(e.message);
+            }
+          } else {
+            const message =
+              responseJson.message === 'Email not found'
+                ? "You're not registered, register then login"
+                : responseJson.data?.message?.indexOf('deactivated') > -1
+                ? 'Your account is currently innactive, contact admin'
+                : responseJson.message
+                ? responseJson.message
+                : 'Something went wrong, please try again later';
+            onError(message);
+          }
+        })
+        .catch(error => {
+          console.log('fbgmail login err --', error);
+          onError(
+            error.message || 'Something went wrong, please try again later.',
+          );
+        })
+        .done();
+    } catch (e) {
+      console.log('fbgmail login err --', e);
+      onError('Something went wrong, please try again later.');
+    }
+  } else {
+    onError(
+      'Your device has no fcm token, check your internet connection and try again.',
+    );
+  }
+};
+
+export const authenticateTask = async ({
+  email,
+  password,
+  userType,
+  authURL,
+  fetchAppUserJobRequests,
+  updateAppUserDetails,
+  fetchJobRequestHistory,
+  toggleLoading,
+  onError,
+  props,
+}) => {
+  toggleLoading();
+  const fcmToken = await messaging().getToken();
+  const client = userType === 'Client';
+  const home = userType === 'Client' ? 'Home' : 'ProHome';
+  console.log('auth url ...', authURL);
+  if (fcmToken) {
+    firebaseAuth()
+      .signInWithEmailAndPassword(email, password)
+      .then(result => {
+        const {user} = result;
+        if (user && typeof user === 'object') {
+          const {
+            _user: {uid},
+          } = user;
+          const data = {
+            email,
+            password,
+            loginType: 'Firebase',
+            fcm_id: fcmToken,
+          };
+          try {
+            fetch(authURL, {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(data),
+            })
+              .then(response => response.json())
+              .then(async responseJson => {
+                if (responseJson && responseJson.result) {
+                  const onlineStatus = await synchroniseOnlineStatus(
+                    responseJson.data.id,
+                    responseJson.data.online,
+                  );
+                  toggleLoading();
+                  const id = responseJson.data.id;
+                  const data = client
+                    ? {
+                        userId: responseJson.data.id,
+                        accountType: responseJson.data.acc_type,
+                        email: responseJson.data.email,
+                        password: responseJson.data.password,
+                        username: responseJson.data.username,
+                        image: responseJson.data.image,
+                        mobile: responseJson.data.mobile,
+                        dob: responseJson.data.dob,
+                        online: onlineStatus,
+                        address: responseJson.data.address,
+                        lat: responseJson.data.lat,
+                        lang: responseJson.data.lang,
+                        fcmId: responseJson.data.fcm_id,
+                        firebaseId: uid,
+                      }
+                    : {
+                        providerId: responseJson.data.id,
+                        name: responseJson.data.username,
+                        email: responseJson.data.email,
+                        password: responseJson.data.password,
+                        imageSource: responseJson.data.image,
+                        surname: responseJson.data.surname,
+                        mobile: responseJson.data.mobile,
+                        services: responseJson.data.services,
+                        description: responseJson.data.description,
+                        address: responseJson.data.address,
+                        lat: responseJson.data.lat,
+                        lang: responseJson.data.lang,
+                        invoice: responseJson.data.invoice,
+                        online: onlineStatus,
+                        status: responseJson.data.status,
+                        fcmId: responseJson.data.fcm_id,
+                        accountType: responseJson.data.account_type,
+                        firebaseId: uid,
+                      };
+                  updateAppUserDetails(data);
+                  //Store data like sharedPreference
+                  rNES.setItem('userId', id);
+                  rNES.setItem('userType', userType);
+                  const auth = {
+                    email,
+                    password,
+                  };
+                  rNES.setItem('auth', JSON.stringify(auth));
+                  rNES.setItem('firebaseId', uid);
+                  fetchJobRequestHistory(id);
+                  fetchAppUserJobRequests(props, id, home);
+                } else {
+                  onError(responseJson.message);
+                }
+              })
+              .catch(error => {
+                console.log('Error :' + error);
+                onError('Something went wrong, please try again later.');
+              })
+              .done();
+          } catch (e) {
+            console.log('Error :' + e);
+            onError('Something went wrong, please try again.');
+          }
+        } else {
+          onError('Something went wrong, please try again later.');
+        }
+      })
+      .catch(error => {
+        toggleLoading();
+        if (error.code === 'auth/user-not-found') {
+          onError("You've not registered yet, please register first");
+        } else if (error.code === 'auth/wrong-password') {
+          onError('You entered a wrong password!');
+        } else {
+          onError('Something went wrong, please try again later.');
+        }
+      });
+  } else {
+    onError(
+      'Your device has no fcm token, check your internet connection and try again.',
+    );
   }
 };

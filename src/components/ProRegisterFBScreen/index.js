@@ -97,19 +97,19 @@ class ProRegisterFBScreen extends Component {
   };
 
   checkValidation = () => {
-    if (this.state.name == '') {
+    if (this.state.name === '') {
       this.setState({error: 'Enter name'});
-    } else if (this.state.email == '') {
+    } else if (this.state.email === '') {
       this.setState({error: 'Enter surname'});
-    } else if (this.state.mobile == '') {
+    } else if (this.state.mobile === '') {
       this.setState({error: 'Enter mobile'});
-    } else if (this.state.serviceName == 'Select services') {
+    } else if (this.state.serviceName === 'Select services') {
       this.setState({error: 'Select services'});
-    } else if (this.state.description == '') {
+    } else if (this.state.description === '') {
       this.setState({error: 'Enter description'});
     } else if (
-      this.state.address == '' ||
-      this.state.address == 'Select Address'
+      this.state.address === '' ||
+      this.state.address === 'Select Address'
     ) {
       this.setState({error: 'Enter address'});
     } else {

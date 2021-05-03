@@ -24,6 +24,7 @@ import {
   GraphRequest,
   GraphRequestManager,
 } from 'react-native-fbsdk';
+import SimpleToast from 'react-native-simple-toast';
 import {GoogleSignin, statusCodes} from '@react-native-community/google-signin';
 import {
   getPendingJobRequest,
@@ -41,7 +42,7 @@ import simpleToast from 'react-native-simple-toast';
 import Axios from 'axios';
 import DialogComponent from '../DialogComponent';
 import {themeRed, black, white, lightGray} from '../../Constants/colors';
-import SimpleToast from 'react-native-simple-toast';
+import {facebookLoginTask} from '../../controllers/users';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
@@ -75,7 +76,6 @@ class FacebookGoogleScreen extends Component {
       password: '',
       opacity: 1,
       isLoading: false,
-      isErrorToast: '',
       firebaseId: '',
       loginType: null,
       showDialog: false,
@@ -125,35 +125,6 @@ class FacebookGoogleScreen extends Component {
       this.setState({firebaseId: id, loginType: 'facebook'});
       this.fbGoogleLoginCustomerTask(name, email, url);
     }
-  };
-
-  facebookLoginTask = async () => {
-    LoginManager.logInWithPermissions(['public_profile', 'email']).then(
-      result => {
-        if (result.isCancelled) {
-          console.log('Login cancelled');
-        } else {
-          AccessToken.getCurrentAccessToken()
-            .then(data => {
-              const {updateUserAuthToken} = this.props;
-              updateUserAuthToken(data.accessToken);
-              const infoRequest = new GraphRequest(
-                '/me?fields=email,name,picture',
-                null,
-                this.responseFbCallbackCustomer,
-              );
-              // Start the graph request.
-              new GraphRequestManager().addRequest(infoRequest).start();
-            })
-            .catch(err => {
-              this.setState({error: 'Could not authenticate, try again later'});
-            });
-        }
-      },
-      error => {
-        console.log('Login fail with error: ' + error);
-      },
-    );
   };
 
   googleLoginTask = async () => {
@@ -237,7 +208,6 @@ class FacebookGoogleScreen extends Component {
                   .then(async response => {
                     this.setState({
                       isLoading: false,
-                      isErrorToast: true,
                     });
                     if (response && response.result) {
                       const userId = response.data.id;
@@ -460,7 +430,6 @@ class FacebookGoogleScreen extends Component {
                     });
                     this.setState({
                       isLoading: false,
-                      isErrorToast: true,
                     });
                     const id = responseJson.data.id;
                     const userData = {
@@ -668,6 +637,7 @@ class FacebookGoogleScreen extends Component {
       dialogLeftText,
       dialogRightText,
     } = this.state;
+    const {updateUserAuthToken} = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -840,7 +810,12 @@ class FacebookGoogleScreen extends Component {
             <View style={{flexDirection: 'row'}}>
               <TouchableOpacity
                 style={[styles.buttonFGContainer, {backgroundColor: '#3c599b'}]}
-                onPress={this.facebookLoginTask.bind(this)}>
+                onPress={() =>
+                  facebookLoginTask(
+                    updateUserAuthToken,
+                    this.responseFbCallbackCustomer,
+                  )
+                }>
                 <Image
                   style={{width: 20, height: 20}}
                   source={require('../../icons/facebook.png')}
