@@ -48,7 +48,7 @@ export const checkValidation = async (
   const emailMsg = await emailCheck(email);
   const passwordMsg = await passwordCheck(password);
   if (emailMsg === true && passwordMsg === true) {
-    callback();
+    typeof callback === 'function' && callback();
     return;
   }
   if (emailMsg && emailMsg !== true) {
@@ -97,17 +97,14 @@ export const googleLoginTask = async (
   } catch (error) {
     console.log('Google signin error', e.message);
     if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-      // user cancelled the login flow
       SimpleToast.show('You cancelled sign in.');
     } else if (error.code === statusCodes.IN_PROGRESS) {
-      // operation (e.g. sign in) is in progress already
       SimpleToast.show('Sign in is already in progress.');
     } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
       SimpleToast.show(
         'You need to install play services to use this sign in method.',
       );
     } else {
-      // some other error happened
       SimpleToast.show('Something went wrong, please try again.');
     }
   }
@@ -334,8 +331,8 @@ export const fbGmailLoginTask = async ({
     const userData = {
       account_type: accountType,
       username: name,
-      email: email,
-      image: image,
+      email,
+      image,
       mobile: '',
       dob: '',
       fcm_id: fcmToken,
@@ -623,5 +620,67 @@ export const authenticateTask = async ({
     onError(
       'Your device has no fcm token, check your internet connection and try again.',
     );
+  }
+};
+
+export const forgotPasswordTask = async ({
+  email,
+  toggleLoading,
+  forgotPasswordURL,
+  onSuccess,
+  onError,
+}) => {
+  toggleLoading();
+  const data = {
+    email,
+  };
+  try {
+    await fetch(forgotPasswordURL, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(responseJson => {
+        if (responseJson.result) {
+          const msg =
+            responseJson.message ||
+            'Check you registered email address for further instructions.';
+          onSuccess(msg);
+        } else {
+          const msg =
+            responseJson.message || 'Something went wrong, please try again';
+          onError(msg);
+        }
+      })
+      .catch(error => {
+        const errorMsg = error.message;
+        const basicMsg = 'Something went wrong, Try again later';
+        let msg;
+        if (errorMsg && errorMsg.indexOf('Network') > -1) {
+          msg = 'Please check your internet connection and try again.';
+        }
+        if (!msg) {
+          msg = basicMsg;
+        }
+        onError(msg);
+        console.log('reset 1 err', errorMsg);
+      })
+      .done();
+  } catch (e) {
+    const errorMsg = e.message;
+    const basicMsg = 'Something went wrong, Try again later';
+    let msg;
+    if (errorMsg && errorMsg.indexOf('Network') > -1) {
+      msg = 'Please check your internet connection and try again.';
+    }
+    if (!msg) {
+      msg = basicMsg;
+    }
+    onError(msg);
+    console.log('reset 2 err', errorMsg);
   }
 };
