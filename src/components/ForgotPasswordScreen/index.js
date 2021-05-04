@@ -16,6 +16,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import DialogComponent from '../DialogComponent';
+import {checkValidation} from '../../controllers/users';
 import {black, white, themeRed, lightGray} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
@@ -42,6 +43,7 @@ export default class ForgotPasswordScreen extends Component {
     super();
     this.state = {
       email: '',
+      emailSent: false,
       isLoading: false,
       showDialog: false,
       dialogType: null,

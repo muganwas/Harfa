@@ -15,6 +15,7 @@ import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import DialogComponent from '../DialogComponent';
 import Config from '../Config';
+import {checkValidation} from '../../controllers/users';
 import {black, white, lightGray, themeRed} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('window').width;

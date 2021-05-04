@@ -40,33 +40,59 @@ export const sanitizeMobileNumber = async (
   return pN;
 };
 
-export const emailCheck = async (
-  email = '',
-  setEmail = () => {},
-  setError = () => {},
-) => {
-  const wrongEmailFormat = 'Please enter an proper email address';
+export const emailCheck = async (email = '', setEmail, setError) => {
+  const wrongEmailFormat = 'Please enter a proper email address';
   const noEmailAddress = 'Please fill in your email address';
-  if (emailRegex && email && email.length > 0) {
-    if (email.match(emailRegex)) setEmail(email);
-    else setError(wrongEmailFormat);
-  } else setError(noEmailAddress);
+  if (email) {
+    if (email.match(emailRegex)) {
+      if (setEmail && typeof setEmail === 'function') {
+        setEmail(email);
+        return;
+      } else {
+        return true;
+      }
+    } else {
+      if (setError && typeof setError === 'function') {
+        setError(wrongEmailFormat);
+        return;
+      } else return wrongEmailFormat;
+    }
+  } else {
+    if (setError && typeof setError === 'function') {
+      setError(noEmailAddress);
+      return;
+    } else return noEmailAddress;
+  }
 };
 
-export const passwordCheck = (
-  password = '',
-  setPassword = () => {},
-  setError = () => {},
-) => {
+export const passwordCheck = async (password = '', setPassword, setError) => {
   const wrongPassFormat =
     'Your password must have a number, capital letter and symbol';
   const noPassword = 'Please fill enter a password';
   const shortpassword = 'Your password is too short';
-  if (passwordRegex && password && password.length > 0) {
-    if (password.length < 8) setError(shortpassword);
-    else if (password.match(passwordRegex)) setPassword(password);
-    else setError(wrongPassFormat);
-  } else setError(noPassword);
+  if (password) {
+    if (password.length < 8) {
+      if (setError && typeof setError === 'function') {
+        setError(shortpassword);
+        return;
+      } else return shortpassword;
+    } else if (password.length >= 8 && password.match(passwordRegex)) {
+      if (setPassword && typeof setPassword === 'function') {
+        setPassword(password);
+        return;
+      } else return true;
+    } else {
+      if (setError && typeof setError === 'function') {
+        setError(wrongPassFormat);
+        return;
+      } else return wrongPassFormat;
+    }
+  } else {
+    if (setError && typeof setError === 'function') {
+      setError(noPassword);
+      return;
+    } else return noPassword;
+  }
 };
 
 export const getDistance = (lat1, lon1, lat2, lon2, unit) => {

@@ -16,7 +16,7 @@ import {
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ShakingText from 'react-native-shaking-text';
 import 'react-native-gesture-handler';
-import {GoogleSignin, statusCodes} from '@react-native-community/google-signin';
+import {GoogleSignin} from '@react-native-community/google-signin';
 import {
   getPendingJobRequest,
   getAllWorkRequestClient,

@@ -12,6 +12,7 @@ import rNES from 'react-native-encrypted-storage';
 import SimpleToast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
 import Config from '../components/Config';
+import {emailCheck, passwordCheck} from '../misc/helpers';
 
 const PRO_GET_PROFILE = Config.baseURL + 'employee/';
 const USER_GET_PROFILE = Config.baseURL + 'users/';
@@ -38,13 +39,26 @@ export const getFCMToken = async (
     });
 };
 
-export const checkValidation = (email, password, setErrorMessage, callback) => {
-  !email
-    ? setErrorMessage('Enter valid email')
-    : !password
-    ? setErrorMessage('Enter password')
-    : callback();
-  return;
+export const checkValidation = async (
+  email,
+  password,
+  setErrorMessage,
+  callback,
+) => {
+  const emailMsg = await emailCheck(email);
+  const passwordMsg = await passwordCheck(password);
+  if (emailMsg === true && passwordMsg === true) {
+    callback();
+    return;
+  }
+  if (emailMsg && emailMsg !== true) {
+    setErrorMessage(emailMsg);
+    return;
+  }
+  if (passwordMsg && passwordMsg !== true) {
+    setErrorMessage(passwordMsg);
+    return;
+  }
 };
 
 export const getUserType = async (
