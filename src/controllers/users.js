@@ -17,6 +17,11 @@ import {emailCheck, passwordCheck} from '../misc/helpers';
 const PRO_GET_PROFILE = Config.baseURL + 'employee/';
 const USER_GET_PROFILE = Config.baseURL + 'users/';
 
+export const checkForUserType = async navigate =>
+  await rNES.getItem('userType').then(result => {
+    if (!result) navigate('AfterSplash');
+  });
+
 export const getFCMToken = async (
   userId = '',
   onSuccess = () => {},

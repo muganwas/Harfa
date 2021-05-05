@@ -4,7 +4,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  PermissionsAndroid,
   Image,
   StyleSheet,
   Platform,
@@ -12,19 +11,14 @@ import {
 import {DrawerActions} from 'react-navigation-drawer';
 import {NavigationEvents} from 'react-navigation';
 import database from '@react-native-firebase/database';
-import Toast from 'react-native-simple-toast';
-import {exitApp} from 'react-native-exit-app';
+import SimpleToast from 'react-native-simple-toast';
 import NetInfo from '@react-native-community/netinfo';
 import _ from 'lodash';
 import Config from '../Config';
 import geolocation from '@react-native-community/geolocation';
-import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
-import rNES from 'react-native-encrypted-storage';
-import {MAPS_API_KEY} from 'react-native-dotenv';
 import {cloneDeep} from 'lodash';
 import {Notifications} from 'react-native-notifications';
-import {imageExists} from '../../misc/helpers';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -56,13 +50,19 @@ import {
   updateConnectivityStatus,
   updateLiveChatUsers,
 } from '../../Redux/Actions/generalActions';
-import SimpleToast from 'react-native-simple-toast';
+import {
+  locationPermissionRequest,
+  returnCoordDetails,
+  imageExists,
+  checkNoficationsAvailability,
+} from '../../misc/helpers';
+import {checkForUserType} from '../../controllers/users';
 
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
 let notifications = [];
 class Hamburger extends React.Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       employeesLocationsFetched: false,
@@ -95,12 +95,14 @@ class Hamburger extends React.Component {
           });
     }
   };
+
   async componentDidMount() {
     const {
       fetchedNotifications,
       updateLiveChatUsers,
       userInfo: {userDetails},
       fetchClientMessages,
+      navigation,
     } = this.props;
     const senderId = userDetails.userId;
     const locationRef = database().ref(`liveLocation/${senderId}`);
@@ -119,7 +121,6 @@ class Hamburger extends React.Component {
       const {
         fetchedNotifications,
         updateActiveRequest,
-        navigation,
         notificationsInfo,
         fetchedPendingJobInfo,
         getAllWorkRequestClient,
@@ -244,11 +245,11 @@ class Hamburger extends React.Component {
         navigation.navigate('Home');
       }
     });
-    await this.checkNoficationsAvailability();
-    await this.checkForUserType();
+    await checkNoficationsAvailability();
+    await checkForUserType(navigation.navigate);
     await fetchClientMessages(senderId);
     /** fetch users current position and upload it to db */
-    this.permissionRequest(() => {
+    locationPermissionRequest(() => {
       geolocation.getCurrentPosition(
         async info => {
           const {
@@ -259,7 +260,7 @@ class Hamburger extends React.Component {
             fetchedCoordinates,
             fetchCoordinatesError,
           } = this.props;
-          const addressInfo = await this.returnCoordDetails({
+          const addressInfo = await returnCoordDetails({
             lat: latitude.toString(),
             lng: longitude.toString(),
           });
@@ -300,7 +301,7 @@ class Hamburger extends React.Component {
             fetchedCoordinates,
             fetchCoordinatesError,
           } = this.props;
-          const addressInfo = await this.returnCoordDetails({
+          const addressInfo = await returnCoordDetails({
             lat: latitude.toString(),
             lng: longitude.toString(),
           });
@@ -405,25 +406,6 @@ class Hamburger extends React.Component {
     socket.open();
   }
 
-  returnCoordDetails = async ({lat = '', lng = ''}) => {
-    let url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_API_KEY}`;
-    let msg = {};
-    lat &&
-      lng &&
-      (await fetch(url)
-        .then(resp => resp.json())
-        .then(resp => {
-          if (resp.status.toLowerCase() === 'ok')
-            msg = {address: resp?.results[0]?.formatted_address, msg: 'ok'};
-          else msg = {msg: 'error'};
-        })
-        .catch(e => {
-          console.log('address error ', e);
-          msg = {msg: 'error'};
-        }));
-    return msg;
-  };
-
   componentDidUpdate() {
     const {
       jobsInfo: {jobRequests},
@@ -451,69 +433,6 @@ class Hamburger extends React.Component {
       .child(senderId)
       .off('child_changed');
   }
-
-  checkForUserType = async () => {
-    await rNES.getItem('userType').then(result => {
-      if (!result) this.props.navigation.navigate('AfterSplash');
-    });
-  };
-
-  checkNoficationsAvailability = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const authStatus = await messaging().requestPermission();
-        const fcmToken = await messaging().getToken();
-        if (fcmToken) {
-          const enabled =
-            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-          if (enabled) {
-            messaging()
-              .getInitialNotification()
-              .then(remoteMessage => {
-                if (remoteMessage) {
-                  console.log(
-                    'Notification caused app to open from quit state:',
-                    remoteMessage.notification,
-                  );
-                  //setInitialRoute(remoteMessage.data.type);
-                }
-              });
-          } else {
-            try {
-              await messaging().requestPermission();
-              console.log('FCM permission granted');
-            } catch (error) {
-              console.log('FCM Permission Error', error);
-            }
-          }
-        } else {
-          console.log('FCM Token not available');
-        }
-      } catch (e) {
-        console.log('Error initializing FCM', e);
-      }
-    }
-  };
-
-  permissionRequest = async (action = () => {}) => {
-    try {
-      if (Platform.OS == 'ios') Geolocation.requestAuthorization();
-      else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          action();
-        } else {
-          SimpleToast.show('You have denied location permission');
-          exitApp();
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   fetchEmployeeLocations = () => {
     const {
@@ -562,7 +481,7 @@ class Hamburger extends React.Component {
   };
 
   showToast = message => {
-    Toast.show(message, Toast.SHORT);
+    SimpleToast.show(message, SimpleToast.SHORT);
   };
 
   render() {
@@ -573,7 +492,9 @@ class Hamburger extends React.Component {
       notificationsInfo.adminMessages;
     return (
       <>
-        <NavigationEvents onDidFocus={() => this.checkForUserType()} />
+        <NavigationEvents
+          onDidFocus={() => checkForUserType(navigation.navigate)}
+        />
         <TouchableOpacity
           onPress={
             navigation

@@ -4,7 +4,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  PermissionsAndroid,
   Image,
   StyleSheet,
   Platform,
@@ -13,12 +12,9 @@ import NetInfo from '@react-native-community/netinfo';
 import rNES from 'react-native-encrypted-storage';
 import {cloneDeep} from 'lodash';
 import {DrawerActions} from 'react-navigation-drawer';
-import {MAPS_API_KEY} from 'react-native-dotenv';
 import {NavigationEvents} from 'react-navigation';
-import {exitApp} from 'react-native-exit-app';
 import database from '@react-native-firebase/database';
 import geolocation from '@react-native-community/geolocation';
-import Geolocation from 'react-native-geolocation-service';
 import messaging from '@react-native-firebase/messaging';
 import {Notifications} from 'react-native-notifications';
 import SimpleToast from 'react-native-simple-toast';
@@ -52,6 +48,12 @@ import {
 import Config from '../Config';
 import _ from 'lodash';
 import {black, white, red} from '../../Constants/colors';
+import {
+  locationPermissionRequest,
+  returnCoordDetails,
+  checkNoficationsAvailability,
+} from '../../misc/helpers';
+import {checkForUserType} from '../../controllers/users';
 
 const socket = Config.socket;
 const Android = Platform.OS === 'android';
@@ -95,6 +97,7 @@ class ProHamburger extends React.Component {
       fetchEmployeeMessages,
       updateLiveChatUsers,
       userInfo: {providerDetails},
+      navigation,
     } = this.props;
     const receiverId = providerDetails.providerId;
     messaging().setBackgroundMessageHandler(message => {
@@ -108,7 +111,6 @@ class ProHamburger extends React.Component {
       const data = JSON.parse(message.data.data);
       const {
         notificationsInfo,
-        navigation,
         jobsInfo: {jobRequestsProviders},
         dispatchFetchedProJobRequests,
         getAllWorkRequestPro,
@@ -153,7 +155,8 @@ class ProHamburger extends React.Component {
       }
     });
     await this.fetchOthersLocations();
-    await this.checkForUserType();
+    await checkNoficationsAvailability();
+    await checkForUserType(navigation.navigate);
     await fetchEmployeeMessages(receiverId);
     database()
       .ref('adminChatting')
@@ -240,14 +243,14 @@ class ProHamburger extends React.Component {
     socket.open();
 
     const userRef = database().ref(`liveLocation/${receiverId}`);
-    this.permissionRequest(() => {
+    locationPermissionRequest(() => {
       /** get pros current position and upload it to db */
       geolocation.getCurrentPosition(
         async info => {
           const {
             coords: {latitude, longitude},
           } = info;
-          const addressInfo = await this.returnCoordDetails({
+          const addressInfo = await returnCoordDetails({
             lat: latitude.toString(),
             lng: longitude.toString(),
           });
@@ -293,7 +296,7 @@ class ProHamburger extends React.Component {
           const {
             coords: {latitude, longitude},
           } = info;
-          const addressInfo = await this.returnCoordDetails({
+          const addressInfo = await returnCoordDetails({
             lat: latitude.toString(),
             lng: longitude.toString(),
           });
@@ -324,50 +327,6 @@ class ProHamburger extends React.Component {
       );
     });
   }
-
-  returnCoordDetails = async ({lat = '', lng = ''}) => {
-    let url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_API_KEY}`;
-    let msg = {};
-    lat &&
-      lng &&
-      (await fetch(url)
-        .then(resp => resp.json())
-        .then(resp => {
-          if (resp.status.toLowerCase() === 'ok')
-            msg = {address: resp?.results[0]?.formatted_address, msg: 'ok'};
-          else msg = {msg: 'error'};
-        })
-        .catch(e => {
-          console.log('address error ', e);
-          msg = {msg: 'error'};
-        }));
-    return msg;
-  };
-
-  checkForUserType = async () => {
-    await rNES.getItem('userType').then(result => {
-      if (!result) this.props.navigation.navigate('AfterSplash');
-    });
-  };
-
-  permissionRequest = async (action = () => {}) => {
-    try {
-      if (Platform.OS == 'ios') Geolocation.requestAuthorization();
-      else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          action();
-        } else {
-          SimpleToast.show('You have denied location permission');
-          exitApp();
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   componentWillUnmount() {
     const {
@@ -439,7 +398,7 @@ class ProHamburger extends React.Component {
     return (
       <>
         <NavigationEvents
-          onDidFocus={async () => await this.checkForUserType()}
+          onDidFocus={async () => await checkForUserType(navigation.navigate)}
         />
         <TouchableOpacity
           onPress={() => navigation.dispatch(DrawerActions.openDrawer())}

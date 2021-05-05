@@ -1,11 +1,58 @@
 import axios from 'axios';
+import {PermissionsAndroid, Platform} from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
+import messaging from '@react-native-firebase/messaging';
+import {exitApp} from 'react-native-exit-app';
+import {MAPS_API_KEY} from 'react-native-dotenv';
 import {PhoneNumberUtil} from 'google-libphonenumber';
 import {cloneDeep} from 'lodash';
+import SimpleToast from 'react-native-simple-toast';
 import moment from 'moment';
 
 const phoneUtil = PhoneNumberUtil.getInstance();
 const emailRegex = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i;
 const passwordRegex = /[^\w\d]*(([0-9]+.*[A-Z]+.*)|[A-Z]+.*([0-9]+.*))/;
+
+export const locationPermissionRequest = async (action = () => {}) => {
+  try {
+    if (Platform.OS == 'ios') Geolocation.requestAuthorization();
+    else {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        action();
+      } else {
+        SimpleToast.show('You have denied location permission');
+        exitApp();
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const returnCoordDetails = async ({lat = '', lng = ''}) => {
+  let url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${MAPS_API_KEY}`;
+  let msg = {};
+  lat &&
+    lng &&
+    (await fetch(url)
+      .then(resp => resp.json())
+      .then(resp => {
+        if (resp.status.toLowerCase() === 'ok')
+          msg = {
+            address: resp?.results[0]?.formatted_address,
+            msg: 'ok',
+          };
+        else msg = {msg: 'error'};
+      })
+      .catch(e => {
+        console.log('address error ', e);
+        msg = {msg: 'error'};
+      }));
+  return msg;
+};
 
 export const phoneNumberCheck = async (phoneNumber, countryLetterCode) => {
   if (phoneNumber && phoneNumber.length > 0) {
@@ -20,6 +67,53 @@ export const phoneNumberCheck = async (phoneNumber, countryLetterCode) => {
       return false;
     }
   } else return false;
+};
+
+export const checkNoficationsAvailability = async () => {
+  if (Platform.OS === 'android') {
+    try {
+      const authStatus = await messaging().requestPermission();
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        if (enabled) {
+          messaging()
+            .getInitialNotification()
+            .then(remoteMessage => {
+              if (remoteMessage) {
+                console.log(
+                  'Notification caused app to open from quit state:',
+                  remoteMessage.notification,
+                );
+                //setInitialRoute(remoteMessage.data.type);
+              }
+            });
+        } else {
+          try {
+            await messaging().requestPermission();
+            console.log('FCM permission granted');
+          } catch (error) {
+            console.log('FCM Permission Error', error);
+            SimpleToast.show(
+              "FCM Permission Error, you can't receive notifications",
+            );
+          }
+        }
+      } else {
+        console.log('FCM Token not available');
+        SimpleToast.show(
+          "FCM Token not available, you can't receive notifications",
+        );
+      }
+    } catch (e) {
+      console.log('Error initializing FCM', e);
+      SimpleToast.show(
+        "Error initializing FCM, you can't receive notifications",
+      );
+    }
+  }
 };
 
 export const sanitizeMobileNumber = async (
