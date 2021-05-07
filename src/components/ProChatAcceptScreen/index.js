@@ -176,13 +176,13 @@ class ProChatAcceptScreen extends Component {
           this.setState({
             isLoading: false,
           });
-          SimpleToast('Error ' + error, SimpleToast.SHORT);
+          SimpleToast.show('Error ' + error, SimpleToast.SHORT);
         });
     } catch (e) {
       this.setState({
         isLoading: false,
       });
-      SimpleToast('Error ' + error, SimpleToast.SHORT);
+      SimpleToast.show('Error ' + error, SimpleToast.SHORT);
     }
   }
 

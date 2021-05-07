@@ -49,6 +49,7 @@ import {
   white,
   lightGray,
 } from '../../Constants/colors';
+import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
@@ -273,13 +274,13 @@ class LoginPhoneScreen extends Component {
                     this.setState({
                       isLoading: false,
                     });
-                    SimpleToast('Something went wrong', SimpleToast.SHORT);
+                    SimpleToast.show('Something went wrong', SimpleToast.SHORT);
                   });
               } catch (e) {
                 this.setState({
                   isLoading: false,
                 });
-                SimpleToast(
+                SimpleToast.show(
                   'Something went wrong, try again',
                   SimpleToast.SHORT,
                 );

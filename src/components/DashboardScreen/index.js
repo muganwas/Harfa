@@ -50,9 +50,8 @@ import images from '../../Constants/images';
 const screenWidth = Dimensions.get('window').width;
 const SERVICES_URL = Config.baseURL + 'service/getall';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
-YellowBox.ignoreWarnings(['']);
-
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
+YellowBox.ignoreWarnings(['']);
 
 const StatusBarPlaceHolder = () => {
   return Platform.OS === 'ios' ? (

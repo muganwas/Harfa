@@ -13,10 +13,7 @@ import {createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import rNES from 'react-native-encrypted-storage';
 import RNExitApp from 'react-native-exit-app';
-import firebaseAuth from '@react-native-firebase/auth';
-import messaging from '@react-native-firebase/messaging';
 import SimpleToast from 'react-native-simple-toast';
-import database from '@react-native-firebase/database';
 import HomeScreen from '../HomeScreen';
 import DashboardScreen from '../DashboardScreen';
 import ProDashboardScreen from '../ProDashboardScreen';
@@ -36,7 +33,6 @@ import ProHomeScreen from '../ProHomeScreen';
 import ProAccountTypeScreen from '../ProAccountTypeScreen';
 import SelectAddressScreen from '../SelectAddressScreen';
 import DialogComponent from '../DialogComponent';
-import Config from '../Config';
 import {
   updateUserDetails,
   updateProviderDetails,
@@ -47,12 +43,17 @@ import {
   getAllWorkRequestPro,
   getAllWorkRequestClient,
 } from '../../Redux/Actions/jobsActions';
+import {
+  getFCMToken,
+  getUserType,
+  autoLogin,
+  inhouseLogin,
+} from '../../controllers/users';
 import {fetchCountryCodes} from '../../Redux/Actions/validationActions';
 import {white} from '../../Constants/colors';
 
 const screenWidth = Dimensions.get('screen').width;
-const PRO_GET_PROFILE = Config.baseURL + 'employee/';
-const USER_GET_PROFILE = Config.baseURL + 'users/';
+const Android = Platform.OS === 'android';
 
 class SplashScreen extends Component {
   constructor(props) {
@@ -89,312 +90,132 @@ class SplashScreen extends Component {
       this.setState({isLoading: false});
   }
 
+  showDialogAction = (
+    {title, message, leftButtonText, rightButtonText, dialogType},
+    leftButtonAction,
+    rightButtonAction,
+  ) => {
+    this.leftButtonActon = leftButtonAction;
+    this.rightButtonAction = rightButtonAction;
+    this.setState({
+      isLoading: false,
+      showDialog: true,
+      dialogType: dialogType || '...',
+      dialogTitle: title,
+      dialogDesc: message,
+      dialogLeftText: leftButtonText,
+      dialogRightText: rightButtonText,
+    });
+  };
+
+  clearDialog = () =>
+    this.setState({
+      isLoading: false,
+      showDialog: false,
+      dialogType: null,
+    });
+
   splashTimeOut = async () => {
     try {
+      const {
+        navigation,
+        fetchPendingJobProviderInfo,
+        fetchPendingJobRequestInfo,
+        fetchJobRequestHistoryPro,
+        fetchJobRequestHistoryClient,
+        updateUserDetails,
+        updateProviderDetails,
+      } = this.props;
       const userId = await rNES.getItem('userId');
-      this.getUserType(userId);
+      getUserType(
+        () =>
+          getFCMToken(
+            userId,
+            (userId, userType, fcmToken) =>
+              autoLogin(
+                {userId, userType, fcmToken},
+                () => this.setState({isLoading: true}),
+                (userId, userType, fcmToken) => {
+                  const provider = userType === 'Provider';
+                  inhouseLogin({
+                    userId,
+                    userType,
+                    fcmToken,
+                    fetchPendingJobInfo: provider
+                      ? fetchPendingJobProviderInfo
+                      : fetchPendingJobRequestInfo,
+                    fetchJobRequestHistory: provider
+                      ? fetchJobRequestHistoryPro
+                      : fetchJobRequestHistoryClient,
+                    updateAppUserDetails: provider
+                      ? updateProviderDetails
+                      : updateUserDetails,
+                    onLoginFailure: message =>
+                      this.showDialogAction(
+                        {
+                          title: 'LOGIN ERROR!',
+                          message,
+                          rightButtonText: 'Ok',
+                          dialogType: 'Alert',
+                        },
+                        null,
+                        () => {
+                          if (Android) BackHandler.exitApp();
+                          else RNExitApp.exitApp();
+                        },
+                      ),
+                    props: this.props,
+                  });
+                },
+                () => navigation.navigate('AfterSplash'),
+              ),
+            () =>
+              this.showDialogAction(
+                {
+                  title: 'AUTH TOKEN!',
+                  message:
+                    'Your device has not received an authentication token, check your internet connection and try again later',
+                  rightButtonText: 'Ok',
+                  dialogType: 'Alert',
+                },
+                null,
+                () => {
+                  if (Android) BackHandler.exitApp();
+                  else RNExitApp.exitApp();
+                },
+              ),
+          ),
+        () =>
+          this.showDialogAction(
+            {
+              title: 'ENABLE NOTIFICATIONS!',
+              message:
+                "You don't have permission for notification. Please enable notification then try again",
+              rightButtonText: 'Ok',
+              dialogType: 'Alert',
+            },
+            null,
+            () => {
+              if (Android) BackHandler.exitApp();
+              else RNExitApp.exitApp();
+            },
+          ),
+      );
     } catch (e) {
-      SimpleToast('Something went wrong, try again.');
-    }
-  };
-
-  getUserType = async userId => {
-    messaging()
-      .requestPermission()
-      .then(authStatus => {
-        const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-        if (enabled) {
-          this.getFCMToken(userId);
-        } else {
-          this.leftButtonActon = null;
-          this.rightButtonAction = () => {
-            if (Platform.OS == 'android') BackHandler.exitApp();
-            else RNExitApp.exitApp();
-          };
-          this.setState({
-            isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'ENABLE NOTIFICATIONS!',
-            dialogDesc:
-              "You don't have permission for notification. Please enable notification then try again",
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Ok',
-          });
-        }
-      })
-      .catch(error => {
-        this.leftButtonActon = null;
-        this.rightButtonAction = () => {
-          if (Platform.OS == 'android') BackHandler.exitApp();
+      this.showDialogAction(
+        {
+          title: 'LOGIN ERROR!',
+          message: 'Something went wrong, try again later',
+          rightButtonText: 'Ok',
+          dialogType: 'Alert',
+        },
+        null,
+        () => {
+          if (Android) BackHandler.exitApp();
           else RNExitApp.exitApp();
-        };
-        this.setState({
-          isLoading: false,
-          showDialog: true,
-          dialogType: 'fb',
-          dialogTitle: 'ENABLE NOTIFICATIONS!',
-          dialogDesc:
-            "You don't have permission for notification. Please enable notification then try again",
-          dialogLeftText: 'Cancel',
-          dialogRightText: 'Ok',
-        });
-      });
-  };
-
-  getFCMToken = async userId => {
-    messaging()
-      .getToken()
-      .then(async fcmToken => {
-        if (fcmToken) {
-          try {
-            const userType = await rNES.getItem('userType');
-            this.autoLogin(userId, userType, fcmToken);
-          } catch (e) {
-            SimpleToast('Something went wrong, try again.');
-          }
-        }
-      })
-      .catch(error => {
-        this.leftButtonActon = null;
-        this.rightButtonAction = () => {
-          if (Platform.OS == 'android') BackHandler.exitApp();
-          else RNExitApp.exitApp();
-        };
-        this.setState({
-          isLoading: false,
-          showDialog: true,
-          dialogType: 'fb',
-          dialogTitle: 'AUTH TOKEN!',
-          dialogDesc:
-            'Your device has not received an authentication token, check your internet connection and try again later',
-          dialogLeftText: 'Cancel',
-          dialogRightText: 'Ok',
-        });
-      });
-  };
-
-  inhouseLogin = (userId, userType, fcmToken) => {
-    const {
-      fetchPendingJobProviderInfo,
-      fetchJobRequestHistoryPro,
-      fetchJobRequestHistoryClient,
-      fetchPendingJobRequest,
-      updateProviderDetails,
-      updateUserDetails,
-    } = this.props;
-    if (userType == 'Provider') {
-      try {
-        fetch(PRO_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        })
-          .then(response => response.json())
-          .then(async responseJson => {
-            let status;
-            if (responseJson && responseJson.result) {
-              const id = responseJson.data.id;
-              const usersRef = database().ref(`users/${id}`);
-              await usersRef.once('value', snapshot => {
-                const value = snapshot.val();
-                if (value) status = value.status;
-                else {
-                  usersRef
-                    .set({status: responseJson.data.online})
-                    .then(() => {
-                      console.log('status set');
-                    })
-                    .catch(e => {
-                      console.log(e.message);
-                    });
-                }
-              });
-              let providerData = {
-                providerId: responseJson.data.id,
-                name: responseJson.data.username,
-                email: responseJson.data.email,
-                password: responseJson.data.password,
-                imageSource: responseJson.data.image,
-                surname: responseJson.data.surname,
-                mobile: responseJson.data.mobile,
-                services: responseJson.data.services,
-                description: responseJson.data.description,
-                address: responseJson.data.address,
-                lat: responseJson.data.lat,
-                lang: responseJson.data.lang,
-                invoice: responseJson.data.invoice,
-                firebaseId: responseJson.data.id,
-                online: (status = !undefined
-                  ? status
-                  : responseJson.data.online),
-                status: responseJson.data.status,
-                fcmId: responseJson.data.fcm_id,
-                accountType: responseJson.data.account_type,
-              };
-              updateProviderDetails(providerData);
-              fetchJobRequestHistoryPro(userId);
-              fetchPendingJobProviderInfo(this.props, userId, 'ProHome');
-            } else {
-              this.leftButtonActon = () => {
-                this.setState({
-                  isLoading: false,
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.rightButtonAction = async () => {
-                await this.autoLogin(userId, userType, fcmToken);
-                this.setState({
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'OOPS!',
-                dialogDesc: responseJson.message,
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Retry',
-              });
-            }
-          })
-          .catch(error => {
-            this.setState({
-              isLoading: false,
-            });
-            alert(error);
-          });
-      } catch (e) {
-        this.setState({
-          isLoading: false,
-        });
-        alert(e);
-      }
-    } else if (userType == 'User') {
-      try {
-        let status;
-        fetch(USER_GET_PROFILE + userId + '?fcm_id=' + fcmToken, {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        })
-          .then(response => response.json())
-          .then(async responseJson => {
-            if (responseJson && responseJson.result) {
-              let userData = {
-                userId: responseJson.data.id,
-                accountType: responseJson.data.acc_type,
-                email: responseJson.data.email,
-                password: responseJson.data.password,
-                username: responseJson.data.username,
-                image: responseJson.data.image,
-                mobile: responseJson.data.mobile,
-                dob: responseJson.data.dob,
-                address: responseJson.data.address,
-                lat: responseJson.data.lat,
-                online: responseJson.data.online,
-                lang: responseJson.data.lang,
-                firebaseId: responseJson.data.id,
-                fcmId: responseJson.data.fcm_id,
-              };
-              const id = responseJson.data.id;
-              const usersRef = database().ref(`users/${id}`);
-              await usersRef.once('value', snapshot => {
-                const value = snapshot.val();
-                if (value) status = value.status;
-                else {
-                  usersRef
-                    .set({status: responseJson.data.online})
-                    .then(() => {
-                      console.log('status set');
-                    })
-                    .catch(e => {
-                      console.log(e.message);
-                    });
-                }
-              });
-              updateUserDetails(userData);
-              //Check if any Ongoing Request
-              fetchJobRequestHistoryClient(userId);
-              fetchPendingJobRequest(this.props, userId, 'Home');
-            } else {
-              this.leftButtonActon = () => {
-                this.setState({
-                  isLoading: false,
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.rightButtonAction = async () => {
-                await this.autoLogin(userId, userType, fcmToken);
-                this.setState({
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'OOPS!',
-                dialogDesc: responseJson.message,
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Retry',
-              });
-            }
-          })
-          .catch(error => {
-            this.setState({
-              isLoading: false,
-            });
-            alert(error);
-          });
-      } catch (e) {
-        this.setState({
-          isLoading: false,
-        });
-        alert(e);
-      }
-    }
-  };
-
-  autoLogin = async (userId, userType, fcmToken) => {
-    if (userId !== null) {
-      this.setState({
-        isLoading: true,
-      });
-      rNES
-        .getItem('auth')
-        .then(storedInfo => {
-          if (storedInfo) {
-            const {email, password} = JSON.parse(storedInfo);
-            firebaseAuth()
-              .signInWithEmailAndPassword(email, password)
-              .then(res => {
-                this.inhouseLogin(userId, userType, fcmToken);
-              })
-              .catch(error => {
-                SimpleToast.show(
-                  'Something went wrong, try closing and reopening app',
-                );
-              });
-          } else this.inhouseLogin(userId, userType, fcmToken);
-        })
-        .catch(e => {
-          console.log('storage error', e);
-        });
-    } else {
-      console.log('No Logged User');
-      this.props.navigation.navigate('AfterSplash');
+        },
+      );
+      console.log('login err', e.message);
     }
   };
 
@@ -452,7 +273,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    fetchPendingJobRequest: (props, uid, navigateTo) => {
+    fetchPendingJobRequestInfo: (props, uid, navigateTo) => {
       dispatch(getPendingJobRequest(props, uid, navigateTo));
     },
     fetchPendingJobProviderInfo: (props, proId, navigateTo) => {

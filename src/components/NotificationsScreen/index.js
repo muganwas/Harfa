@@ -141,13 +141,13 @@ class NotificationsScreen extends Component {
           }
         })
         .catch(e => {
-          SimpleToast(
+          SimpleToast.show(
             "Notification couldn't be read, try again later",
             SimpleToast.SHORT,
           );
         });
     } catch (e) {
-      SimpleToast(
+      SimpleToast.show(
         "Notification couldn't be read, try again later",
         SimpleToast.SHORT,
       );
@@ -178,13 +178,13 @@ class NotificationsScreen extends Component {
           }
         })
         .catch(e => {
-          SimpleToast(
+          SimpleToast.show(
             "Notification couldn't be deleted, try again later",
             SimpleToast.SHORT,
           );
         });
     } catch (e) {
-      SimpleToast(
+      SimpleToast.show(
         "Notification couldn't be deleted, try again later",
         SimpleToast.SHORT,
       );

@@ -54,7 +54,7 @@ export default class ProAccountTypeScreen extends Component {
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={() =>
-            this.props.navigation.navigate('ProLoginPhoneScreen', {
+            this.props.navigation.navigate('ProFacebookGoogle', {
               accountType: 'Individual',
             })
           }>
@@ -64,7 +64,7 @@ export default class ProAccountTypeScreen extends Component {
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={() =>
-            this.props.navigation.navigate('ProLoginPhoneScreen', {
+            this.props.navigation.navigate('ProFacebookGoogle', {
               accountType: 'Company',
             })
           }>
