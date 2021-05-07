@@ -140,12 +140,9 @@ class Hamburger extends React.Component {
       await jobRequests.map((obj, i) => {
         if (orderId === obj.order_id) pos = i;
       });
-      if (
-        title.toLowerCase() === 'chat request rejected' &&
-        pos !== undefined
-      ) {
-        newJobRequests.splice(pos, 1);
-        fetchedPendingJobInfo(newJobRequests);
+      if (title.toLowerCase() === 'chat request rejected') {
+        pos && newJobRequests.splice(pos, 1);
+        pos && fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
         this.showToast(
           'The service provider rejected your request. please try again later',

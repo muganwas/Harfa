@@ -139,7 +139,7 @@ export const getPendingJobRequest = (props, userId, navTo) => {
             //const id = responseJson.data.id;
             responseJson.data.map(async (job, index) => {
               if (job && job.employee_details) {
-                var jobData = {
+                let jobData = {
                   id: job._id,
                   order_id: job.order_id,
                   employee_id: job.employee_details && job.employee_details._id,

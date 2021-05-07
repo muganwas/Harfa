@@ -17,8 +17,8 @@ import {
 } from 'react-native';
 import {connect} from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
+import SimpleToast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
-import Toast from 'react-native-simple-toast';
 import ReviewDialog from '../ReviewDialog';
 import Config from '../Config';
 import ProHamburger from '../ProHamburger';
@@ -40,8 +40,16 @@ import {
   getPendingJobRequestProvider,
   fetchedDataWorkSource,
 } from '../../Redux/Actions/jobsActions';
-import _, {cloneDeep} from 'lodash';
 import {updateProviderDetails} from '../../Redux/Actions/userActions';
+import {
+  acceptChatRequest,
+  rejectJobRequest,
+  updateAvailabilityInMongoDB,
+} from '../../controllers/chats';
+import {
+  requestClientForReview,
+  submitClientReview,
+} from '../../controllers/tasks';
 import {
   colorBg,
   colorYellow,
@@ -54,12 +62,7 @@ import {
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
-
-const PRO_INFO_UPDATE = Config.baseURL + 'employee/';
-const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
-const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
-const ASK_FOR_REVIEW = Config.baseURL + 'notification/addreviewrequest';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -413,59 +416,28 @@ class ProDashboardScreen extends Component {
     }
   };
 
-  updateAvailabilityInMongoDB = async userData => {
-    const {
-      userInfo: {providerDetails},
-      updateProviderDetails,
-    } = this.props;
-    try {
-      let newProDits = _.cloneDeep(providerDetails);
-      await fetch(PRO_INFO_UPDATE + providerDetails.providerId, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      })
-        .then(response => {
-          return response.json();
-        })
-        .then(response => {
-          const {result, data} = response;
-          const {
-            generalInfo: {online},
-          } = this.props;
-          if (result && data) {
-            newProDits.online = data.online;
-            updateProviderDetails(newProDits);
-            this.setState({
-              status: data.online === '1' && online ? 'ONLINE' : 'OFFLINE',
-              availBackground: data.online === '1' && online ? 'green' : 'red',
-              isLoading: false,
-              isErrorToast: false,
-            });
-            this.showToast(response.message);
-          } else {
-            this.setState({
-              isLoading: false,
-            });
-            this.showToast(response.message);
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
-          this.setState({
-            isLoading: false,
-          });
+  updateAvailabilityInDB = async userData =>
+    await updateAvailabilityInMongoDB({
+      userData,
+      providerDetails: this.props?.userInfo?.providerDetails,
+      updateProviderDetails: this.props?.updateProviderDetails,
+      online: this.props?.generalInfo?.online,
+      onSuccess: (msg, liveOnline, manualOnline) => {
+        this.setState({
+          status: manualOnline === '1' && liveOnline ? 'ONLINE' : 'OFFLINE',
+          availBackground: manualOnline === '1' && liveOnline ? 'green' : 'red',
+          isLoading: false,
+          isErrorToast: false,
         });
-    } catch (e) {
-      console.log('Error :' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
+        this.showToast(msg);
+      },
+      onError: msg => {
+        this.setState({
+          isLoading: false,
+        });
+        this.showToast(msg);
+      },
+    });
 
   changeAvailabilityStaus = () => {
     const {
@@ -493,7 +465,7 @@ class ProDashboardScreen extends Component {
           usersRef
             .update(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB({
+              this.updateAvailabilityInDB({
                 online: '1',
               });
             })
@@ -504,7 +476,7 @@ class ProDashboardScreen extends Component {
           usersRef
             .set(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB({
+              this.updateAvailabilityInDB({
                 online: '1',
               });
             })
@@ -523,7 +495,7 @@ class ProDashboardScreen extends Component {
           usersRef
             .update(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB({
+              this.updateAvailabilityInDB({
                 online: '1',
               });
             })
@@ -534,7 +506,7 @@ class ProDashboardScreen extends Component {
           usersRef
             .set(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB({
+              this.updateAvailabilityInDB({
                 online: '1',
               });
             })
@@ -554,7 +526,7 @@ class ProDashboardScreen extends Component {
           usersRef
             .update(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB({online: newStatus});
+              this.updateAvailabilityInDB({online: newStatus});
             })
             .catch(e => {
               console.log(e.message);
@@ -563,7 +535,7 @@ class ProDashboardScreen extends Component {
           usersRef
             .set(userData)
             .then(() => {
-              this.updateAvailabilityInMongoDB({
+              this.updateAvailabilityInDB({
                 online: newStatus,
               });
             })
@@ -575,7 +547,7 @@ class ProDashboardScreen extends Component {
     }
   };
 
-  _spring = () => {
+  _spring = () =>
     this.setState({backClickCount: 1}, () => {
       Animated.sequence([
         Animated.spring(this.springValue, {
@@ -593,7 +565,6 @@ class ProDashboardScreen extends Component {
         this.setState({backClickCount: 0});
       });
     });
-  };
 
   handleBackButtonClick = () => {
     if (Platform.OS == 'ios')
@@ -661,215 +632,40 @@ class ProDashboardScreen extends Component {
     }
   };
 
-  rejectJob = async (pos, redirect = true) => {
-    const {
-      fetchedPendingJobInfo,
-      userInfo: {providerDetails},
-      jobsInfo: {jobRequestsProviders},
-    } = this.props;
-    let newjobRequestsProviders = cloneDeep(jobRequestsProviders);
-    const {
-      id,
-      user_id,
-      fcm_id,
-      service_name,
-      order_id,
-    } = newjobRequestsProviders[pos];
-    const data = {
-      main_id: id,
-      chat_status: '0',
-      status: 'Rejected',
-      notification: {
-        fcm_id: fcm_id,
-        title: 'Chat Request Rejected',
-        type: 'JobRejection',
-        notification_by: 'Employee',
-        save_notification: true,
-        user_id: user_id,
-        employee_id: providerDetails.providerId,
-        order_id: order_id,
-        body:
-          'Chat request has been accepted by ' +
-          providerDetails.name +
-          ' Request Id : ' +
-          order_id,
-        data: {
-          providerId: providerDetails.id,
-          serviceName: service_name,
-          orderId: order_id,
-          mainId: id,
+  rejectJob = async (pos, redirect) =>
+    await rejectJobRequest(
+      {
+        pos,
+        fetchedPendingJobInfo: this.props?.fetchedPendingJobInfo,
+        providerDetails: this.props?.userInfo?.providerDetails,
+        jobRequestsProviders: this.props?.jobsInfo?.jobRequestsProviders,
+        toggleLoading: error => this.changeWaitingDialogVisibility(null, error),
+        onError: error => {
+          SimpleToast.show(error, SimpleToast.SHORT);
+          this.setState({isErrorToast: true, error});
         },
+        navigate: () => this.props.navigation.navigate('ProAcceptRejectJob'),
       },
-    };
+      redirect,
+    );
 
-    this.setState({
-      isLoading: true,
-    });
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
+  acceptChat = async (pos, redirect) =>
+    await acceptChatRequest(
+      {
+        pos,
+        fetchedPendingJobInfo: this.props?.fetchedPendingJobInfo,
+        providerDetails: this.props?.userInfo?.providerDetails,
+        jobRequests: this.props?.jobsInfo?.jobRequestsProviders,
+        setSelectedJobRequest: this.props?.dispatchSelectedJobRequest,
+        toggleLoading: error => this.changeWaitingDialogVisibility(null, error),
+        onError: error => {
+          SimpleToast.show(error, SimpleToast.SHORT);
+          this.setState({isErrorToast: true, error});
         },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-            });
-            newjobRequestsProviders.splice(pos, 1);
-            fetchedPendingJobInfo(newjobRequestsProviders);
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
-          if (redirect) this.props.navigation.navigate('ProAcceptRejectJob');
-        })
-        .catch(error => {
-          console.log('reject error', error);
-          this.setState({
-            isLoading: false,
-          });
-        });
-    } catch (e) {
-      console.log('reject error', e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
-
-  acceptChatRequest = async (pos, redirect = true) => {
-    const {
-      fetchedPendingJobInfo,
-      userInfo: {providerDetails},
-      jobsInfo: {jobRequestsProviders},
-      dispatchSelectedJobRequest,
-    } = this.props;
-    const newjobRequestsProviders = [...jobRequestsProviders];
-    const {
-      id,
-      user_id,
-      fcm_id,
-      name,
-      service_name,
-      order_id,
-      image,
-      mobile,
-      dob,
-      address,
-      lat,
-      lang,
-      status,
-      delivery_address,
-      delivery_lat,
-      delivery_lang,
-    } = jobRequestsProviders[pos];
-
-    dispatchSelectedJobRequest(jobRequestsProviders[pos]);
-    this.setState({
-      isLoading: true,
-    });
-
-    const data = {
-      main_id: id,
-      chat_status: '1',
-      status: 'Pending',
-      notification: {
-        fcm_id: fcm_id,
-        title: 'Chat Request Accepted',
-        type: 'ChatAcceptance',
-        notification_by: 'Employee',
-        save_notification: true,
-        user_id: user_id,
-        employee_id: providerDetails.providerId,
-        order_id: order_id,
-        body:
-          'Chat request has been accepted by ' +
-          providerDetails.name +
-          ' Request Id : ' +
-          order_id,
-        data: {
-          user_id: '',
-          providerId: providerDetails.id,
-          ProviderData: JSON.stringify(providerDetails),
-          serviceName: service_name,
-          orderId: order_id,
-          mainId: id,
-          chat_status: '1',
-          status: 'Pending',
-        },
+        navigate: () => this.props.navigation.navigate('ProAcceptRejectJob'),
       },
-    };
-    try {
-      await fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(async responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-            });
-            var jobData = {
-              id: responseJson.data.id,
-              order_id,
-              user_id,
-              image,
-              fcm_id,
-              name,
-              mobile,
-              dob,
-              address,
-              lat,
-              lang,
-              service_name,
-              chat_status: '1',
-              status,
-              delivery_address,
-              delivery_lat,
-              delivery_lang,
-            };
-
-            imageExists(image).then(res => {
-              jobData.imageAvailable = res;
-            });
-
-            newjobRequestsProviders[pos] = jobData;
-            fetchedPendingJobInfo(newjobRequestsProviders);
-            if (redirect) this.props.navigation.navigate('ProAcceptRejectJob');
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            isLoading: false,
-          });
-        });
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
+      redirect,
+    );
 
   renderPendingJobs = (item, index) => {
     if (item) {
@@ -983,7 +779,7 @@ class ProDashboardScreen extends Component {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.arrowView}
-                  onPress={() => this.acceptChatRequest(index, false)}>
+                  onPress={() => this.acceptChat(index, false)}>
                   <View style={styles.viewAccept}>
                     <Text style={styles.textAccept}>Accept Chat</Text>
                   </View>
@@ -996,169 +792,51 @@ class ProDashboardScreen extends Component {
     }
   };
 
-  reviewTask = async (rating, review, item) => {
-    const {
-      userInfo: {providerDetails},
-    } = this.props;
-    this.setState({
-      isLoading: true,
-    });
-    const reviewData = {
-      main_id: this.state.mainId,
-      type: 'Employee',
-      rating: rating,
-      review: review,
-      notification: {
-        fcm_id: item.user_details.fcm_id,
-        type: 'Review',
-        notification_by: 'Employee',
-        title: 'Given Review',
-        save_notification: true,
-        senderName: providerDetails.name,
-        senderId: providerDetails.providerId,
-        body:
-          providerDetails.name +
-          ' ' +
-          providerDetails.surname +
-          ' has given you a review',
-      },
-    };
-    try {
-      await fetch(REVIEW_RATING, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reviewData),
-      })
-        .then(response => response.json())
-        .then(response => {
-          if (response.result) {
-            this.setState({
-              isLoading: false,
-              isReviewDialogVisible: false,
-              mainId: '',
-              dataWorkSource: [],
-              isErrorToast: false,
-              selectedReviewItem: null,
-            });
-            this.showToast('Review submitted');
-            this.onRefresh();
-          } else {
-            this.setState({
-              isLoading: false,
-              selectedReviewItem: null,
-            });
-            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
-          this.setState({
-            isLoading: false,
-            selectedReviewItem: null,
-          });
-        })
-        .done();
-    } catch (e) {
-      console.log('Error :' + e);
-      this.setState({
-        isLoading: false,
-        selectedReviewItem: null,
-      });
-    }
-  };
-
-  askForReview = async item => {
-    const {
-      fetchJobRequestHistory,
-      userInfo: {providerDetails},
-    } = this.props;
-    if (item.customer_review !== 'Requested' && item.customer_rating === '') {
-      this.setState({
-        isLoading: true,
-      });
-      const askReviewData = {
-        order_id: item._id,
-        user_id: item.user_id,
-        employee_id: providerDetails.providerId,
-        notification: {
-          fcm_id: item.user_details.fcm_id,
-          type: 'ReviewRequest',
-          notification_by: 'Employee',
-          title: 'Ask For Review',
-          save_notification: true,
-          user_id: item.user_id,
-          employee_id: providerDetails.providerId,
-          order_id: item._id,
-          body:
-            providerDetails.name +
-            ' ' +
-            providerDetails.surname +
-            ' waiting for your feedback',
-        },
-      };
-      try {
-        await fetch(ASK_FOR_REVIEW, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(askReviewData),
-        })
-          .then(response => response.json())
-          .then(response => {
-            if (response.result) {
-              this.setState({
-                isLoading: false,
-                dataWorkSource: [],
-                isErrorToast: false,
-              });
-              const {
-                userInfo: {providerDetails},
-              } = this.props;
-              this.showToast('Request submitted successfully');
-              fetchJobRequestHistory(providerDetails.providerId);
-            } else {
-              this.setState({
-                isLoading: false,
-                isErrorToast: true,
-              });
-              this.showToast('Something went wrong');
-            }
-          })
-          .catch(error => {
-            console.log('Error :' + error);
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          })
-          .done();
-      } catch (e) {
-        console.log('Error :' + e);
+  reviewTask = async (rating, review, item) =>
+    await submitClientReview({
+      item,
+      review,
+      rating,
+      providerDetails: this.props?.userInfo?.providerDetails,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      onSuccess: msg => {
         this.setState({
           isLoading: false,
-          isErrorToast: true,
+          isReviewDialogVisible: false,
+          mainId: '',
+          isErrorToast: false,
+          selectedReviewItem: null,
         });
-        this.showToast('Something went wrong, try again');
-      }
-    } else if (item.customer_review == 'Requested') {
-      this.setState({
-        isErrorToast: true,
-      });
-      this.showToast(
-        'You have already asked, Please wait for customer feedback',
-      );
-    }
-  };
+        msg && this.showToast(msg);
+        this.onRefresh();
+      },
+      onError: msg => {
+        this.setState({
+          isLoading: false,
+          selectedReviewItem: null,
+        });
+        msg && this.showToast(msg);
+      },
+    });
+
+  askForReview = async item =>
+    await requestClientForReview({
+      item,
+      fetchJobRequestHistory: this.props?.fetchJobRequestHistory,
+      providerDetails: this.props?.userInfo?.providerDetails,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      onSuccess: msg => {
+        this.changeWaitingDialogVisibility(false);
+        msg && this.showToast(msg);
+      },
+      onError: msg => {
+        this.changeWaitingDialogVisibility(false);
+        msg && this.showToast(msg);
+      },
+    });
 
   showToast = message => {
-    Toast.show(message);
+    SimpleToast.show(message);
   };
 
   onRefresh = async () => {
@@ -1188,10 +866,12 @@ class ProDashboardScreen extends Component {
     this.setState({refreshing: false});
   };
 
-  changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+  changeWaitingDialogVisibility = (bool, error) => {
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+      isErrorToast: error ? true : false,
+      error,
+    }));
   };
 
   render() {

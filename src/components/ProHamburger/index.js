@@ -9,7 +9,6 @@ import {
   Platform,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import rNES from 'react-native-encrypted-storage';
 import {cloneDeep} from 'lodash';
 import {DrawerActions} from 'react-navigation-drawer';
 import {NavigationEvents} from 'react-navigation';
@@ -148,8 +147,8 @@ class ProHamburger extends React.Component {
             ? 'Job was cancelled by client'
             : 'Job was completed by client',
         );
-        newJobRequestsProviders.splice(pos, 1);
-        dispatchFetchedProJobRequests(newJobRequestsProviders);
+        pos && newJobRequestsProviders.splice(pos, 1);
+        pos && dispatchFetchedProJobRequests(newJobRequestsProviders);
         getAllWorkRequestPro(receiverId);
         navigation.navigate('ProHome');
       }
