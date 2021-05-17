@@ -4,6 +4,7 @@ import Config from '../components/Config';
 const ASK_FOR_REVIEW = Config.baseURL + 'notification/addreviewrequest';
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
+const SERVICES_URL = Config.baseURL + 'service/getall';
 
 export const requestClientForReview = async ({
   item,
@@ -206,4 +207,16 @@ export const jobCancelTask = async ({
     console.log('Error >>> ' + e);
     onError("Couldn't cancel job, please try again later");
   }
+};
+
+export const fetchServices = async ({onSuccess, onError}) => {
+  await fetch(SERVICES_URL)
+    .then(response => response.json())
+    .then(responseJson => {
+      onSuccess(responseJson.data);
+    })
+    .catch(error => {
+      console.log(error);
+      onError('An error has occurred, check your internet connection');
+    });
 };

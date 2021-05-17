@@ -166,8 +166,6 @@ class ProAllMessageScreen extends Component {
           isDataMatch: true,
         });
         return item;
-      } else {
-        console.log('False');
       }
     });
     this.setState({dataSource: filterTracks});
