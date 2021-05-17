@@ -42,6 +42,7 @@ import {
 } from '../../Redux/Actions/generalActions';
 import {
   fetchedJobProviderInfo,
+  getPendingJobRequestProvider,
   getAllWorkRequestPro,
 } from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
@@ -113,6 +114,7 @@ class ProHamburger extends React.Component {
         jobsInfo: {jobRequestsProviders},
         dispatchFetchedProJobRequests,
         getAllWorkRequestPro,
+        getPendingJobRequests,
       } = this.props;
       const {title, main_id} = data;
       const check = main_id + title;
@@ -147,10 +149,12 @@ class ProHamburger extends React.Component {
             ? 'Job was cancelled by client'
             : 'Job was completed by client',
         );
-        pos && newJobRequestsProviders.splice(pos, 1);
-        pos && dispatchFetchedProJobRequests(newJobRequestsProviders);
+        if (pos !== undefined) {
+          newJobRequestsProviders.splice(pos, 1);
+          dispatchFetchedProJobRequests(newJobRequestsProviders);
+          navigation.navigate('ProHome');
+        } else getPendingJobRequests(this.props, receiverId, 'ProHome');
         getAllWorkRequestPro(receiverId);
-        navigation.navigate('ProHome');
       }
     });
     await this.fetchOthersLocations();
@@ -487,6 +491,9 @@ const mapDispatchToProps = dispatch => {
     },
     getAllWorkRequestPro: proId => {
       dispatch(getAllWorkRequestPro(proId));
+    },
+    getPendingJobRequests: (props, providerId, navTo) => {
+      dispatch(getPendingJobRequestProvider(props, providerId, navTo));
     },
   };
 };

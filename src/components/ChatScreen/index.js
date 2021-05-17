@@ -36,6 +36,7 @@ import {
   fetchClientMessages,
 } from '../../Redux/Actions/messageActions';
 import {uploadAttachment} from '../../controllers/storage';
+import {jobCancelTask} from '../../controllers/jobs';
 import Config from '../Config';
 import {
   MessagesFooter,
@@ -74,7 +75,7 @@ const StatusBarPlaceHolder = () => {
 };
 
 class ChatScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       showDialog: false,
@@ -462,156 +463,40 @@ class ChatScreen extends Component {
     else Toast.show(message);
   };
 
-  jobCancelTask = () => {
-    const {
-      fetchedPendingJobInfo,
-      jobsInfo: {
-        jobRequests,
-        selectedJobRequest: {employee_id},
-      },
-    } = this.props;
-    let currRequestPos;
-    jobRequests.map((obj, key) => {
-      if (obj.employee_id === employee_id) currRequestPos = key;
-    });
-    var newJobRequests = cloneDeep(jobRequests);
-    this.setState({
-      isLoading: true,
-    });
-
-    const data = {
-      main_id: jobRequests[currRequestPos].id,
-      chat_status: '1',
-      status: 'Cancelled',
-      notification: {
-        fcm_id: jobRequests[currRequestPos].fcm_id,
-        title: 'Job Cancelled',
-        type: 'JobCancellation',
-        body:
-          'Job request has been cancelled by client' +
-          ' Request Id : ' +
-          jobRequests[currRequestPos].order_id,
-        save_notification: true,
-        user_id: this.state.senderId,
-        employee_id: employee_id,
-        order_id: jobRequests[currRequestPos].order_id,
-        notification_by: 'Customer',
-        data: {
-          ProviderId: jobRequests[currRequestPos].employee_id,
-          image: jobRequests[currRequestPos].image
-            ? jobRequests[currRequestPos].image
-            : 'null',
-          fcmId: jobRequests[currRequestPos].fcm_id,
-          name: jobRequests[currRequestPos].name,
-          surname: jobRequests[currRequestPos].surname,
-          mobile: jobRequests[currRequestPos].mobile,
-          description: jobRequests[currRequestPos].description,
-          address: jobRequests[currRequestPos].address,
-          lat: jobRequests[currRequestPos].lat,
-          lang: jobRequests[currRequestPos].lang,
-          serviceName: jobRequests[currRequestPos].service_name,
-          orderId: jobRequests[currRequestPos].order_id,
-          mainId: jobRequests[currRequestPos].id,
-          chat_status: jobRequests[currRequestPos].chat_status,
-          status: 'Cancelled',
-          delivery_address: jobRequests[currRequestPos].delivery_address,
-          delivery_lat: jobRequests[currRequestPos].delivery_lat,
-          delivery_lang: jobRequests[currRequestPos].delivery_lang,
-        },
-      },
-    };
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-              isAcceptJob: true,
-            });
-
-            newJobRequests.splice(currRequestPos, 1);
-            fetchedPendingJobInfo(newJobRequests);
-            this.props.navigation.navigate('Dashboard');
-          } else {
-            this.leftButtonActon = null;
-            this.rightButtonAction = () => {
-              this.setState({
-                showDialog: false,
-                dialogType: null,
-              });
-            };
-            this.setState({
-              isLoading: false,
-              showDialog: true,
-              dialogType: 'fb',
-              dialogTitle: 'OOPS!',
-              dialogDesc: 'Something went wrong, try again later',
-              dialogLeftText: 'Cancel',
-              dialogRightText: 'Ok',
-            });
-          }
-        })
-        .catch(error => {
-          console.log('cancellation error', error);
-          this.leftButtonActon = () => {
-            this.setState({
-              isLoading: false,
-              showDialog: false,
-              dialogType: null,
-            });
-          };
-          this.rightButtonAction = () => {
-            this.jobCancelTask();
-            this.setState({
-              showDialog: false,
-              dialogType: null,
-            });
-          };
+  jobCancelTaskChat = async () =>
+    await jobCancelTask({
+      currRequestPos: this.props.navigation.getParam('currentPosition'),
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      fetchedPendingJobInfo: this.props?.fetchedPendingJobInfo,
+      jobRequests: this.props?.jobsInfo?.jobRequests,
+      userDetails: this.props?.userInfo?.userDetails,
+      onError: msg => {
+        this.leftButtonActon = () => {
           this.setState({
             isLoading: false,
-            showDialog: true,
-            dialogType: 'fb',
-            dialogTitle: 'OOPS!',
-            dialogDesc: 'Something went wrong!',
-            dialogLeftText: 'Cancel',
-            dialogRightText: 'Retry',
+            showDialog: false,
+            dialogType: null,
           });
-        });
-    } catch (e) {
-      console.log('cancellation error', e);
-      this.leftButtonActon = () => {
+        };
+        this.rightButtonAction = () => {
+          this.jobCancelTaskChat();
+          this.setState({
+            showDialog: false,
+            dialogType: null,
+          });
+        };
         this.setState({
           isLoading: false,
-          showDialog: false,
-          dialogType: null,
+          showDialog: true,
+          dialogType: 'error',
+          dialogTitle: 'OOPS!',
+          dialogDesc: msg,
+          dialogLeftText: 'Cancel',
+          dialogRightText: 'Retry',
         });
-      };
-      this.rightButtonAction = () => {
-        this.jobCancelTask();
-        this.setState({
-          showDialog: false,
-          dialogType: null,
-        });
-      };
-      this.setState({
-        isLoading: false,
-        showDialog: true,
-        dialogType: 'fb',
-        dialogTitle: 'OOPS!',
-        dialogDesc: 'Something went wrong!',
-        dialogLeftText: 'Cancel',
-        dialogRightText: 'Retry',
-      });
-    }
-  };
+      },
+      navigate: this.props?.navigation?.navigate,
+    });
 
   handleBackButtonClick = () => {
     const {titlePage} = this.state;
@@ -629,6 +514,12 @@ class ChatScreen extends Component {
 
   renderSeparator = () => {
     return <View style={{height: 5, width: '100%'}} />;
+  };
+
+  changeWaitingDialogVisibility = bool => {
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   changeDialogVisibility = () =>
@@ -730,7 +621,7 @@ class ChatScreen extends Component {
                   }}>
                   <TouchableOpacity
                     style={styles.buttonContainer}
-                    onPress={this.jobCancelTask}>
+                    onPress={this.jobCancelTaskChat}>
                     <Text
                       style={[
                         styles.text,

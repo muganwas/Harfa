@@ -1,7 +1,9 @@
+import {cloneDeep} from 'lodash';
 import Config from '../components/Config';
 
 const ASK_FOR_REVIEW = Config.baseURL + 'notification/addreviewrequest';
 const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
+const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 
 export const requestClientForReview = async ({
   item,
@@ -121,5 +123,87 @@ export const submitClientReview = async ({
   } catch (e) {
     console.log('Error :' + e);
     onError('Something went wrong, please try again later');
+  }
+};
+
+export const jobCancelTask = async ({
+  currRequestPos,
+  toggleIsLoading,
+  fetchedPendingJobInfo,
+  jobRequests,
+  userDetails,
+  onError,
+  navigate,
+}) => {
+  toggleIsLoading();
+  try {
+    let newJobRequests = cloneDeep(jobRequests);
+    const data = {
+      main_id: jobRequests[currRequestPos].id,
+      chat_status: '1',
+      status: 'Cancelled',
+      notification: {
+        fcm_id: jobRequests[currRequestPos].fcm_id,
+        title: 'Job Cancelled',
+        type: 'JobCancellation',
+        user_id: userDetails.userId,
+        employee_id: jobRequests[currRequestPos].employee_id,
+        order_id: jobRequests[currRequestPos].order_id,
+        notification_by: 'Customer',
+        save_notification: true,
+        body:
+          'Job request has been cancelled by client' +
+          ' Request Id : ' +
+          jobRequests[currRequestPos].order_id,
+        data: {
+          ProviderId: jobRequests[currRequestPos].employee_id,
+          image: jobRequests[currRequestPos].image
+            ? jobRequests[currRequestPos].image
+            : 'null',
+          fcmId: jobRequests[currRequestPos].fcm_id,
+          name: jobRequests[currRequestPos].name,
+          surname: jobRequests[currRequestPos].surname,
+          mobile: jobRequests[currRequestPos].mobile,
+          description: jobRequests[currRequestPos].description,
+          address: jobRequests[currRequestPos].address,
+          lat: jobRequests[currRequestPos].lat,
+          lang: jobRequests[currRequestPos].lang,
+          serviceName: jobRequests[currRequestPos].service_name,
+          orderId: jobRequests[currRequestPos].order_id,
+          mainId: jobRequests[currRequestPos].id,
+          chat_status: jobRequests[currRequestPos].chat_status,
+          status: 'Cancelled',
+          delivery_address: jobRequests[currRequestPos].delivery_address,
+          delivery_lat: jobRequests[currRequestPos].delivery_lat,
+          delivery_lang: jobRequests[currRequestPos].delivery_lang,
+        },
+      },
+    };
+    await fetch(REJECT_ACCEPT_REQUEST, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(responseJson => {
+        if (responseJson.result) {
+          toggleIsLoading();
+          newJobRequests.splice(currRequestPos, 1);
+          fetchedPendingJobInfo(newJobRequests);
+          navigate && navigate('Dashboard');
+        } else {
+          onError('An error has occurred, please try again later');
+        }
+      })
+      .catch(error => {
+        console.log('cancel job error --', error);
+        onError("Couldn't cancel job, please try again later");
+      });
+  } catch (e) {
+    console.log('Error >>> ' + e);
+    onError("Couldn't cancel job, please try again later");
   }
 };

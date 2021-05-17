@@ -49,7 +49,7 @@ import {
 import {
   requestClientForReview,
   submitClientReview,
-} from '../../controllers/tasks';
+} from '../../controllers/jobs';
 import {
   colorBg,
   colorYellow,

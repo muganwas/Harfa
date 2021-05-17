@@ -22,7 +22,6 @@ import {
   notificationError,
 } from '../../Redux/Actions/notificationActions';
 import RNExitApp from 'react-native-exit-app';
-import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
@@ -46,10 +45,10 @@ import {
   black,
 } from '../../Constants/colors';
 import images from '../../Constants/images';
+import {jobCancelTask} from '../../controllers/jobs';
 
 const screenWidth = Dimensions.get('window').width;
 const SERVICES_URL = Config.baseURL + 'service/getall';
-const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 YellowBox.ignoreWarnings(['']);
 
@@ -122,107 +121,40 @@ class DashboardScreen extends Component {
     });
   };
 
-  jobCancelTask = async index => {
-    this.setState({isLoading: true});
-    const {
-      fetchedPendingJobInfo,
-      jobsInfo: {jobRequests},
-      userInfo: {userDetails},
-    } = this.props;
-
-    try {
-      const currRequestPos = index;
-      let newJobRequests = cloneDeep(jobRequests);
-      const data = {
-        main_id: jobRequests[currRequestPos].id,
-        chat_status: '1',
-        status: 'Cancelled',
-        notification: {
-          fcm_id: jobRequests[currRequestPos].fcm_id,
-          title: 'Job Cancelled',
-          type: 'JobCancellation',
-          user_id: userDetails.userId,
-          employee_id: jobRequests[currRequestPos].employee_id,
-          order_id: jobRequests[currRequestPos].order_id,
-          notification_by: 'Customer',
-          save_notification: true,
-          body:
-            'Job request has been cancelled by client' +
-            ' Request Id : ' +
-            jobRequests[currRequestPos].order_id,
-          data: {
-            ProviderId: jobRequests[currRequestPos].employee_id,
-            image: jobRequests[currRequestPos].image
-              ? jobRequests[currRequestPos].image
-              : 'null',
-            fcmId: jobRequests[currRequestPos].fcm_id,
-            name: jobRequests[currRequestPos].name,
-            surname: jobRequests[currRequestPos].surname,
-            mobile: jobRequests[currRequestPos].mobile,
-            description: jobRequests[currRequestPos].description,
-            address: jobRequests[currRequestPos].address,
-            lat: jobRequests[currRequestPos].lat,
-            lang: jobRequests[currRequestPos].lang,
-            serviceName: jobRequests[currRequestPos].service_name,
-            orderId: jobRequests[currRequestPos].order_id,
-            mainId: jobRequests[currRequestPos].id,
-            chat_status: jobRequests[currRequestPos].chat_status,
-            status: 'Cancelled',
-            delivery_address: jobRequests[currRequestPos].delivery_address,
-            delivery_lat: jobRequests[currRequestPos].delivery_lat,
-            delivery_lang: jobRequests[currRequestPos].delivery_lang,
-          },
-        },
-      };
-      await fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-            });
-            newJobRequests.splice(currRequestPos, 1);
-            fetchedPendingJobInfo(newJobRequests);
-            this.props.navigation.navigate('Dashboard');
-          } else {
-            this.leftButtonActon = null;
-            this.rightButtonAction = () => {
-              this.setState({
-                showDialog: false,
-                dialogType: null,
-              });
-            };
-            this.setState({
-              isLoading: false,
-              showDialog: true,
-              dialogType: 'fb',
-              dialogTitle: 'OOPS!',
-              dialogDesc: 'An error has occurred, please try again later',
-              dialogLeftText: 'Cancel',
-              dialogRightText: 'Ok',
-            });
-          }
-        })
-        .catch(error => {
-          console.log('Error >>> ' + error);
+  jobCancelTaskDash = async currRequestPos =>
+    await jobCancelTask({
+      currRequestPos,
+      fetchedPendingJobInfo: this.props?.fetchedPendingJobInfo,
+      jobRequests: this.props?.jobsInfo?.jobRequests,
+      userDetails: this.props?.userInfo?.userDetails,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      onError: msg => {
+        this.leftButtonActon = () => {
           this.setState({
             isLoading: false,
+            showDialog: false,
+            dialogType: null,
           });
+        };
+        this.rightButtonAction = () => {
+          this.jobCancelTaskDash(currRequestPos);
+          this.setState({
+            showDialog: false,
+            dialogType: null,
+          });
+        };
+        this.setState({
+          isLoading: false,
+          showDialog: true,
+          dialogType: 'error',
+          dialogTitle: 'OOPS!',
+          dialogDesc: msg,
+          dialogLeftText: 'Cancel',
+          dialogRightText: 'Retry',
         });
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
+      },
+      navigate: this.props?.navigation?.navigate,
+    });
 
   handleBackButton = () => {
     if (Platform.OS == 'ios')
@@ -423,9 +355,9 @@ class DashboardScreen extends Component {
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   renderPendingJobRequests = (item, index) => {
@@ -534,7 +466,7 @@ class DashboardScreen extends Component {
               {chat_status === '0' && (
                 <TouchableOpacity
                   style={styles.cancelRequest}
-                  onPress={() => this.jobCancelTask(index)}>
+                  onPress={() => this.jobCancelTaskDash(index)}>
                   <Text style={styles.cancelRequestText}>Cancel Request</Text>
                 </TouchableOpacity>
               )}
