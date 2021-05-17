@@ -244,7 +244,6 @@ class ProHamburger extends React.Component {
       }
     });
     socket.open();
-
     const userRef = database().ref(`liveLocation/${receiverId}`);
     locationPermissionRequest(() => {
       /** get pros current position and upload it to db */

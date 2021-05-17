@@ -1,5 +1,6 @@
 import {cloneDeep} from 'lodash';
 import {imageExists} from '../misc/helpers';
+import database from '@react-native-firebase/database';
 import Config from '../components/Config';
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
@@ -238,4 +239,24 @@ export const updateAvailabilityInMongoDB = async ({
     console.log('Error :' + e);
     onError('Something went wrong, please try again later');
   }
+};
+//Recent Chat Message
+export const getAllRecentChats = async ({id, dataSource, onSuccess}) => {
+  const dbRef = database()
+    .ref('recentMessage')
+    .child(id);
+  const newDataSource = cloneDeep(dataSource);
+  dbRef.on('child_added', async val => {
+    let message = val.val();
+    await imageExists(message.image).then(res => {
+      message.exists = res;
+    });
+    let present = false;
+    newDataSource.map(obj => {
+      if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
+    });
+    if (message && !present) {
+      onSuccess([...newDataSource, message]);
+    }
+  });
 };
