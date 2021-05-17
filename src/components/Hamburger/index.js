@@ -141,14 +141,14 @@ class Hamburger extends React.Component {
         if (orderId === obj.order_id) pos = i;
       });
       if (title.toLowerCase() === 'chat request rejected') {
-        pos && newJobRequests.splice(pos, 1);
-        pos && fetchedPendingJobInfo(newJobRequests);
+        pos !== undefined && newJobRequests.splice(pos, 1);
+        pos !== undefined && fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
         this.showToast(
           'The service provider rejected your request. please try again later',
         );
         navigation.navigate('Home');
-      } else if (title.toLowerCase() === 'job accepted' && pos !== undefined) {
+      } else if (title.toLowerCase() === 'job accepted') {
         const providerData =
           typeof data.ProviderData === 'string'
             ? JSON.parse(data.ProviderData)
@@ -177,19 +177,21 @@ class Hamburger extends React.Component {
         imageExists(providerData.imageSource).then(res => {
           pendingJobData.imageAvailable = res;
         });
-        newJobRequests[pos] = pendingJobData;
-        fetchedPendingJobInfo(newJobRequests);
+        if (pos !== undefined) {
+          newJobRequests[pos] = pendingJobData;
+          fetchedPendingJobInfo(newJobRequests);
+        }
         getAllWorkRequestClient(senderId);
         this.showToast('Your job has been accepted.');
         navigation.navigate('Home');
-      } else if (title.toLowerCase() === 'job rejected' && pos !== undefined) {
-        newJobRequests.splice(pos, 1);
-        fetchedPendingJobInfo(newJobRequests);
+      } else if (title.toLowerCase() === 'job rejected') {
+        pos !== undefined && newJobRequests.splice(pos, 1);
+        pos !== undefined && fetchedPendingJobInfo(newJobRequests);
         navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
-      } else if (title.toLowerCase() === 'job completed' && pos !== undefined) {
-        newJobRequests.splice(pos, 1);
-        fetchedPendingJobInfo(newJobRequests);
+      } else if (title.toLowerCase() === 'job completed') {
+        pos !== undefined && newJobRequests.splice(pos, 1);
+        pos !== undefined && fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
         this.showToast('Your job is complete..');
         navigation.navigate('Home');
@@ -229,13 +231,12 @@ class Hamburger extends React.Component {
         updateActiveRequest(false);
         navigation.navigate('Home');
       } else if (
-        (title.toLowerCase() === 'No Response' ||
-          title.toLowerCase() === 'cancelled' ||
-          title.toLowerCase() === 'job cancelled') &&
-        pos !== undefined
+        title.toLowerCase() === 'No Response' ||
+        title.toLowerCase() === 'cancelled' ||
+        title.toLowerCase() === 'job cancelled'
       ) {
-        newJobRequests.splice(pos, 1);
-        fetchedPendingJobInfo(newJobRequests);
+        pos !== undefined && newJobRequests.splice(pos, 1);
+        pos !== undefined && fetchedPendingJobInfo(newJobRequests);
         this.showToast(
           'The service provider is nolonger available. please try again later',
         );
