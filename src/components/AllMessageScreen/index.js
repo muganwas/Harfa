@@ -182,11 +182,9 @@ class AllMessageScreen extends Component {
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
-
         <View style={styles.header}>
           <Hamburger navigation={this.props.navigation} text="Your Messages" />
         </View>
-
         <View
           style={{
             flexDirection: 'row',

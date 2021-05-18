@@ -10,12 +10,16 @@ import {GoogleSignin, statusCodes} from '@react-native-community/google-signin';
 import firebaseAuth from '@react-native-firebase/auth';
 import rNES from 'react-native-encrypted-storage';
 import SimpleToast from 'react-native-simple-toast';
+import axios from 'axios';
+import {cloneDeep} from 'lodash';
 import database from '@react-native-firebase/database';
+import storage from '@react-native-firebase/storage';
 import Config from '../components/Config';
 import {emailCheck, passwordCheck} from '../misc/helpers';
 
 const PRO_GET_PROFILE = Config.baseURL + 'employee/';
 const USER_GET_PROFILE = Config.baseURL + 'users/';
+const storageRef = storage().ref('/users_info');
 
 export const checkForUserType = async navigate =>
   await rNES.getItem('userType').then(result => {
@@ -687,5 +691,97 @@ export const forgotPasswordTask = async ({
     }
     onError(msg);
     console.log('reset 2 err', errorMsg);
+  }
+};
+
+export const updateProfileImageTask = async ({
+  userId,
+  imageObject,
+  firebaseId,
+  userDetails,
+  updateUserDetails,
+  toggleIsLoading,
+  updateURL,
+}) => {
+  toggleIsLoading(true);
+  const {fileName, path} = imageObject;
+  const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
+  userDataRef
+    .putFile(path)
+    .then(uploadRes => {
+      const {state} = uploadRes;
+      if (state === 'success') {
+        userDataRef.getDownloadURL().then(urlResult => {
+          axios
+            .post(updateURL + userId, {
+              type: imageObject.type,
+              uri: urlResult,
+              name: imageObject.fileName,
+            })
+            .then(async res => {
+              let newUserDetails = cloneDeep(userDetails);
+              /** cater for different names for user and client */
+              newUserDetails.image = newUserDetails.imageSource = urlResult;
+              await updateUserDetails(newUserDetails);
+              toggleIsLoading(false);
+              if (res && res.data.result) {
+                SimpleToast.show(res.data.message);
+              }
+            })
+            .catch(error => {
+              console.log('Error :' + error);
+              toggleIsLoading(false);
+              SimpleToast.show('Something went wrong, try again later');
+            });
+        });
+      } else {
+        SimpleToast.show('Upload failed, try again please.');
+      }
+    })
+    .catch(error => {
+      console.log('image upload error', error.messge);
+      SimpleToast.show('Something went wrong, try again later.');
+    });
+};
+
+export const updateProfileInfo = async ({
+  userId,
+  fcmId,
+  userData,
+  fetchUserProfile,
+  updateURL,
+  onSuccess,
+  toggleIsLoading,
+}) => {
+  try {
+    await fetch(updateURL + userId, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    })
+      .then(response => response.json())
+      .then(response => {
+        if (response.result) {
+          onSuccess(userData);
+          SimpleToast.show(response.message);
+          fetchUserProfile(userId, fcmId);
+        } else {
+          toggleIsLoading(false);
+          SimpleToast.show(response.message);
+        }
+      })
+      .catch(error => {
+        console.log('profile update error :' + error);
+        toggleIsLoading(false);
+        SimpleToast.show('Something went wrong, try again later.');
+      })
+      .done();
+  } catch (e) {
+    console.log('profile update erroror :' + e);
+    toggleIsLoading(false);
+    SimpleToast.show('Something went wrong, try again later.');
   }
 };

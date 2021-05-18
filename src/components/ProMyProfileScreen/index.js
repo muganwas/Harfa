@@ -19,11 +19,8 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import rNES from 'react-native-encrypted-storage';
 import ShakingText from 'react-native-shaking-text';
 import TextInputMask from 'react-native-text-input-mask';
-import axios from 'axios';
-import storage from '@react-native-firebase/storage';
 import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
-import {cloneDeep} from 'lodash';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../ProHamburger';
@@ -31,6 +28,10 @@ import {
   updateProviderDetails,
   fetchProviderProfile,
 } from '../../Redux/Actions/userActions';
+import {
+  updateProfileImageTask,
+  updateProfileInfo,
+} from '../../controllers/users';
 import {white, themeRed, black, colorBg} from '../../Constants/colors';
 import {
   phoneNumberCheck,
@@ -47,7 +48,6 @@ const options = {
   quality: 1,
 };
 
-const storageRef = storage().ref('/employees_info');
 const PRO_IMAGE_UPDATE = Config.baseURL + 'employee/upload/';
 const PRO_INFO_UPDATE = Config.baseURL + 'employee/';
 
@@ -206,9 +206,6 @@ class ProMyProfileScreen extends Component {
   };
 
   checkValidation = () => {
-    this.setState({
-      isLoading: true,
-    });
     rNES
       .getItem('userId')
       .then(async providerId => await this.updateInformation(providerId));
@@ -232,6 +229,9 @@ class ProMyProfileScreen extends Component {
       fetchProviderProfile,
       validationInfo: {countryAlpha2},
     } = this.props;
+    this.setState({
+      isLoading: true,
+    });
     const userData = {
       username: name,
       surname,
@@ -260,124 +260,44 @@ class ProMyProfileScreen extends Component {
             },
           ));
         if (!this.state.error)
-          try {
-            await fetch(PRO_INFO_UPDATE + providerId, {
-              method: 'POST',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(userData),
-            })
-              .then(response => response.json())
-              .then(async response => {
-                if (response.result) {
-                  this.setState({
-                    emailSet: userData && userData.email,
-                    isLoading: false,
-                    isErrorToast: false,
-                  });
-                  //ToastAndroid.show(response.message, ToastAndroid.show);
-                  this.showToast(response.message);
-                  fetchProviderProfile(providerId, fcmId);
-                } else {
-                  this.setState({
-                    isLoading: false,
-                    isErrorToast: true,
-                  });
-                  this.showToast(response.message);
-                }
-              })
-              .catch(error => {
-                console.log('Error :' + error);
-                this.setState({
-                  isLoading: false,
-                  isErrorToast: true,
-                });
-                this.showToast('Something went wrong');
-              })
-              .done();
-          } catch (e) {
-            console.log('Error :' + e);
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
+          await updateProfileInfo({
+            userId: providerId,
+            fcmId,
+            userData,
+            fetchUserProfile: fetchProviderProfile,
+            updateURL: PRO_INFO_UPDATE,
+            onSuccess: userData => {
+              this.setState({
+                emailSet: userData && userData.email,
+                isLoading: false,
+                isErrorToast: false,
+              });
+            },
+            toggleIsLoading: this.changeWaitingDialogVisibility,
+          });
       }
     });
   };
 
-  //Image Update
-  updateImageTask = (proId, imageObject) => {
-    this.setState({
-      isLoading: true,
+  updateImageTask = async (userId, imageObject) =>
+    await updateProfileImageTask({
+      userId,
+      imageObject,
+      firebaseId: this.props?.userInfo?.providerDetails?.firebaseId,
+      userDetails: this.props?.userInfo?.providerDetails,
+      updateUserDetails: this.props?.updateProviderDetails,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      updateURL: PRO_IMAGE_UPDATE,
     });
-    const {
-      userInfo: {
-        providerDetails: {firebaseId},
-      },
-    } = this.props;
-    const {fileName, path} = imageObject;
-    if (firebaseId) {
-      const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
-      userDataRef
-        .putFile(path)
-        .then(uploadRes => {
-          const {state} = uploadRes;
-          if (state === 'success') {
-            userDataRef.getDownloadURL().then(urlResult => {
-              axios
-                .post(PRO_IMAGE_UPDATE + proId, {
-                  type: imageObject.type,
-                  uri: urlResult,
-                  name: imageObject.fileName,
-                })
-                .then(async res => {
-                  const {
-                    userInfo: {providerDetails},
-                    updateProviderDetails,
-                  } = this.props;
-                  let newProviderDetails = cloneDeep(providerDetails);
-                  newProviderDetails.imageSource = urlResult;
-                  await updateProviderDetails(newProviderDetails);
-                  this.setState({
-                    isLoading: false,
-                    isErrorToast: false,
-                  });
-                  if (res && res.data.result) {
-                    this.showToast(res.data.message);
-                  }
-                })
-                .catch(error => {
-                  console.log('Error :' + error);
-                  this.setState({
-                    isLoading: false,
-                  });
-                  this.showToast('Something went wrong');
-                });
-            });
-          } else {
-            this.showToast('Upload failed, try again please.');
-          }
-        })
-        .catch(error => {
-          console.log('image upload error', error.messge);
-        });
-    } else {
-      this.showToast('Something went wrong');
-    }
-  };
 
   showToast = message => {
     Toast.show(message);
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   render() {

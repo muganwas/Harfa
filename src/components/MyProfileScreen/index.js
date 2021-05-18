@@ -13,19 +13,15 @@ import {
   Modal,
   Animated,
 } from 'react-native';
-//import {NavigationActions} from 'react-navigation';
 import {connect} from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
 import ShakingText from 'react-native-shaking-text';
 import ImagePicker from 'react-native-image-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import axios from 'axios';
-import storage from '@react-native-firebase/storage';
 import rNES from 'react-native-encrypted-storage';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import TextInputMask from 'react-native-text-input-mask';
 import moment from 'moment';
-import {cloneDeep} from 'lodash';
 import {
   phoneNumberCheck,
   sanitizeMobileNumber,
@@ -46,6 +42,10 @@ import {
   black,
   colorBg,
 } from '../../Constants/colors';
+import {
+  updateProfileImageTask,
+  updateProfileInfo,
+} from '../../controllers/users';
 
 const options = {
   title: 'Select a photo',
@@ -54,7 +54,6 @@ const options = {
   quality: 1,
 };
 
-const storageRef = storage().ref('/users_info');
 const screenWidth = Dimensions.get('window').width;
 
 const USER_IMAGE_UPDATE = Config.baseURL + 'users/upload/';
@@ -172,7 +171,9 @@ class MyProfileScreen extends Component {
           });
           rNES
             .getItem('userId')
-            .then(providerId => this.updateImageTask(providerId, response));
+            .then(providerId =>
+              this.updateImageTaskCustomer(providerId, response),
+            );
         }
       });
     } catch (error) {
@@ -203,10 +204,6 @@ class MyProfileScreen extends Component {
   };
 
   checkValidation = () => {
-    this.setState({
-      isLoading: true,
-    });
-
     rNES
       .getItem('userId')
       .then(providerId => this.updateInformation(providerId));
@@ -217,6 +214,7 @@ class MyProfileScreen extends Component {
     const {fcmId, username, email, mobile, dob} = this.state;
     const {
       validationInfo: {countryAlpha2},
+      fetchUserProfile,
     } = this.props;
     this.setState({
       isLoading: true,
@@ -243,115 +241,45 @@ class MyProfileScreen extends Component {
             },
           ));
         if (!this.state.error)
-          try {
-            await fetch(USER_INFO_UPDATE + userId, {
-              method: 'POST',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(userData),
-            })
-              .then(response => response.json())
-              .then(response => {
-                if (response.result) {
-                  this.setState({
-                    emailSet: userData && userData.email,
-                    isLoading: false,
-                    isErrorToast: false,
-                  });
-                  this.showToast(response.message);
-                  fetchUserProfile(userId, fcmId);
-                } else {
-                  this.setState({
-                    isLoading: false,
-                    isErrorToast: true,
-                  });
-                  this.showToast(response.message);
-                }
-              })
-              .catch(error => {
-                console.log('Error :' + error);
-                this.setState({
-                  isLoading: false,
-                });
-              })
-              .done();
-          } catch (e) {
-            console.log('Error :' + e);
-            this.setState({
-              isLoading: false,
-            });
-          }
+          await updateProfileInfo({
+            userId,
+            fcmId,
+            userData,
+            fetchUserProfile,
+            updateURL: USER_INFO_UPDATE,
+            onSuccess: userData => {
+              this.setState({
+                emailSet: userData && userData.email,
+                isLoading: false,
+                isErrorToast: false,
+              });
+            },
+            toggleIsLoading: this.changeWaitingDialogVisibility,
+          });
       }
     });
   };
 
-  //Image Update
-  updateImageTask = (userId, imageObject) => {
-    this.setState({
-      isLoading: true,
+  updateImageTaskCustomer = async (userId, imageObject) =>
+    await updateProfileImageTask({
+      userId,
+      imageObject,
+      firebaseId: this.props?.userInfo?.userDetails?.firebaseId,
+      userDetails: this.props?.userInfo?.userDetails,
+      updateUserDetails: this.props?.updateUserDetails,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      updateURL: USER_IMAGE_UPDATE,
     });
-    const {
-      userInfo: {
-        userDetails: {firebaseId},
-      },
-    } = this.props;
-    const {fileName, path} = imageObject;
-    const userDataRef = storageRef.child(`/${firebaseId}/${fileName}`);
-    userDataRef
-      .putFile(path)
-      .then(uploadRes => {
-        const {state} = uploadRes;
-        if (state === 'success') {
-          userDataRef.getDownloadURL().then(urlResult => {
-            axios
-              .post(USER_IMAGE_UPDATE + userId, {
-                type: imageObject.type,
-                uri: urlResult,
-                name: imageObject.fileName,
-              })
-              .then(async res => {
-                const {
-                  userInfo: {userDetails},
-                  updateUserDetails,
-                } = this.props;
-                let newUserDetails = cloneDeep(userDetails);
-                newUserDetails.image = urlResult;
-                await updateUserDetails(newUserDetails);
-                this.setState({
-                  isLoading: false,
-                  isErrorToast: false,
-                });
-                if (res && res.data.result) {
-                  this.showToast(res.data.message);
-                }
-              })
-              .catch(error => {
-                console.log('Error :' + error);
-                this.setState({
-                  isLoading: false,
-                });
-                this.showToast('Something went wrong');
-              });
-          });
-        } else {
-          this.showToast('Upload failed, try again please.');
-        }
-      })
-      .catch(error => {
-        console.log('image upload error', error.messge);
-      });
-  };
 
-  showToast = message => {
-    Toast.show(message);
+  showToast = (message, length) => {
+    if (length) Toast.show(message, length);
+    else Toast.show(message);
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   render() {
