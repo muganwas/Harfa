@@ -52,6 +52,7 @@ import {
   white,
   lightGray,
 } from '../../Constants/colors';
+import {synchroniseOnlineStatus} from '../../controllers/users';
 import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
@@ -189,21 +190,11 @@ class LoginPhoneScreen extends Component {
           .then(async responseJson => {
             let status;
             if (responseJson.status === 200 && responseJson.data.createdDate) {
-              const usersRef = database().ref(`users/${responseJson.data.id}`);
-              await usersRef.once('value', snapshot => {
-                const value = snapshot.val();
-                if (value) status = value.status;
-                else {
-                  usersRef
-                    .set({status: responseJson.data.status})
-                    .then(() => {
-                      console.log('status set');
-                    })
-                    .catch(e => {
-                      console.log(e.message);
-                    });
-                }
-              });
+              const id = responseJson.data.id;
+              const onlineStatus = await synchroniseOnlineStatus(
+                id,
+                responseJson.data.online,
+              );
               try {
                 const id = responseJson.data.id;
                 fetch(PRO_GET_PROFILE + id + '?fcm_id=' + fcmToken, {
@@ -234,6 +225,7 @@ class LoginPhoneScreen extends Component {
                         lat: response.data.lat,
                         lang: response.data.lang,
                         invoice: response.data.invoice,
+                        online: onlineStatus,
                         firebaseId: this.state.firebaseId,
                         status:
                           status != undefined ? status : response.data.status,
@@ -262,6 +254,7 @@ class LoginPhoneScreen extends Component {
                         address: responseJson.data.address,
                         lat: responseJson.data.lat,
                         lang: responseJson.data.lang,
+                        online: onlineStatus,
                         invoice: responseJson.data.invoice,
                         status:
                           status != undefined

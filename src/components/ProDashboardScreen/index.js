@@ -153,7 +153,6 @@ class ProDashboardScreen extends Component {
       userInfo: {providerDetails},
     } = this.props;
     const {status} = this.state;
-
     if (!connectivityAvailable && status === 'ONLINE')
       this.setState({
         status: 'OFFLINE',
