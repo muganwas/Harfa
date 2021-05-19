@@ -108,7 +108,6 @@ class ProDashboardScreen extends Component {
           : 'red',
       dataUserSource: [],
       isDialogLogoutVisible: false,
-      isRecentMessage: false,
       isWorkRequest: false,
       isRecentUser: false,
       isReviewDialogVisible: false,
@@ -179,7 +178,7 @@ class ProDashboardScreen extends Component {
       dataSource: this.props?.messagesInfo?.latestChats,
       onSuccess: data => {
         this.props.updateLatestChats(data);
-        this.setState({isLoading: false, isRecentMessage: true});
+        this.setState({isLoading: false});
       },
     });
 
@@ -836,7 +835,6 @@ class ProDashboardScreen extends Component {
     } = this.props;
     this.setState({
       dataUserSource: [],
-      isRecentMessage: false,
       status:
         online && providerDetails.online === '1' && connectivityAvailable
           ? 'ONLINE'
@@ -957,7 +955,7 @@ class ProDashboardScreen extends Component {
             />
           }>
           <View>
-            {this.state.isRecentMessage && (
+            {latestChats && latestChats.length > 0 && (
               <View style={styles.mainContainer}>
                 <View style={styles.recentMessageHeader}>
                   <Text
@@ -983,7 +981,6 @@ class ProDashboardScreen extends Component {
                     </TouchableOpacity>
                   )}
                 </View>
-
                 <View style={styles.listView}>
                   {latestChats.map(this.renderRecentMessageItem)}
                 </View>

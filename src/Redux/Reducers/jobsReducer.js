@@ -13,6 +13,8 @@ import {
   FETCHED_DATA_WORK_SOURCE,
   FETCH_DATA_WORK_SOURCE_ERROR,
   UPDATE_ACTIVE_REQUREST,
+  UPDATE_BOOKING_COMPLETE_DATA,
+  UPDATE_REJECTED_BOOKINGS_DATA,
 } from '../types';
 
 const initialState = {
@@ -22,6 +24,8 @@ const initialState = {
   jobRequestsProviders: [],
   allJobRequestsProviders: [],
   allJobRequestsClient: [],
+  bookingCompleteData: [],
+  bookingRejectData: [],
   requestsProvidersFetched: false,
   allJobRequestsProvidersFetched: false,
   allJobRequestsClientFetched: false,
@@ -90,6 +94,16 @@ const jobsReducer = (state = initialState, action) => {
         ...state,
         allJobRequestsProviders: action.payload,
         allJobRequestsProvidersFetched: true,
+      };
+    case UPDATE_BOOKING_COMPLETE_DATA:
+      return {
+        ...state,
+        bookingCompleteData: action.payload,
+      };
+    case UPDATE_REJECTED_BOOKINGS_DATA:
+      return {
+        ...state,
+        bookingRejectData: action.payload,
       };
     case FETCH_ALL_JOB_REQUESTS_PRO_ERROR:
       return {

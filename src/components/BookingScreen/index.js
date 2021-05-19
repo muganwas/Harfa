@@ -20,7 +20,11 @@ import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
 import _ from 'lodash';
-import {imageExists} from '../../misc/helpers';
+import {
+  updateCompletedBookingData,
+  updateFailedBookingData,
+} from '../../Redux/Actions/jobsActions';
+import {getAllBookings} from '../../controllers/bookings';
 import {font_size} from '../../Constants/metrics';
 import {
   colorPrimaryDark,
@@ -54,12 +58,9 @@ const StatusBarPlaceHolder = () => {
 };
 
 class BookingScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
-      bookingCompleteData: [],
-      bookingRejectData: [],
-      employeeDetails: [],
       currentPage: 0,
       isLoading: true,
       backClickCount: 0,
@@ -69,10 +70,8 @@ class BookingScreen extends Component {
 
   componentDidMount() {
     const {navigation} = this.props;
-    this.getAllBookings();
+    this.getAllBookingsCustomer();
     navigation.addListener('willFocus', async () => {
-      const from = navigation.getParam('from');
-      if (from !== 'detailsScreen') this.getAllBookings();
       BackHandler.addEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -113,68 +112,18 @@ class BookingScreen extends Component {
     });
   };
 
-  getAllBookings = () => {
-    this.setState({
-      isLoading: true,
-      bookingCompleteData: [],
-      bookingRejectData: [],
+  getAllBookingsCustomer = async () =>
+    await getAllBookings({
+      userId: this.props.userInfo.userDetails.userId,
+      userType: 'Client',
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      bookingHistoryURL: BOOKING_HISTORY,
+      onSuccess: (bookingCompleteData, bookingRejectData) => {
+        this.props.updateCompletedBookingData(bookingCompleteData);
+        this.props.updateFailedBookingData(bookingRejectData);
+        this.setState({isLoading: false});
+      },
     });
-    let bookingCompleteData = [];
-    let bookingRejectData = [];
-    const {
-      userInfo: {userDetails},
-    } = this.props;
-    try {
-      fetch(BOOKING_HISTORY + userDetails.userId + '/bookings')
-        .then(response => response.json())
-        .then(async responseJson => {
-          if (responseJson.result && responseJson.data) {
-            const newData = _.cloneDeep(responseJson.data);
-            for (let i = 0; i < newData.length; i++) {
-              imageExists(newData[i].employee_details.image).then(res => {
-                if (newData[i].employee_details)
-                  newData[i].employee_details.imageAvailable = res;
-              });
-              if (newData[i].chat_status == '1') {
-                if (newData[i].status == 'Completed') {
-                  bookingCompleteData.push(newData[i]);
-                } else if (newData[i].status == 'Rejected') {
-                  bookingRejectData.push(newData[i]);
-                }
-              } else {
-                if (newData[i].status == 'Rejected') {
-                  bookingRejectData.push(newData[i]);
-                }
-              }
-            }
-            this.setState({
-              isLoading: false,
-              bookingCompleteData,
-              bookingRejectData,
-            });
-          } else {
-            this.setState({
-              isLoading: false,
-            });
-          }
-        })
-        .catch(error => {
-          console.log(error);
-          this.setState({
-            isLoading: false,
-          });
-          this.showToast(
-            'Something went wrong, check your internet connection',
-          );
-        });
-    } catch (e) {
-      console.log(e);
-      this.setState({
-        isLoading: false,
-      });
-      this.showToast('Something went wrong, try again later');
-    }
-  };
 
   onPageSelected = event => {
     let currentPage = event.nativeEvent.position;
@@ -322,17 +271,21 @@ class BookingScreen extends Component {
     );
   };
 
-  showToast = message => {
-    Toast.show(message);
+  showToast = (message, length) => {
+    if (length) Toast.show(message, length);
+    else Toast.show(message);
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   render() {
+    const {
+      jobsInfo: {bookingCompleteData, bookingRejectData},
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -414,29 +367,26 @@ class BookingScreen extends Component {
           onPageSelected={event => this.onPageSelected(event)}>
           <View key="1">
             <View style={styles.listView}>
-              {this.state.bookingCompleteData.map(
-                this.renderBookingHistoryItem,
-              )}
+              {bookingCompleteData.map(this.renderBookingHistoryItem)}
             </View>
-            {this.state.bookingCompleteData.length == 0 &&
-              !this.state.isLoading && (
-                <View style={styles.loaderStyle}>
-                  <Text
-                    style={{
-                      color: darkGray,
-                      fontSize: 16,
-                      fontStyle: 'italic',
-                    }}>
-                    No completed bookings found!
-                  </Text>
-                </View>
-              )}
+            {bookingCompleteData.length === 0 && !this.state.isLoading && (
+              <View style={styles.loaderStyle}>
+                <Text
+                  style={{
+                    color: darkGray,
+                    fontSize: 16,
+                    fontStyle: 'italic',
+                  }}>
+                  No completed bookings found!
+                </Text>
+              </View>
+            )}
           </View>
           <View key="2">
             <View style={styles.listView}>
-              {this.state.bookingRejectData.map(this.renderBookingHistoryItem)}
+              {bookingRejectData.map(this.renderBookingHistoryItem)}
             </View>
-            {this.state.bookingRejectData.length == 0 && !this.state.isLoading && (
+            {bookingRejectData.length === 0 && !this.state.isLoading && (
               <View style={styles.loaderStyle}>
                 <Text
                   style={{color: darkGray, fontSize: 16, fontStyle: 'italic'}}>
@@ -476,18 +426,22 @@ class BookingScreen extends Component {
 
 const mapStateToProps = state => {
   return {
-    notificationsInfo: state.notificationsInfo,
     userInfo: state.userInfo,
+    jobsInfo: state.jobsInfo,
   };
 };
 
-const mapDispatchToProps = dispatch => {
-  return {
-    fetchNotifications: data => {
-      dispatch(startFetchingNotification(data));
-    },
-  };
-};
+const mapDispatchToProps = dispatch => ({
+  fetchNotifications: data => {
+    dispatch(startFetchingNotification(data));
+  },
+  updateCompletedBookingData: data => {
+    dispatch(updateCompletedBookingData(data));
+  },
+  updateFailedBookingData: data => {
+    dispatch(updateFailedBookingData(data));
+  },
+});
 
 export default connect(
   mapStateToProps,

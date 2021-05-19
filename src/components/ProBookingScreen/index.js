@@ -21,7 +21,10 @@ import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../ProHamburger';
 import {font_size} from '../../Constants/metrics';
-import {imageExists} from '../../misc/helpers';
+import {
+  updateCompletedBookingData,
+  updateFailedBookingData,
+} from '../../Redux/Actions/jobsActions';
 import {
   colorPrimary,
   white,
@@ -31,6 +34,7 @@ import {
   lightGray,
   colorBg,
 } from '../../Constants/colors';
+import {getAllBookings} from '../../controllers/bookings';
 
 const screenWidth = Dimensions.get('window').width;
 const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/';
@@ -52,12 +56,9 @@ const StatusBarPlaceHolder = () => {
 };
 
 class ProBookingScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
-      bookingCompleteData: [],
-      bookingRejectData: [],
-      employeeDetails: [],
       currentPage: 0,
       isLoading: true,
       isErrorToast: false,
@@ -68,10 +69,8 @@ class ProBookingScreen extends Component {
 
   componentDidMount() {
     const {navigation} = this.props;
-    this.getAllBookings();
+    this.getAllBookingsProvider();
     navigation.addListener('willFocus', async () => {
-      const from = navigation.getParam('from');
-      if (from !== 'detailsScreen') this.getAllBookings();
       BackHandler.addEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -112,71 +111,20 @@ class ProBookingScreen extends Component {
     });
   };
 
-  getAllBookings = () => {
-    this.setState({
-      isLoading: true,
-      bookingCompleteData: [],
-      bookingRejectData: [],
-    });
-    const {userInfo} = this.props;
-    let bookingCompleteData = [];
-    let bookingRejectData = [];
-    if (userInfo && userInfo.providerDetailsFetched) {
-      const {providerDetails} = userInfo;
-      try {
-        fetch(BOOKING_HISTORY + providerDetails.providerId + '/bookings')
-          .then(response => response.json())
-          .then(async responseJson => {
-            if (responseJson.result && responseJson.data) {
-              let newData = _.cloneDeep(responseJson.data);
-              for (let i = 0; i < newData.length; i++) {
-                imageExists(newData[i].user_details.image).then(res => {
-                  if (newData[i].user_details)
-                    newData[i].user_details.imageAvailable = res;
-                });
-                if (newData[i].chat_status == '1') {
-                  if (newData[i].status === 'Completed') {
-                    bookingCompleteData.push(newData[i]);
-                  } else if (newData[i].status == 'Rejected') {
-                    bookingRejectData.push(newData[i]);
-                  }
-                } else {
-                  if (newData[i].status === 'Rejected') {
-                    bookingRejectData.push(newData[i]);
-                  }
-                }
-              }
-              this.setState({
-                isLoading: false,
-                bookingCompleteData,
-                bookingRejectData,
-              });
-            } else {
-              this.setState({
-                isLoading: false,
-              });
-            }
-          })
-          .catch(error => {
-            console.log(error);
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast(
-              'Something went wrong, check your internet connection',
-            );
-          });
-      } catch (e) {
-        console.log(e);
+  getAllBookingsProvider = async () =>
+    await getAllBookings({
+      userId: this.props?.userInfo?.providerDetails?.providerId,
+      userType: 'Provider',
+      bookingHistoryURL: BOOKING_HISTORY,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      onSuccess: (bookingCompleteData, bookingRejectData) => {
+        this.props.updateCompletedBookingData(bookingCompleteData);
+        this.props.updateFailedBookingData(bookingRejectData);
         this.setState({
           isLoading: false,
-          isErrorToast: true,
         });
-        this.showToast('Something went wrong, please try again');
-      }
-    }
-  };
+      },
+    });
 
   onPageSelected = event => {
     const currentPage = event.nativeEvent.position;
@@ -322,17 +270,21 @@ class ProBookingScreen extends Component {
     );
   };
 
-  showToast = message => {
-    Toast.show(message);
+  showToast = (message, length) => {
+    if (length) Toast.show(message, length);
+    else Toast.show(message);
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   render() {
+    const {
+      jobsInfo: {bookingCompleteData, bookingRejectData},
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -411,29 +363,26 @@ class ProBookingScreen extends Component {
           onPageSelected={event => this.onPageSelected(event)}>
           <View key="1">
             <View style={styles.listView}>
-              {this.state.bookingCompleteData.map(
-                this.renderBookingHistoryItem,
-              )}
+              {bookingCompleteData.map(this.renderBookingHistoryItem)}
             </View>
-            {this.state.bookingCompleteData.length == 0 &&
-              !this.state.isLoading && (
-                <View style={styles.loaderStyle}>
-                  <Text
-                    style={{
-                      color: darkGray,
-                      fontSize: 16,
-                      fontStyle: 'italic',
-                    }}>
-                    No completed bookings found!
-                  </Text>
-                </View>
-              )}
+            {bookingCompleteData.length === 0 && !this.state.isLoading && (
+              <View style={styles.loaderStyle}>
+                <Text
+                  style={{
+                    color: darkGray,
+                    fontSize: 16,
+                    fontStyle: 'italic',
+                  }}>
+                  No completed bookings found!
+                </Text>
+              </View>
+            )}
           </View>
           <View key="2">
             <View style={styles.listView}>
-              {this.state.bookingRejectData.map(this.renderBookingHistoryItem)}
+              {bookingRejectData.map(this.renderBookingHistoryItem)}
             </View>
-            {this.state.bookingRejectData.length == 0 && !this.state.isLoading && (
+            {bookingRejectData.length === 0 && !this.state.isLoading && (
               <View style={styles.loaderStyle}>
                 <Text
                   style={{color: darkGray, fontSize: 16, fontStyle: 'italic'}}>
@@ -475,9 +424,17 @@ class ProBookingScreen extends Component {
 
 const mapStateToProps = state => ({
   userInfo: state.userInfo,
+  jobsInfo: state.jobsInfo,
 });
 
-const mapDispatchToProps = dispatch => ({});
+const mapDispatchToProps = dispatch => ({
+  updateCompletedBookingData: data => {
+    dispatch(updateCompletedBookingData(data));
+  },
+  updateFailedBookingData: data => {
+    dispatch(updateFailedBookingData(data));
+  },
+});
 
 export default connect(
   mapStateToProps,
