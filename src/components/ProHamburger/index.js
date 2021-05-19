@@ -21,6 +21,7 @@ import {
   startFetchingNotification,
   notificationsFetched,
   notificationError,
+  updateNotifications,
 } from '../../Redux/Actions/notificationActions';
 import {
   startFetchingMessages,
@@ -44,6 +45,8 @@ import {
   fetchedJobProviderInfo,
   getPendingJobRequestProvider,
   getAllWorkRequestPro,
+  updateCompletedBookingData,
+  updateFailedBookingData,
 } from '../../Redux/Actions/jobsActions';
 import Config from '../Config';
 import _ from 'lodash';
@@ -53,9 +56,14 @@ import {
   returnCoordDetails,
   checkNoficationsAvailability,
 } from '../../misc/helpers';
+import {getAllNotifications} from '../../controllers/notifications';
+import {getAllBookings} from '../../controllers/bookings';
 import {checkForUserType} from '../../controllers/users';
 
 const socket = Config.socket;
+const NOTIFICATION_URL =
+  Config.baseURL + 'notification/get-employee-notification/';
+const BOOKING_HISTORY = Config.baseURL + 'jobrequest/employee_request/';
 const Android = Platform.OS === 'android';
 let notifications = [];
 
@@ -130,6 +138,7 @@ class ProHamburger extends React.Component {
         if (orderId === obj.order_id) pos = key;
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
+      this.getAllNotificationsProvider();
       if (title.toLowerCase() === 'booking request') {
         navigation.navigate('ProChatAccept', {
           userId: data.userId,
@@ -155,6 +164,7 @@ class ProHamburger extends React.Component {
           navigation.navigate('ProHome');
         } else getPendingJobRequests(this.props, receiverId, 'ProHome');
         getAllWorkRequestPro(receiverId);
+        this.getAllBookingsProvider();
       }
     });
     await this.fetchOthersLocations();
@@ -345,6 +355,32 @@ class ProHamburger extends React.Component {
       .off('child_changed');
   }
 
+  getAllNotificationsProvider = () =>
+    getAllNotifications({
+      userId: this.props?.userInfo?.providerDetails?.providerId,
+      userType: 'Provider',
+      toggleIsLoading: () => {},
+      onSuccess: dataSource => {
+        this.props.updateNotifications(dataSource);
+      },
+      onError: () => {
+        /** Do something on error */
+      },
+      notificationsURL: NOTIFICATION_URL,
+    });
+
+  getAllBookingsProvider = () =>
+    getAllBookings({
+      userId: this.props?.userInfo?.providerDetails?.providerId,
+      userType: 'Provider',
+      bookingHistoryURL: BOOKING_HISTORY,
+      toggleIsLoading: () => {},
+      onSuccess: (bookingCompleteData, bookingRejectData) => {
+        this.props.updateCompletedBookingData(bookingCompleteData);
+        this.props.updateFailedBookingData(bookingRejectData);
+      },
+    });
+
   fetchOthersLocations = async () => {
     const {
       jobsInfo: {allJobRequestsProviders},
@@ -493,6 +529,15 @@ const mapDispatchToProps = dispatch => {
     },
     getPendingJobRequests: (props, providerId, navTo) => {
       dispatch(getPendingJobRequestProvider(props, providerId, navTo));
+    },
+    updateNotifications: data => {
+      dispatch(updateNotifications(data));
+    },
+    updateCompletedBookingData: data => {
+      dispatch(updateCompletedBookingData(data));
+    },
+    updateFailedBookingData: data => {
+      dispatch(updateFailedBookingData(data));
     },
   };
 };

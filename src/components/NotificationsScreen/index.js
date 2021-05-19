@@ -23,6 +23,7 @@ import {
   startFetchingNotification,
   notificationsFetched,
   notificationError,
+  updateNotifications,
 } from '../../Redux/Actions/notificationActions';
 import {
   getAllNotifications,
@@ -67,8 +68,6 @@ class NotificationsScreen extends Component {
     super();
     this.state = {
       isLoading: true,
-      isNoData: false,
-      dataSource: [],
       backClickCount: 0,
     };
     this.springValue = new Animated.Value(100);
@@ -79,7 +78,6 @@ class NotificationsScreen extends Component {
     fetchedNotifications({type: 'generic', value: 0});
     this.getAllNotificationsCustomer();
     navigation.addListener('willFocus', async () => {
-      //this.getAllNotificationsCustomer();
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
       );
@@ -122,9 +120,9 @@ class NotificationsScreen extends Component {
   readNotificationCustomer = async userId =>
     await readNotification({
       userId,
-      dataSource: this.state?.dataSource,
+      dataSource: this.props.notificationsInfo?.dataSource,
       onSuccess: dataSource => {
-        this.setState({dataSource});
+        this.props.updateNotifications(dataSource);
       },
       readNotificationURL: READ_NOTIFICATION_URL,
     });
@@ -132,10 +130,10 @@ class NotificationsScreen extends Component {
   deleteNotificationCustomer = async userId =>
     await deleteNotification({
       userId,
-      dataSource: this.state?.dataSource,
+      dataSource: this.props.notificationsInfo?.dataSource,
       deleteNotificationURL: DELETE_NOTIFICATION_URL,
       onSuccess: dataSource => {
-        this.setState({dataSource});
+        this.props.updateNotifications(dataSource);
       },
     });
 
@@ -145,16 +143,14 @@ class NotificationsScreen extends Component {
       userType: 'Customer',
       toggleIsLoading: this.changeWaitingDialogVisibility,
       onSuccess: dataSource => {
+        this.props.updateNotifications(dataSource);
         this.setState({
-          dataSource,
           isLoading: false,
-          isNoData: !dataSource || dataSource.length === 0,
         });
       },
       onError: () => {
         this.setState({
           isLoading: false,
-          isNoData: true,
         });
       },
       notificationsURL: NOTIFICATION_URL,
@@ -251,6 +247,9 @@ class NotificationsScreen extends Component {
   };
 
   render() {
+    const {
+      notificationsInfo: {dataSource},
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -268,43 +267,41 @@ class NotificationsScreen extends Component {
             <ActivityIndicator size={'large'} color={colorGray} />
           </View>
         )}
-        {!this.state.isLoading && !this.state.isNoData && (
+        {!this.state.isLoading && (dataSource && dataSource.length > 0) && (
           <ScrollView>
             <View style={styles.listView}>
-              {this.state.dataSource.map(this.renderItem)}
+              {dataSource.map(this.renderItem)}
             </View>
           </ScrollView>
         )}
-        {!this.state.isLoading &&
-          (this.state.isNoData ||
-            (this.state.dataSource && this.state.dataSource.length === 0)) && (
+        {!this.state.isLoading && (!dataSource || dataSource.length === 0) && (
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'column',
+              backgroundColor: lightGray,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
             <View
               style={{
-                flex: 1,
-                flexDirection: 'column',
-                backgroundColor: lightGray,
+                width: 100,
+                height: 100,
+                borderRadius: 100,
+                backgroundColor: themeRed,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <View
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 100,
-                  backgroundColor: themeRed,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}>
-                <Image
-                  style={{width: 50, height: 50, tintColor: white}}
-                  source={require('../../icons/ic_notification.png')}
-                />
-              </View>
-              <Text style={{fontSize: 18, marginTop: 10}}>
-                You have no notifications
-              </Text>
+              <Image
+                style={{width: 50, height: 50, tintColor: white}}
+                source={require('../../icons/ic_notification.png')}
+              />
             </View>
-          )}
+            <Text style={{fontSize: 18, marginTop: 10}}>
+              You have no notifications
+            </Text>
+          </View>
+        )}
         <Animated.View
           style={[
             styles.animatedView,
@@ -396,6 +393,9 @@ const mapDispatchToProps = dispatch => {
     },
     fetchingNotificationsError: error => {
       dispatch(notificationError(error));
+    },
+    updateNotifications: data => {
+      dispatch(updateNotifications(data));
     },
   };
 };

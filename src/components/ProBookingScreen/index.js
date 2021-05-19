@@ -11,6 +11,7 @@ import {
   Platform,
   Modal,
   Animated,
+  ScrollView,
 } from 'react-native';
 import {connect} from 'react-redux';
 import _ from 'lodash';
@@ -362,34 +363,42 @@ class ProBookingScreen extends Component {
           }}
           onPageSelected={event => this.onPageSelected(event)}>
           <View key="1">
-            <View style={styles.listView}>
-              {bookingCompleteData.map(this.renderBookingHistoryItem)}
-            </View>
-            {bookingCompleteData.length === 0 && !this.state.isLoading && (
-              <View style={styles.loaderStyle}>
-                <Text
-                  style={{
-                    color: darkGray,
-                    fontSize: 16,
-                    fontStyle: 'italic',
-                  }}>
-                  No completed bookings found!
-                </Text>
+            <ScrollView>
+              <View style={styles.listView}>
+                {bookingCompleteData.map(this.renderBookingHistoryItem)}
               </View>
-            )}
+              {bookingCompleteData.length === 0 && !this.state.isLoading && (
+                <View style={styles.loaderStyle}>
+                  <Text
+                    style={{
+                      color: darkGray,
+                      fontSize: 16,
+                      fontStyle: 'italic',
+                    }}>
+                    No completed bookings found!
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
           </View>
           <View key="2">
-            <View style={styles.listView}>
-              {bookingRejectData.map(this.renderBookingHistoryItem)}
-            </View>
-            {bookingRejectData.length === 0 && !this.state.isLoading && (
-              <View style={styles.loaderStyle}>
-                <Text
-                  style={{color: darkGray, fontSize: 16, fontStyle: 'italic'}}>
-                  No rejected bookings found!
-                </Text>
+            <ScrollView>
+              <View style={styles.listView}>
+                {bookingRejectData.map(this.renderBookingHistoryItem)}
               </View>
-            )}
+              {bookingRejectData.length === 0 && !this.state.isLoading && (
+                <View style={styles.loaderStyle}>
+                  <Text
+                    style={{
+                      color: darkGray,
+                      fontSize: 16,
+                      fontStyle: 'italic',
+                    }}>
+                    No rejected bookings found!
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
           </View>
         </ViewPager>
 

@@ -564,11 +564,13 @@ class ProAcceptRejectJobScreen extends Component {
     });
     const {
       fetchedDataWorkSource,
-      userInfo: {providerDetails, dataWorkSource},
+      jobsInfo: {dataWorkSource},
+      userInfo: {providerDetails},
     } = this.props;
     let newDWS = cloneDeep(dataWorkSource);
     let dataWSPos;
     const {orderId, receiverId} = this.state;
+    console.log('new dws', newDWS);
     await newDWS.map((wks, i) => {
       if (wks.order_id === orderId) dataWSPos = i;
     });
