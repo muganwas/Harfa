@@ -28,7 +28,6 @@ import {
   notificationsFetched,
   notificationError,
 } from '../../Redux/Actions/notificationActions';
-import {imageExists} from '../../misc/helpers';
 import {
   startFetchingJobProvider,
   fetchAllJobRequestsProError,
@@ -42,9 +41,14 @@ import {
 } from '../../Redux/Actions/jobsActions';
 import {updateProviderDetails} from '../../Redux/Actions/userActions';
 import {
+  updateLatestChats,
+  setLatestChatsError,
+} from '../../Redux/Actions/messageActions';
+import {
   acceptChatRequest,
   rejectJobRequest,
   updateAvailabilityInMongoDB,
+  getAllRecentChats,
 } from '../../controllers/chats';
 import {
   requestClientForReview,
@@ -102,10 +106,8 @@ class ProDashboardScreen extends Component {
         online && providerDetails.online === '1' && connectivityAvailable
           ? 'green'
           : 'red',
-      dataSource: [],
       dataUserSource: [],
       isDialogLogoutVisible: false,
-      isRecentMessage: false,
       isWorkRequest: false,
       isRecentUser: false,
       isReviewDialogVisible: false,
@@ -170,33 +172,15 @@ class ProDashboardScreen extends Component {
   }
 
   //Recent Chat Message
-  getAllRecentChat = async () => {
-    const {
-      userInfo: {providerDetails},
-    } = this.props;
-    let dbRef = database()
-      .ref('recentMessage')
-      .child(providerDetails.providerId);
-
-    dbRef.on('child_added', async val => {
-      const {dataSource} = this.state;
-      let message = val.val();
-      await imageExists(message.image).then(res => {
-        message.exists = res;
-      });
-      let present = false;
-      dataSource.map(obj => {
-        if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
-      });
-      if (message && !present) {
-        this.setState(prevState => ({
-          dataSource: [...prevState.dataSource, message],
-          isLoading: false,
-          isRecentMessage: true,
-        }));
-      }
+  getAllRecentChatsPro = async () =>
+    await getAllRecentChats({
+      id: this.props?.userInfo?.providerDetails?.providerId,
+      dataSource: this.props?.messagesInfo?.latestChats,
+      onSuccess: data => {
+        this.props.updateLatestChats(data);
+        this.setState({isLoading: false});
+      },
     });
-  };
 
   getAllRecentUser = async () => {
     this.setState({
@@ -610,7 +594,7 @@ class ProDashboardScreen extends Component {
   };
 
   goToProMapDirection = (chat_status, status, jobInfo) => {
-    if (chat_status == '0') {
+    if (chat_status.toString() === '0') {
       this.setState({
         isErrorToast: true,
       });
@@ -618,12 +602,12 @@ class ProDashboardScreen extends Component {
     } else {
       const {dispatchSelectedJobRequest} = this.props;
       dispatchSelectedJobRequest(jobInfo);
-      if (status == 'Pending') {
+      if (status === 'Pending') {
         this.props.navigation.navigate('ProAcceptRejectJob', {
           currentPos: jobInfo.currentPos,
           orderId: jobInfo.orderId,
         });
-      } else if (status == 'Accepted') {
+      } else if (status === 'Accepted') {
         this.props.navigation.navigate('ProMapDirection', {
           currentPos: jobInfo.currentPos,
           pageTitle: 'ProDashboard',
@@ -835,8 +819,10 @@ class ProDashboardScreen extends Component {
       },
     });
 
-  showToast = message => {
-    SimpleToast.show(message);
+  showToast = (message, length) => {
+    if (length) {
+      SimpleToast.show(message, length);
+    } else SimpleToast.show(message);
   };
 
   onRefresh = async () => {
@@ -848,9 +834,7 @@ class ProDashboardScreen extends Component {
       //getPendingJobRequestProvider,
     } = this.props;
     this.setState({
-      dataSource: [],
       dataUserSource: [],
-      isRecentMessage: false,
       status:
         online && providerDetails.online === '1' && connectivityAvailable
           ? 'ONLINE'
@@ -858,7 +842,7 @@ class ProDashboardScreen extends Component {
       isJobRequest: false,
       isRecentUser: false,
     });
-    await this.getAllRecentChat();
+    await this.getAllRecentChatsPro();
     await this.getAllRecentUser();
     //await getPendingJobRequestProvider(this.props, providerDetails.providerId);
     await fetchJobRequestHistory(providerDetails.providerId);
@@ -883,6 +867,7 @@ class ProDashboardScreen extends Component {
       },
       generalInfo: {online, connectivityAvailable},
       userInfo: {providerDetails},
+      messagesInfo: {latestChats},
       navigation,
     } = this.props;
     return (
@@ -970,7 +955,7 @@ class ProDashboardScreen extends Component {
             />
           }>
           <View>
-            {this.state.isRecentMessage && (
+            {latestChats && latestChats.length > 0 && (
               <View style={styles.mainContainer}>
                 <View style={styles.recentMessageHeader}>
                   <Text
@@ -996,9 +981,8 @@ class ProDashboardScreen extends Component {
                     </TouchableOpacity>
                   )}
                 </View>
-
                 <View style={styles.listView}>
-                  {this.state.dataSource.map(this.renderRecentMessageItem)}
+                  {latestChats.map(this.renderRecentMessageItem)}
                 </View>
               </View>
             )}
@@ -1215,12 +1199,19 @@ const mapStateToProps = state => {
     notificationsInfo: state.notificationsInfo,
     jobsInfo: state.jobsInfo,
     generalInfo: state.generalInfo,
+    messagesInfo: state.messagesInfo,
     userInfo: state.userInfo,
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
+    updateLatestChats: data => {
+      dispatch(updateLatestChats(data));
+    },
+    setLatestChatsError: () => {
+      dispatch(setLatestChatsError());
+    },
     fetchNotifications: data => {
       dispatch(startFetchingNotification(data));
     },

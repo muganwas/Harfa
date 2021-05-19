@@ -25,7 +25,8 @@ import RNExitApp from 'react-native-exit-app';
 import Toast from 'react-native-simple-toast';
 import WaitingDialog from '../WaitingDialog';
 import Hamburger from '../Hamburger';
-import Config from '../Config';
+import {updateLatestChats} from '../../Redux/Actions/messageActions';
+import {getAllRecentChats} from '../../controllers/chats';
 import {
   startFetchingJobCustomer,
   fetchedJobCustomerInfo,
@@ -45,10 +46,9 @@ import {
   black,
 } from '../../Constants/colors';
 import images from '../../Constants/images';
-import {jobCancelTask} from '../../controllers/jobs';
+import {jobCancelTask, fetchServices} from '../../controllers/jobs';
 
 const screenWidth = Dimensions.get('window').width;
-const SERVICES_URL = Config.baseURL + 'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 YellowBox.ignoreWarnings(['']);
 
@@ -68,7 +68,7 @@ const StatusBarPlaceHolder = () => {
 };
 
 class DashboardScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       dataSource: [],
@@ -85,7 +85,6 @@ class DashboardScreen extends Component {
     this.setState({buttonType: buttonType1});
   };
 
-  //Get All Services
   componentDidMount = () => {
     const {navigation} = this.props;
     this.onRefresh();
@@ -274,23 +273,18 @@ class DashboardScreen extends Component {
     ) {
       this.setState({isLoading: true});
       try {
-        await fetch(SERVICES_URL)
-          .then(response => response.json())
-          .then(responseJson => {
+        await fetchServices({
+          onSuccess: data => {
             this.setState({
-              dataSource: responseJson.data,
+              dataSource: data,
               isLoading: false,
             });
-          })
-          .catch(error => {
-            console.log(error);
-            this.setState({
-              isLoading: false,
-            });
-            this.showToast(
-              'An error has occurred, check your internet connection',
-            );
-          });
+          },
+          onError: err => {
+            this.showToast(err);
+            this.setState({isLoading: false});
+          },
+        });
       } catch (e) {
         this.setState({
           isLoading: false,
@@ -304,8 +298,20 @@ class DashboardScreen extends Component {
     }
     await getAllWorkRequestClient(userDetails.userId);
     //await getPendingJobRequest(this.props, userDetails.userId);
+    await this.getAllRecentChatsCustomer();
     this.setState({isLoading: false});
   };
+
+  //Recent Chat Message
+  getAllRecentChatsCustomer = async () =>
+    await getAllRecentChats({
+      id: this.props?.userInfo?.userDetails?.userId,
+      dataSource: this.props?.messagesInfo?.latestChats,
+      onSuccess: data => {
+        this.props.updateLatestChats(data);
+        this.setState({isLoading: false, isRecentMessage: true});
+      },
+    });
 
   goToNextPage = (chat_status, jobInfo) => {
     const {dispatchSelectedJobRequest, fetchedNotifications} = this.props;
@@ -350,8 +356,10 @@ class DashboardScreen extends Component {
     }
   };
 
-  showToast = message => {
-    Toast.show(message);
+  showToast = (message, length) => {
+    if (length) {
+      Toast.show(message, length);
+    } else Toast.show(message);
   };
 
   changeWaitingDialogVisibility = bool => {
@@ -455,9 +463,9 @@ class DashboardScreen extends Component {
                   textAlignVertical: 'center',
                   fontWeight: 'bold',
                 }}>
-                {chat_status == '0'
+                {chat_status === '0'
                   ? 'New job application'
-                  : status == 'Pending'
+                  : status === 'Pending'
                   ? 'Chat request accepted'
                   : 'Job Accepted'}
               </Text>
@@ -636,6 +644,9 @@ const mapDispatchToProps = dispatch => {
     },
     getAllWorkRequestClient: id => {
       dispatch(getAllWorkRequestClient(id));
+    },
+    updateLatestChats: data => {
+      dispatch(updateLatestChats(data));
     },
     getPendingJobRequest: (props, userId, navTo) => {
       dispatch(getPendingJobRequest(props, userId, navTo));

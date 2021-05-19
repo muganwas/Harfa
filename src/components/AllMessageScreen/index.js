@@ -22,9 +22,7 @@ import {
   notificationError,
 } from '../../Redux/Actions/notificationActions';
 import {setSelectedJobRequest} from '../../Redux/Actions/jobsActions';
-import database from '@react-native-firebase/database';
 import Hamburger from '../Hamburger';
-import {imageExists} from '../../misc/helpers';
 import {
   lightGray,
   colorPrimaryDark,
@@ -54,14 +52,13 @@ const StatusBarPlaceHolder = () => {
 };
 
 class AllMessageScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
-      isLoading: true,
+      isLoading: false,
       dataSource: [],
       isRecentMessage: false,
       query: '',
-      fullData: [],
       isDataMatch: true,
       backClickCount: 0,
     };
@@ -71,31 +68,10 @@ class AllMessageScreen extends Component {
 
   componentDidMount() {
     const {
-      userInfo: {userDetails},
       navigation,
+      messagesInfo: {latestChats},
     } = this.props;
-    let dbRef = database()
-      .ref('recentMessage')
-      .child(userDetails.userId);
-    dbRef.on('child_added', async val => {
-      const {dataSource} = this.state;
-      let message = val.val();
-      await imageExists(message.image).then(res => {
-        message.exists = res;
-      });
-      let present = false;
-      dataSource.map(obj => {
-        if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
-      });
-      if (message && !present) {
-        this.setState(prevState => ({
-          dataSource: [...prevState.dataSource, message],
-          fullData: [...prevState.dataSource, message],
-          isLoading: false,
-          isRecentMessage: true,
-        }));
-      }
-    });
+    this.setState({dataSource: latestChats});
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener(
         'hardwareBackPress',
@@ -108,6 +84,15 @@ class AllMessageScreen extends Component {
         this.handleBackButtonClick,
       );
     });
+  }
+
+  componentDidUpdate(prevProps) {
+    const {
+      messagesInfo: {latestChats},
+    } = this.props;
+    if (!_.isEqual(prevProps.messagesInfo.latestChats, latestChats)) {
+      this.setState({dataSource: latestChats});
+    }
   }
 
   handleBackButtonClick = () => {
@@ -181,17 +166,13 @@ class AllMessageScreen extends Component {
 
   searchTask = textInput => {
     let text = textInput.toLowerCase();
-    let tracks = this.state.fullData;
+    let tracks = this.props?.messagesInfo?.latestChats;
     let filterTracks = tracks.filter(item => {
       if (item.name.toLowerCase().match(text)) {
         this.setState({
           isDataMatch: true,
         });
         return item;
-      } else {
-        // this.setState({
-        //     isDataMatch: false,
-        // })
       }
     });
     this.setState({dataSource: filterTracks});
@@ -201,11 +182,9 @@ class AllMessageScreen extends Component {
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
-
         <View style={styles.header}>
           <Hamburger navigation={this.props.navigation} text="Your Messages" />
         </View>
-
         <View
           style={{
             flexDirection: 'row',
@@ -280,6 +259,7 @@ const mapStateToProps = state => {
     notificationsInfo: state.notificationsInfo,
     userInfo: state.userInfo,
     jobsInfo: state.jobsInfo,
+    messagesInfo: state.messagesInfo,
   };
 };
 

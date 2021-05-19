@@ -23,6 +23,7 @@ import {
   startFetchingNotification,
   notificationsFetched,
   notificationError,
+  updateNotifications,
 } from '../../Redux/Actions/notificationActions';
 import {
   startFetchingMessages,
@@ -38,6 +39,8 @@ import {
   fetchCustomerJobInfoError,
   setSelectedJobRequest,
   updateActiveRequest,
+  updateCompletedBookingData,
+  updateFailedBookingData,
 } from '../../Redux/Actions/jobsActions';
 import {
   updatingCoordinates,
@@ -57,8 +60,13 @@ import {
   checkNoficationsAvailability,
 } from '../../misc/helpers';
 import {checkForUserType} from '../../controllers/users';
+import {getAllNotifications} from '../../controllers/notifications';
+import {getAllBookings} from '../../controllers/bookings';
 
 const socket = Config.socket;
+const NOTIFICATION_URL =
+  Config.baseURL + 'notification/get-customer-notification/';
+const BOOKING_HISTORY = Config.baseURL + 'jobrequest/customer_request/';
 const Android = Platform.OS === 'android';
 let notifications = [];
 class Hamburger extends React.Component {
@@ -140,6 +148,7 @@ class Hamburger extends React.Component {
       await jobRequests.map((obj, i) => {
         if (orderId === obj.order_id) pos = i;
       });
+      this.getAllNotificationsCustomer();
       if (title.toLowerCase() === 'chat request rejected') {
         pos !== undefined && newJobRequests.splice(pos, 1);
         pos !== undefined && fetchedPendingJobInfo(newJobRequests);
@@ -182,17 +191,20 @@ class Hamburger extends React.Component {
           fetchedPendingJobInfo(newJobRequests);
         }
         getAllWorkRequestClient(senderId);
+        this.getAllBookingsCustomer();
         this.showToast('Your job has been accepted.');
         navigation.navigate('Home');
       } else if (title.toLowerCase() === 'job rejected') {
         pos !== undefined && newJobRequests.splice(pos, 1);
         pos !== undefined && fetchedPendingJobInfo(newJobRequests);
+        this.getAllBookingsCustomer();
         navigation.navigate('Home');
         this.showToast('Your job has been rejected. please try again later');
       } else if (title.toLowerCase() === 'job completed') {
         pos !== undefined && newJobRequests.splice(pos, 1);
         pos !== undefined && fetchedPendingJobInfo(newJobRequests);
         getAllWorkRequestClient(senderId);
+        this.getAllBookingsCustomer();
         this.showToast('Your job is complete..');
         navigation.navigate('Home');
       } else if (title.toLowerCase() === 'chat request accepted') {
@@ -432,6 +444,32 @@ class Hamburger extends React.Component {
       .off('child_changed');
   }
 
+  getAllNotificationsCustomer = () =>
+    getAllNotifications({
+      userId: this.props?.userInfo?.userDetails?.userId,
+      userType: 'Customer',
+      toggleIsLoading: () => {},
+      onSuccess: dataSource => {
+        this.props.updateNotifications(dataSource);
+      },
+      onError: () => {
+        /** Do something on error */
+      },
+      notificationsURL: NOTIFICATION_URL,
+    });
+
+  getAllBookingsCustomer = () =>
+    getAllBookings({
+      userId: this.props?.userInfo?.userDetails?.userId,
+      userType: 'Customer',
+      toggleIsLoading: () => {},
+      bookingHistoryURL: BOOKING_HISTORY,
+      onSuccess: (bookingCompleteData, bookingRejectData) => {
+        this.props.updateCompletedBookingData(bookingCompleteData);
+        this.props.updateFailedBookingData(bookingRejectData);
+      },
+    });
+
   fetchEmployeeLocations = () => {
     const {
       fetchingOthersCoordinates,
@@ -597,6 +635,15 @@ const mapDispatchToProps = dispatch => {
     },
     fetchClientMessages: (senderId, callBack) => {
       dispatch(fetchClientMessages({senderId, callBack}));
+    },
+    updateNotifications: data => {
+      dispatch(updateNotifications(data));
+    },
+    updateCompletedBookingData: data => {
+      dispatch(updateCompletedBookingData(data));
+    },
+    updateFailedBookingData: data => {
+      dispatch(updateFailedBookingData(data));
     },
   };
 };

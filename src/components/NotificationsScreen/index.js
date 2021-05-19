@@ -14,18 +14,22 @@ import {
   ScrollView,
 } from 'react-native';
 import {connect} from 'react-redux';
-import Toast from 'react-native-simple-toast';
+import SimpleToast from 'react-native-simple-toast';
 import RNExitApp from 'react-native-exit-app';
-import {cloneDeep} from 'lodash';
 import Config from '../Config';
 import SwipeableButton from '../SwipeableBtn';
-import {imageExists} from '../../misc/helpers';
 import Hamburger from '../Hamburger';
 import {
   startFetchingNotification,
   notificationsFetched,
   notificationError,
+  updateNotifications,
 } from '../../Redux/Actions/notificationActions';
+import {
+  getAllNotifications,
+  deleteNotification,
+  readNotification,
+} from '../../controllers/notifications';
 import {
   lightGray,
   white,
@@ -60,12 +64,10 @@ const StatusBarPlaceHolder = () => {
 };
 
 class NotificationsScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       isLoading: true,
-      isNoData: false,
-      dataSource: [],
       backClickCount: 0,
     };
     this.springValue = new Animated.Value(100);
@@ -74,9 +76,8 @@ class NotificationsScreen extends Component {
   componentDidMount() {
     const {fetchedNotifications, navigation} = this.props;
     fetchedNotifications({type: 'generic', value: 0});
-    this.getAllNotifications();
+    this.getAllNotificationsCustomer();
     navigation.addListener('willFocus', async () => {
-      this.getAllNotifications();
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
       );
@@ -116,135 +117,47 @@ class NotificationsScreen extends Component {
     });
   };
 
-  readNotification = async id => {
-    const {dataSource} = this.state;
-    let altDataSource = cloneDeep(dataSource);
-    try {
-      await fetch(READ_NOTIFICATION_URL + id, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson) {
-            const {
-              data: {_id, status},
-            } = responseJson;
-            dataSource.map((notification, index) => {
-              if (_id === notification._id)
-                altDataSource[index].status = status;
-            });
-            this.setState({dataSource: altDataSource});
-          }
-        })
-        .catch(e => {
-          SimpleToast.show(
-            "Notification couldn't be read, try again later",
-            SimpleToast.SHORT,
-          );
-        });
-    } catch (e) {
-      SimpleToast.show(
-        "Notification couldn't be read, try again later",
-        SimpleToast.SHORT,
-      );
-    }
-  };
-
-  deleteNotification = id => {
-    const {dataSource} = this.state;
-    let altDataSource = cloneDeep(dataSource);
-    try {
-      fetch(DELETE_NOTIFICATION_URL + id, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson) {
-            const {
-              data: {_id},
-            } = responseJson;
-            dataSource.map((notification, index) => {
-              if (_id === notification._id) altDataSource.splice(index, 1);
-            });
-            this.setState({dataSource: altDataSource});
-          }
-        })
-        .catch(e => {
-          SimpleToast.show(
-            "Notification couldn't be deleted, try again later",
-            SimpleToast.SHORT,
-          );
-        });
-    } catch (e) {
-      SimpleToast.show(
-        "Notification couldn't be deleted, try again later",
-        SimpleToast.SHORT,
-      );
-    }
-  };
-
-  getAllNotifications = () => {
-    this.setState({
-      isLoading: true,
+  readNotificationCustomer = async userId =>
+    await readNotification({
+      userId,
+      dataSource: this.props.notificationsInfo?.dataSource,
+      onSuccess: dataSource => {
+        this.props.updateNotifications(dataSource);
+      },
+      readNotificationURL: READ_NOTIFICATION_URL,
     });
-    const {
-      userInfo: {userDetails},
-    } = this.props;
-    try {
-      fetch(NOTIFICATION_URL + userDetails.userId)
-        .then(response => response.json())
-        .then(responseJson => {
-          //console.log('notification', responseJson)
 
-          if (responseJson.result) {
-            let dataSource = cloneDeep(responseJson.data);
-            dataSource?.map((item, i) => {
-              imageExists(item.employee_details.image).then(res => {
-                dataSource[i].employee_details.imageAvailable = res;
-              });
-            });
-            this.setState({
-              dataSource,
-              isLoading: false,
-              isNoData: !dataSource || dataSource.length === 0,
-            });
-          } else {
-            this.setState({
-              isLoading: false,
-              isNoData: true,
-            });
-          }
-        })
-        .catch(error => {
-          console.log(error);
-          this.setState({
-            isLoading: false,
-            isNoData: true,
-          });
-          this.showToast(
-            'An error has occurred, check your internet connection',
-          );
+  deleteNotificationCustomer = async userId =>
+    await deleteNotification({
+      userId,
+      dataSource: this.props.notificationsInfo?.dataSource,
+      deleteNotificationURL: DELETE_NOTIFICATION_URL,
+      onSuccess: dataSource => {
+        this.props.updateNotifications(dataSource);
+      },
+    });
+
+  getAllNotificationsCustomer = async () =>
+    await getAllNotifications({
+      userId: this.props?.userInfo?.userDetails?.userId,
+      userType: 'Customer',
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      onSuccess: dataSource => {
+        this.props.updateNotifications(dataSource);
+        this.setState({
+          isLoading: false,
         });
-    } catch (e) {
-      console.log(e);
-      this.setState({
-        isLoading: false,
-        isNoData: true,
-      });
-      this.showToast('An error has occurred, try again later');
-    }
-  };
+      },
+      onError: () => {
+        this.setState({
+          isLoading: false,
+        });
+      },
+      notificationsURL: NOTIFICATION_URL,
+    });
 
   showToast = message => {
-    Toast.show(message);
+    SimpleToast.show(message);
   };
 
   //GridView Items
@@ -254,12 +167,12 @@ class NotificationsScreen extends Component {
       return (
         <SwipeableButton
           key={index}
-          onSwipeableLeftOpen={() => this.readNotification(_id)}
-          onSwipeableRightOpen={() => this.deleteNotification(_id)}>
+          onSwipeableLeftOpen={() => this.readNotificationCustomer(_id)}
+          onSwipeableRightOpen={() => this.deleteNotificationCustomer(_id)}>
           <TouchableOpacity
             key={index}
             onPress={() => {
-              if (status === '0') this.readNotification(_id);
+              if (status === '0') this.readNotificationCustomer(_id);
             }}
             style={{
               flexDirection: 'row',
@@ -328,12 +241,15 @@ class NotificationsScreen extends Component {
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   render() {
+    const {
+      notificationsInfo: {dataSource},
+    } = this.props;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -351,43 +267,41 @@ class NotificationsScreen extends Component {
             <ActivityIndicator size={'large'} color={colorGray} />
           </View>
         )}
-        {!this.state.isLoading && !this.state.isNoData && (
+        {!this.state.isLoading && (dataSource && dataSource.length > 0) && (
           <ScrollView>
             <View style={styles.listView}>
-              {this.state.dataSource.map(this.renderItem)}
+              {dataSource.map(this.renderItem)}
             </View>
           </ScrollView>
         )}
-        {!this.state.isLoading &&
-          (this.state.isNoData ||
-            (this.state.dataSource && this.state.dataSource.length === 0)) && (
+        {!this.state.isLoading && (!dataSource || dataSource.length === 0) && (
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'column',
+              backgroundColor: lightGray,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
             <View
               style={{
-                flex: 1,
-                flexDirection: 'column',
-                backgroundColor: lightGray,
+                width: 100,
+                height: 100,
+                borderRadius: 100,
+                backgroundColor: themeRed,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <View
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 100,
-                  backgroundColor: themeRed,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}>
-                <Image
-                  style={{width: 50, height: 50, tintColor: white}}
-                  source={require('../../icons/ic_notification.png')}
-                />
-              </View>
-              <Text style={{fontSize: 18, marginTop: 10}}>
-                You have no notifications
-              </Text>
+              <Image
+                style={{width: 50, height: 50, tintColor: white}}
+                source={require('../../icons/ic_notification.png')}
+              />
             </View>
-          )}
+            <Text style={{fontSize: 18, marginTop: 10}}>
+              You have no notifications
+            </Text>
+          </View>
+        )}
         <Animated.View
           style={[
             styles.animatedView,
@@ -479,6 +393,9 @@ const mapDispatchToProps = dispatch => {
     },
     fetchingNotificationsError: error => {
       dispatch(notificationError(error));
+    },
+    updateNotifications: data => {
+      dispatch(updateNotifications(data));
     },
   };
 };

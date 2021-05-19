@@ -14,10 +14,8 @@ import {
   Platform,
   Animated,
 } from 'react-native';
-import database from '@react-native-firebase/database';
 import _ from 'lodash';
 import Hamburger from '../ProHamburger';
-import {imageExists} from '../../misc/helpers';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -59,7 +57,6 @@ class ProAllMessageScreen extends Component {
       dataSource: [],
       isRecentMessage: false,
       query: '',
-      fullData: [],
       isDataMatch: true,
       backClickCount: 0,
     };
@@ -68,30 +65,18 @@ class ProAllMessageScreen extends Component {
 
   componentDidMount() {
     const {
-      userInfo: {providerDetails},
+      messagesInfo: {latestChats},
     } = this.props;
-    let dbRef = database()
-      .ref('recentMessage')
-      .child(providerDetails.providerId);
-    dbRef.on('child_added', async val => {
-      const {dataSource} = this.state;
-      let message = val.val();
-      await imageExists(message.image).then(res => {
-        message.exists = res;
-      });
-      let present = false;
-      dataSource.map(obj => {
-        if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
-      });
-      if (message && !present) {
-        this.setState(prevState => ({
-          dataSource: [...prevState.dataSource, message],
-          fullData: [...prevState.dataSource, message],
-          isLoading: false,
-          isRecentMessage: true,
-        }));
-      }
-    });
+    this.setState({dataSource: latestChats, isLoading: false});
+  }
+
+  componentDidUpdate(prevState) {
+    const {
+      messagesInfo: {latestChats},
+    } = this.props;
+    if (!_.isEqual(prevState.messagesInfo.latestChats, latestChats)) {
+      this.setState({dataSource: latestChats});
+    }
   }
 
   handleBackButtonClick = () => {
@@ -174,15 +159,13 @@ class ProAllMessageScreen extends Component {
 
   searchTask = textInput => {
     let text = textInput.toLowerCase();
-    let tracks = this.state.fullData;
+    let tracks = _.cloneDeep(this.props.messagesInfo.latestChats);
     let filterTracks = tracks.filter(item => {
       if (item.name.toLowerCase().match(text)) {
         this.setState({
           isDataMatch: true,
         });
         return item;
-      } else {
-        console.log('False');
       }
     });
     this.setState({dataSource: filterTracks});
@@ -283,6 +266,7 @@ const mapStateToProps = state => {
     jobsInfo: state.jobsInfo,
     generalInfo: state.generalInfo,
     userInfo: state.userInfo,
+    messagesInfo: state.messagesInfo,
   };
 };
 

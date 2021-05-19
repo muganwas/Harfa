@@ -6,6 +6,8 @@ import {
   FETCHED_MESSAGES,
   FETCHING_MESSAGES_ERROR,
   FETCHED_DB_MESSAGES,
+  UPDATE_LATEST_CHATS,
+  SET_LATEST_CHATS_ERROR,
 } from '../types';
 
 const FETCH_MESSAGES = Config.baseURL + 'chat/fetchChats';
@@ -35,6 +37,19 @@ export const messagesError = payload => {
   return {
     type: FETCHING_MESSAGES_ERROR,
     payload,
+  };
+};
+
+export const updateLatestChats = payload => {
+  return {
+    type: UPDATE_LATEST_CHATS,
+    payload,
+  };
+};
+
+export const setLatestChatsError = () => {
+  return {
+    type: SET_LATEST_CHATS_ERROR,
   };
 };
 

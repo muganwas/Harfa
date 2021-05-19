@@ -15,6 +15,8 @@ import {
   FETCHED_DATA_WORK_SOURCE,
   FETCH_DATA_WORK_SOURCE_ERROR,
   UPDATE_ACTIVE_REQUREST,
+  UPDATE_BOOKING_COMPLETE_DATA,
+  UPDATE_REJECTED_BOOKINGS_DATA,
 } from '../types';
 
 import {imageExists} from '../../misc/helpers';
@@ -46,6 +48,21 @@ export const fetchCustomerJobInfoError = payload => {
     payload,
   };
 };
+
+export const updateCompletedBookingData = payload => {
+  return {
+    type: UPDATE_BOOKING_COMPLETE_DATA,
+    payload,
+  };
+};
+
+export const updateFailedBookingData = payload => {
+  return {
+    type: UPDATE_REJECTED_BOOKINGS_DATA,
+    payload,
+  };
+};
+
 export const startFetchingJobProvider = () => {
   return {
     type: FETCHING_JOB_REQUESTS_PROVIDERS,
