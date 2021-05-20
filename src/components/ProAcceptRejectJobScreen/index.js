@@ -44,7 +44,7 @@ import {
   MessagesHeader,
   MessagesFooter,
 } from '../ProMessagesComponents';
-import {attachFile} from '../../controllers/chats';
+import {attachFile, sendMessageTask} from '../../controllers/chats';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
 import {
@@ -80,7 +80,7 @@ const StatusBarPlaceHolder = () => {
 };
 
 class ProAcceptRejectJobScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       online: false,
@@ -271,7 +271,7 @@ class ProAcceptRejectJobScreen extends Component {
       receiverId: this.state.receiverId,
       dbMessagesFetched: this.props.dbMessagesFetched,
       messagesInfo: this.props.messagesInfo,
-      sendMessageTask: this.sendMessageTask,
+      sendMessageTask: this.sendMessageTaskProvider,
       clearInput: () =>
         this.setState({
           inputMessage: '',
@@ -284,100 +284,35 @@ class ProAcceptRejectJobScreen extends Component {
         })),
     });
 
-  sendMessageTask = async (type = 'text', altMessage) => {
-    const {
-      userInfo: {providerDetails},
-      fetchEmployeeMessages,
-    } = this.props;
-    if (!socket.connected) {
-      this.setState({isLoading: true});
-      socket.close();
-      socket.connect();
-      await fetchEmployeeMessages(providerDetails.providerId, () =>
-        setTimeout(() => this.setState({isLoading: false}), 200),
-      );
-    }
-    const {
-      inputMessage,
-      senderId,
-      senderName,
-      senderImage,
-      receiverId,
-      receiverImage,
-      receiverFcmId,
-      receiverName,
-      serviceName,
-      orderId,
-    } = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
-      const messageObj = {
-        type,
-        userType: 'employee',
-        textMessage: inputMessage || altMessage.uri,
-        file: altMessage,
-        senderId,
-        senderName,
-        senderImage,
-        receiverId,
-        receiverImage,
-        fcm_id: receiverFcmId,
-        receiverName,
-        serviceName,
-        orderId,
-        type,
-        time,
-        date,
-      };
-      if (type === 'text') {
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            type,
-            time,
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            type,
-            time,
-            date,
-          });
-        }
-      } else {
-        newMessages[receiverId][
-          newMessages[receiverId].length - 1
-        ].notUploaded = false;
-      }
-      if (socket.connected) {
+  sendMessageTaskProvider = async (type = 'text', altMessage) =>
+    await sendMessageTask({
+      type,
+      userType: 'employee',
+      userId: this.props?.userInfo?.providerDetails?.providerId,
+      inputMessage: this.state.inputMessage,
+      senderId: this.state.senderId,
+      senderName: this.state.senderName,
+      senderImage: this.state.senderImage,
+      receiverId: this.state.receiverId,
+      receiverName: this.state.receiverName,
+      receiverImage: this.state.receiverImage,
+      fcm_id: this.state.receiverFcmId,
+      serviceName: this.state.serviceName,
+      orderId: this.state.orderId,
+      altMessage,
+      fetchMessages: this.props.fetchEmployeeMessages,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      toggleIsLoading: bool =>
+        this.setState(prevState => ({
+          isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+        })),
+      clearInput: () =>
         this.setState({
           inputMessage: '',
           showButton: false,
-        });
-        dbMessagesFetched(newMessages);
-        socket.emit('sent-message', messageObj);
-      } else {
-        this.showToast(
-          'No connection, wait a few seconds and send again or check your internet connection.',
-          Toast.LONG,
-        );
-      }
-    }
-  };
+        }),
+    });
 
   acceptJobTask = async () => {
     this.setState({
@@ -745,7 +680,7 @@ class ProAcceptRejectJobScreen extends Component {
               inputMesage={this.state.inputMessage}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
               attachFileTask={this.attachFileProvider}
-              sendMessageTask={this.sendMessageTask}
+              sendMessageTask={this.sendMessageTaskProvider}
               showButton={this.state.showButton}
             />
             {this.state.isAcceptJob && (

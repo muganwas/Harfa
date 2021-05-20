@@ -8,6 +8,7 @@ import {imageExists} from '../misc/helpers';
 import {uploadAttachment} from './storage';
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
+const socket = Config.socket;
 const PRO_INFO_UPDATE = Config.baseURL + 'employee/';
 
 export const acceptChatRequest = async (
@@ -335,5 +336,99 @@ export const attachFile = async ({
       'Something went wrong, try again later',
       SimpleToast.SHORT,
     );
+  }
+};
+
+export const sendMessageTask = async ({
+  type,
+  userType,
+  userId,
+  inputMessage,
+  senderId,
+  senderName,
+  senderImage,
+  receiverId,
+  receiverImage,
+  fcm_id,
+  receiverName,
+  serviceName,
+  orderId,
+  altMessage,
+  fetchMessages,
+  dbMessagesFetched,
+  messagesInfo,
+  toggleIsLoading,
+  clearInput,
+}) => {
+  if (!socket.connected) {
+    toggleIsLoading(true);
+    socket.close();
+    socket.connect();
+    await fetchMessages(userId, () =>
+      setTimeout(() => toggleIsLoading(false), 200),
+    );
+  }
+  let newMessages = cloneDeep(messagesInfo.messages);
+  const time = moment().toISOString();
+  const date =
+    new Date().getDate() +
+    '/' +
+    (new Date().getMonth() + 1) +
+    '/' +
+    new Date().getFullYear();
+  if (inputMessage.length > 0 || (altMessage && type === 'image')) {
+    const messageObj = {
+      type,
+      userType,
+      textMessage: inputMessage || altMessage.uri,
+      senderId,
+      senderName,
+      file: altMessage,
+      senderImage,
+      receiverId,
+      receiverName,
+      receiverImage,
+      fcm_id,
+      serviceName,
+      orderId,
+      time,
+      date,
+    };
+    if (type === 'text') {
+      if (newMessages[receiverId])
+        newMessages[receiverId].push({
+          message: inputMessage,
+          recipient: receiverId,
+          sender: senderId,
+          type,
+          time,
+          date,
+        });
+      else {
+        newMessages[receiverId] = [];
+        newMessages[receiverId].push({
+          message: inputMessage,
+          recipient: receiverId,
+          sender: senderId,
+          type,
+          time,
+          date,
+        });
+      }
+    } else {
+      newMessages[receiverId][
+        newMessages[receiverId].length - 1
+      ].notUploaded = false;
+    }
+    if (socket.connected) {
+      clearInput();
+      dbMessagesFetched(newMessages);
+      socket.emit('sent-message', messageObj);
+    } else {
+      SimpleToast.show(
+        'No connection, wait a few seconds and send again or check your internet connection.',
+        SimpleToast.LONG,
+      );
+    }
   }
 };
