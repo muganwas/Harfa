@@ -1,7 +1,11 @@
 import {cloneDeep} from 'lodash';
-import {imageExists} from '../misc/helpers';
+import moment from 'moment';
+import SimpleToast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
+import FilePickerManager from 'react-native-file-picker';
 import Config from '../components/Config';
+import {imageExists} from '../misc/helpers';
+import {uploadAttachment} from './storage';
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 const PRO_INFO_UPDATE = Config.baseURL + 'employee/';
@@ -259,4 +263,77 @@ export const getAllRecentChats = async ({id, dataSource, onSuccess}) => {
       onSuccess([...newDataSource, message]);
     }
   });
+};
+
+export const attachFile = async ({
+  senderId,
+  receiverId,
+  dbMessagesFetched,
+  sendMessageTask,
+  messagesInfo,
+  clearInput,
+  toggleUploadingImage,
+}) => {
+  let newMessages = cloneDeep(messagesInfo.messages);
+  const time = moment().toISOString();
+  const date =
+    new Date().getDate() +
+    '/' +
+    (new Date().getMonth() + 1) +
+    '/' +
+    new Date().getFullYear();
+  clearInput();
+  try {
+    FilePickerManager.showFilePicker(null, async response => {
+      toggleUploadingImage(true);
+      let urlText = response.uri;
+      const ext = response.fileName.split('.').pop();
+      const altMessage = {
+        name: response.fileName,
+        ext,
+        fileType: response.type,
+        uri: urlText,
+        path: response.path,
+      };
+      if (newMessages[receiverId])
+        newMessages[receiverId].push({
+          message: urlText,
+          file: altMessage,
+          recipient: receiverId,
+          sender: senderId,
+          local: true,
+          notUploaded: true,
+          time,
+          type: 'image',
+          date,
+        });
+      else {
+        newMessages[receiverId] = [];
+        newMessages[receiverId].push({
+          message: urlText,
+          file: altMessage,
+          recipient: receiverId,
+          sender: senderId,
+          notUploaded: true,
+          local: true,
+          type: 'image',
+          time,
+          date,
+        });
+      }
+      dbMessagesFetched(newMessages);
+      //SetTimeout(() => this.setState({uploadingImage: false}), 500);
+      const newUrlText = await uploadAttachment(response);
+      altMessage.uri = newUrlText;
+      if (newUrlText) {
+        sendMessageTask('image', altMessage);
+        toggleUploadingImage(false);
+      }
+    });
+  } catch (e) {
+    SimpleToast.show(
+      'Something went wrong, try again later',
+      SimpleToast.SHORT,
+    );
+  }
 };

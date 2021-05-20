@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
-import FilePickerManager from 'react-native-file-picker';
 import moment from 'moment';
 import {
   dbMessagesFetched,
@@ -28,7 +27,7 @@ import {
   notificationError,
 } from '../../Redux/Actions/notificationActions';
 import {lightGray, colorBg, white} from '../../Constants/colors';
-import {uploadAttachment} from '../../controllers/storage';
+import {attachFile} from '../../controllers/chats';
 import {
   MessagesView,
   MessagesHeader,
@@ -256,72 +255,24 @@ class ProChatAfterBookingDetailsScreen extends Component {
     }
   };
 
-  attachFile = async () => {
-    const {senderId, receiverId} = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    this.setState({
-      inputMessage: '',
-      showButton: false,
+  attachFileProvider = async () =>
+    await attachFile({
+      senderId: this.state.senderId,
+      receiverId: this.state.receiverId,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      sendMessageTask: this.sendMessageTask,
+      clearInput: () =>
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        }),
+      toggleUploadingImage: bool =>
+        this.setState(prevState => ({
+          uploadingImage:
+            typeof bool === 'boolean' ? bool : !prevState.uploadingImage,
+        })),
     });
-    try {
-      FilePickerManager.showFilePicker(null, async response => {
-        this.setState({uploadingImage: true});
-        let urlText = response.uri;
-        const ext = response.fileName.split('.').pop();
-        const altMessage = {
-          name: response.fileName,
-          ext,
-          fileType: response.type,
-          uri: urlText,
-          path: response.path,
-        };
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            local: true,
-            notUploaded: true,
-            time,
-            type: 'image',
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            notUploaded: true,
-            local: true,
-            type: 'image',
-            time,
-            date,
-          });
-        }
-        dbMessagesFetched(newMessages);
-        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
-        const newUrlText = await uploadAttachment(response);
-        altMessage.uri = newUrlText;
-        if (newUrlText) {
-          this.sendMessageTask('image', altMessage);
-          this.setState({uploadingImage: false});
-        }
-      });
-    } catch (e) {
-      this.showToast('Something went wrong, try again later', Toast.SHORT);
-    }
-  };
 
   sendMessageTask = async (type = 'text', altMessage) => {
     const {
@@ -433,7 +384,14 @@ class ProChatAfterBookingDetailsScreen extends Component {
   };
 
   render() {
-    let {showButton, senderId, receiverId, online, imageAvailable} = this.state;
+    const {
+      showButton,
+      senderId,
+      receiverId,
+      online,
+      imageAvailable,
+      uploadingImage,
+    } = this.state;
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -465,7 +423,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
               <MessagesView
                 senderId={senderId}
                 receiverId={receiverId}
-                uploadingImage={this.state.uploadingImage}
+                uploadingImage={uploadingImage}
                 messagesInfo={this.props.messagesInfo}
               />
             </View>
@@ -484,7 +442,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
             <MessagesFooter
               inputMesage={this.state.inputMessage}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
-              attachFileTask={this.attachFile}
+              attachFileTask={this.attachFileProvider}
               sendMessageTask={this.sendMessageTask}
               showButton={showButton}
             />

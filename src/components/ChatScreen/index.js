@@ -29,15 +29,14 @@ import moment from 'moment';
 import {cloneDeep, clone} from 'lodash';
 import Toast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
-import FilePickerManager from 'react-native-file-picker';
 import DialogComponent from '../DialogComponent';
 import {
   dbMessagesFetched,
   fetchClientMessages,
 } from '../../Redux/Actions/messageActions';
-import {uploadAttachment} from '../../controllers/storage';
 import {jobCancelTask} from '../../controllers/jobs';
 import Config from '../Config';
+import {attachFile} from '../../controllers/chats';
 import {
   MessagesFooter,
   MessagesHeader,
@@ -292,72 +291,24 @@ class ChatScreen extends Component {
     }
   };
 
-  attachFile = async () => {
-    const {senderId, receiverId} = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    this.setState({
-      inputMessage: '',
-      showButton: false,
+  attachFileCustomer = async () =>
+    await attachFile({
+      senderId: this.state.senderId,
+      receiverId: this.state.receiverId,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      sendMessageTask: this.sendMessageTask,
+      clearInput: () =>
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        }),
+      toggleUploadingImage: bool =>
+        this.setState(prevState => ({
+          uploadingImage:
+            typeof bool === 'boolean' ? bool : !prevState.uploadingImage,
+        })),
     });
-    try {
-      FilePickerManager.showFilePicker(null, async response => {
-        this.setState({uploadingImage: true});
-        let urlText = response.uri;
-        const ext = response.fileName.split('.').pop();
-        const altMessage = {
-          name: response.fileName,
-          ext,
-          fileType: response.type,
-          uri: urlText,
-          path: response.path,
-        };
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            local: true,
-            notUploaded: true,
-            time,
-            type: 'image',
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            notUploaded: true,
-            local: true,
-            type: 'image',
-            time,
-            date,
-          });
-        }
-        dbMessagesFetched(newMessages);
-        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
-        const newUrlText = await uploadAttachment(response);
-        altMessage.uri = newUrlText;
-        if (newUrlText) {
-          this.sendMessageTask('image', altMessage);
-          this.setState({uploadingImage: false});
-        }
-      });
-    } catch (e) {
-      this.showToast('Something went wrong, try again later', Toast.SHORT);
-    }
-  };
 
   sendMessageTask = async (type = 'text', altMessage) => {
     const {
@@ -571,7 +522,6 @@ class ChatScreen extends Component {
             imageAvailable={imageAvailable}
             receiverName={receiverName}
             online={online}
-            uploadingImage={uploadingImage}
             handleBackButtonClick={this.handleBackButtonClick}
           />
           <ScrollView
@@ -587,7 +537,12 @@ class ChatScreen extends Component {
             }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag">
-            <MessagesView senderId={senderId} receiverId={receiverId} />
+            <MessagesView
+              senderId={senderId}
+              receiverId={receiverId}
+              uploadingImage={uploadingImage}
+              messagesInfo={this.props.messagesInfo}
+            />
           </ScrollView>
           {isLoading && (
             <View style={styles.loaderStyle}>
@@ -636,7 +591,7 @@ class ChatScreen extends Component {
             <MessagesFooter
               sendMessageTask={this.sendMessageTask}
               showButton={showButton}
-              attachFileTask={this.attachFile}
+              attachFileTask={this.attachFileCustomer}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
               inputMesage={this.state.inputMessage}
             />
