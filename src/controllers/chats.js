@@ -1,9 +1,14 @@
 import {cloneDeep} from 'lodash';
-import {imageExists} from '../misc/helpers';
+import moment from 'moment';
+import SimpleToast from 'react-native-simple-toast';
 import database from '@react-native-firebase/database';
+import FilePickerManager from 'react-native-file-picker';
 import Config from '../components/Config';
+import {imageExists} from '../misc/helpers';
+import {uploadAttachment} from './storage';
 
 const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
+const socket = Config.socket;
 const PRO_INFO_UPDATE = Config.baseURL + 'employee/';
 
 export const acceptChatRequest = async (
@@ -151,14 +156,14 @@ export const rejectJobRequest = async (
     chat_status: '0',
     status: 'Rejected',
     notification: {
-      fcm_id: fcm_id,
+      fcm_id,
       title: 'Chat Request Rejected',
       type: 'JobRejection',
       notification_by: 'Employee',
       save_notification: true,
-      user_id: user_id,
+      user_id,
       employee_id: providerDetails.providerId,
-      order_id: order_id,
+      order_id,
       body:
         'Chat request has been accepted by ' +
         providerDetails.name +
@@ -259,4 +264,171 @@ export const getAllRecentChats = async ({id, dataSource, onSuccess}) => {
       onSuccess([...newDataSource, message]);
     }
   });
+};
+
+export const attachFile = async ({
+  senderId,
+  receiverId,
+  dbMessagesFetched,
+  sendMessageTask,
+  messagesInfo,
+  clearInput,
+  toggleUploadingImage,
+}) => {
+  let newMessages = cloneDeep(messagesInfo.messages);
+  const time = moment().toISOString();
+  const date =
+    new Date().getDate() +
+    '/' +
+    (new Date().getMonth() + 1) +
+    '/' +
+    new Date().getFullYear();
+  clearInput();
+  try {
+    FilePickerManager.showFilePicker(null, async response => {
+      toggleUploadingImage(true);
+      let urlText = response.uri;
+      const ext = response.fileName.split('.').pop();
+      const altMessage = {
+        name: response.fileName,
+        ext,
+        fileType: response.type,
+        uri: urlText,
+        path: response.path,
+      };
+      if (newMessages[receiverId])
+        newMessages[receiverId].push({
+          message: urlText,
+          file: altMessage,
+          recipient: receiverId,
+          sender: senderId,
+          local: true,
+          notUploaded: true,
+          time,
+          type: 'image',
+          date,
+        });
+      else {
+        newMessages[receiverId] = [];
+        newMessages[receiverId].push({
+          message: urlText,
+          file: altMessage,
+          recipient: receiverId,
+          sender: senderId,
+          notUploaded: true,
+          local: true,
+          type: 'image',
+          time,
+          date,
+        });
+      }
+      dbMessagesFetched(newMessages);
+      //SetTimeout(() => this.setState({uploadingImage: false}), 500);
+      const newUrlText = await uploadAttachment(response);
+      altMessage.uri = newUrlText;
+      if (newUrlText) {
+        sendMessageTask('image', altMessage);
+        toggleUploadingImage(false);
+      }
+    });
+  } catch (e) {
+    SimpleToast.show(
+      'Something went wrong, try again later',
+      SimpleToast.SHORT,
+    );
+  }
+};
+
+export const sendMessageTask = async ({
+  type,
+  userType,
+  userId,
+  inputMessage,
+  senderId,
+  senderName,
+  senderImage,
+  receiverId,
+  receiverImage,
+  fcm_id,
+  receiverName,
+  serviceName,
+  orderId,
+  altMessage,
+  fetchMessages,
+  dbMessagesFetched,
+  messagesInfo,
+  toggleIsLoading,
+  clearInput,
+}) => {
+  if (!socket.connected) {
+    toggleIsLoading(true);
+    socket.close();
+    socket.connect();
+    await fetchMessages(userId, () =>
+      setTimeout(() => toggleIsLoading(false), 200),
+    );
+  }
+  let newMessages = cloneDeep(messagesInfo.messages);
+  const time = moment().toISOString();
+  const date =
+    new Date().getDate() +
+    '/' +
+    (new Date().getMonth() + 1) +
+    '/' +
+    new Date().getFullYear();
+  if (inputMessage.length > 0 || (altMessage && type === 'image')) {
+    const messageObj = {
+      type,
+      userType,
+      textMessage: inputMessage || altMessage.uri,
+      senderId,
+      senderName,
+      file: altMessage,
+      senderImage,
+      receiverId,
+      receiverName,
+      receiverImage,
+      fcm_id,
+      serviceName,
+      orderId,
+      time,
+      date,
+    };
+    if (type === 'text') {
+      if (newMessages[receiverId])
+        newMessages[receiverId].push({
+          message: inputMessage,
+          recipient: receiverId,
+          sender: senderId,
+          type,
+          time,
+          date,
+        });
+      else {
+        newMessages[receiverId] = [];
+        newMessages[receiverId].push({
+          message: inputMessage,
+          recipient: receiverId,
+          sender: senderId,
+          type,
+          time,
+          date,
+        });
+      }
+    } else {
+      newMessages[receiverId][
+        newMessages[receiverId].length - 1
+      ].notUploaded = false;
+    }
+    if (socket.connected) {
+      clearInput();
+      dbMessagesFetched(newMessages);
+      socket.emit('sent-message', messageObj);
+    } else {
+      SimpleToast.show(
+        'No connection, wait a few seconds and send again or check your internet connection.',
+        SimpleToast.LONG,
+      );
+    }
+  }
 };

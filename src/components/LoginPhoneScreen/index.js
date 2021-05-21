@@ -16,9 +16,7 @@ import {
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import ShakingText from 'react-native-shaking-text';
-import rNES from 'react-native-encrypted-storage';
 import 'react-native-gesture-handler';
-import messaging from '@react-native-firebase/messaging';
 import {
   getPendingJobRequest,
   getAllWorkRequestClient,
@@ -36,9 +34,6 @@ import {
 } from '../../Redux/Actions/validationActions';
 import WaitingDialog from '../WaitingDialog';
 import firebaseAuth from '@react-native-firebase/auth';
-import database from '@react-native-firebase/database';
-import simpleToast from 'react-native-simple-toast';
-import Axios from 'axios';
 import TextInputMask from 'react-native-text-input-mask';
 import {phoneNumberCheck, sanitizeMobileNumber} from '../../misc/helpers';
 import DialogComponent from '../DialogComponent';
@@ -49,7 +44,7 @@ import {
   white,
   lightGray,
 } from '../../Constants/colors';
-import SimpleToast from 'react-native-simple-toast';
+import {phoneLoginTask} from '../../controllers/users';
 
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'users/register/create';
@@ -162,187 +157,22 @@ class LoginPhoneScreen extends Component {
     }
   };
 
-  phoneLoginCustomerTask = async () => {
-    this.setState({
-      isLoading: true,
-    });
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-      const {
-        fetchJobRequests,
-        fetchJobRequestHistory,
-        updateUserDetails,
-        validationInfo: {mobile, countryCode},
-        updateNumberSent,
-      } = this.props;
-      const newMobile = await sanitizeMobileNumber(mobile, countryCode, false);
-      const userData = {
-        acc_type: this.state.accountType,
-        username: newMobile,
-        mobile: newMobile,
-        fcm_id: fcmToken,
-        type: this.state.loginType,
-      };
-      try {
-        Axios.post(REGISTER_URL, {data: JSON.stringify(userData)})
-          .then(async responseJson => {
-            if (responseJson.status === 200 && responseJson.data.createdDate) {
-              const usersRef = database().ref(`users/${responseJson.data.id}`);
-              await usersRef.once('value', snapshot => {
-                const value = snapshot.val();
-                if (value) status = value.status;
-                else {
-                  usersRef
-                    .set({status: responseJson.data.status})
-                    .then(() => {
-                      console.log('status set');
-                    })
-                    .catch(e => {
-                      console.log(e.message);
-                    });
-                }
-              });
-              const id = responseJson.data.id;
-              try {
-                /** get stored profile if exists */
-                fetch(USER_GET_PROFILE + id + '?fcm_id=' + fcmToken, {
-                  method: 'GET',
-                  headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                  },
-                })
-                  .then(response => response.json())
-                  .then(async response => {
-                    this.setState({
-                      isLoading: false,
-                      isErrorToast: true,
-                    });
-                    if (response && response.result) {
-                      const userId = response.data.id;
-                      const data = {
-                        userId: response.data.id,
-                        accountType: response.data.acc_type,
-                        email: response.data.email,
-                        password: response.data.password,
-                        username: response.data.username,
-                        image: response.data.image,
-                        mobile: response.data.mobile,
-                        dob: response.data.dob,
-                        address: response.data.address,
-                        lat: response.data.lat,
-                        lang: response.data.lang,
-                        firebaseId: this.state.firebaseId,
-                        fcmId: response.data.fcm_id,
-                      };
-                      updateUserDetails(data);
-                      //Store data like sharedPreference
-                      rNES.setItem('userId', userId);
-                      rNES.setItem('userType', 'User');
-                      rNES.setItem('email', response.data.email);
-                      rNES.setItem('firebaseId', this.state.firebaseId);
-                      //Check if any Ongoing Request
-                      fetchJobRequestHistory(userId);
-                      fetchJobRequests(this.props, userId, 'Home');
-                    } else {
-                      const userData = {
-                        userId: responseJson.data.id,
-                        accountType: responseJson.data.acc_type,
-                        email: responseJson.data.email,
-                        password: responseJson.data.password,
-                        username: responseJson.data.username,
-                        image: responseJson.data.image,
-                        mobile: responseJson.data.mobile,
-                        dob: responseJson.data.dob,
-                        address: responseJson.data.address,
-                        lat: responseJson.data.lat,
-                        lang: responseJson.data.lang,
-                        fcmId: responseJson.data.fcm_id,
-                        firebaseId: this.state.firebaseId,
-                      };
-                      updateUserDetails(userData);
-                      //Store data like sharedPreference
-                      rNES.setItem('userId', id);
-                      rNES.setItem('userType', 'User');
-                      rNES.setItem('email', email);
-                      rNES.setItem('firebaseId', this.state.firebaseId);
-                      fetchJobRequestHistory(id);
-                      fetchJobRequests(this.props, id, 'Home');
-                    }
-                  })
-                  .catch(error => {
-                    this.setState({
-                      isLoading: false,
-                    });
-                    SimpleToast.show('Something went wrong', SimpleToast.SHORT);
-                  });
-              } catch (e) {
-                this.setState({
-                  isLoading: false,
-                });
-                SimpleToast.show(
-                  'Something went wrong, try again',
-                  SimpleToast.SHORT,
-                );
-              }
-            } else {
-              this.leftButtonActon = () => {
-                this.setState({
-                  isLoading: false,
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.rightButtonAction = () => {
-                this.phoneLoginCustomerTask();
-                this.setState({
-                  isLoading: false,
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'OOPS!',
-                dialogDesc: responseJson.data.message || 'Something went wrong',
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Retry',
-              });
-            }
-          })
-          .catch(error => {
-            this.leftButtonActon = () => {
-              updateNumberSent(false);
-              this.setState({
-                isLoading: false,
-                showDialog: false,
-                dialogType: null,
-              });
-            };
-            this.rightButtonAction = () => {
-              this.phoneLoginCustomerTask();
-              this.setState({
-                isLoading: false,
-                showDialog: false,
-                dialogType: null,
-              });
-            };
-            this.setState({
-              isLoading: false,
-              showDialog: true,
-              dialogType: 'fb',
-              dialogTitle: 'OOPS!',
-              dialogDesc: 'Something went wrong',
-              dialogLeftText: 'Cancel',
-              dialogRightText: 'Retry',
-            });
-          })
-          .done();
-      } catch (e) {
+  phoneLoginCustomerTask = async () =>
+    await phoneLoginTask({
+      userType: 'Customer',
+      accountType: this.state.accountType,
+      loginType: this.state.loginType,
+      firebaseId: this.state.firebaseId,
+      fetchJobRequests: this.props.fetchJobRequests,
+      fetchJobRequestHistory: this.props.fetchJobRequestHistory,
+      updateUserDetails: this.props.updateUserDetails,
+      validationInfo: this.props.validationInfo,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      registerURL: REGISTER_URL,
+      getProfileURL: USER_GET_PROFILE,
+      onError: msg => {
         this.leftButtonActon = () => {
-          updateNumberSent(false);
+          this.props.updateNumberSent(false);
           this.setState({
             isLoading: false,
             showDialog: false,
@@ -360,21 +190,15 @@ class LoginPhoneScreen extends Component {
         this.setState({
           isLoading: false,
           showDialog: true,
-          dialogType: 'fb',
+          dialogType: 'error',
           dialogTitle: 'OOPS!',
-          dialogDesc: 'Something went wrong, try again.',
+          dialogDesc: msg,
           dialogLeftText: 'Cancel',
           dialogRightText: 'Retry',
         });
-      }
-    } else {
-      this.setState({isLoading: false});
-      simpleToast.show(
-        'Something went wrong, we could not retrieve your fcm token, restart app and try again',
-        simpleToast.SHORT,
-      );
-    }
-  };
+      },
+      props: this.props,
+    });
 
   checkValidation = async () => {
     const wrongPhoneNumberFormat = 'Please enter a proper phone number';
@@ -433,9 +257,9 @@ class LoginPhoneScreen extends Component {
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : prevState.isLoading,
+    }));
   };
 
   changeDialogVisibility = () =>

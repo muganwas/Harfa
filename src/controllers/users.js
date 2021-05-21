@@ -15,7 +15,12 @@ import {cloneDeep} from 'lodash';
 import database from '@react-native-firebase/database';
 import storage from '@react-native-firebase/storage';
 import Config from '../components/Config';
-import {emailCheck, passwordCheck} from '../misc/helpers';
+import {
+  emailCheck,
+  passwordCheck,
+  sanitizeMobileNumber,
+  phoneNumberCheck,
+} from '../misc/helpers';
 
 const PRO_GET_PROFILE = Config.baseURL + 'employee/';
 const USER_GET_PROFILE = Config.baseURL + 'users/';
@@ -640,10 +645,10 @@ export const forgotPasswordTask = async ({
   onError,
 }) => {
   toggleLoading();
-  const data = {
-    email,
-  };
   try {
+    const data = {
+      email,
+    };
     await fetch(forgotPasswordURL, {
       method: 'POST',
       headers: {
@@ -783,5 +788,186 @@ export const updateProfileInfo = async ({
     console.log('profile update erroror :' + e);
     toggleIsLoading(false);
     SimpleToast.show('Something went wrong, try again later.');
+  }
+};
+
+export const phoneLoginTask = async ({
+  userType,
+  accountType,
+  loginType,
+  firebaseId,
+  fetchJobRequests,
+  fetchJobRequestHistory,
+  validationInfo,
+  updateUserDetails,
+  toggleIsLoading,
+  registerURL,
+  getProfileURL,
+  onError,
+  props,
+}) => {
+  toggleIsLoading(true);
+  const fcmToken = await messaging().getToken();
+  const Home = userType === 'Provider' ? 'ProHome' : 'Home';
+  if (fcmToken) {
+    try {
+      const {mobile, countryCode} = validationInfo;
+      const newMobile = await sanitizeMobileNumber(mobile, countryCode, false);
+      const userData = {
+        acc_type: accountType,
+        username: newMobile,
+        mobile: newMobile,
+        fcm_id: fcmToken,
+        type: loginType,
+      };
+      Axios.post(registerURL, {data: JSON.stringify(userData)})
+        .then(async responseJson => {
+          if (responseJson.status === 200 && responseJson.data.createdDate) {
+            const id = responseJson.data.id;
+            const onlineStatus = await synchroniseOnlineStatus(
+              id,
+              responseJson.data.online,
+            );
+            try {
+              /** get stored profile if exists */
+              fetch(getProfileURL + id + '?fcm_id=' + fcmToken, {
+                method: 'GET',
+                headers: {
+                  Accept: 'application/json',
+                  'Content-Type': 'application/json',
+                },
+              })
+                .then(response => response.json())
+                .then(async response => {
+                  toggleIsLoading(false);
+                  if (response && response.result) {
+                    const data =
+                      userType === 'Provider'
+                        ? {
+                            providerId: response.data.id,
+                            name: response.data.username,
+                            email: response.data.email,
+                            password: response.data.password,
+                            imageSource: response.data.image,
+                            surname: response.data.surname,
+                            mobile: response.data.mobile,
+                            services: response.data.services,
+                            description: response.data.description,
+                            address: response.data.address,
+                            lat: response.data.lat,
+                            lang: response.data.lang,
+                            invoice: response.data.invoice,
+                            online: onlineStatus,
+                            firebaseId,
+                            status: response.data.status,
+                            fcmId: response.data.fcm_id,
+                            accountType: response.data.account_type,
+                          }
+                        : {
+                            userId: response.data.id,
+                            accountType: response.data.acc_type,
+                            email: response.data.email,
+                            password: response.data.password,
+                            username: response.data.username,
+                            image: response.data.image,
+                            mobile: response.data.mobile,
+                            dob: response.data.dob,
+                            address: response.data.address,
+                            online: onlineStatus,
+                            lat: response.data.lat,
+                            lang: response.data.lang,
+                            firebaseId,
+                            fcmId: response.data.fcm_id,
+                          };
+                    updateUserDetails(data);
+                    //Store data like sharedPreference
+                    rNES.setItem('userId', id);
+                    rNES.setItem('userType', userType);
+                    rNES.setItem('email', data.email);
+                    rNES.setItem('firebaseId', firebaseId);
+                    //Check if any Ongoing Request
+                    fetchJobRequestHistory(id);
+                    fetchJobRequests(props, id, Home);
+                  } else {
+                    const data =
+                      userType === 'Provider'
+                        ? {
+                            providerId: responseJson.data.id,
+                            name: responseJson.data.username,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            imageSource: responseJson.data.image,
+                            surname: responseJson.data.surname,
+                            mobile: responseJson.data.mobile,
+                            services: responseJson.data.services,
+                            description: responseJson.data.description,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            online: onlineStatus,
+                            invoice: responseJson.data.invoice,
+                            status: responseJson.data.status,
+                            fcmId: responseJson.data.fcm_id,
+                            accountType: responseJson.data.account_type,
+                            firebaseId,
+                          }
+                        : {
+                            userId: responseJson.data.id,
+                            accountType: responseJson.data.acc_type,
+                            email: responseJson.data.email,
+                            password: responseJson.data.password,
+                            username: responseJson.data.username,
+                            image: responseJson.data.image,
+                            mobile: responseJson.data.mobile,
+                            dob: responseJson.data.dob,
+                            online: onlineStatus,
+                            address: responseJson.data.address,
+                            lat: responseJson.data.lat,
+                            lang: responseJson.data.lang,
+                            fcmId: responseJson.data.fcm_id,
+                            firebaseId: this.state.firebaseId,
+                          };
+                    updateUserDetails(data);
+                    //Store data like sharedPreference
+                    rNES.setItem('userId', id);
+                    rNES.setItem('userType', userType);
+                    rNES.setItem('email', data.email);
+                    rNES.setItem('firebaseId', firebaseId);
+                    fetchJobRequestHistory(id);
+                    fetchJobRequests(props, id, Home);
+                  }
+                })
+                .catch(error => {
+                  console.log('Phone auth err - 1 ', error);
+                  toggleIsLoading(false);
+                  SimpleToast.show('Something went wrong', SimpleToast.SHORT);
+                });
+            } catch (e) {
+              console.log('Phone auth err - 2 ', e);
+              toggleIsLoading(false);
+              SimpleToast.show(
+                'Something went wrong, try again',
+                SimpleToast.SHORT,
+              );
+            }
+          } else {
+            onError(responseJson.data.message || 'Something went wrong');
+          }
+        })
+        .catch(error => {
+          console.log('Phone auth err - 3 ', error);
+          onError('Something went wrong');
+        })
+        .done();
+    } catch (e) {
+      console.log('Phone auth err - 4 ', e);
+      onError('Something went wrong, try again.');
+    }
+  } else {
+    toggleIsLoading(false);
+    SimpleToast.show(
+      'Something went wrong, we could not retrieve your fcm token, restart app and try again',
+      SimpleToast.SHORT,
+    );
   }
 };

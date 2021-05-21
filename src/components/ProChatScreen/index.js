@@ -12,10 +12,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import moment from 'moment';
-import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
-import FilePickerManager from 'react-native-file-picker';
 import {
   dbMessagesFetched,
   fetchEmployeeMessages,
@@ -32,7 +29,7 @@ import {
   messagesFetched,
   messagesError,
 } from '../../Redux/Actions/messageActions';
-import {uploadAttachment} from '../../controllers/storage';
+import {attachFile, sendMessageTask} from '../../controllers/chats';
 import {lightGray, colorBg, white} from '../../Constants/colors';
 import {
   MessagesView,
@@ -264,167 +261,54 @@ class ProChatScreen extends Component {
     }
   };
 
-  attachFile = async () => {
-    const {senderId, receiverId} = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    this.setState({
-      inputMessage: '',
-      showButton: false,
-    });
-    try {
-      FilePickerManager.showFilePicker(null, async response => {
-        this.setState({uploadingImage: true});
-        let urlText = response.uri;
-        const ext = response.fileName.split('.').pop();
-        const altMessage = {
-          name: response.fileName,
-          ext,
-          fileType: response.type,
-          uri: urlText,
-          path: response.path,
-        };
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            local: true,
-            notUploaded: true,
-            time,
-            type: 'image',
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            notUploaded: true,
-            local: true,
-            type: 'image',
-            time,
-            date,
-          });
-        }
-        dbMessagesFetched(newMessages);
-        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
-        const newUrlText = await uploadAttachment(response);
-        altMessage.uri = newUrlText;
-        if (newUrlText) {
-          this.sendMessageTask('image', altMessage);
-          this.setState({uploadingImage: false});
-        }
-      });
-    } catch (e) {
-      this.showToast('Something went wrong, try again later', Toast.SHORT);
-    }
-  };
-
-  sendMessageTask = async (type = 'text', altMessage) => {
-    const {
-      userInfo: {providerDetails},
-      fetchEmployeeMessages,
-    } = this.props;
-    if (!socket.connected) {
-      this.setState({isLoading: true});
-      socket.close();
-      socket.connect();
-      await fetchEmployeeMessages(providerDetails.providerId, () =>
-        setTimeout(() => this.setState({isLoading: false}), 200),
-      );
-    }
-    const {
-      inputMessage,
-      senderId,
-      senderName,
-      senderImage,
-      receiverId,
-      receiverImage,
-      customer_FCM_id,
-      receiverName,
-      serviceName,
-      orderId,
-    } = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
-      const messageObj = {
-        type,
-        userType: 'employee',
-        textMessage: inputMessage || altMessage.uri,
-        senderId,
-        senderName,
-        file: altMessage,
-        senderImage,
-        receiverId,
-        receiverImage,
-        fcm_id: customer_FCM_id,
-        receiverName,
-        serviceName,
-        orderId,
-        type,
-        time,
-        date,
-      };
-      if (type === 'text') {
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            type,
-            time,
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            type,
-            time,
-            date,
-          });
-        }
-      } else {
-        newMessages[receiverId][
-          newMessages[receiverId].length - 1
-        ].notUploaded = false;
-      }
-      if (socket.connected) {
+  attachFileProvider = async () =>
+    await attachFile({
+      senderId: this.state.senderId,
+      receiverId: this.state.receiverId,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      sendMessageTask: this.sendMessageTaskProvider,
+      clearInput: () =>
         this.setState({
           inputMessage: '',
           showButton: false,
-        });
-        dbMessagesFetched(newMessages);
-        socket.emit('sent-message', messageObj);
-      } else {
-        this.showToast(
-          'No connection, wait a few seconds and send again or check your internet connection.',
-          Toast.LONG,
-        );
-      }
-    }
-  };
+        }),
+      toggleUploadingImage: bool =>
+        this.setState(prevState => ({
+          uploadingImage:
+            typeof bool === 'boolean' ? bool : !prevState.uploadingImage,
+        })),
+    });
+
+  sendMessageTaskProvider = async (type = 'text', altMessage) =>
+    await sendMessageTask({
+      type,
+      userType: 'employee',
+      userId: this.props?.userInfo?.providerDetails?.providerId,
+      inputMessage: this.state.inputMessage,
+      senderId: this.state.senderId,
+      senderName: this.state.senderName,
+      senderImage: this.state.senderImage,
+      receiverId: this.state.receiverId,
+      receiverName: this.state.receiverName,
+      receiverImage: this.state.receiverImage,
+      fcm_id: this.state.customer_FCM_id,
+      serviceName: this.state.serviceName,
+      orderId: this.state.orderId,
+      altMessage,
+      fetchMessages: this.props.fetchEmployeeMessages,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      toggleIsLoading: bool =>
+        this.setState(prevState => ({
+          isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+        })),
+      clearInput: () =>
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        }),
+    });
 
   showToast = (message, duration) => {
     if (
@@ -441,7 +325,14 @@ class ProChatScreen extends Component {
   };
 
   render() {
-    let {showButton, online, senderId, receiverId} = this.state;
+    const {
+      showButton,
+      online,
+      senderId,
+      receiverId,
+      uploadingImage,
+      isLoading,
+    } = this.state;
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -451,6 +342,7 @@ class ProChatScreen extends Component {
           online={online}
           receiverImage={this.state.receiverImage}
           receiverName={this.state.receiverName}
+          imageAvailable={this.state.userImageAvailable}
           handleBackButtonClick={this.handleBackButtonClick}
         />
         <ImageBackground
@@ -472,12 +364,12 @@ class ProChatScreen extends Component {
               <MessagesView
                 senderId={senderId}
                 receiverId={receiverId}
-                uploadingImage={this.state.uploadingImage}
+                uploadingImage={uploadingImage}
                 messagesInfo={this.props.messagesInfo}
               />
             </View>
           </ScrollView>
-          {this.state.isLoading && (
+          {isLoading && (
             <View style={styles.loaderStyle}>
               <ActivityIndicator
                 style={{height: 80}}
@@ -491,8 +383,8 @@ class ProChatScreen extends Component {
             <MessagesFooter
               inputMesage={this.state.inputMessage}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
-              attachFileTask={this.attachFile}
-              sendMessageTask={this.sendMessageTask}
+              attachFileTask={this.attachFileProvider}
+              sendMessageTask={this.sendMessageTaskProvider}
               showButton={showButton}
             />
           </View>

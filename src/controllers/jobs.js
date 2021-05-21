@@ -1,4 +1,8 @@
 import {cloneDeep} from 'lodash';
+import database from '@react-native-firebase/database';
+import Geolocation from 'react-native-geolocation-service';
+import SimpleToast from 'react-native-simple-toast';
+
 import Config from '../components/Config';
 
 const ASK_FOR_REVIEW = Config.baseURL + 'notification/addreviewrequest';
@@ -15,7 +19,7 @@ export const requestClientForReview = async ({
   onError,
 }) => {
   if (item.customer_review !== 'Requested' && item.customer_rating === '') {
-    toggleIsLoading();
+    toggleIsLoading(true);
     const askReviewData = {
       order_id: item._id,
       user_id: item.user_id,
@@ -78,7 +82,7 @@ export const submitClientReview = async ({
   onSuccess,
   onError,
 }) => {
-  toggleIsLoading();
+  toggleIsLoading(true);
   const reviewData = {
     main_id: this.state.mainId,
     type: 'Employee',
@@ -136,7 +140,7 @@ export const jobCancelTask = async ({
   onError,
   navigate,
 }) => {
-  toggleIsLoading();
+  toggleIsLoading(true);
   try {
     let newJobRequests = cloneDeep(jobRequests);
     const data = {
@@ -191,7 +195,7 @@ export const jobCancelTask = async ({
       .then(response => response.json())
       .then(responseJson => {
         if (responseJson.result) {
-          toggleIsLoading();
+          toggleIsLoading(false);
           newJobRequests.splice(currRequestPos, 1);
           fetchedPendingJobInfo(newJobRequests);
           navigate && navigate('Dashboard');
@@ -206,6 +210,227 @@ export const jobCancelTask = async ({
   } catch (e) {
     console.log('Error >>> ' + e);
     onError("Couldn't cancel job, please try again later");
+  }
+};
+
+export const acceptJobTask = async ({
+  receiverId,
+  orderId,
+  fcm_id,
+  deliveryAddress,
+  deliveryLat,
+  deliveryLang,
+  serviceName,
+  mainId,
+  providerDetails,
+  dataWorkSource,
+  fetchedDataWorkSource,
+  fetchedPendingJobInfo,
+  jobRequestsProviders,
+  getAllWorkRequestPro,
+  toggleIsLoading,
+  currRequestPos,
+  onSuccess,
+  onError,
+}) => {
+  toggleIsLoading(true);
+  let newDWS = cloneDeep(dataWorkSource);
+  let dataWSPos;
+  await newDWS.map((wks, i) => {
+    if (wks.order_id === orderId) dataWSPos = i;
+  });
+  const data = {
+    main_id: mainId,
+    chat_status: '1',
+    status: 'Accepted',
+    notification: {
+      fcm_id,
+      title: 'Job Accepted',
+      type: 'JobAcceptence',
+      notification_by: 'Employee',
+      user_id: receiverId,
+      employee_id: providerDetails.providerId,
+      order_id: orderId,
+      save_notification: true,
+      body:
+        'Your request has been accepted by ' +
+        providerDetails.name +
+        ' ' +
+        providerDetails.surname +
+        ' Request Id : ' +
+        orderId,
+      data: {
+        userId: receiverId,
+        providerId: providerDetails.providerId,
+        ProviderData: providerDetails,
+        serviceName: serviceName,
+        orderId: orderId,
+        mainId: mainId,
+        chat_status: '1',
+        status: 'Accepted',
+        delivery_address: deliveryAddress,
+        delivery_lat: deliveryLat,
+        delivery_lang: deliveryLang,
+      },
+    },
+  };
+  try {
+    fetch(REJECT_ACCEPT_REQUEST, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(responseJson => {
+        let newjobRequestsProviders = cloneDeep(jobRequestsProviders);
+        if (responseJson.data) {
+          onSuccess();
+          if (dataWSPos || dataWSPos === 0) {
+            newDWS[dataWSPos].status = 'Accepted';
+            fetchedDataWorkSource(newDWS);
+          }
+          newjobRequestsProviders[currRequestPos].chat_status =
+            responseJson.data.chat_status;
+          newjobRequestsProviders[currRequestPos].status =
+            responseJson.data.status;
+          fetchedPendingJobInfo(newjobRequestsProviders);
+          getAllWorkRequestPro(providerDetails.providerId);
+          //Send Location to Firebase for tracking
+          Geolocation.getCurrentPosition(position => {
+            let locationData = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            };
+
+            let updates = {};
+            updates['tracking/' + orderId] = locationData;
+            database()
+              .ref()
+              .update(updates);
+          });
+        } else {
+          onError();
+          SimpleToast.show('Something went wrong, please try again later');
+        }
+      })
+      .catch(error => {
+        console.log('Error >>> ' + error);
+        toggleIsLoading(false);
+        SimpleToast.show('Something went wrong, please try again later');
+      });
+  } catch (e) {
+    console.log('Error >>> ' + e);
+    toggleIsLoading(false);
+    SimpleToast.show('Something went wrong, please try again later');
+  }
+};
+
+export const rejectJobTask = async ({
+  orderId,
+  receiverId,
+  currRequestPos,
+  mainId,
+  fcm_id,
+  serviceName,
+  deliveryAddress,
+  deliveryLat,
+  deliveryLang,
+  dataWorkSource,
+  providerDetails,
+  toggleIsLoading,
+  fetchedPendingJobInfo,
+  fetchedDataWorkSource,
+  jobRequestsProviders,
+  navigation,
+  onSuccess,
+  onError,
+}) => {
+  toggleIsLoading(true);
+  let newDWS = cloneDeep(dataWorkSource);
+  let dataWSPos;
+  await newDWS.map((wks, i) => {
+    if (wks.order_id === orderId) dataWSPos = i;
+  });
+  const data = {
+    main_id: mainId,
+    chat_status: '1',
+    status: 'Rejected',
+    notification: {
+      fcm_id,
+      title: 'Job Rejected',
+      type: 'JobRejection',
+      notification_by: 'Employee',
+      save_notification: true,
+      user_id: receiverId,
+      employee_id: providerDetails.providerId,
+      order_id: orderId,
+      body:
+        'Your request has been rejected by ' +
+        providerDetails.name +
+        ' Request Id : ' +
+        orderId,
+      data: {
+        ProviderId: providerDetails.providerId,
+        image: providerDetails.imageSource
+          ? providerDetails.imageSource
+          : 'null',
+        fcmId: providerDetails.fcmId,
+        name: providerDetails.name,
+        surname: providerDetails.surname,
+        mobile: providerDetails.mobile,
+        description: providerDetails.description,
+        address: providerDetails.address,
+        lat: providerDetails.lat,
+        lang: providerDetails.lang,
+        serviceName: serviceName,
+        orderId: orderId,
+        mainId: mainId,
+        chat_status: '0',
+        status: 'Rejected',
+        delivery_address: deliveryAddress,
+        delivery_lat: deliveryLat,
+        delivery_lang: deliveryLang,
+      },
+    },
+  };
+  try {
+    fetch(REJECT_ACCEPT_REQUEST, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(responseJson => {
+        let newjobRequestsProviders = cloneDeep(jobRequestsProviders);
+        if (responseJson.result) {
+          onSuccess();
+          if (dataWSPos || dataWSPos === 0) {
+            newDWS.splice(dataWSPos, 1);
+            fetchedDataWorkSource(newDWS);
+          }
+          newjobRequestsProviders.splice(currRequestPos, 1);
+          fetchedPendingJobInfo(newjobRequestsProviders);
+          navigation.navigate('ProDashboard');
+        } else {
+          onError();
+          SimpleToast.show('Something went wrong, please try again later');
+        }
+      })
+      .catch(error => {
+        console.log('Error >>> ' + error);
+        toggleIsLoading(false);
+        SimpleToast.show('Something went wrong, please try again later');
+      });
+  } catch (e) {
+    console.log('Error >>> ' + e);
+    toggleIsLoading(false);
+    SimpleToast.show('Something went wrong, please try again later');
   }
 };
 

@@ -92,6 +92,7 @@ const ProMessagesComponent = ({
       !newDownloading[key] ||
       (newDownloading[key] && !newDownloading[key][index])
     ) {
+      console.log('downloading file');
       RNFS.downloadFile(DownloadFileOptions)
         .promise.then(async () => {
           let newDownloading = _.cloneDeep(downloading);
@@ -339,7 +340,7 @@ const ProMessagesComponent = ({
                                       downloading[key][index] &&
                                       downloading[key][index].percentage > 0 &&
                                       downloading[key][index].percentage <
-                                        99 && (
+                                        90 && (
                                         <View
                                           style={{
                                             display: 'flex',

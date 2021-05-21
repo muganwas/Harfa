@@ -17,12 +17,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {withNavigation} from 'react-navigation';
-import FilePickerManager from 'react-native-file-picker';
 import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
-import Geolocation from 'react-native-geolocation-service';
-import moment from 'moment';
-import {cloneDeep} from 'lodash';
 import {
   dbMessagesFetched,
   fetchEmployeeMessages,
@@ -45,7 +41,8 @@ import {
   MessagesHeader,
   MessagesFooter,
 } from '../ProMessagesComponents';
-import {uploadAttachment} from '../../controllers/storage';
+import {attachFile, sendMessageTask} from '../../controllers/chats';
+import {acceptJobTask, rejectJobTask} from '../../controllers/jobs';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
 import {
@@ -62,7 +59,6 @@ const socket = Config.socket;
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
 
-const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -81,7 +77,7 @@ const StatusBarPlaceHolder = () => {
 };
 
 class ProAcceptRejectJobScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       online: false,
@@ -132,7 +128,7 @@ class ProAcceptRejectJobScreen extends Component {
       socket.connect();
       fetchEmployeeMessages(providerDetails.providerId);
     }
-    let currRequestPos = navigation.getParam('currentPos', 0);
+    const currRequestPos = navigation.getParam('currentPos', 0);
     this.setState({
       senderId: providerDetails.providerId,
       senderImage: providerDetails.imageSource,
@@ -239,18 +235,6 @@ class ProAcceptRejectJobScreen extends Component {
     return <View style={{height: 5, width: '100%'}} />;
   };
 
-  convertTime = time => {
-    let d = new Date(time);
-    let c = new Date();
-    let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
-    result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-    if (c.getDay() !== d.getDay()) {
-      result =
-        d.getDay() + '/' + d.getMonth() + '/' + d.getFullYear() + ', ' + result;
-    }
-    return result;
-  };
-
   showHideButton = input => {
     this.setState({
       inputMessage: input,
@@ -266,413 +250,114 @@ class ProAcceptRejectJobScreen extends Component {
     }
   };
 
-  attachFile = async () => {
-    const {senderId, receiverId} = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    this.setState({
-      inputMessage: '',
-      showButton: false,
-    });
-    try {
-      FilePickerManager.showFilePicker(null, async response => {
-        this.setState({uploadingImage: true});
-        let urlText = response.uri;
-        const ext = response.fileName.split('.').pop();
-        const altMessage = {
-          name: response.fileName,
-          ext,
-          fileType: response.type,
-          uri: urlText,
-          path: response.path,
-        };
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            local: true,
-            notUploaded: true,
-            time,
-            type: 'image',
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: urlText,
-            file: altMessage,
-            recipient: receiverId,
-            sender: senderId,
-            notUploaded: true,
-            local: true,
-            type: 'image',
-            time,
-            date,
-          });
-        }
-        dbMessagesFetched(newMessages);
-        //SetTimeout(() => this.setState({uploadingImage: false}), 500);
-        const newUrlText = await uploadAttachment(response);
-        altMessage.uri = newUrlText;
-        if (newUrlText) {
-          this.sendMessageTask('image', altMessage);
-          this.setState({uploadingImage: false});
-        }
-      });
-    } catch (e) {
-      this.showToast('Something went wrong, try again later', Toast.SHORT);
-    }
-  };
-
-  sendMessageTask = async (type = 'text', altMessage) => {
-    const {
-      userInfo: {providerDetails},
-      fetchEmployeeMessages,
-    } = this.props;
-    if (!socket.connected) {
-      this.setState({isLoading: true});
-      socket.close();
-      socket.connect();
-      await fetchEmployeeMessages(providerDetails.providerId, () =>
-        setTimeout(() => this.setState({isLoading: false}), 200),
-      );
-    }
-    const {
-      inputMessage,
-      senderId,
-      senderName,
-      senderImage,
-      receiverId,
-      receiverImage,
-      receiverFcmId,
-      receiverName,
-      serviceName,
-      orderId,
-    } = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
-      const messageObj = {
-        type,
-        userType: 'employee',
-        textMessage: inputMessage || altMessage.uri,
-        file: altMessage,
-        senderId,
-        senderName,
-        senderImage,
-        receiverId,
-        receiverImage,
-        fcm_id: receiverFcmId,
-        receiverName,
-        serviceName,
-        orderId,
-        type,
-        time,
-        date,
-      };
-      if (type === 'text') {
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            type,
-            time,
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            type,
-            time,
-            date,
-          });
-        }
-      } else {
-        newMessages[receiverId][
-          newMessages[receiverId].length - 1
-        ].notUploaded = false;
-      }
-      if (socket.connected) {
+  attachFileProvider = async () =>
+    await attachFile({
+      senderId: this.state.senderId,
+      receiverId: this.state.receiverId,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      sendMessageTask: this.sendMessageTaskProvider,
+      clearInput: () =>
         this.setState({
           inputMessage: '',
           showButton: false,
-        });
-        dbMessagesFetched(newMessages);
-        socket.emit('sent-message', messageObj);
-      } else {
-        this.showToast(
-          'No connection, wait a few seconds and send again or check your internet connection.',
-          Toast.LONG,
-        );
-      }
-    }
-  };
+        }),
+      toggleUploadingImage: bool =>
+        this.setState(prevState => ({
+          uploadingImage:
+            typeof bool === 'boolean' ? bool : !prevState.uploadingImage,
+        })),
+    });
 
-  acceptJobTask = async () => {
-    this.setState({
-      isLoading: true,
+  sendMessageTaskProvider = async (type = 'text', altMessage) =>
+    await sendMessageTask({
+      type,
+      userType: 'employee',
+      userId: this.props?.userInfo?.providerDetails?.providerId,
+      inputMessage: this.state.inputMessage,
+      senderId: this.state.senderId,
+      senderName: this.state.senderName,
+      senderImage: this.state.senderImage,
+      receiverId: this.state.receiverId,
+      receiverName: this.state.receiverName,
+      receiverImage: this.state.receiverImage,
+      fcm_id: this.state.receiverFcmId,
+      serviceName: this.state.serviceName,
+      orderId: this.state.orderId,
+      altMessage,
+      fetchMessages: this.props.fetchEmployeeMessages,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      clearInput: () =>
+        this.setState({
+          inputMessage: '',
+          showButton: false,
+        }),
     });
-    const {
-      userInfo: {providerDetails},
-      jobsInfo: {dataWorkSource},
-      fetchedDataWorkSource,
-    } = this.props;
-    const {
-      receiverId,
-      receiverFcmId,
-      orderId,
-      deliveryAddress,
-      deliveryLat,
-      deliveryLang,
-      serviceName,
-      mainId,
-    } = this.state;
-    let newDWS = cloneDeep(dataWorkSource);
-    let dataWSPos;
-    await newDWS.map((wks, i) => {
-      if (wks.order_id === orderId) dataWSPos = i;
-    });
-    const data = {
-      main_id: this.state.mainId,
-      chat_status: '1',
-      status: 'Accepted',
-      notification: {
-        fcm_id: receiverFcmId,
-        title: 'Job Accepted',
-        type: 'JobAcceptence',
-        notification_by: 'Employee',
-        user_id: receiverId,
-        employee_id: providerDetails.providerId,
-        order_id: orderId,
-        save_notification: true,
-        body:
-          'Your request has been accepted by ' +
-          providerDetails.name +
-          ' ' +
-          providerDetails.surname +
-          ' Request Id : ' +
-          orderId,
-        data: {
-          userId: receiverId,
-          providerId: providerDetails.providerId,
-          ProviderData: providerDetails,
-          serviceName: serviceName,
-          orderId: orderId,
-          mainId: mainId,
-          chat_status: '1',
-          status: 'Accepted',
-          delivery_address: deliveryAddress,
-          delivery_lat: deliveryLat,
-          delivery_lang: deliveryLang,
-        },
-      },
-    };
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          const {
-            fetchedPendingJobInfo,
-            getAllWorkRequestPro,
-            jobsInfo: {jobRequestsProviders},
-          } = this.props;
-          const {currRequestPos} = this.state;
-          var newjobRequestsProviders = cloneDeep(jobRequestsProviders);
-          if (responseJson.data) {
-            this.setState({
-              isLoading: false,
-              isAcceptJob: true,
-            });
-            if (dataWSPos || dataWSPos === 0) {
-              newDWS[dataWSPos].status = 'Accepted';
-              fetchedDataWorkSource(newDWS);
-            }
-            newjobRequestsProviders[currRequestPos].chat_status =
-              responseJson.data.chat_status;
-            newjobRequestsProviders[currRequestPos].status =
-              responseJson.data.status;
-            fetchedPendingJobInfo(newjobRequestsProviders);
-            getAllWorkRequestPro(providerDetails.providerId);
-            //Send Location to Firebase for tracking
-            Geolocation.getCurrentPosition(position => {
-              let locationData = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-              };
 
-              let updates = {};
-              updates[
-                'tracking/' + this.props.navigation.state.params.orderId
-              ] = locationData;
-              database()
-                .ref()
-                .update(updates);
-            });
-          } else {
-            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            isLoading: false,
-          });
-        });
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
+  acceptJobTaskProvider = async () =>
+    await acceptJobTask({
+      receiverId: this.state.receiverId,
+      orderId: this.state.orderId,
+      fcm_id: this.state.receiverFcmId,
+      deliveryAddress: this.state.deliveryAddress,
+      deliveryLat: this.state.deliveryLat,
+      deliveryLang: this.state.deliveryLang,
+      serviceName: this.state.serviceName,
+      currRequestPos: this.state.currRequestPos,
+      mainId: this.state.mainId,
+      providerDetails: this.props?.userInfo?.providerDetails,
+      dataWorkSource: this.props?.jobsInfo?.dataWorkSource,
+      fetchedDataWorkSource: this.props.fetchedDataWorkSource,
+      fetchedPendingJobInfo: this.props.fetchedPendingJobInfo,
+      jobRequestsProviders: this.props?.jobsInfo?.jobRequestsProviders,
+      getAllWorkRequestPro: this.props.getAllWorkRequestPro,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      onSuccess: () =>
+        this.setState({
+          isLoading: false,
+          isAcceptJob: true,
+        }),
+      onError: () =>
+        this.setState({
+          isLoading: false,
+          isErrorToast: true,
+          isAcceptJob: false,
+        }),
+    });
 
-  rejectJobTask = async () => {
-    this.setState({
-      isLoading: true,
+  rejectJobTaskProvider = async () =>
+    await rejectJobTask({
+      receiverId: this.state.receiverId,
+      orderId: this.state.orderId,
+      fcm_id: this.state.receiverFcmId,
+      deliveryAddress: this.state.deliveryAddress,
+      deliveryLat: this.state.deliveryLat,
+      deliveryLang: this.state.deliveryLang,
+      serviceName: this.state.serviceName,
+      currRequestPos: this.state.currRequestPos,
+      mainId: this.state.mainId,
+      providerDetails: this.props?.userInfo?.providerDetails,
+      dataWorkSource: this.props?.jobsInfo?.dataWorkSource,
+      fetchedDataWorkSource: this.props.fetchedDataWorkSource,
+      fetchedPendingJobInfo: this.props.fetchedPendingJobInfo,
+      jobRequestsProviders: this.props?.jobsInfo?.jobRequestsProviders,
+      getAllWorkRequestPro: this.props.getAllWorkRequestPro,
+      navigation: this.props.navigation,
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      onSuccess: () =>
+        this.setState({
+          isLoading: false,
+          isRejectJob: true,
+        }),
+      onError: () =>
+        this.setState({
+          isLoading: false,
+          isErrorToast: true,
+          isRejectJob: false,
+        }),
     });
-    const {
-      fetchedDataWorkSource,
-      jobsInfo: {dataWorkSource},
-      userInfo: {providerDetails},
-    } = this.props;
-    let newDWS = cloneDeep(dataWorkSource);
-    let dataWSPos;
-    const {orderId, receiverId} = this.state;
-    console.log('new dws', newDWS);
-    await newDWS.map((wks, i) => {
-      if (wks.order_id === orderId) dataWSPos = i;
-    });
-    const data = {
-      main_id: this.state.mainId,
-      chat_status: '1',
-      status: 'Rejected',
-      notification: {
-        fcm_id: this.state.receiverFcmId,
-        title: 'Job Rejected',
-        type: 'JobRejection',
-        notification_by: 'Employee',
-        save_notification: true,
-        user_id: receiverId,
-        employee_id: providerDetails.providerId,
-        order_id: orderId,
-        body:
-          'Your request has been rejected by ' +
-          providerDetails.name +
-          ' Request Id : ' +
-          this.state.orderId,
-        data: {
-          ProviderId: providerDetails.providerId,
-          image: providerDetails.imageSource
-            ? providerDetails.imageSource
-            : 'null',
-          fcmId: providerDetails.fcmId,
-          name: providerDetails.name,
-          surname: providerDetails.surname,
-          mobile: providerDetails.mobile,
-          description: providerDetails.description,
-          address: providerDetails.address,
-          lat: providerDetails.lat,
-          lang: providerDetails.lang,
-          serviceName: this.state.serviceName,
-          orderId: this.state.orderId,
-          mainId: this.state.mainId,
-          chat_status: '0',
-          status: 'Rejected',
-          delivery_address: this.state.deliveryAddress,
-          delivery_lat: this.state.deliveryLat,
-          delivery_lang: this.state.deliveryLang,
-        },
-      },
-    };
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          const {
-            fetchedPendingJobInfo,
-            jobsInfo: {jobRequestsProviders},
-            navigation,
-          } = this.props;
-          const {currRequestPos} = this.state;
-          var newjobRequestsProviders = cloneDeep(jobRequestsProviders);
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-              isRejectJob: true,
-            });
-            if (dataWSPos || dataWSPos === 0) {
-              newDWS.splice(dataWSPos, 1);
-              fetchedDataWorkSource(newDWS);
-            }
-            newjobRequestsProviders.splice(currRequestPos, 1);
-            fetchedPendingJobInfo(newjobRequestsProviders);
-            navigation.navigate('ProDashboard');
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            isLoading: false,
-          });
-        });
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
-
-  goToMapDirection = () => {
-    this.props.navigation.navigate('ProMapDirection', {
-      pageTitle: 'ProAcceptRejectJob',
-    });
-  };
 
   showToast = (message, duration) => {
     if (
@@ -685,9 +370,9 @@ class ProAcceptRejectJobScreen extends Component {
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   render() {
@@ -700,7 +385,10 @@ class ProAcceptRejectJobScreen extends Component {
       receiverName,
       uploadingImage,
     } = this.state;
-    const {messagesInfo} = this.props;
+    const {
+      messagesInfo,
+      navigation: {navigate},
+    } = this.props;
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -767,7 +455,7 @@ class ProAcceptRejectJobScreen extends Component {
                   }}>
                   <TouchableOpacity
                     style={styles.buttonContainer}
-                    onPress={this.acceptJobTask}>
+                    onPress={this.acceptJobTaskProvider}>
                     <Text
                       style={[
                         styles.text,
@@ -778,7 +466,7 @@ class ProAcceptRejectJobScreen extends Component {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.buttonContainer}
-                    onPress={this.rejectJobTask}>
+                    onPress={this.rejectJobTaskProvider}>
                     <Text
                       style={[
                         styles.text,
@@ -793,8 +481,8 @@ class ProAcceptRejectJobScreen extends Component {
             <MessagesFooter
               inputMesage={this.state.inputMessage}
               textChangeAction={inputMesage => this.showHideButton(inputMesage)}
-              attachFileTask={this.attachFile}
-              sendMessageTask={this.sendMessageTask}
+              attachFileTask={this.attachFileProvider}
+              sendMessageTask={this.sendMessageTaskProvider}
               showButton={this.state.showButton}
             />
             {this.state.isAcceptJob && (
@@ -817,7 +505,11 @@ class ProAcceptRejectJobScreen extends Component {
                 />
                 <TouchableOpacity
                   style={styles.textViewDirection}
-                  onPress={this.goToMapDirection}>
+                  onPress={() =>
+                    navigate('ProMapDirection', {
+                      pageTitle: 'ProAcceptRejectJob',
+                    })
+                  }>
                   <Image
                     style={{width: 20, height: 20, marginLeft: 20}}
                     source={require('../../icons/mobile_gps.png')}

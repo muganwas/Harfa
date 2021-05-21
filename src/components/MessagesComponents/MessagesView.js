@@ -86,7 +86,6 @@ const ProMessagesComponent = ({
             [index]: {percentage, path, name},
           };
         }
-        console.log('download info', newDownloading);
         updateDownloading(newDownloading);
       },
     };
