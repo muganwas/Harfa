@@ -15,14 +15,11 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
-import {cloneDeep} from 'lodash';
-import FilePickerManager from 'react-native-file-picker';
 import database from '@react-native-firebase/database';
 import {
   dbMessagesFetched,
   fetchClientMessages,
 } from '../../Redux/Actions/messageActions';
-import moment from 'moment';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -35,7 +32,7 @@ import {
   MessagesHeader,
   MessagesView,
 } from '../MessagesComponents';
-import {attachFile} from '../../controllers/chats';
+import {attachFile, sendMessageTask} from '../../controllers/chats';
 import Toast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
@@ -208,7 +205,7 @@ class ChatAfterBookingDetailsScreen extends Component {
 
   componentDidUpdate() {
     const {
-      messagesInfo: {fetched, dataChatSource},
+      messagesInfo: {dataChatSource},
       jobsInfo: {
         selectedJobRequest: {employee_id},
       },
@@ -283,100 +280,35 @@ class ChatAfterBookingDetailsScreen extends Component {
         })),
     });
 
-  sendMessageTask = async (type = 'text', altMessage) => {
-    const {
-      userInfo: {userDetails},
-      fetchClientMessages,
-    } = this.props;
-    if (!socket.connected) {
-      this.setState({isLoading: true});
-      socket.close();
-      socket.connect();
-      await fetchClientMessages(userDetails.userId, () =>
-        setTimeout(() => this.setState({isLoading: false}), 200),
-      );
-    }
-    const {
-      inputMessage,
-      senderId,
-      senderName,
-      senderImage,
-      receiverId,
-      receiverImage,
-      provider_FCM_id,
-      receiverName,
-      serviceName,
-      orderId,
-    } = this.state;
-    const {dbMessagesFetched, messagesInfo} = this.props;
-    let newMessages = cloneDeep(messagesInfo.messages);
-    const time = moment().toISOString();
-    const date =
-      new Date().getDate() +
-      '/' +
-      (new Date().getMonth() + 1) +
-      '/' +
-      new Date().getFullYear();
-    if (inputMessage.length > 0 || (altMessage && type === 'image')) {
-      const messageObj = {
-        type,
-        userType: 'client',
-        textMessage: inputMessage || altMessage.uri,
-        file: altMessage,
-        senderId,
-        senderName,
-        senderImage,
-        receiverId,
-        receiverImage,
-        fcm_id: provider_FCM_id,
-        receiverName,
-        serviceName,
-        orderId,
-        time,
-        date,
-      };
-      if (type === 'text') {
-        if (newMessages[receiverId])
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            time,
-            type,
-            date,
-          });
-        else {
-          newMessages[receiverId] = [];
-          newMessages[receiverId].push({
-            message: inputMessage,
-            recipient: receiverId,
-            sender: senderId,
-            type,
-            time,
-            date,
-          });
-        }
-      } else {
-        newMessages[receiverId][
-          newMessages[receiverId].length - 1
-        ].notUploaded = false;
-        dbMessagesFetched(newMessages);
-      }
-      if (socket.connected) {
+  sendMessageTask = async (type = 'text', altMessage) =>
+    await sendMessageTask({
+      type,
+      userType: 'client',
+      userId: this.props?.userInfo?.userDetails?.userId,
+      inputMessage: this.state.inputMessage,
+      senderId: this.state.senderId,
+      senderName: this.state.senderName,
+      senderImage: this.state.senderImage,
+      receiverId: this.state.receiverId,
+      receiverName: this.state.receiverName,
+      receiverImage: this.state.receiverImage,
+      fcm_id: this.state.provider_FCM_id,
+      serviceName: this.state.serviceName,
+      orderId: this.state.orderId,
+      altMessage,
+      fetchMessages: this.props.fetchClientMessages,
+      dbMessagesFetched: this.props.dbMessagesFetched,
+      messagesInfo: this.props.messagesInfo,
+      toggleIsLoading: bool =>
+        this.setState(prevState => ({
+          isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+        })),
+      clearInput: () =>
         this.setState({
           inputMessage: '',
           showButton: false,
-        });
-        dbMessagesFetched(newMessages);
-        socket.emit('sent-message', messageObj);
-      } else {
-        this.showToast(
-          'No connection, wait a few seconds and send again or check your internet connection.',
-          Toast.LONG,
-        );
-      }
-    }
-  };
+        }),
+    });
 
   showToast = (message, duration) => {
     if (
@@ -404,7 +336,6 @@ class ChatAfterBookingDetailsScreen extends Component {
       isLoading,
       uploadingImage,
     } = this.state;
-    console.log('is loading', isLoading);
     return (
       <KeyboardAvoidingView
         style={styles.container}
@@ -439,7 +370,7 @@ class ChatAfterBookingDetailsScreen extends Component {
               messagesInfo={this.props.messagesInfo}
             />
           </ScrollView>
-          {this.state.isLoading && (
+          {isLoading && (
             <View style={styles.loaderStyle}>
               <ActivityIndicator
                 style={{height: 80}}
