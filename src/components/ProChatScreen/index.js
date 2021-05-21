@@ -12,8 +12,6 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import moment from 'moment';
-import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
 import {
   dbMessagesFetched,

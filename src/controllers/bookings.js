@@ -1,6 +1,7 @@
 import {imageExists} from '../misc/helpers';
 import {cloneDeep} from 'lodash';
 import SimpleToast from 'react-native-simple-toast';
+
 export const getAllBookings = async ({
   userId,
   userType,

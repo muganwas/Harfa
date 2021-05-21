@@ -156,14 +156,14 @@ export const rejectJobRequest = async (
     chat_status: '0',
     status: 'Rejected',
     notification: {
-      fcm_id: fcm_id,
+      fcm_id,
       title: 'Chat Request Rejected',
       type: 'JobRejection',
       notification_by: 'Employee',
       save_notification: true,
-      user_id: user_id,
+      user_id,
       employee_id: providerDetails.providerId,
-      order_id: order_id,
+      order_id,
       body:
         'Chat request has been accepted by ' +
         providerDetails.name +

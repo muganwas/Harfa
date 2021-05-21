@@ -12,9 +12,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
 } from 'react-native';
-import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
-import moment from 'moment';
 import {
   dbMessagesFetched,
   fetchEmployeeMessages,
