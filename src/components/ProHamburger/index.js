@@ -130,7 +130,11 @@ class ProHamburger extends React.Component {
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
       if (!_.isEqual(this.state.currentMessage, message)) {
-        fetchedNotifications({type: 'generic', value: currentGenericCount + 1});
+        title !== 'Message Recieved' &&
+          fetchedNotifications({
+            type: 'generic',
+            value: currentGenericCount + 1,
+          });
       }
       const orderId = data.order_id;
       let pos;
@@ -171,7 +175,7 @@ class ProHamburger extends React.Component {
     await checkNoficationsAvailability();
     await checkForUserType(navigation.navigate);
     await fetchEmployeeMessages(receiverId);
-    database()
+    /*database()
       .ref('adminChatting')
       .child(receiverId)
       .on('child_changed', result => {
@@ -181,7 +185,7 @@ class ProHamburger extends React.Component {
           type: 'adminMessages',
           value: adminMessageCount + 1,
         });
-      });
+      });*/
     const {updateConnectivityStatus, updateOnlineStatus} = this.props;
 
     NetInfo.addEventListener(state => {
@@ -224,7 +228,6 @@ class ProHamburger extends React.Component {
         generalInfo: {connectivityAvailable},
       } = this.props;
       console.log('you disconnected');
-      // console.log(info);
       updateLiveChatUsers({});
       updateOnlineStatus(false);
       if (connectivityAvailable) {

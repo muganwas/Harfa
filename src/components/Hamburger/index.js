@@ -137,10 +137,11 @@ class Hamburger extends React.Component {
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
       if (!_.isEqual(this.state.currentMessage, message)) {
-        fetchedNotifications({
-          type: 'generic',
-          value: currentGenericCount + 1,
-        });
+        title !== 'Message Recieved' &&
+          fetchedNotifications({
+            type: 'generic',
+            value: currentGenericCount + 1,
+          });
       }
       let newJobRequests = cloneDeep(jobRequests);
       const orderId = data.orderId;
