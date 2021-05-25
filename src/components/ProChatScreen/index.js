@@ -124,7 +124,7 @@ class ProChatScreen extends Component {
       OnlineUsers,
       userId: user_id,
       setStatus: (selectedStatus, online) =>
-        this.setStatus({
+        this.setState({
           selectedStatus,
           online,
         }),
@@ -136,7 +136,7 @@ class ProChatScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
-      deregisterOnlineStatusListener();
+      deregisterOnlineStatusListener(user_id);
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -190,7 +190,7 @@ class ProChatScreen extends Component {
       OnlineUsers,
       userId: user_id,
       setStatus: (selectedStatus, online) =>
-        this.setStatus({
+        this.setState({
           selectedStatus,
           online,
         }),

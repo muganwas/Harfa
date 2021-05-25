@@ -121,7 +121,7 @@ class ChatAfterBookingDetailsScreen extends Component {
       OnlineUsers,
       userId: employee_id,
       setStatus: (selectedStatus, online) =>
-        this.setStatus({
+        this.setState({
           selectedStatus,
           online,
         }),
@@ -134,7 +134,7 @@ class ChatAfterBookingDetailsScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
-      deregisterOnlineStatusListener();
+      deregisterOnlineStatusListener(employee_id);
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -183,7 +183,7 @@ class ChatAfterBookingDetailsScreen extends Component {
       OnlineUsers,
       userId: employee_id,
       setStatus: (selectedStatus, online) =>
-        this.setStatus({
+        this.setState({
           selectedStatus,
           online,
         }),
@@ -312,6 +312,7 @@ class ChatAfterBookingDetailsScreen extends Component {
   };
 
   render() {
+    console.log('after booking');
     const {
       showButton,
       receiverImage,

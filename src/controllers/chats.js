@@ -466,7 +466,7 @@ export const setOnlineStatusListener = ({OnlineUsers, userId, setStatus}) => {
   });
 };
 
-export const deregisterOnlineStatusListener = () => {
+export const deregisterOnlineStatusListener = userId => {
   const userRef = database().ref(`users/${userId}`);
   userRef.off('child_changed');
   userRef.off('child_added');

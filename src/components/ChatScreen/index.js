@@ -91,7 +91,13 @@ class ChatScreen extends Component {
   }
 
   componentDidMount() {
-    const {fetchedNotifications, navigation} = this.props;
+    const {
+      fetchedNotifications,
+      jobsInfo: {
+        selectedJobRequest: {employee_id},
+      },
+      navigation,
+    } = this.props;
     this.reInit(this.props);
     fetchedNotifications({type: 'messages', value: 0});
     navigation.addListener('willFocus', async () => {
@@ -102,7 +108,7 @@ class ChatScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
-      deregisterOnlineStatusListener();
+      deregisterOnlineStatusListener(employee_id);
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -128,9 +134,7 @@ class ChatScreen extends Component {
       fetchClientMessages(userDetails.userId);
     }
     const currRequestPos = navigation.getParam('currentPosition');
-    const providerId =
-      navigation.getParam('providerId', null) ||
-      jobRequests[currRequestPos].employee_id;
+    const providerId = navigation.getParam('providerId', null) || employee_id;
     this.setState({
       senderId: userDetails.userId,
       senderImage: userDetails.image,
@@ -184,7 +188,7 @@ class ChatScreen extends Component {
       OnlineUsers,
       userId: providerId,
       setStatus: (selectedStatus, online) =>
-        this.setStatus({
+        this.setState({
           selectedStatus,
           online,
         }),
@@ -386,6 +390,7 @@ class ChatScreen extends Component {
     this.setState(prevState => ({showDialog: !prevState.showDialog}));
 
   render() {
+    console.log('reg chat');
     const {
       requestStatus,
       showButton,
