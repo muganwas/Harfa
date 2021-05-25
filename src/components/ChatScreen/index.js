@@ -25,9 +25,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
-import {cloneDeep} from 'lodash';
 import Toast from 'react-native-simple-toast';
-import database from '@react-native-firebase/database';
 import DialogComponent from '../DialogComponent';
 import {
   dbMessagesFetched,
@@ -35,7 +33,12 @@ import {
 } from '../../Redux/Actions/messageActions';
 import {jobCancelTask} from '../../controllers/jobs';
 import Config from '../Config';
-import {attachFile, sendMessageTask} from '../../controllers/chats';
+import {
+  attachFile,
+  sendMessageTask,
+  setOnlineStatusListener,
+  deregisterOnlineStatusListener,
+} from '../../controllers/chats';
 import {
   MessagesFooter,
   MessagesHeader,
@@ -99,6 +102,7 @@ class ChatScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
+      deregisterOnlineStatusListener();
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -124,7 +128,6 @@ class ChatScreen extends Component {
       fetchClientMessages(userDetails.userId);
     }
     const currRequestPos = navigation.getParam('currentPosition');
-    const onlineUsers = cloneDeep(OnlineUsers);
     const providerId =
       navigation.getParam('providerId', null) ||
       jobRequests[currRequestPos].employee_id;
@@ -177,41 +180,14 @@ class ChatScreen extends Component {
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
     });
-    const userRef = database().ref(`users/${providerId}`);
-    userRef.on('child_changed', result => {
-      if (result && result.key === 'status' && providerId) {
-        if (onlineUsers[providerId] && result.val() === '1')
-          this.setState({
-            selectedStatus: result.val(),
-            online:
-              onlineUsers[providerId] && onlineUsers[providerId].status === '1',
-          });
-        else
-          this.setState({
-            online: result.val() === '1',
-            selectedStatus: result.val(),
-          });
-      } else console.log('provider id unavailable');
-    });
-
-    userRef.once('value', data => {
-      if (data) {
-        const {status} = data.val();
-        if (providerId) {
-          if (onlineUsers[providerId]) {
-            if (onlineUsers[providerId] && status === '1')
-              this.setState({
-                selectedStatus: status,
-                online:
-                  onlineUsers[providerId] &&
-                  onlineUsers[providerId].status === '1',
-              });
-            else {
-              this.setState({online: status === '1', selectedStatus: status});
-            }
-          }
-        }
-      }
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: providerId,
+      setStatus: (selectedStatus, online) =>
+        this.setStatus({
+          selectedStatus,
+          online,
+        }),
     });
   };
 

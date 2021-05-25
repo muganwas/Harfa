@@ -15,7 +15,6 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
-import database from '@react-native-firebase/database';
 import {
   dbMessagesFetched,
   fetchClientMessages,
@@ -32,8 +31,13 @@ import {
   MessagesHeader,
   MessagesView,
 } from '../MessagesComponents';
-import {attachFile, sendMessageTask} from '../../controllers/chats';
-import Toast from 'react-native-simple-toast';
+import {
+  attachFile,
+  sendMessageTask,
+  setOnlineStatusListener,
+  deregisterOnlineStatusListener,
+} from '../../controllers/chats';
+import SimpleToast from 'react-native-simple-toast';
 
 const screenWidth = Dimensions.get('window').width;
 const ios = Platform.OS === 'ios';
@@ -100,20 +104,28 @@ class ChatAfterBookingDetailsScreen extends Component {
     const {
       fetchedNotifications,
       navigation,
+      userInfo: {userDetails},
+      generalInfo: {OnlineUsers},
       jobsInfo: {
         selectedJobRequest: {employee_id},
       },
-      generalInfo: {OnlineUsers},
-      userInfo: {userDetails},
       fetchClientMessages,
     } = this.props;
-    const providerId = employee_id;
     if (!socket.connected) {
       socket.close();
       socket.connect();
       fetchClientMessages(userDetails.userId);
     }
     fetchedNotifications({type: 'messages', value: 0});
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: employee_id,
+      setStatus: (selectedStatus, online) =>
+        this.setStatus({
+          selectedStatus,
+          online,
+        }),
+    });
     navigation.addListener('willFocus', async () => {
       this.reInit();
       BackHandler.addEventListener(
@@ -122,46 +134,11 @@ class ChatAfterBookingDetailsScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
+      deregisterOnlineStatusListener();
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
       );
-    });
-    const userRef = database().ref(`users/${providerId}`);
-    userRef.on('child_changed', result => {
-      if (result && result.key === 'status' && providerId) {
-        if (OnlineUsers[providerId] && result.val() === '1')
-          this.setState({
-            selectedStatus: result.val(),
-            online:
-              OnlineUsers[providerId] && OnlineUsers[providerId].status === '1',
-          });
-        else
-          this.setState({
-            online: result.val() === '1',
-            selectedStatus: result.val(),
-          });
-      } else console.log('provider id unavailable');
-    });
-
-    userRef.once('value', data => {
-      if (data) {
-        const {status} = data.val();
-        if (providerId) {
-          if (OnlineUsers[providerId]) {
-            if (OnlineUsers[providerId] && status === '1')
-              this.setState({
-                selectedStatus: status,
-                online:
-                  OnlineUsers[providerId] &&
-                  OnlineUsers[providerId].status === '1',
-              });
-            else {
-              this.setState({online: status === '1', selectedStatus: status});
-            }
-          }
-        }
-      }
     });
   }
 
@@ -172,6 +149,7 @@ class ChatAfterBookingDetailsScreen extends Component {
       jobsInfo: {
         selectedJobRequest: {employee_id},
       },
+      generalInfo: {OnlineUsers},
       fetchClientMessages,
     } = props;
     if (!socket.connected) {
@@ -200,6 +178,15 @@ class ChatAfterBookingDetailsScreen extends Component {
       titlePage: props.navigation.state.params.pageTitle,
       isJobAccepted: props.navigation.state.params.isJobAccepted,
       provider_FCM_id: props.navigation.state.params.fcmId,
+    });
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: employee_id,
+      setStatus: (selectedStatus, online) =>
+        this.setStatus({
+          selectedStatus,
+          online,
+        }),
     });
   };
 
@@ -313,11 +300,11 @@ class ChatAfterBookingDetailsScreen extends Component {
   showToast = (message, duration) => {
     if (
       typeof duration === 'number' ||
-      duration === Toast.LONG ||
-      duration === Toast.SHORT
+      duration === SimpleToast.LONG ||
+      duration === SimpleToast.SHORT
     )
-      Toast.show(message, duration);
-    else Toast.show(message);
+      SimpleToast.show(message, duration);
+    else SimpleToast.show(message);
   };
 
   renderSeparator = () => {

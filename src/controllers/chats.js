@@ -432,3 +432,43 @@ export const sendMessageTask = async ({
     }
   }
 };
+
+export const setOnlineStatusListener = ({OnlineUsers, userId, setStatus}) => {
+  const userRef = database().ref(`users/${userId}`);
+  userRef.on('child_changed', result => {
+    if (result && result.key === 'status' && userId) {
+      const selectedStatus = result.val();
+      if (OnlineUsers[userId] && result.val() === '1') {
+        const onlineStatus = OnlineUsers[userId].status === '1';
+        setStatus(selectedStatus, onlineStatus);
+      } else {
+        const onlineStatus = result.val() === '1';
+        setStatus(selectedStatus, onlineStatus);
+      }
+    } else console.log('provider id unavailable');
+  });
+
+  userRef.once('value', data => {
+    if (data) {
+      const {status} = data.val();
+      if (userId) {
+        if (OnlineUsers[userId]) {
+          if (OnlineUsers[userId] && status === '1') {
+            const onlineStatus = OnlineUsers[userId].status === '1';
+            setStatus(status, onlineStatus);
+          } else {
+            const onlineStatus = status === '1';
+            setStatus(status, onlineStatus);
+          }
+        }
+      }
+    }
+  });
+};
+
+export const deregisterOnlineStatusListener = () => {
+  const userRef = database().ref(`users/${userId}`);
+  userRef.off('child_changed');
+  userRef.off('child_added');
+  userRef.off('value');
+};
