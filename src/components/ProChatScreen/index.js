@@ -17,7 +17,6 @@ import {
   dbMessagesFetched,
   fetchEmployeeMessages,
 } from '../../Redux/Actions/messageActions';
-import database from '@react-native-firebase/database';
 import Config from '../Config';
 import {
   startFetchingNotification,
@@ -29,7 +28,12 @@ import {
   messagesFetched,
   messagesError,
 } from '../../Redux/Actions/messageActions';
-import {attachFile, sendMessageTask} from '../../controllers/chats';
+import {
+  attachFile,
+  sendMessageTask,
+  setOnlineStatusListener,
+  deregisterOnlineStatusListener,
+} from '../../controllers/chats';
 import {lightGray, colorBg, white} from '../../Constants/colors';
 import {
   MessagesView,
@@ -116,6 +120,15 @@ class ProChatScreen extends Component {
       socket.connect();
       fetchEmployeeMessages(providerDetails.providerId);
     }
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: user_id,
+      setStatus: (selectedStatus, online) =>
+        this.setState({
+          selectedStatus,
+          online,
+        }),
+    });
     navigation.addListener('willFocus', async () => {
       this.reInit();
       BackHandler.addEventListener('hardwareBackPress', () =>
@@ -123,44 +136,11 @@ class ProChatScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
+      deregisterOnlineStatusListener(user_id);
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
       );
-    });
-    const userRef = database().ref(`users/${user_id}`);
-    userRef.on('child_changed', result => {
-      if (result && result.key === 'status' && user_id) {
-        if (OnlineUsers[user_id] && result.val() === '1')
-          this.setState({
-            selectedStatus: result.val(),
-            online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1',
-          });
-        else
-          this.setState({
-            online: result.val() === '1',
-            selectedStatus: result.val(),
-          });
-      } else console.log('provider id unavailable');
-    });
-
-    userRef.once('value', data => {
-      if (data) {
-        const {status} = data.val();
-        if (user_id) {
-          if (OnlineUsers[user_id]) {
-            if (OnlineUsers[user_id] && status === '1')
-              this.setState({
-                selectedStatus: status,
-                online:
-                  OnlineUsers[user_id] && OnlineUsers[user_id].status === '1',
-              });
-            else {
-              this.setState({online: status === '1', selectedStatus: status});
-            }
-          }
-        }
-      }
     });
   }
 
@@ -178,6 +158,7 @@ class ProChatScreen extends Component {
       },
       navigation,
       userInfo: {providerDetails},
+      generalInfo: {OnlineUsers},
       fetchEmployeeMessages,
     } = this.props;
     if (!socket.connected) {
@@ -204,6 +185,15 @@ class ProChatScreen extends Component {
         allJobRequestsProviders[currentPos].service_details.service_name,
       userImageAvailable: allJobRequestsProviders[currentPos].imageAvailable,
       customer_FCM_id: allJobRequestsProviders[currentPos].user_details.fcm_id,
+    });
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: user_id,
+      setStatus: (selectedStatus, online) =>
+        this.setState({
+          selectedStatus,
+          online,
+        }),
     });
   };
 

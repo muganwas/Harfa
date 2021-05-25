@@ -17,7 +17,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {withNavigation} from 'react-navigation';
-import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
 import {
   dbMessagesFetched,
@@ -41,7 +40,12 @@ import {
   MessagesHeader,
   MessagesFooter,
 } from '../ProMessagesComponents';
-import {attachFile, sendMessageTask} from '../../controllers/chats';
+import {
+  attachFile,
+  sendMessageTask,
+  setOnlineStatusListener,
+  deregisterOnlineStatusListener,
+} from '../../controllers/chats';
 import {acceptJobTask, rejectJobTask} from '../../controllers/jobs';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
@@ -92,7 +96,12 @@ class ProAcceptRejectJobScreen extends Component {
   }
 
   componentDidMount() {
-    const {navigation} = this.props;
+    const {
+      navigation,
+      jobsInfo: {
+        selectedJobRequest: {user_id},
+      },
+    } = this.props;
     this.init(this.props);
     navigation.addListener('willFocus', async () => {
       this.init(this.props);
@@ -101,6 +110,7 @@ class ProAcceptRejectJobScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
+      deregisterOnlineStatusListener(user_id);
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -164,39 +174,14 @@ class ProAcceptRejectJobScreen extends Component {
       liveChatStatus: OnlineUsers[user_id] ? OnlineUsers[user_id].status : '0',
       online: false,
     });
-    const userRef = database().ref(`users/${user_id}`);
-    userRef.on('child_changed', result => {
-      if (result && result.key === 'status' && user_id) {
-        if (OnlineUsers[user_id] && result.val() === '1')
-          this.setState({
-            selectedStatus: result.val(),
-            online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1',
-          });
-        else
-          this.setState({
-            online: result.val() === '1',
-            selectedStatus: result.val(),
-          });
-      } else console.log('provider id unavailable');
-    });
-
-    userRef.once('value', data => {
-      if (data) {
-        const {status} = data.val();
-        if (user_id) {
-          if (OnlineUsers[user_id]) {
-            if (OnlineUsers[user_id] && status === '1')
-              this.setState({
-                selectedStatus: status,
-                online:
-                  OnlineUsers[user_id] && OnlineUsers[user_id].status === '1',
-              });
-            else {
-              this.setState({online: status === '1', selectedStatus: status});
-            }
-          }
-        }
-      }
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: user_id,
+      setStatus: (selectedStatus, online) =>
+        this.setState({
+          selectedStatus,
+          online,
+        }),
     });
   };
 

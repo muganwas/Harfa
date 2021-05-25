@@ -250,18 +250,52 @@ export const getAllRecentChats = async ({id, dataSource, onSuccess}) => {
   const dbRef = database()
     .ref('recentMessage')
     .child(id);
-  const newDataSource = cloneDeep(dataSource);
-  dbRef.on('child_added', async val => {
-    let message = val.val();
+  let newDataSource = cloneDeep(dataSource);
+  dbRef.on('value', async resp => {
+    const messages = resp.val();
+    let newMsgs = [];
+    let msgsArr = Object.values(messages);
+    msgsArr.map(async message => {
+      await imageExists(message.image).then(res => {
+        message.exists = res;
+      });
+      let present = false;
+      await newDataSource.map(obj => {
+        if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
+      });
+      if (!present) {
+        newMsgs.push(message);
+      }
+    });
+    onSuccess(newMsgs);
+  });
+  dbRef.on('child_changed', async resp => {
+    let message = resp.val();
     await imageExists(message.image).then(res => {
       message.exists = res;
     });
     let present = false;
-    newDataSource.map(obj => {
+    await newDataSource.map((obj, i) => {
+      if (obj.name === message.name) {
+        newDataSource[i] = message;
+      }
+    });
+    if (message && !present) {
+      onSuccess(newDataSource);
+    }
+  });
+  dbRef.on('child_added', async resp => {
+    let message = resp.val();
+    await imageExists(message.image).then(res => {
+      message.exists = res;
+    });
+    let present = false;
+    await newDataSource.map(obj => {
       if (JSON.stringify(obj) === JSON.stringify(message)) present = true;
     });
     if (message && !present) {
-      onSuccess([...newDataSource, message]);
+      newDataSource.push(message);
+      onSuccess(newDataSource);
     }
   });
 };
@@ -431,4 +465,43 @@ export const sendMessageTask = async ({
       );
     }
   }
+};
+
+export const setOnlineStatusListener = ({OnlineUsers, userId, setStatus}) => {
+  const userRef = database().ref(`users/${userId}`);
+  userRef.once('value', data => {
+    if (data) {
+      const {status} = data.val();
+      if (userId) {
+        if (OnlineUsers[userId]) {
+          if (OnlineUsers[userId] && status === '1') {
+            const onlineStatus = OnlineUsers[userId].status === '1';
+            setStatus(status, onlineStatus);
+          } else {
+            const onlineStatus = status === '1';
+            setStatus(status, onlineStatus);
+          }
+        }
+      }
+    }
+  });
+  userRef.on('child_changed', result => {
+    if (result && result.key === 'status' && userId) {
+      const selectedStatus = result.val();
+      if (OnlineUsers[userId] && result.val() === '1') {
+        const onlineStatus = OnlineUsers[userId].status === '1';
+        setStatus(selectedStatus, onlineStatus);
+      } else {
+        const onlineStatus = result.val() === '1';
+        setStatus(selectedStatus, onlineStatus);
+      }
+    } else console.log('provider id unavailable');
+  });
+};
+
+export const deregisterOnlineStatusListener = userId => {
+  const userRef = database().ref(`users/${userId}`);
+  userRef.off('child_changed');
+  userRef.off('child_added');
+  userRef.off('value');
 };

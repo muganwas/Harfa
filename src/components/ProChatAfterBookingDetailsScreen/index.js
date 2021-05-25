@@ -18,14 +18,18 @@ import {
   fetchEmployeeMessages,
 } from '../../Redux/Actions/messageActions';
 import Config from '../Config';
-import database from '@react-native-firebase/database';
 import {
   startFetchingNotification,
   notificationsFetched,
   notificationError,
 } from '../../Redux/Actions/notificationActions';
 import {lightGray, colorBg, white} from '../../Constants/colors';
-import {attachFile, sendMessageTask} from '../../controllers/chats';
+import {
+  attachFile,
+  sendMessageTask,
+  setOnlineStatusListener,
+  deregisterOnlineStatusListener,
+} from '../../controllers/chats';
 import {
   MessagesView,
   MessagesHeader,
@@ -95,11 +99,11 @@ class ProChatAfterBookingDetailsScreen extends Component {
     const {
       fetchedNotifications,
       navigation,
+      generalInfo: {OnlineUsers},
+      userInfo: {providerDetails},
       jobsInfo: {
         selectedJobRequest: {user_id},
       },
-      generalInfo: {OnlineUsers},
-      userInfo: {providerDetails},
       fetchEmployeeMessages,
     } = this.props;
     if (!socket.connected) {
@@ -108,6 +112,15 @@ class ProChatAfterBookingDetailsScreen extends Component {
       fetchEmployeeMessages(providerDetails.providerId);
     }
     fetchedNotifications({type: 'messages', value: 0});
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: user_id,
+      setStatus: (selectedStatus, online) =>
+        this.setState({
+          selectedStatus,
+          online,
+        }),
+    });
     navigation.addListener('willFocus', async () => {
       this.reInit();
       BackHandler.addEventListener('hardwareBackPress', () =>
@@ -115,44 +128,11 @@ class ProChatAfterBookingDetailsScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
+      deregisterOnlineStatusListener(user_id);
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
       );
-    });
-    const userRef = database().ref(`users/${user_id}`);
-    userRef.on('child_changed', result => {
-      if (result && result.key === 'status' && user_id) {
-        if (OnlineUsers[user_id] && result.val() === '1')
-          this.setState({
-            selectedStatus: result.val(),
-            online: OnlineUsers[user_id] && OnlineUsers[user_id].status === '1',
-          });
-        else
-          this.setState({
-            online: result.val() === '1',
-            selectedStatus: result.val(),
-          });
-      } else console.log('provider id unavailable');
-    });
-
-    userRef.once('value', data => {
-      if (data) {
-        const {status} = data.val();
-        if (user_id) {
-          if (OnlineUsers[user_id]) {
-            if (OnlineUsers[user_id] && status === '1')
-              this.setState({
-                selectedStatus: status,
-                online:
-                  OnlineUsers[user_id] && OnlineUsers[user_id].status === '1',
-              });
-            else {
-              this.setState({online: status === '1', selectedStatus: status});
-            }
-          }
-        }
-      }
     });
     this.setState({
       isLoading: false,
@@ -165,6 +145,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
       jobsInfo: {
         selectedJobRequest: {user_id},
       },
+      generalInfo: {OnlineUsers},
       navigation,
       userInfo: {providerDetails},
       fetchEmployeeMessages,
@@ -191,6 +172,15 @@ class ProChatAfterBookingDetailsScreen extends Component {
       serviceName: navigation.state.params.serviceName,
       pageTitle: navigation.state.params.pageTitle,
       client_FCM_id: navigation.state.params.fcm_id,
+    });
+    setOnlineStatusListener({
+      OnlineUsers,
+      userId: user_id,
+      setStatus: (selectedStatus, online) =>
+        this.setState({
+          selectedStatus,
+          online,
+        }),
     });
   };
 
