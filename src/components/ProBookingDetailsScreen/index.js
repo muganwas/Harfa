@@ -182,73 +182,7 @@ class ProBookingDetailsScreen extends Component {
           });
         }
       },
-    }); /*{
-    this.setState({
-      isLoading: true,
-      isErrorToast: false,
-      employee_rating: rating,
-      employee_review: review,
     });
-    const {providerDetails} = this.props.userInfo;
-    const reviewData = {
-      main_id: this.state.mainId,
-      type: 'Employee',
-      rating: rating,
-      review: review,
-      notification: {
-        fcm_id: this.state.fcm_id,
-        type: 'Review',
-        notification_by: 'Employee',
-        title: 'Given Review',
-        save_notification: true,
-        senderName: providerDetails.name,
-        senderId: providerDetails.providerId,
-        body: this.state.username + ' has given you a review',
-      },
-    };
-    try {
-      await fetch(REVIEW_RATING, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reviewData),
-      })
-        .then(response => response.json())
-        .then(response => {
-          if (response.result) {
-            this.setState({
-              isErrorToast: false,
-              isLoading: false,
-              isReviewDialogVisible: false,
-              mainId: '',
-            });
-            //ToastAndroid.show("Review submitted", ToastAndroid.show);
-            this.showToast('Review submitted');
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
-          this.setState({
-            isLoading: false,
-          });
-        })
-        .done();
-    } catch (e) {
-      console.log('Error :' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };*/
 
   showToast = message => {
     Toast.show(message);
