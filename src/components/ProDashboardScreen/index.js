@@ -176,6 +176,7 @@ class ProDashboardScreen extends Component {
       id: this.props?.userInfo?.providerDetails?.providerId,
       dataSource: this.props?.messagesInfo?.latestChats,
       onSuccess: data => {
+        console.log('latest chats got ...', data);
         this.props.updateLatestChats(data);
         this.setState({isLoading: false});
       },

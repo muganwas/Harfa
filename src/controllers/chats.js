@@ -267,7 +267,7 @@ export const getAllRecentChats = async ({id, dataSource, onSuccess}) => {
         newMsgs.push(message);
       }
     });
-    onSuccess(newMsgs);
+    newMsgs.length > 0 && onSuccess(newMsgs);
   });
   dbRef.on('child_changed', async resp => {
     let message = resp.val();
