@@ -14,12 +14,16 @@ import {
 } from 'react-native';
 import {connect} from 'react-redux';
 import {withNavigation} from 'react-navigation';
+import {cloneDeep} from 'lodash';
 import {AirbnbRating} from 'react-native-ratings';
 import ReviewDialogCustomer from '../ReviewDialogCustomer';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
 import {reviewTask} from '../../controllers/bookings';
-import {setSelectedJobRequest} from '../../Redux/Actions/jobsActions';
+import {
+  setSelectedJobRequest,
+  updateCompletedBookingData,
+} from '../../Redux/Actions/jobsActions';
 import {
   black,
   colorBg,
@@ -57,7 +61,7 @@ class BookingDetailsScreen extends Component {
       isLoading: false,
       isErrorToast: false,
       bookingDetails: props.navigation.state.params.bookingDetails,
-      isDialogLogoutVisible: false,
+      isRatingDialogVisible: false,
       mainId: '',
       username:
         props.navigation.state.params.bookingDetails.employee_details.username,
@@ -95,7 +99,7 @@ class BookingDetailsScreen extends Component {
       isLoading: false,
       isErrorToast: false,
       bookingDetails: props.navigation.state.params.bookingDetails,
-      isDialogLogoutVisible: false,
+      isRatingDialogVisible: false,
       mainId: '',
       username:
         props.navigation.state.params.bookingDetails.employee_details.username,
@@ -118,39 +122,19 @@ class BookingDetailsScreen extends Component {
   };
 
   //Call also from ReviewDialog
-  changeDialogVisibility = (bool, text, bookingDetails, rating, review) => {
-    if (this.state.bookingDetails.customer_rating == '') {
-      if (rating != '') {
-        if (text == '') {
-          this.setState({
-            isDialogLogoutVisible: bool,
-            mainId: this.state.bookingDetails._id,
-          });
-        } else {
-          if (text == 'Not now') {
-            this.setState({
-              isDialogLogoutVisible: bool,
-            });
-          } else if (text == 'Submitted') {
-            this.setState({
-              isDialogLogoutVisible: bool,
-            });
-            this.reviewTaskCustomer(rating, review);
-          }
-        }
-      } else {
-        console.log('ELSE >>');
-        if (text == 'Not now') {
-          this.setState({
-            isDialogLogoutVisible: bool,
-          });
-        } else if (text == 'Submitted') {
-          this.setState({
-            isDialogLogoutVisible: bool,
-          });
-          this.reviewTaskCustomer(rating, review);
-        }
-      }
+  changeDialogVisibility = async (bool, resp) => {
+    const {customer_rating, customer_review, bookingDetails} = this.state;
+    this.setState({
+      isRatingDialogVisible: bool,
+      mainId: bookingDetails._id,
+    });
+    if (
+      bookingDetails.customer_rating === '' &&
+      customer_rating &&
+      customer_rating !== '' &&
+      resp === 'Submit'
+    ) {
+      await this.reviewTaskCustomer(customer_rating, customer_review);
     }
   };
 
@@ -173,6 +157,17 @@ class BookingDetailsScreen extends Component {
           mainId: '',
           isErrorToast: false,
         });
+        const pos = this.props.navigation.getParam('position');
+        let newCompletedBookingData = cloneDeep(
+          this.props.jobsInfo.bookingCompleteData,
+        );
+        let newBookingDetails = cloneDeep(this.state.bookingDetails);
+        if (pos !== undefined) {
+          newBookingDetails.customer_rating = this.state.customer_rating;
+          newBookingDetails.customer_review = this.state.customer_review;
+          newCompletedBookingData[pos] = newBookingDetails;
+          this.props.updateCompletedBookingData(newCompletedBookingData);
+        }
       },
       toggleIsLoading: bool => {
         if (bool === true) {
@@ -443,13 +438,7 @@ class BookingDetailsScreen extends Component {
                     this.setState({
                       customer_rating: rating,
                     });
-                    this.changeDialogVisibility(
-                      true,
-                      '',
-                      this.state.bookingDetails,
-                      rating,
-                      '',
-                    );
+                    this.changeDialogVisibility(true);
                   }}
                 />
               </View>
@@ -630,11 +619,9 @@ class BookingDetailsScreen extends Component {
 
             <Modal
               transparent={true}
-              visible={this.state.isDialogLogoutVisible}
+              visible={this.state.isRatingDialogVisible}
               animationType="fade"
-              onRequestClose={() =>
-                this.changeDialogVisibility(false, '', '', '', '', '')
-              }>
+              onRequestClose={() => this.changeDialogVisibility(false)}>
               <ReviewDialogCustomer
                 style={{
                   shadowColor: black,
@@ -643,12 +630,16 @@ class BookingDetailsScreen extends Component {
                   shadowRadius: 5,
                   elevation: 5,
                 }}
+                rating={this.state.customer_rating}
+                review={this.state.customer_review}
                 changeDialogVisibility={this.changeDialogVisibility}
-                data={
-                  JSON.stringify(this.state.bookingDetails) +
-                  '//////' +
-                  this.state.customer_rating
+                updateReview={review =>
+                  this.setState({customer_review: review})
                 }
+                updateRating={rating =>
+                  this.setState({customer_rating: rating})
+                }
+                data={this.state.bookingDetails}
               />
             </Modal>
           </View>
@@ -670,6 +661,7 @@ class BookingDetailsScreen extends Component {
 const mapStateToProps = state => {
   return {
     notificationsInfo: state.notificationsInfo,
+    jobsInfo: state.jobsInfo,
     userInfo: state.userInfo,
   };
 };
@@ -681,6 +673,9 @@ const mapDispatchToProps = dispatch => {
     },
     fetchNotifications: data => {
       dispatch(startFetchingNotification(data));
+    },
+    updateCompletedBookingData: data => {
+      dispatch(updateCompletedBookingData(data));
     },
   };
 };

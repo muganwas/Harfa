@@ -162,6 +162,7 @@ class BookingScreen extends Component {
         onPress={() =>
           this.props.navigation.navigate('BookingDetails', {
             bookingDetails: item,
+            position: index,
           })
         }>
         <View style={styles.itemContainer}>
