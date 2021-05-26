@@ -50,10 +50,8 @@ import {
   updateAvailabilityInMongoDB,
   getAllRecentChats,
 } from '../../controllers/chats';
-import {
-  requestClientForReview,
-  submitClientReview,
-} from '../../controllers/jobs';
+import {requestClientForReview} from '../../controllers/jobs';
+import {reviewTask} from '../../controllers/bookings';
 import {
   colorBg,
   colorYellow,
@@ -66,7 +64,7 @@ import {
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
-const RECENT_USER = Config.baseURL + 'jobrequest/usergroupby/';
+const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -106,7 +104,6 @@ class ProDashboardScreen extends Component {
         online && providerDetails.online === '1' && connectivityAvailable
           ? 'green'
           : 'red',
-      dataUserSource: [],
       isDialogLogoutVisible: false,
       isWorkRequest: false,
       isRecentUser: false,
@@ -176,56 +173,11 @@ class ProDashboardScreen extends Component {
       id: this.props?.userInfo?.providerDetails?.providerId,
       dataSource: this.props?.messagesInfo?.latestChats,
       onSuccess: data => {
+        console.log('latest chats got ...', data);
         this.props.updateLatestChats(data);
         this.setState({isLoading: false});
       },
     });
-
-  getAllRecentUser = async () => {
-    this.setState({
-      isLoading: true,
-    });
-    const {
-      userInfo: {providerDetails},
-    } = this.props;
-    try {
-      await fetch(RECENT_USER + providerDetails.providerId)
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              dataUserSource: responseJson.data,
-              isLoading: false,
-              isRecentUser: true,
-            });
-          } else {
-            this.setState({
-              isLoading: false,
-              isRecentUser: false,
-            });
-          }
-        })
-        .catch(error => {
-          console.log(error);
-          this.setState({
-            isLoading: false,
-            isRecentUser: true,
-            isErrorToast: true,
-          });
-          this.showToast(
-            'Something went wrong, Check your internet connection',
-          );
-        });
-    } catch (e) {
-      console.log(e);
-      this.setState({
-        isLoading: false,
-        isRecentUser: true,
-        isErrorToast: true,
-      });
-      this.showToast('Something went wrong, try again later.');
-    }
-  };
 
   renderRecentMessageItem = (item, index) => {
     if (item) {
@@ -233,6 +185,7 @@ class ProDashboardScreen extends Component {
         dispatchSelectedJobRequest,
         jobsInfo: {allJobRequestsProviders},
         fetchedNotifications,
+        navigation,
       } = this.props;
       let currentPos;
       allJobRequestsProviders.map((request, index) => {
@@ -246,7 +199,7 @@ class ProDashboardScreen extends Component {
             dispatchSelectedJobRequest({user_id: item.id});
             setTimeout(() => {
               fetchedNotifications({type: 'messages', value: 0});
-              this.props.navigation.navigate('ProChat', {
+              navigation.navigate('ProChat', {
                 currentPos,
                 userId: item.id,
                 name: item.name,
@@ -301,6 +254,7 @@ class ProDashboardScreen extends Component {
   renderWorkItem = (item, index) => {
     const {
       userInfo: {providerDetails},
+      navigation,
     } = this.props;
     if (
       item &&
@@ -318,7 +272,7 @@ class ProDashboardScreen extends Component {
             backgroundColor: 'white',
           }}
           onPress={() =>
-            this.props.navigation.navigate('ProBookingDetails', {
+            navigation.navigate('ProBookingDetails', {
               currentPos: index,
               bookingDetails: item,
             })
@@ -587,12 +541,15 @@ class ProDashboardScreen extends Component {
           rating: rating,
           review: review,
         });
-        this.reviewTask(rating, review, this.state.selectedReviewItem);
+        this.reviewTaskProvider(rating, review, this.state.selectedReviewItem);
       }
     }
   };
 
   goToProMapDirection = (chat_status, status, jobInfo) => {
+    const {
+      navigation: {navigate},
+    } = this.props;
     if (chat_status.toString() === '0') {
       this.setState({
         isErrorToast: true,
@@ -602,12 +559,12 @@ class ProDashboardScreen extends Component {
       const {dispatchSelectedJobRequest} = this.props;
       dispatchSelectedJobRequest(jobInfo);
       if (status === 'Pending') {
-        this.props.navigation.navigate('ProAcceptRejectJob', {
+        navigate('ProAcceptRejectJob', {
           currentPos: jobInfo.currentPos,
           orderId: jobInfo.orderId,
         });
       } else if (status === 'Accepted') {
-        this.props.navigation.navigate('ProMapDirection', {
+        navigate('ProMapDirection', {
           currentPos: jobInfo.currentPos,
           pageTitle: 'ProDashboard',
         });
@@ -775,30 +732,40 @@ class ProDashboardScreen extends Component {
     }
   };
 
-  reviewTask = async (rating, review, item) =>
-    await submitClientReview({
-      item,
-      review,
+  reviewTaskProvider = async (rating, review, item) =>
+    await reviewTask({
       rating,
-      providerDetails: this.props?.userInfo?.providerDetails,
-      toggleIsLoading: this.changeWaitingDialogVisibility,
-      onSuccess: msg => {
+      review,
+      main_id: this.state.mainId,
+      fcm_id: item.user_details.fcm_id,
+      senderName: this.props?.userInfo?.providerDetails?.name,
+      senderId: this.props?.userInfo?.providerDetails?.providerId,
+      userType: 'Employee',
+      notification_by: 'Employee',
+      notificationType: 'Review',
+      reviewURL: REVIEW_RATING,
+      onSuccess: () => {
         this.setState({
+          isErrorToast: false,
           isLoading: false,
           isReviewDialogVisible: false,
           mainId: '',
-          isErrorToast: false,
-          selectedReviewItem: null,
         });
-        msg && this.showToast(msg);
-        this.onRefresh();
       },
-      onError: msg => {
-        this.setState({
-          isLoading: false,
-          selectedReviewItem: null,
-        });
-        msg && this.showToast(msg);
+      toggleIsLoading: bool => {
+        if (bool === true) {
+          this.setState({
+            isLoading: bool,
+            isErrorToast: false,
+            employee_rating: rating,
+            employee_review: review,
+          });
+        } else {
+          this.setState({
+            isLoading: false,
+            isErrorToast: true,
+          });
+        }
       },
     });
 
@@ -833,7 +800,6 @@ class ProDashboardScreen extends Component {
       //getPendingJobRequestProvider,
     } = this.props;
     this.setState({
-      dataUserSource: [],
       status:
         online && providerDetails.online === '1' && connectivityAvailable
           ? 'ONLINE'
@@ -842,7 +808,6 @@ class ProDashboardScreen extends Component {
       isRecentUser: false,
     });
     await this.getAllRecentChatsPro();
-    await this.getAllRecentUser();
     //await getPendingJobRequestProvider(this.props, providerDetails.providerId);
     await fetchJobRequestHistory(providerDetails.providerId);
     this.springValue = new Animated.Value(100);
@@ -877,14 +842,14 @@ class ProDashboardScreen extends Component {
             styles.header,
             {borderBottomWidth: 1, borderBottomColor: themeRed},
           ]}>
-          <ProHamburger navigation={this.props.navigation} text="kuchapa" />
+          <ProHamburger navigation={navigation} text="kuchapa" />
           <TouchableOpacity
             style={{
               width: '100%',
               justifyContent: 'center',
               alignContent: 'center',
             }}
-            onPress={() => this.props.navigation.navigate('ProAddAddress')}>
+            onPress={() => navigation.navigate('ProAddAddress')}>
             <Image
               style={{
                 width: 22,
@@ -973,9 +938,7 @@ class ProDashboardScreen extends Component {
                   {false && (
                     <TouchableOpacity
                       style={styles.viewAll}
-                      onPress={() =>
-                        this.props.navigation.navigate('ProAllMessage')
-                      }>
+                      onPress={() => navigation.navigate('ProAllMessage')}>
                       <Text style={styles.textViewAll}>View All</Text>
                     </TouchableOpacity>
                   )}

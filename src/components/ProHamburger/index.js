@@ -57,6 +57,7 @@ import {
   checkNoficationsAvailability,
 } from '../../misc/helpers';
 import {getAllNotifications} from '../../controllers/notifications';
+import {deregisterOnlineStatusListener} from '../../controllers/chats';
 import {getAllBookings} from '../../controllers/bookings';
 import {checkForUserType} from '../../controllers/users';
 
@@ -74,6 +75,7 @@ class ProHamburger extends React.Component {
       fetchedOthersLocations: false,
       currentMessage: null,
       notificationId: null,
+      prevConnectivityStatus: false,
     };
     Notifications.registerRemoteNotifications();
   }
@@ -106,6 +108,9 @@ class ProHamburger extends React.Component {
       updateLiveChatUsers,
       userInfo: {providerDetails},
       navigation,
+      dispatchFetchedProJobRequests,
+      getAllWorkRequestPro,
+      getPendingJobRequests,
     } = this.props;
     const receiverId = providerDetails.providerId;
     messaging().setBackgroundMessageHandler(message => {
@@ -120,9 +125,6 @@ class ProHamburger extends React.Component {
       const {
         notificationsInfo,
         jobsInfo: {jobRequestsProviders},
-        dispatchFetchedProJobRequests,
-        getAllWorkRequestPro,
-        getPendingJobRequests,
       } = this.props;
       const {title, main_id} = data;
       const check = main_id + title;
@@ -175,20 +177,19 @@ class ProHamburger extends React.Component {
     await checkNoficationsAvailability();
     await checkForUserType(navigation.navigate);
     await fetchEmployeeMessages(receiverId);
-    /*database()
-      .ref('adminChatting')
-      .child(receiverId)
-      .on('child_changed', result => {
-        const {notificationsInfo} = this.props;
-        const adminMessageCount = notificationsInfo.adminMessages;
-        fetchedNotifications({
-          type: 'adminMessages',
-          value: adminMessageCount + 1,
-        });
-      });*/
     const {updateConnectivityStatus, updateOnlineStatus} = this.props;
 
     NetInfo.addEventListener(state => {
+      if (state.isConnected && !this.state.prevConnectivityStatus) {
+        setTimeout(() => {
+          getAllWorkRequestPro(receiverId);
+          getPendingJobRequests(this.props, receiverId);
+        }, 1000);
+        this.setState({prevConnectivityStatus: state.isConnected});
+      }
+      if (!state.isConnected) {
+        this.setState({prevConnectivityStatus: state.isConnected});
+      }
       updateConnectivityStatus(state.isConnected);
     });
     NetInfo.fetch().then(state => {
@@ -348,14 +349,7 @@ class ProHamburger extends React.Component {
       userInfo: {providerDetails},
     } = this.props;
     const senderId = providerDetails.providerId;
-    database()
-      .ref('adminChatting')
-      .child(senderId)
-      .off('child_added');
-    database()
-      .ref('adminChatting')
-      .child(senderId)
-      .off('child_changed');
+    deregisterOnlineStatusListener(senderId);
   }
 
   getAllNotificationsProvider = () =>

@@ -6,7 +6,6 @@ import SimpleToast from 'react-native-simple-toast';
 import Config from '../components/Config';
 
 const ASK_FOR_REVIEW = Config.baseURL + 'notification/addreviewrequest';
-const REVIEW_RATING = Config.baseURL + 'jobrequest/ratingreview';
 const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 const SERVICES_URL = Config.baseURL + 'service/getall';
 
@@ -70,64 +69,6 @@ export const requestClientForReview = async ({
     }
   } else if (item.customer_review == 'Requested') {
     onError('You have already asked, Please wait for customer feedback');
-  }
-};
-
-export const submitClientReview = async ({
-  rating,
-  review,
-  item,
-  providerDetails,
-  toggleIsLoading,
-  onSuccess,
-  onError,
-}) => {
-  toggleIsLoading(true);
-  const reviewData = {
-    main_id: this.state.mainId,
-    type: 'Employee',
-    rating: rating,
-    review: review,
-    notification: {
-      fcm_id: item.user_details.fcm_id,
-      type: 'Review',
-      notification_by: 'Employee',
-      title: 'Given Review',
-      save_notification: true,
-      senderName: providerDetails.name,
-      senderId: providerDetails.providerId,
-      body:
-        providerDetails.name +
-        ' ' +
-        providerDetails.surname +
-        ' has given you a review',
-    },
-  };
-  try {
-    await fetch(REVIEW_RATING, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reviewData),
-    })
-      .then(response => response.json())
-      .then(response => {
-        if (response.result) {
-          onSuccess('Review submitted');
-        } else {
-          onError('Something went wrong');
-        }
-      })
-      .catch(error => {
-        console.log('Error :' + error);
-        onError("Couldn't submit review");
-      })
-      .done();
-  } catch (e) {
-    console.log('Error :' + e);
-    onError('Something went wrong, please try again later');
   }
 };
 

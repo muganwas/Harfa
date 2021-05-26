@@ -17,7 +17,12 @@ import Toast from 'react-native-simple-toast';
 import ReviewDialog from '../ReviewDialog';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
-import {setSelectedJobRequest} from '../../Redux/Actions/jobsActions';
+import {reviewTask} from '../../controllers/bookings';
+import {cloneDeep} from 'lodash';
+import {
+  setSelectedJobRequest,
+  updateCompletedBookingData,
+} from '../../Redux/Actions/jobsActions';
 import {
   colorPrimary,
   colorBg,
@@ -55,7 +60,7 @@ class ProBookingDetailsScreen extends Component {
       isLoading: false,
       isErrorToast: false,
       bookingDetails: props.navigation.state.params.bookingDetails,
-      isDialogLogoutVisible: false,
+      isRatingDialogVisible: false,
       mainId: '',
       fcm_id: props.navigation.state.params.bookingDetails.user_details.fcm_id,
       username:
@@ -92,7 +97,7 @@ class ProBookingDetailsScreen extends Component {
       isLoading: false,
       isErrorToast: false,
       bookingDetails: props.navigation.state.params.bookingDetails,
-      isDialogLogoutVisible: false,
+      isRatingDialogVisible: false,
       mainId: '',
       fcm_id: props.navigation.state.params.bookingDetails.user_details.fcm_id,
       username:
@@ -114,109 +119,70 @@ class ProBookingDetailsScreen extends Component {
   };
 
   //Call also from ReviewDialog
-  changeDialogVisibility = async (bool, text, rating, review) => {
-    if (this.state.bookingDetails.employee_rating == '') {
-      if (rating != '') {
-        if (text == '') {
-          this.setState({
-            isDialogLogoutVisible: bool,
-            mainId: this.state.bookingDetails._id,
-          });
-        } else {
-          if (text == 'Not now') {
-            this.setState({
-              isDialogLogoutVisible: bool,
-            });
-          } else if (text == 'Submitted') {
-            this.setState({
-              isDialogLogoutVisible: bool,
-            });
-            await this.reviewTask(rating, review);
-          }
-        }
-      } else {
-        console.log('ELSE >>');
-        if (text == 'Not now') {
-          this.setState({
-            isDialogLogoutVisible: bool,
-          });
-        } else if (text == 'Submitted') {
-          this.setState({
-            isDialogLogoutVisible: bool,
-          });
-          await this.reviewTask(rating, review);
-        }
-      }
+  changeDialogVisibility = async (bool, resp) => {
+    const {employee_rating, employee_review, bookingDetails} = this.state;
+    this.setState({
+      isRatingDialogVisible: bool,
+      mainId: bookingDetails._id,
+    });
+    if (
+      bookingDetails.customer_rating === '' &&
+      employee_rating &&
+      employee_rating !== '' &&
+      resp === 'Submit'
+    ) {
+      console.log('uploading review...');
+      await this.reviewTaskProvider(employee_rating, employee_review);
     }
   };
 
-  reviewTask = async (rating, review) => {
-    this.setState({
-      isLoading: true,
-      isErrorToast: false,
-      employee_rating: rating,
-      employee_review: review,
-    });
-    const {providerDetails} = this.props.userInfo;
-    const reviewData = {
+  reviewTaskProvider = async (rating, review) =>
+    await reviewTask({
+      rating,
+      review,
       main_id: this.state.mainId,
-      type: 'Employee',
-      rating: rating,
-      review: review,
-      notification: {
-        fcm_id: this.state.fcm_id,
-        type: 'Review',
-        notification_by: 'Employee',
-        title: 'Given Review',
-        save_notification: true,
-        senderName: providerDetails.name,
-        senderId: providerDetails.providerId,
-        body: this.state.username + ' has given you a review',
+      fcm_id: this.state.fcm_id,
+      senderName: this.props?.userInfo?.providerDetails?.name,
+      senderId: this.props?.userInfo?.providerDetails?.providerId,
+      userType: 'Employee',
+      notification_by: 'Employee',
+      notificationType: 'Review',
+      reviewURL: REVIEW_RATING,
+      onSuccess: () => {
+        this.setState({
+          isErrorToast: false,
+          isLoading: false,
+          isReviewDialogVisible: false,
+          mainId: '',
+        });
+        const pos = this.props.navigation.getParam('position');
+        let newCompletedBookingData = cloneDeep(
+          this.props.jobsInfo.bookingCompleteData,
+        );
+        let newBookingDetails = cloneDeep(this.state.bookingDetails);
+        if (pos !== undefined) {
+          newBookingDetails.employee_rating = this.state.employee_rating;
+          newBookingDetails.employee_review = this.state.employee_review;
+          newCompletedBookingData[pos] = newBookingDetails;
+          this.props.updateCompletedBookingData(newCompletedBookingData);
+        }
       },
-    };
-    try {
-      await fetch(REVIEW_RATING, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reviewData),
-      })
-        .then(response => response.json())
-        .then(response => {
-          if (response.result) {
-            this.setState({
-              isErrorToast: false,
-              isLoading: false,
-              isReviewDialogVisible: false,
-              mainId: '',
-            });
-            //ToastAndroid.show("Review submitted", ToastAndroid.show);
-            this.showToast('Review submitted');
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
+      toggleIsLoading: bool => {
+        if (bool === true) {
+          this.setState({
+            isLoading: bool,
+            isErrorToast: false,
+            employee_rating: rating,
+            employee_review: review,
+          });
+        } else {
           this.setState({
             isLoading: false,
+            isErrorToast: true,
           });
-        })
-        .done();
-    } catch (e) {
-      console.log('Error :' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
+        }
+      },
+    });
 
   showToast = message => {
     Toast.show(message);
@@ -317,7 +283,11 @@ class ProBookingDetailsScreen extends Component {
                 {this.state.bookingDetails.user_details.username}
               </Text>
               <View
-                style={{flexDirection: 'row', marginLeft: 10, marginTop: 5}}>
+                style={{
+                  flexDirection: 'row',
+                  marginLeft: 10,
+                  marginTop: 5,
+                }}>
                 <Image
                   style={{
                     height: 15,
@@ -340,7 +310,11 @@ class ProBookingDetailsScreen extends Component {
                 </Text>
               </View>
               <View
-                style={{flexDirection: 'row', marginLeft: 10, marginTop: 5}}>
+                style={{
+                  flexDirection: 'row',
+                  marginLeft: 10,
+                  marginTop: 5,
+                }}>
                 <Image
                   style={{
                     height: 15,
@@ -389,7 +363,11 @@ class ProBookingDetailsScreen extends Component {
                   marginLeft: 10,
                 }}>
                 <Text
-                  style={{color: darkGray, fontWeight: 'bold', fontSize: 14}}>
+                  style={{
+                    color: darkGray,
+                    fontWeight: 'bold',
+                    fontSize: 14,
+                  }}>
                   {this.state.bookingDetails.createdDate}
                 </Text>
               </View>
@@ -480,13 +458,7 @@ class ProBookingDetailsScreen extends Component {
                 this.setState({
                   employee_rating: rating,
                 });
-                this.changeDialogVisibility(
-                  true,
-                  '',
-                  this.state.bookingDetails,
-                  rating,
-                  '',
-                );
+                this.changeDialogVisibility(true);
               }}
             />
           </View>
@@ -538,7 +510,12 @@ class ProBookingDetailsScreen extends Component {
             });
           }}>
           <Image
-            style={{width: 20, height: 20, marginLeft: 20, tintColor: white}}
+            style={{
+              width: 20,
+              height: 20,
+              marginLeft: 20,
+              tintColor: white,
+            }}
             source={require('../../icons/chatting.png')}
           />
           <Text
@@ -567,11 +544,9 @@ class ProBookingDetailsScreen extends Component {
 
         <Modal
           transparent={true}
-          visible={this.state.isDialogLogoutVisible}
+          visible={this.state.isRatingDialogVisible}
           animationType="fade"
-          onRequestClose={() =>
-            this.changeDialogVisibility(false, '', '', '', '', '')
-          }>
+          onRequestClose={() => this.changeDialogVisibility(false)}>
           <ReviewDialog
             style={{
               shadowColor: black,
@@ -580,12 +555,12 @@ class ProBookingDetailsScreen extends Component {
               shadowRadius: 5,
               elevation: 5,
             }}
+            rating={this.state.employee_rating}
+            review={this.state.employee_review}
+            updateReview={review => this.setState({employee_review: review})}
+            updateRating={rating => this.setState({employee_rating: rating})}
             changeDialogVisibility={this.changeDialogVisibility}
-            data={
-              JSON.stringify(this.state.bookingDetails) +
-              '//////' +
-              this.state.employee_rating
-            }
+            data={this.state.bookingDetails}
           />
         </Modal>
 
@@ -611,6 +586,9 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
   dispatchSelectedJobRequest: job => {
     dispatch(setSelectedJobRequest(job));
+  },
+  updateCompletedBookingData: data => {
+    dispatch(updateCompletedBookingData(data));
   },
 });
 
