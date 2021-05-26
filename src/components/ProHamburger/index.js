@@ -57,6 +57,7 @@ import {
   checkNoficationsAvailability,
 } from '../../misc/helpers';
 import {getAllNotifications} from '../../controllers/notifications';
+import {deregisterOnlineStatusListener} from '../../controllers/chats';
 import {getAllBookings} from '../../controllers/bookings';
 import {checkForUserType} from '../../controllers/users';
 
@@ -348,14 +349,7 @@ class ProHamburger extends React.Component {
       userInfo: {providerDetails},
     } = this.props;
     const senderId = providerDetails.providerId;
-    database()
-      .ref('adminChatting')
-      .child(senderId)
-      .off('child_added');
-    database()
-      .ref('adminChatting')
-      .child(senderId)
-      .off('child_changed');
+    deregisterOnlineStatusListener(senderId);
   }
 
   getAllNotificationsProvider = () =>

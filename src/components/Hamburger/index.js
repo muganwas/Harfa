@@ -61,6 +61,7 @@ import {
   checkNoficationsAvailability,
 } from '../../misc/helpers';
 import {checkForUserType} from '../../controllers/users';
+import {deregisterOnlineStatusListener} from '../../controllers/chats';
 import {getAllNotifications} from '../../controllers/notifications';
 import {getAllBookings} from '../../controllers/bookings';
 
@@ -450,19 +451,7 @@ class Hamburger extends React.Component {
       userInfo: {userDetails},
     } = this.props;
     const senderId = userDetails.userId;
-
-    database()
-      .ref('adminChatting')
-      .child(senderId)
-      .off('child_added');
-    database()
-      .ref('adminChatting')
-      .child(senderId)
-      .off('child_changed');
-    database()
-      .ref('chatting')
-      .child(senderId)
-      .off('child_changed');
+    deregisterOnlineStatusListener(senderId);
   }
 
   getAllNotificationsCustomer = () =>
