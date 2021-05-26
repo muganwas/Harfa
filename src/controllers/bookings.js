@@ -60,3 +60,66 @@ export const getAllBookings = async ({
     SimpleToast.show('Something went wrong, please try again');
   }
 };
+
+export const reviewTask = async ({
+  rating,
+  review,
+  main_id,
+  fcm_id,
+  senderName,
+  senderId,
+  userType,
+  notification_by,
+  notificationType,
+  reviewURL,
+  onSuccess,
+  toggleIsLoading,
+}) => {
+  toggleIsLoading(true);
+  const reviewData = {
+    main_id,
+    type: userType,
+    rating: rating,
+    review: review,
+    notification: {
+      fcm_id,
+      type: notificationType,
+      notification_by,
+      title: 'Given Review',
+      save_notification: true,
+      senderName,
+      senderId,
+      body: senderName + ' has given you a review',
+    },
+  };
+  try {
+    fetch(reviewURL, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reviewData),
+    })
+      .then(response => response.json())
+      .then(response => {
+        if (response.result) {
+          onSuccess();
+          SimpleToast.show('Review Submitted');
+        } else {
+          toggleIsLoading();
+          SimpleToast.show('Something went wrong, please try again.');
+        }
+      })
+      .catch(error => {
+        console.log('Error :' + error);
+        toggleIsLoading();
+        SimpleToast.show('Something went wrong, please try again.');
+      })
+      .done();
+  } catch (e) {
+    console.log('Error :' + e);
+    toggleIsLoading();
+    SimpleToast.show('Something went wrong, please try again.');
+  }
+};

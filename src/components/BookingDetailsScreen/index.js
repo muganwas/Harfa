@@ -14,11 +14,11 @@ import {
 } from 'react-native';
 import {connect} from 'react-redux';
 import {withNavigation} from 'react-navigation';
-import Toast from 'react-native-simple-toast';
 import {AirbnbRating} from 'react-native-ratings';
 import ReviewDialogCustomer from '../ReviewDialogCustomer';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
+import {reviewTask} from '../../controllers/bookings';
 import {setSelectedJobRequest} from '../../Redux/Actions/jobsActions';
 import {
   black,
@@ -135,7 +135,7 @@ class BookingDetailsScreen extends Component {
             this.setState({
               isDialogLogoutVisible: bool,
             });
-            this.reviewTask(rating, review);
+            this.reviewTaskCustomer(rating, review);
           }
         }
       } else {
@@ -148,80 +148,47 @@ class BookingDetailsScreen extends Component {
           this.setState({
             isDialogLogoutVisible: bool,
           });
-          this.reviewTask(rating, review);
+          this.reviewTaskCustomer(rating, review);
         }
       }
     }
   };
 
-  reviewTask = (rating, review) => {
-    this.setState({
-      isLoading: true,
-      customer_rating: rating,
-      customer_review: review,
-    });
-    const {userDetails} = this.props.userInfo;
-    const reviewData = {
+  reviewTaskCustomer = async (rating, review) =>
+    await reviewTask({
+      rating,
+      review,
       main_id: this.state.mainId,
-      type: 'Customer',
-      rating: rating,
-      review: review,
-      notification: {
-        fcm_id: this.state.fcm_id,
-        type: 'Review',
-        notification_by: 'Customer',
-        title: 'Given Review',
-        save_notification: true,
-        senderName: userDetails.username,
-        senderId: userDetails.userId,
-        body: this.state.username + ' has given you a review',
+      fcm_id: this.state.fcm_id,
+      senderName: this.props?.userInfo?.userDetails?.username,
+      senderId: this.props?.userInfo?.userDetails?.senderId,
+      userType: 'Customer',
+      notification_by: 'Customer',
+      notificationType: 'Review',
+      reviewURL: REVIEW_RATING,
+      onSuccess: () => {
+        this.setState({
+          isLoading: false,
+          isReviewDialogVisible: false,
+          mainId: '',
+          isErrorToast: false,
+        });
       },
-    };
-    try {
-      fetch(REVIEW_RATING, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reviewData),
-      })
-        .then(response => response.json())
-        .then(response => {
-          if (response.result) {
-            this.setState({
-              isLoading: false,
-              isReviewDialogVisible: false,
-              mainId: '',
-              isErrorToast: false,
-            });
-            this.showToast('Review Submitted');
-          } else {
-            this.setState({
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
-        })
-        .catch(error => {
-          console.log('Error :' + error);
+      toggleIsLoading: bool => {
+        if (bool === true) {
           this.setState({
-            isLoading: false,
+            isLoading: bool,
+            customer_rating: rating,
+            customer_review: review,
           });
-        })
-        .done();
-    } catch (e) {
-      console.log('Error :' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
-
-  showToast = message => {
-    Toast.show(message);
-  };
+        } else {
+          this.setState({
+            isLoading: bool,
+            isErrorToast: true,
+          });
+        }
+      },
+    });
 
   changeWaitingDialogVisibility = bool => {
     this.setState({

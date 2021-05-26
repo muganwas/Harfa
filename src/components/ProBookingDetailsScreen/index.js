@@ -17,6 +17,7 @@ import Toast from 'react-native-simple-toast';
 import ReviewDialog from '../ReviewDialog';
 import WaitingDialog from '../WaitingDialog';
 import Config from '../Config';
+import {reviewTask} from '../../controllers/bookings';
 import {setSelectedJobRequest} from '../../Redux/Actions/jobsActions';
 import {
   colorPrimary,
@@ -131,7 +132,7 @@ class ProBookingDetailsScreen extends Component {
             this.setState({
               isDialogLogoutVisible: bool,
             });
-            await this.reviewTask(rating, review);
+            await this.reviewTaskProvider(rating, review);
           }
         }
       } else {
@@ -144,13 +145,48 @@ class ProBookingDetailsScreen extends Component {
           this.setState({
             isDialogLogoutVisible: bool,
           });
-          await this.reviewTask(rating, review);
+          await this.reviewTaskProvider(rating, review);
         }
       }
     }
   };
 
-  reviewTask = async (rating, review) => {
+  reviewTaskProvider = async (rating, review) =>
+    await reviewTask({
+      rating,
+      review,
+      main_id: this.state.mainId,
+      fcm_id: this.state.fcm_id,
+      senderName: this.props?.userInfo?.providerDetails?.name,
+      senderId: this.props?.userInfo?.providerDetails?.providerId,
+      userType: 'Employee',
+      notification_by: 'Employee',
+      notificationType: 'Review',
+      reviewURL: REVIEW_RATING,
+      onSuccess: () => {
+        this.setState({
+          isErrorToast: false,
+          isLoading: false,
+          isReviewDialogVisible: false,
+          mainId: '',
+        });
+      },
+      toggleIsLoading: bool => {
+        if (bool === true) {
+          this.setState({
+            isLoading: bool,
+            isErrorToast: false,
+            employee_rating: rating,
+            employee_review: review,
+          });
+        } else {
+          this.setState({
+            isLoading: false,
+            isErrorToast: true,
+          });
+        }
+      },
+    }); /*{
     this.setState({
       isLoading: true,
       isErrorToast: false,
@@ -216,7 +252,7 @@ class ProBookingDetailsScreen extends Component {
         isLoading: false,
       });
     }
-  };
+  };*/
 
   showToast = message => {
     Toast.show(message);
