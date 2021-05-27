@@ -246,12 +246,14 @@ class Hamburger extends React.Component {
         imageExists(providerData.imageSource).then(res => {
           pendingJobData.imageAvailable = res;
         });
-        newJobRequests.push(pendingJobData);
-        fetchedPendingJobInfo(newJobRequests);
+        if (pos !== undefined) {
+          newJobRequests[pos] = pendingJobData;
+          fetchedPendingJobInfo(newJobRequests);
+          navigation.navigate('Home');
+        } else getPendingJobRequestProvider(this.props, senderId, 'Home');
         getAllWorkRequestClient(senderId);
         this.showToast('Chat request accepted');
         updateActiveRequest(false);
-        navigation.navigate('Home');
       } else if (
         title.toLowerCase() === 'No Response' ||
         title.toLowerCase() === 'cancelled' ||

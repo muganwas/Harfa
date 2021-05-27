@@ -15,7 +15,7 @@ const passwordRegex = /[^\w\d]*(([0-9]+.*[A-Z]+.*)|[A-Z]+.*([0-9]+.*))/;
 
 export const locationPermissionRequest = async (action = () => {}) => {
   try {
-    if (Platform.OS == 'ios') Geolocation.requestAuthorization();
+    if (Platform.OS === 'ios') Geolocation.requestAuthorization();
     else {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
