@@ -1,6 +1,9 @@
 import {imageExists} from '../misc/helpers';
 import {cloneDeep} from 'lodash';
 import SimpleToast from 'react-native-simple-toast';
+import Config from '../components/Config';
+
+const BOOKING_REQUEST = Config.baseURL + 'jobrequest/addjobrequest';
 
 export const getAllBookings = async ({
   userId,
@@ -121,5 +124,103 @@ export const reviewTask = async ({
     console.log('Error :' + e);
     toggleIsLoading();
     SimpleToast.show('Something went wrong, please try again.');
+  }
+};
+
+export const requestForBooking = async ({
+  fcm_id,
+  providerId,
+  serviceId,
+  serviceName,
+  userDetails,
+  online,
+  navigation,
+  onRequestSending,
+  onSuccess,
+  onError,
+  goBack,
+}) => {
+  if (!userDetails.lang) {
+    onError('Please provide your address first');
+    setTimeout(
+      () =>
+        navigation.navigate('SelectAddress', {
+          onGoBack: goBack,
+        }),
+      400,
+    );
+  } else if (!userDetails.mobile) {
+    onError('Please update mobile first');
+  } else {
+    onRequestSending();
+    const data = {
+      user_id: userDetails.userId,
+      employee_id: providerId,
+      service_id: serviceId,
+      delivery_address: userDetails.address,
+      delivery_lat: userDetails.lat,
+      delivery_lang: userDetails.lang,
+      notification: {
+        fcm_id,
+        title: 'Booking Request',
+        body: 'You have a booking request from ' + userDetails.username,
+        save_notification: true,
+        user_id: userDetails.userId,
+        employee_id: providerId,
+        notification_by: 'Customer',
+        data: {
+          userId: userDetails.userId,
+          serviceName: serviceName,
+          delivery_address: userDetails.address,
+          delivery_lat: userDetails.lat,
+          delivery_lang: userDetails.lang,
+        },
+      },
+    };
+    if (!online) {
+      onError('Service provider is Offline and might take a while to respond');
+    }
+    try {
+      fetch(BOOKING_REQUEST, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            onSuccess('Waiting for acceptance...');
+          } else {
+            if (responseJson.message == 'Already Exist') {
+              onError(
+                false,
+                'You already have a running job with this provider',
+              );
+            } else if (responseJson.message == 'Service provider busy') {
+              onError(
+                false,
+                'Service provider is currently busy. please try another service provider',
+              );
+            } else if (responseJson.message == 'Service provider is offline') {
+              onError(
+                false,
+                'Service provider is offline. Book another service provider',
+              );
+            } else {
+              SimpleToast.show('Something went wrong');
+            }
+          }
+        })
+        .catch(error => {
+          console.log('pro req error ', error);
+          onError('Something went wrong, try again later');
+        });
+    } catch (e) {
+      console.log('Pro request err !', e);
+      onError('Something went wrong, try again later');
+    }
   }
 };
