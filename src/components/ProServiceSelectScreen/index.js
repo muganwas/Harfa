@@ -86,6 +86,25 @@ export default class ProServiceSelectScreen extends Component {
     });
   };
 
+  checkValidation = () => {
+    const {navigation} = this.props;
+    const origin = navigation.getParam('from');
+    const onGoBack = navigation.getParam('onGoBack');
+    if (this.state.selectedServiceId.length > 0) {
+      navigation.state.params.onGoBack(
+        this.state.selectedServiceId + '/' + this.state.selectedServiceName,
+      );
+      if (origin === 'profile-screen') {
+        navigation.navigate('ProMyProfile', {
+          onGoBack,
+          from: 'service-select',
+        });
+      } else navigation.goBack();
+    } else {
+      SimpleToast.show('Select atleast one services', SimpleToast.SHORT);
+    }
+  };
+
   renderItem = (item, index) => {
     return (
       <View
@@ -136,25 +155,6 @@ export default class ProServiceSelectScreen extends Component {
         </View>
       </View>
     );
-  };
-
-  checkValidation = () => {
-    const {navigation} = this.props;
-    const origin = navigation.getParam('from');
-    const onGoBack = navigation.getParam('onGoBack');
-    if (this.state.selectedServiceId.length > 0) {
-      this.props.navigation.state.params.onGoBack(
-        this.state.selectedServiceId + '/' + this.state.selectedServiceName,
-      );
-      if (origin === 'profile-screen') {
-        this.props.navigation.navigate('ProMyProfile', {
-          onGoBack,
-          from: 'service-select',
-        });
-      } else this.props.navigation.goBack();
-    } else {
-      SimpleToast.show('Select atleast one services', SimpleToast.SHORT);
-    }
   };
 
   render() {

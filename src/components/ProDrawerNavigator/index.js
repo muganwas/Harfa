@@ -8,7 +8,6 @@ import ProDashboardScreen from '../ProDashboardScreen';
 import ProMyProfileScreen from '../ProMyProfileScreen';
 import ProNotificationsScreen from '../ProNotificationsScreen';
 import ProAllMessageScreen from '../ProAllMessageScreen';
-import ChatWithAdminScreen from '../ChatWithAdminScreen';
 import ContactUsScreen from '../ContactUsScreen';
 import ProAcceptRejectJobScreen from '../ProAcceptRejectJobScreen';
 import ProMapDirectionScreen from '../ProMapDirectionScreen';
@@ -46,7 +45,6 @@ const ProMyDrawerNavigator = createDrawerNavigator(
     ProChatAfterBookingDetails: {screen: ProChatAfterBookingDetailsScreen},
     ProNotifications: {screen: ProNotificationsScreen},
     ProAllMessage: {screen: ProAllMessageScreen},
-    ChatWithAdmin: {screen: ChatWithAdminScreen},
     ContactUs: {screen: ContactUsScreen},
     ProBooking: {screen: ProBookingScreen},
     LoginPhoneScreen: {screen: LoginPhoneScreen},
