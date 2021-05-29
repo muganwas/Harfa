@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {
   View,
+  ImageBackground,
   StatusBar,
   Text,
   StyleSheet,
@@ -17,20 +18,22 @@ import {connect} from 'react-redux';
 import ShakingText from 'react-native-shaking-text';
 import TextInputMask from 'react-native-text-input-mask';
 import messaging from '@react-native-firebase/messaging';
-import Axios from 'axios';
-import firebaseAuth from '@react-native-firebase/auth';
-import storage from '@react-native-firebase/storage';
-import database from '@react-native-firebase/database';
 import {
   updateProviderDetails,
   updateNewUserInfo,
 } from '../../Redux/Actions/userActions';
+import {
+  selectPhoto,
+  emailCheck,
+  passwordCheck,
+  phoneNumberCheck,
+} from '../../misc/helpers';
 import WaitingDialog from '../WaitingDialog';
 import DialogComponent from '../DialogComponent';
+import {registerTask, checkValidation} from '../../controllers/users';
 import Config from '../Config';
 import {black, white, themeRed, lightGray} from '../../Constants/colors';
 
-const storageRef = storage().ref('/employees_info');
 const screenWidth = Dimensions.get('window').width;
 const REGISTER_URL = Config.baseURL + 'employee/register';
 
@@ -59,7 +62,6 @@ class ProRegisterScreen extends Component {
       surname: '',
       email: '',
       password: '',
-      image: '',
       mobile: '',
       serviceName: 'Select services',
       serviceId: '',
@@ -79,6 +81,8 @@ class ProRegisterScreen extends Component {
       countryCode: '',
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
+      imageURI: null,
+      imageDataObject: null,
     };
     this.leftButtonActon = null;
     this.rightButtonAction = null;
@@ -86,10 +90,6 @@ class ProRegisterScreen extends Component {
 
   componentDidMount() {
     const {navigation} = this.props;
-    const countryCodeRef = database().ref('constants/countryCode');
-    countryCodeRef.once('value').then(code => {
-      this.setState({countryCode: code.val()});
-    });
     navigation.addListener('willFocus', async () => {
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -108,212 +108,162 @@ class ProRegisterScreen extends Component {
     return true;
   };
 
-  checkValidation = () => {
-    if (this.state.name == '') {
+  checkValidation = async () => {
+    const {
+      name,
+      mobile,
+      serviceName,
+      description,
+      address,
+      email,
+      imageURI,
+      password,
+    } = this.state;
+    if (!imageURI) {
+      this.setState({error: 'Select profile image'});
+    } else if (!name) {
       this.setState({error: 'Enter name'});
-    } else if (this.state.email == '') {
-      this.setState({error: 'Enter surname'});
-    } else if (this.state.mobile == '') {
-      this.setState({error: 'Enter mobile'});
-    } else if (this.state.serviceName == 'Select services') {
+    } else if (serviceName === 'Select services') {
       this.setState({error: 'Select services'});
-    } else if (this.state.description == '') {
+    } else if (!description) {
       this.setState({error: 'Enter description'});
-    } else if (
-      this.state.address == '' ||
-      this.state.address == 'Select Address'
-    ) {
+    } else if (address === '' || address === 'Select Address') {
       this.setState({error: 'Enter address'});
     } else {
-      this.registerTask();
+      const wrongPhoneNumberFormat = 'Please enter a proper phone number';
+      const noPhoneNumber = 'Please fill in your phone number';
+      const noCountryCode = 'Please check your internet connection';
+      const {
+        validationInfo: {countryCode, countryAlpha2},
+      } = this.props;
+      const isValidPhoneNumber = await phoneNumberCheck(mobile, countryAlpha2);
+      if (!countryCode) {
+        this.setState({error: noCountryCode});
+        return;
+      } else if (String(mobile.trim()) === String(countryCode.trim())) {
+        this.setState({error: noPhoneNumber});
+        return;
+      } else if (!isValidPhoneNumber) {
+        this.setState({error: wrongPhoneNumberFormat});
+        return;
+      } else {
+        await checkValidation(
+          email,
+          password,
+          error => this.setState({error}),
+          this.registerTaskProvider,
+        );
+      }
     }
   };
 
-  registerTask = async () => {
+  registerTaskProvider = async () => {
     const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-      const userData = {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    if (enabled && fcmToken) {
+      await registerTask({
+        userType: 'Provider',
+        fcmToken,
         username: this.state.name,
         surname: this.state.surname,
         email: this.state.email,
-        password: this.state.password,
-        image: this.state.image,
         mobile: this.state.mobile,
-        services: this.state.serviceId,
-        description: this.state.description,
-        address: this.state.address,
-        lat: this.state.lat,
-        lang: this.state.lng,
+        password: this.state.password,
+        dob: this.state.dob,
+        accountType: this.state.account_type,
         invoice: this.state.invoice,
-        fcm_id: fcmToken,
+        address: this.state.address,
+        description: this.state.description,
+        services: this.state.serviceId,
+        imageObject: this.state.imageDataObject,
         type: 'normal',
-        account_type: this.state.account_type,
+        lat: this.state.lat,
+        lang: this.state.lang,
+        toggleIsLoading: this.changeWaitingDialogVisibility,
+        registerURL: REGISTER_URL,
+        updateNewUserInfo: this.props.updateNewUserInfo,
+        onSuccess: msg => {
+          this.leftButtonActon = () => {
+            this.setState({
+              isLoading: false,
+              showDialog: false,
+              dialogType: null,
+            });
+          };
+          this.rightButtonAction = () => this.props.navigation.goBack();
+          this.setState({
+            isLoading: false,
+            showDialog: true,
+            dialogType: 'success',
+            dialogTitle: 'REGISTERED SUCCESSFULLY!',
+            dialogDesc: msg,
+            dialogLeftText: 'Cancel',
+            dialogRightText: 'Ok',
+          });
+        },
+        onError: (error, simple) => {
+          if (simple) {
+            this.setState({
+              error,
+              isLoading: false,
+            });
+          } else {
+            this.leftButtonActon = () => {
+              this.setState({
+                isLoading: false,
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.rightButtonAction = async () => {
+              await this.registerTaskProvider();
+              this.setState({
+                showDialog: false,
+                dialogType: null,
+              });
+            };
+            this.setState({
+              isLoading: false,
+              showDialog: true,
+              dialogType: 'error',
+              dialogTitle: 'OOPS!',
+              dialogDesc: error,
+              dialogLeftText: 'Cancel',
+              dialogRightText: 'Retry',
+            });
+          }
+        },
+      });
+    } else {
+      this.leftButtonActon = null;
+      this.rightButtonAction = () => {
+        if (Platform.OS == 'android') BackHandler.exitApp();
+        else RNExitApp.exitApp();
       };
       this.setState({
-        isLoading: true,
+        isLoading: false,
+        showDialog: true,
+        dialogType: 'error',
+        dialogTitle: 'ENABLE NOTIFICATIONS!',
+        dialogDesc:
+          'Check your internet connection and allow notifications to continue.',
+        dialogLeftText: 'Cancel',
+        dialogRightText: 'Ok',
       });
-
-      firebaseAuth()
-        .createUserWithEmailAndPassword(this.state.email, this.state.password)
-        .then(result => {
-          const {fileName, path} = imageObject;
-          const {updateNewUserInfo} = this.props;
-          const {
-            user,
-            user: {uid},
-          } = result;
-          const newUser = Object.assign({uid}, userData);
-          const userDataRef = storageRef.child(`/${uid}/${fileName}`);
-          updateNewUserInfo(newUser);
-          userDataRef
-            .putFile(path)
-            .then(uploadRes => {
-              const {state} = uploadRes;
-              if (state === 'success') {
-                userDataRef.getDownloadURL().then(urlResult => {
-                  let newUserData = cloneDeep(userData);
-                  newUserData.image = urlResult;
-                  try {
-                    Axios.post(REGISTER_URL, {
-                      data: JSON.stringify(newUserData),
-                    })
-                      .then(responseJson => {
-                        if (
-                          responseJson.status === 200 &&
-                          responseJson.data.createdDate
-                        ) {
-                          this.leftButtonActon = () => {
-                            this.setState({
-                              isLoading: false,
-                              showDialog: false,
-                              dialogType: null,
-                            });
-                          };
-                          this.rightButtonAction = () =>
-                            this.props.navigation.goBack();
-                          this.setState({
-                            isLoading: false,
-                            showDialog: true,
-                            dialogType: 'fb',
-                            dialogTitle: 'REGISTARTION SUCCESSFUL',
-                            dialogDesc:
-                              'We have send you a email verification link to your registered email id and then Login to your account',
-                            dialogLeftText: 'Cancel',
-                            dialogRightText: 'OK',
-                          });
-                        } else {
-                          this.leftButtonActon = () => {
-                            this.setState({
-                              isLoading: false,
-                              showDialog: false,
-                              dialogType: null,
-                            });
-                          };
-                          this.rightButtonAction = () => {
-                            this.registerTask(this.state.imageDataObject);
-                            this.setState({
-                              isLoading: false,
-                              showDialog: false,
-                              dialogType: null,
-                            });
-                          };
-                          this.setState({
-                            isLoading: false,
-                            showDialog: true,
-                            dialogType: 'fb',
-                            dialogTitle: 'OOPS!',
-                            dialogDesc: responseJson.data.message,
-                            dialogLeftText: 'Cancel',
-                            dialogRightText: 'Retry',
-                          });
-                        }
-                      })
-                      .catch(error => {
-                        this.leftButtonActon = () => {
-                          this.setState({
-                            isLoading: false,
-                            showDialog: false,
-                            dialogType: null,
-                          });
-                        };
-                        this.rightButtonAction = () => {
-                          this.registerTask(this.state.imageDataObject);
-                          this.setState({
-                            isLoading: false,
-                            showDialog: false,
-                            dialogType: null,
-                          });
-                        };
-                        this.setState({
-                          isLoading: false,
-                          showDialog: true,
-                          dialogType: 'fb',
-                          dialogTitle: 'OOPS!',
-                          dialogDesc: error.message,
-                          dialogLeftText: 'Cancel',
-                          dialogRightText: 'Retry',
-                        });
-                      })
-                      .done();
-                  } catch (e) {
-                    this.leftButtonActon = () => {
-                      this.setState({
-                        isLoading: false,
-                        showDialog: false,
-                        dialogType: null,
-                      });
-                    };
-                    this.rightButtonAction = () => {
-                      this.registerTask(this.state.imageDataObject);
-                      this.setState({
-                        isLoading: false,
-                        showDialog: false,
-                        dialogType: null,
-                      });
-                    };
-                    this.setState({
-                      isLoading: false,
-                      showDialog: true,
-                      dialogType: 'fb',
-                      dialogTitle: 'OOPS!',
-                      dialogDesc:
-                        'Something went wrong, please try again later',
-                      dialogLeftText: 'Cancel',
-                      dialogRightText: 'Retry',
-                    });
-                  }
-                });
-              }
-            })
-            .catch(error => {
-              simpleToast.show('Image upload failed', simpleToast.SHORT);
-              console.log('image upload error', error.messge);
-            });
-        })
-        .catch(error => {
-          if (error.code === 'auth/email-already-in-use')
-            this.setState({
-              error: 'The email is already registerd.',
-              isLoading: false,
-            });
-          else if (error.code === 'auth/invalid-email')
-            this.setState({
-              error: 'Your email address is invalid!',
-              isLoading: false,
-            });
-          else if (error.code === 'auth/weak-password')
-            this.setState({
-              error: 'Your password is too weak',
-              isLoading: false,
-            });
-          else
-            this.setState({
-              error: 'Something went wrong, please try again later',
-              isLoading: false,
-            });
-        });
     }
   };
+
+  selectPhotoReg = async () =>
+    await selectPhoto(obj =>
+      this.setState({
+        imageURI: obj.imageURI,
+        imageDataObject: obj.imageDataObject,
+        error: obj.error,
+      }),
+    );
 
   getDataFromServiceScreen = data => {
     var data = data.split('/');
@@ -333,9 +283,9 @@ class ProRegisterScreen extends Component {
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
   };
 
   changeDialogVisibility = () =>
@@ -349,8 +299,10 @@ class ProRegisterScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
-      countryCode,
     } = this.state;
+    const {
+      validationInfo: {countryCode},
+    } = this.props;
     return (
       <View style={StyleSheet.container}>
         <StatusBarPlaceHolder />
@@ -384,42 +336,76 @@ class ProRegisterScreen extends Component {
             }}>
             <View
               style={{
-                flex: 0.25,
                 width: screenWidth,
-                backgroundColor: white,
+                height: screenWidth,
+                backgroundColor: '#D8D7D3',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <TouchableOpacity
-                style={{
-                  width: 35,
-                  height: 35,
-                  alignSelf: 'flex-start',
-                  justifyContent: 'center',
-                  marginLeft: 5,
-                  marginTop: 5,
-                }}
-                onPress={() => this.props.navigation.goBack()}>
-                <Image
-                  style={{
-                    width: 20,
-                    height: 20,
-                    tintColor: black,
-                    alignSelf: 'center',
-                  }}
-                  source={require('../../icons/arrow_back.png')}
-                />
-              </TouchableOpacity>
-              <Image
-                style={{width: 170, height: 170}}
-                source={require('../../images/kuchapa_logo.png')}
-                resizeMode="contain"
-              />
+              <ImageBackground
+                style={{width: screenWidth, height: screenWidth}}
+                source={
+                  this.state.imageURI != null
+                    ? this.state.imageURI
+                    : require('../../icons/user.png')
+                }>
+                <View style={{width: screenWidth, height: screenWidth}}>
+                  <TouchableOpacity
+                    style={{
+                      width: 35,
+                      height: 35,
+                      position: 'absolute',
+                      justifyContent: 'center',
+                      start: 0,
+                      margin: 5,
+                    }}
+                    onPress={() => this.props.navigation.goBack()}>
+                    <Image
+                      style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: black,
+                        alignSelf: 'center',
+                      }}
+                      source={require('../../icons/arrow_back.png')}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{
+                      width: 40,
+                      height: 40,
+                      position: 'absolute',
+                      end: 0,
+                      alignSelf: 'flex-end',
+                      alignContent: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 50,
+                      backgroundColor: '#fff',
+                      margin: 20,
+                      shadowColor: '#000',
+                      shadowOffset: {width: 0, height: 0},
+                      shadowOpacity: 0.75,
+                      shadowRadius: 5,
+                      elevation: 5,
+                    }}
+                    onPress={this.selectPhotoReg}>
+                    <Image
+                      style={{
+                        width: 20,
+                        height: 20,
+                        tintColor: themeRed,
+                        alignSelf: 'center',
+                      }}
+                      source={require('../../icons/camera.png')}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </ImageBackground>
             </View>
 
             <View style={styles.logincontainer}>
-              <ShakingText
-                style={{color: 'red', fontWeight: 'bold', marginBottom: 5}}>
+              <ShakingText style={styles.shakingText}>
                 {this.state.error}
               </ShakingText>
 
@@ -488,8 +474,12 @@ class ProRegisterScreen extends Component {
                     color: black,
                   }}
                   placeholder="Email"
-                  onChangeText={emailInput =>
-                    this.setState({error: '', email: emailInput})
+                  onChangeText={email =>
+                    emailCheck(
+                      email,
+                      email => this.setState({email, error: ''}),
+                      error => this.setState({error}),
+                    )
                   }
                 />
               </View>
@@ -508,8 +498,12 @@ class ProRegisterScreen extends Component {
                   }}
                   placeholder="Password"
                   secureTextEntry={true}
-                  onChangeText={passwordInput =>
-                    this.setState({error: '', password: passwordInput})
+                  onChangeText={password =>
+                    passwordCheck(
+                      password,
+                      password => this.setState({password, error: ''}),
+                      error => this.setState({error}),
+                    )
                   }
                 />
               </View>
@@ -685,6 +679,7 @@ class ProRegisterScreen extends Component {
 
 const mapStateToProps = state => ({
   userInfo: state.userInfo,
+  validationInfo: state.validationInfo,
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -707,6 +702,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: lightGray,
+  },
+  shakingText: {
+    flex: 1,
+    color: 'red',
+    fontWeight: 'bold',
+    margin: 10,
+    textAlign: 'center',
   },
   logincontainer: {
     flex: 0.65,

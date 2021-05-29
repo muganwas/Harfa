@@ -5,6 +5,7 @@ import messaging from '@react-native-firebase/messaging';
 import {exitApp} from 'react-native-exit-app';
 import {MAPS_API_KEY} from 'react-native-dotenv';
 import {PhoneNumberUtil} from 'google-libphonenumber';
+import ImagePicker from 'react-native-image-picker';
 import {cloneDeep} from 'lodash';
 import SimpleToast from 'react-native-simple-toast';
 import moment from 'moment';
@@ -161,7 +162,7 @@ export const emailCheck = async (email = '', setEmail, setError) => {
 
 export const passwordCheck = async (password = '', setPassword, setError) => {
   const wrongPassFormat =
-    'Your password must have a number, capital letter and symbol';
+    'Your password must have a number, and capital letter';
   const noPassword = 'Please fill enter a password';
   const shortpassword = 'Your password is too short';
   if (password) {
@@ -252,4 +253,27 @@ export const imageExists = async image_url => {
       });
   else result = false;
   return result;
+};
+
+export const selectPhoto = async callback => {
+  const options = {
+    title: 'Select a photo',
+    takePhotoButtonTitle: 'Take a photo',
+    chooseFromLibraryButtonTitle: 'Choose from gallery',
+    quality: 1,
+  };
+  ImagePicker.showImagePicker(options, response => {
+    if (response.didCancel) {
+      SimpleToast.show('You cancelled image selection', SimpleToast.SHORT);
+    } else if (response.error) {
+      SimpleToast.show('Something went wrong, try again.');
+    } else {
+      const source = {uri: response.uri};
+      callback({
+        imageURI: source,
+        imageDataObject: response,
+        error: '',
+      });
+    }
+  });
 };
