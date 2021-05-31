@@ -287,7 +287,14 @@ class MyProfileScreen extends Component {
       userInfo: {userDetails},
       validationInfo: {countryCode},
     } = this.props;
-    const {mobile, emailDisabled, emailSet, mobileDisabled} = this.state;
+    const {
+      mobile,
+      emailDisabled,
+      emailSet,
+      mobileDisabled,
+      galleryCameraImage,
+      image,
+    } = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -340,11 +347,11 @@ class MyProfileScreen extends Component {
                   marginTop: 20,
                 }}
                 source={
-                  this.state.galleryCameraImage == ''
-                    ? this.state.image
-                      ? {uri: this.state.image}
+                  !galleryCameraImage
+                    ? image
+                      ? {uri: image}
                       : require('../../images/generic_avatar.png')
-                    : {uri: this.state.image.uri}
+                    : {uri: image.uri}
                 }
               />
 

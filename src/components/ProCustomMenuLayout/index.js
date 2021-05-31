@@ -15,7 +15,7 @@ import {notificationsFetched} from '../../Redux/Actions/notificationActions';
 import {black, lightGray, themeRed, white} from '../../Constants/colors';
 
 class CustomMenuLayout extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       imageExists: true,
@@ -27,7 +27,7 @@ class CustomMenuLayout extends Component {
     const {
       userInfo: {providerDetails},
     } = this.props;
-    imageExists(providerDetails.imageSource).then(result => {
+    await imageExists(providerDetails.imageSource).then(result => {
       this.setState({imageExists: result});
     });
   }

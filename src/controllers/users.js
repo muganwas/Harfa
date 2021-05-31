@@ -1043,7 +1043,7 @@ export const registerTask = async ({
                     responseJson.data.createdDate
                   ) {
                     onSuccess(
-                      'We have send you a email verification link to your registered email id and then Login to your account',
+                      'Please check your email inbox for an account verificatoin link.',
                     );
                   } else {
                     onError(

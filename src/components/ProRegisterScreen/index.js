@@ -186,13 +186,7 @@ class ProRegisterScreen extends Component {
         registerURL: REGISTER_URL,
         updateNewUserInfo: this.props.updateNewUserInfo,
         onSuccess: msg => {
-          this.leftButtonActon = () => {
-            this.setState({
-              isLoading: false,
-              showDialog: false,
-              dialogType: null,
-            });
-          };
+          this.leftButtonActon = null;
           this.rightButtonAction = () => this.props.navigation.goBack();
           this.setState({
             isLoading: false,
