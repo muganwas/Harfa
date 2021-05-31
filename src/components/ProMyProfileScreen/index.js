@@ -301,7 +301,14 @@ class ProMyProfileScreen extends Component {
   };
 
   render() {
-    const {mobile, emailDisabled, emailSet, mobileDisabled} = this.state;
+    const {
+      mobile,
+      emailDisabled,
+      emailSet,
+      mobileDisabled,
+      galleryCameraImage,
+      imageSource,
+    } = this.state;
     const {
       validationInfo: {countryCode},
     } = this.props;
@@ -343,11 +350,11 @@ class ProMyProfileScreen extends Component {
                   marginTop: 20,
                 }}
                 source={
-                  this.state.galleryCameraImage == ''
-                    ? this.state.imageSource
-                      ? {uri: this.state.imageSource}
+                  !galleryCameraImage
+                    ? imageSource
+                      ? {uri: imageSource}
                       : require('../../images/generic_avatar.png')
-                    : {uri: this.state.imageSource.uri}
+                    : {uri: imageSource.uri}
                 }
               />
 

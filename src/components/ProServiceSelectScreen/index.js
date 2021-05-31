@@ -7,13 +7,13 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
-  ToastAndroid,
   StatusBar,
   Platform,
 } from 'react-native';
 import CheckBox from 'react-native-check-box';
-import Config from '../Config';
+import SimpleToast from 'react-native-simple-toast';
 import images from '../../Constants/images';
+import {fetchServices} from '../../controllers/jobs';
 import {
   colorBg,
   colorPrimary,
@@ -23,7 +23,6 @@ import {
   lightGray,
 } from '../../Constants/colors';
 
-const SERVICES_URL = Config.baseURL + 'service/getall';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -42,7 +41,7 @@ const StatusBarPlaceHolder = () => {
 };
 
 export default class ProServiceSelectScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       dataSource: [],
@@ -50,6 +49,23 @@ export default class ProServiceSelectScreen extends Component {
       selectedServiceName: [],
       isLoading: true,
     };
+  }
+
+  async componentDidMount() {
+    //Get All Services
+    await fetchServices({
+      onSuccess: dataSource =>
+        this.setState({
+          dataSource,
+          isLoading: false,
+        }),
+      onError: msg => {
+        this.setState({
+          isLoading: false,
+        });
+        SimpleToast.show(msg);
+      },
+    });
   }
 
   onCheckBoxPress = (id, serviceName) => {
@@ -70,6 +86,25 @@ export default class ProServiceSelectScreen extends Component {
     });
   };
 
+  checkValidation = () => {
+    const {navigation} = this.props;
+    const origin = navigation.getParam('from');
+    const onGoBack = navigation.getParam('onGoBack');
+    if (this.state.selectedServiceId.length > 0) {
+      navigation.state.params.onGoBack(
+        this.state.selectedServiceId + '/' + this.state.selectedServiceName,
+      );
+      if (origin === 'profile-screen') {
+        navigation.navigate('ProMyProfile', {
+          onGoBack,
+          from: 'service-select',
+        });
+      } else navigation.goBack();
+    } else {
+      SimpleToast.show('Select atleast one services', SimpleToast.SHORT);
+    }
+  };
+
   renderItem = (item, index) => {
     return (
       <View
@@ -85,18 +120,32 @@ export default class ProServiceSelectScreen extends Component {
         <View
           style={[
             styles.touchaleHighlight,
-            {justifyContent: 'center', alignItems: 'center'},
+            {
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
           ]}>
           <Image
-            style={{width: 25, tintColor: white, height: 25}}
+            style={{
+              width: 25,
+              tintColor: white,
+              height: 25,
+            }}
             source={images[item.image]}
           />
         </View>
         <Text style={styles.textHeader}> {item.service_name}</Text>
         <View
-          style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignContent: 'center',
+          }}>
           <CheckBox
-            style={{alignSelf: 'flex-end', marginRight: 20}}
+            style={{
+              alignSelf: 'flex-end',
+              marginRight: 20,
+            }}
             isChecked={
               this.state.selectedServiceId.includes(item.id) ? true : false
             }
@@ -106,55 +155,6 @@ export default class ProServiceSelectScreen extends Component {
         </View>
       </View>
     );
-  };
-
-  //Get All Services
-  componentDidMount() {
-    try {
-      fetch(SERVICES_URL)
-        .then(response => response.json())
-        .then(responseJson => {
-          this.setState({
-            dataSource: responseJson.data, //data is key
-            isLoading: false,
-          });
-        })
-        .catch(error => {
-          console.log(error);
-          this.setState({
-            isLoading: false,
-          });
-          ToastAndroid.show(
-            'Something went wrong, Check your internet connection',
-            ToastAndroid.SHORT,
-          );
-        });
-    } catch (e) {
-      console.log(e);
-      this.setState({
-        isLoading: false,
-      });
-      ToastAndroid.show('Something went wrong, try again.', ToastAndroid.SHORT);
-    }
-  }
-
-  checkValidation = () => {
-    const {navigation} = this.props;
-    const origin = navigation.getParam('from');
-    const onGoBack = navigation.getParam('onGoBack');
-    if (this.state.selectedServiceId.length > 0) {
-      this.props.navigation.state.params.onGoBack(
-        this.state.selectedServiceId + '/' + this.state.selectedServiceName,
-      );
-      if (origin === 'profile-screen') {
-        this.props.navigation.navigate('ProMyProfile', {
-          onGoBack,
-          from: 'service-select',
-        });
-      } else this.props.navigation.goBack();
-    } else {
-      ToastAndroid.show('Select atleast one services', ToastAndroid.SHORT);
-    }
   };
 
   render() {
@@ -173,7 +173,11 @@ export default class ProServiceSelectScreen extends Component {
             paddingTop: 5,
             paddingBottom: 5,
           }}>
-          <View style={{flex: 1, flexDirection: 'row'}}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+            }}>
             <TouchableOpacity
               style={{
                 width: 35,

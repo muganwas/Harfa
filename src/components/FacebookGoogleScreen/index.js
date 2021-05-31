@@ -29,6 +29,7 @@ import {
 import WaitingDialog from '../WaitingDialog';
 import DialogComponent from '../DialogComponent';
 import {themeRed, black, white, lightGray} from '../../Constants/colors';
+import {emailCheck, passwordCheck} from '../../misc/helpers';
 import {
   facebookLoginTask,
   fbGmailLoginTask,
@@ -78,6 +79,7 @@ class FacebookGoogleScreen extends Component {
       dialogDesc: '',
       dialogLeftText: 'Cancel',
       dialogRightText: 'Retry',
+      error: '',
     };
     this.leftButtonActon = null;
     this.rightButtonAction = null;
@@ -219,6 +221,7 @@ class FacebookGoogleScreen extends Component {
       dialogDesc,
       dialogLeftText,
       dialogRightText,
+      error,
     } = this.state;
     const {updateUserAuthToken} = this.props;
     return (
@@ -288,7 +291,7 @@ class FacebookGoogleScreen extends Component {
                   fontWeight: 'bold',
                   marginBottom: 10,
                 }}>
-                {this.state.error}
+                {error}
               </ShakingText>
               <View style={styles.textInputView}>
                 <Image
@@ -303,9 +306,12 @@ class FacebookGoogleScreen extends Component {
                     color: black,
                   }}
                   placeholder="Email"
-                  value={this.state.email}
-                  onChangeText={emailInput =>
-                    this.setState({email: emailInput})
+                  onChangeText={email =>
+                    emailCheck(
+                      email,
+                      email => this.setState({email, error: ''}),
+                      error => this.setState({error}),
+                    )
                   }
                 />
               </View>
@@ -322,10 +328,13 @@ class FacebookGoogleScreen extends Component {
                     color: black,
                   }}
                   placeholder="Password"
-                  value={this.state.password}
                   secureTextEntry={true}
-                  onChangeText={passwordInput =>
-                    this.setState({error: '', password: passwordInput})
+                  onChangeText={password =>
+                    passwordCheck(
+                      password,
+                      password => this.setState({password, error: ''}),
+                      error => this.setState({error}),
+                    )
                   }
                 />
               </View>

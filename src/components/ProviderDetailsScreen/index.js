@@ -16,8 +16,6 @@ import {
 } from 'react-native';
 import {AirbnbRating} from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
-import database from '@react-native-firebase/database';
-import {cloneDeep} from 'lodash';
 import {
   startFetchingJobCustomer,
   fetchedJobCustomerInfo,
@@ -26,9 +24,8 @@ import {
   updateActiveRequest,
   getPendingJobRequest,
 } from '../../Redux/Actions/jobsActions';
-import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
-import {clone} from 'lodash';
+import {cloneDeep} from 'lodash';
 import {imageExists} from '../../misc/helpers';
 import {
   updateUserDetails,
@@ -39,6 +36,11 @@ import {
   notificationsFetched,
   notificationError,
 } from '../../Redux/Actions/notificationActions';
+import {
+  setOnlineStatusListener,
+  deregisterOnlineStatusListener,
+} from '../../controllers/chats';
+import {requestForBooking} from '../../controllers/bookings';
 import {
   lightGray,
   themeRed,
@@ -51,8 +53,6 @@ import DialogComponent from '../DialogComponent';
 import Availability from '../AvailabilityComponent';
 
 const screenWidth = Dimensions.get('window').width;
-
-const BOOKING_REQUEST = Config.baseURL + 'jobrequest/addjobrequest';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -71,7 +71,7 @@ const StatusBarPlaceHolder = () => {
 };
 
 class ProviderDetailsScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       providerId: null,
@@ -96,7 +96,6 @@ class ProviderDetailsScreen extends Component {
       isJobAccepted: false,
       isErrorToast: false,
       isLoading: true,
-      timer: null,
       title: '',
       body: '',
       data: '',
@@ -111,175 +110,43 @@ class ProviderDetailsScreen extends Component {
     this.rightButtonAction = null;
   }
 
-  requestForBooking = () => {
-    const {
-      userInfo: {userDetails},
-      navigation,
-    } = this.props;
-    if (userDetails.lang == '') {
-      this.setState({
-        isErrorToast: true,
-      });
-      this.showToast('Please provide your address first');
-      setTimeout(
-        () =>
-          navigation.navigate('SelectAddress', {
-            onGoBack: this.goBack,
-          }),
-        400,
-      );
-    } else if (userDetails.mobile == '') {
-      this.setState({
-        isErrorToast: true,
-      });
-      this.showToast('Please update mobile first');
-      //ToastAndroid.show("Please update your mobile number", ToastAndroid.SHORT);
-    } else {
-      this.setState({
-        requestStatus: 'Request Sending...',
-        isLoading: true,
-      });
-
-      const data = {
-        user_id: userDetails.userId,
-        employee_id: this.state.providerId,
-        service_id: this.state.serviceId,
-        delivery_address: userDetails.address,
-        delivery_lat: userDetails.lat,
-        delivery_lang: userDetails.lang,
-        notification: {
-          fcm_id: this.props.navigation.state.params.fcmId,
-          title: 'Booking Request',
-          body: 'You have a booking request from ' + userDetails.username,
-          save_notification: true,
-          user_id: userDetails.userId,
-          employee_id: this.state.providerId,
-          notification_by: 'Customer',
-          data: {
-            userId: userDetails.userId,
-            serviceName: this.state.serviceName,
-            delivery_address: userDetails.address,
-            delivery_lat: userDetails.lat,
-            delivery_lang: userDetails.lang,
-          },
-        },
-      };
-      if (!this.state.online) {
+  requestProBooking = async () =>
+    await requestForBooking({
+      fcm_id: this.state.fcmId,
+      providerId: this.state.providerId,
+      serviceId: this.state.serviceId,
+      serviceName: this.state.serviceName,
+      userDetails: this.props?.userInfo?.userDetails,
+      online: this.state.online,
+      navigation: this.props.navigation,
+      onRequestSending: () =>
         this.setState({
-          isErrorToast: false,
-        });
-        //ToastAndroid.show("Service provider is Offline", ToastAndroid.SHORT);
-        this.showToast(
-          'Service provider is Offline and might take a while to respond',
-        );
-      }
-      try {
-        fetch(BOOKING_REQUEST, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        })
-          .then(response => response.json())
-          .then(responseJson => {
-            if (responseJson.result) {
-              this.props.updateActiveRequest(true);
-              this.setState({
-                requestStatus: 'Waiting for acceptance...',
-                isLoading: false,
-              });
-            } else {
-              if (responseJson.message == 'Already Exist') {
-                this.leftButtonActon = null;
-                this.rightButtonAction = () => {
-                  this.setState({
-                    isLoading: false,
-                    showDialog: false,
-                    dialogType: null,
-                  });
-                };
-                this.setState({
-                  isLoading: false,
-                  showDialog: true,
-                  dialogType: 'fb',
-                  dialogTitle: 'JOB REQUEST ALERT!',
-                  dialogDesc:
-                    'You already have a running job with this provider',
-                  dialogLeftText: 'Cancel',
-                  dialogRightText: 'Ok',
-                });
-              } else if (responseJson.message == 'Service provider busy') {
-                this.leftButtonActon = null;
-                this.rightButtonAction = () => this.goBack();
-                this.setState({
-                  isLoading: false,
-                  showDialog: true,
-                  dialogType: 'fb',
-                  dialogTitle: 'Busy!',
-                  dialogDesc:
-                    'Service provider is currently busy. please try another service provider',
-                  dialogLeftText: 'Cancel',
-                  dialogRightText: 'Ok',
-                });
-              } else if (
-                responseJson.message == 'Service provider is offline'
-              ) {
-                this.leftButtonActon = null;
-                this.rightButtonAction = () => this.goBack();
-                this.setState({
-                  isLoading: false,
-                  showDialog: true,
-                  dialogType: 'fb',
-                  dialogTitle: 'OFFLINE!',
-                  dialogDesc:
-                    'Service provider is offline. Book another service provider',
-                  dialogLeftText: 'Cancel',
-                  dialogRightText: 'Ok',
-                });
-              } else if (responseJson.message == 'No Response') {
-                this.leftButtonActon = null;
-                this.rightButtonAction = () => this.goBack();
-                this.setState({
-                  isLoading: false,
-                  showDialog: true,
-                  dialogType: 'fb',
-                  dialogTitle: 'NO RESPONSE!',
-                  dialogDesc:
-                    "Check your internet connection, may be it's too slow",
-                  dialogLeftText: 'Cancel',
-                  dialogRightText: 'Ok',
-                });
-              } else {
-                //ToastAndroid.show("Something went wrong", ToastAndroid.SHORT);
-                this.showToast('Something went wrong');
-              }
-            }
-          })
-          .catch(error => {
-            this.setState({
-              timer: null,
-              requestStatus: 'No Response',
-              isLoading: false,
-            });
-            //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-            this.showToast('Something went wrong, try again later');
-          });
-      } catch (e) {
+          requestStatus: 'Request Sending...',
+          isLoading: true,
+        }),
+      onSuccess: requestStatus => {
+        this.props.updateActiveRequest(true);
         this.setState({
-          timer: null,
-          requestStatus: 'No Response',
+          requestStatus,
           isLoading: false,
         });
-        //ToastAndroid.show("Something went wrong", ToastAndroid.show);
-        this.showToast('Something went wrong, try again later');
-      }
-    }
-  };
+      },
+      onError: (simple, msg) => {
+        if (simple) {
+          this.showToast(msg);
+        } else {
+          this.setState({
+            requestStatus: 'No Response',
+            isLoading: false,
+          });
+          this.showToast(msg);
+        }
+      },
+      goBack: this.goBack,
+    });
 
   goBack = () => {
-    this.setState({isLoading: false});
+    this.setState({isLoading: false, requestStatus: ''});
     this.props.navigation.goBack();
   };
 
@@ -357,54 +224,25 @@ class ProviderDetailsScreen extends Component {
       isJobAccepted: false,
       isErrorToast: false,
       isLoading: false,
-      timer: null,
       title: '',
       body: '',
       data: '',
     });
     const {image} = this.props.navigation.state.params;
-    imageExists(image).then(imageAvailable => {
+    await imageExists(image).then(imageAvailable => {
       this.setState({imageAvailable});
     });
-    const onlineUsers = clone(OnlineUsers);
-    const providerId = navigation.state.params.providerId;
-    const userRef = database().ref(`users/${providerId}`);
-
-    userRef.on('child_changed', result => {
-      if (result && result.key === 'status' && providerId) {
-        if (onlineUsers[providerId] && result.val() === '1')
+    const providerId = navigation.getParam('providerId');
+    providerId &&
+      setOnlineStatusListener({
+        OnlineUsers,
+        userId: providerId,
+        setStatus: (selectedStatus, online) =>
           this.setState({
-            selectedStatus: result.val(),
-            online:
-              onlineUsers[providerId] && onlineUsers[providerId].status === '1',
-          });
-        else
-          this.setState({
-            online: result.val() === '1',
-            selectedStatus: result.val(),
-          });
-      } else console.log('provider id unavailable');
-    });
-
-    userRef.once('value', data => {
-      if (data) {
-        const {status} = data.val();
-        if (providerId) {
-          if (onlineUsers[providerId]) {
-            if (onlineUsers[providerId] && status === '1')
-              this.setState({
-                selectedStatus: status,
-                online:
-                  onlineUsers[providerId] &&
-                  onlineUsers[providerId].status === '1',
-              });
-            else {
-              this.setState({online: status === '1', selectedStatus: status});
-            }
-          }
-        }
-      }
-    });
+            selectedStatus,
+            online,
+          }),
+      });
   };
 
   handleBackButtonClick = () => {
@@ -421,8 +259,7 @@ class ProviderDetailsScreen extends Component {
     let newJobRequests = cloneDeep(jobRequests);
     let data = this.state.data;
     const providerData = JSON.parse(data.ProviderData);
-
-    var pendingJobData = {
+    const pendingJobData = {
       id: data.mainId,
       order_id: data.orderId,
       employee_id: providerData.providerId,
@@ -474,8 +311,11 @@ class ProviderDetailsScreen extends Component {
     const {
       userInfo: {userDetails},
       getPendingJobRequest,
+      navigation,
     } = this.props;
     getPendingJobRequest(this.props, userDetails.userId);
+    const providerId = navigation.getParam('providerId');
+    providerId && deregisterOnlineStatusListener(providerId);
   }
 
   changeDialogVisibility = () =>
@@ -640,7 +480,7 @@ class ProviderDetailsScreen extends Component {
           <View style={[styles.bottomView, {flexDirection: 'row'}]}>
             <TouchableOpacity
               style={styles.buttonContainer}
-              onPress={this.requestForBooking}>
+              onPress={this.requestProBooking}>
               <Text style={styles.text}>Send Request</Text>
             </TouchableOpacity>
           </View>

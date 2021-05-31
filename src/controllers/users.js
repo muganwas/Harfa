@@ -10,17 +10,11 @@ import {GoogleSignin, statusCodes} from '@react-native-community/google-signin';
 import firebaseAuth from '@react-native-firebase/auth';
 import rNES from 'react-native-encrypted-storage';
 import SimpleToast from 'react-native-simple-toast';
-import axios from 'axios';
 import {cloneDeep} from 'lodash';
 import database from '@react-native-firebase/database';
 import storage from '@react-native-firebase/storage';
 import Config from '../components/Config';
-import {
-  emailCheck,
-  passwordCheck,
-  sanitizeMobileNumber,
-  phoneNumberCheck,
-} from '../misc/helpers';
+import {emailCheck, passwordCheck, sanitizeMobileNumber} from '../misc/helpers';
 
 const PRO_GET_PROFILE = Config.baseURL + 'employee/';
 const USER_GET_PROFILE = Config.baseURL + 'users/';
@@ -717,12 +711,11 @@ export const updateProfileImageTask = async ({
       const {state} = uploadRes;
       if (state === 'success') {
         userDataRef.getDownloadURL().then(urlResult => {
-          axios
-            .post(updateURL + userId, {
-              type: imageObject.type,
-              uri: urlResult,
-              name: imageObject.fileName,
-            })
+          Axios.post(updateURL + userId, {
+            type: imageObject.type,
+            uri: urlResult,
+            name: imageObject.fileName,
+          })
             .then(async res => {
               let newUserDetails = cloneDeep(userDetails);
               /** cater for different names for user and client */
@@ -970,4 +963,117 @@ export const phoneLoginTask = async ({
       SimpleToast.SHORT,
     );
   }
+};
+
+export const registerTask = async ({
+  email,
+  username,
+  surname,
+  userType,
+  mobile,
+  services,
+  description,
+  address,
+  lat,
+  lang,
+  invoice,
+  password,
+  fcmToken,
+  dob,
+  accountType,
+  type,
+  imageObject,
+  toggleIsLoading,
+  registerURL,
+  updateNewUserInfo,
+  onSuccess,
+  onError,
+}) => {
+  toggleIsLoading(true);
+  const userData =
+    userType === 'Provider'
+      ? {
+          username,
+          surname,
+          email,
+          password,
+          mobile,
+          services,
+          description,
+          address,
+          lat,
+          lang,
+          invoice,
+          fcm_id: fcmToken,
+          type,
+          account_type: accountType,
+        }
+      : {
+          username,
+          email,
+          mobile,
+          password,
+          dob,
+          acc_type: accountType,
+          fcm_id: fcmToken,
+          type,
+        };
+  firebaseAuth()
+    .createUserWithEmailAndPassword(email, password)
+    .then(result => {
+      const {fileName, path} = imageObject;
+      const {
+        user: {uid},
+      } = result;
+      const newUser = Object.assign({uid}, userData);
+      const userDataRef = storageRef.child(`/${uid}/${fileName}`);
+      updateNewUserInfo(newUser);
+      userDataRef
+        .putFile(path)
+        .then(uploadRes => {
+          const {state} = uploadRes;
+          if (state === 'success') {
+            userDataRef.getDownloadURL().then(urlResult => {
+              let newUserData = cloneDeep(userData);
+              newUserData.image = urlResult;
+              Axios.post(registerURL, {data: JSON.stringify(newUserData)})
+                .then(responseJson => {
+                  if (
+                    responseJson.status === 200 &&
+                    responseJson.data.createdDate
+                  ) {
+                    onSuccess(
+                      'Please check your email inbox for an account verificatoin link.',
+                    );
+                  } else {
+                    onError(
+                      responseJson.data.message ||
+                        'Something went wrong, try again later',
+                    );
+                  }
+                })
+                .catch(error => {
+                  console.log('registration err ', error);
+                  onError('Something went wrong, please try again.');
+                })
+                .done();
+            });
+          }
+        })
+        .catch(error => {
+          onError('Image upload failed');
+          console.log('image upload error', error.messge);
+        });
+    })
+    .catch(error => {
+      let errMsg;
+      if (error.code === 'auth/email-already-in-use')
+        errMsg = 'The email is already registerd.';
+      else if (error.code === 'auth/invalid-email')
+        errMsg = 'Your email address is invalid!';
+      else if (error.code === 'auth/weak-password')
+        errMsg = 'Your password is too weak';
+      else errMsg = 'Something went wrong, please try again later';
+      onError(errMsg, true);
+    });
 };
