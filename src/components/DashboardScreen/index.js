@@ -188,7 +188,7 @@ class DashboardScreen extends Component {
             this.props.navigation.navigate('ListOfProviders', {
               serviceName: item.service_name,
               serviceId: item.id,
-              image: item.image,
+              serviceImage: item.image,
             });
           }}>
           {item.image ? (
