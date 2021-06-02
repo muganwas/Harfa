@@ -1189,7 +1189,7 @@ export const fetchProfile = async ({
   userGetProfileURL,
 }) => {
   try {
-    fetch(userGetProfileURL + userId, {
+    await fetch(userGetProfileURL + userId, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -1220,7 +1220,7 @@ export const fetchProfile = async ({
             userLang: responseJson.data.lang,
             userFcmId: responseJson.data.fcm_id,
           });
-          database()
+          await database()
             .ref(`liveLocation/${id}`)
             .once('value', result => {
               const {latitude, longitude} = result.val();
