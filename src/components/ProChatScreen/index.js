@@ -320,8 +320,11 @@ class ProChatScreen extends Component {
       online,
       senderId,
       receiverId,
+      receiverName,
       uploadingImage,
+      receiverImage,
       isLoading,
+      userImageAvailable,
     } = this.state;
     return (
       <KeyboardAvoidingView
@@ -330,9 +333,9 @@ class ProChatScreen extends Component {
         <StatusBarPlaceHolder />
         <MessagesHeader
           online={online}
-          receiverImage={this.state.receiverImage}
-          receiverName={this.state.receiverName}
-          imageAvailable={this.state.userImageAvailable}
+          receiverImage={receiverImage}
+          receiverName={receiverName}
+          imageAvailable={userImageAvailable}
           handleBackButtonClick={this.handleBackButtonClick}
         />
         <ImageBackground

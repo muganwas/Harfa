@@ -161,10 +161,10 @@ class ProMyProfileScreen extends Component {
   };
 
   handleBackButtonClick = () => {
-    if (Platform.OS == 'ios')
-      this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
+    if (Platform.OS === 'ios')
+      this.state.backClickCount === 1 ? RNExitApp.exitApp() : this._spring();
     else
-      this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+      this.state.backClickCount === 1 ? BackHandler.exitApp() : this._spring();
   };
 
   _spring = () => {
@@ -584,7 +584,7 @@ class ProMyProfileScreen extends Component {
                   }}>
                   <TouchableOpacity
                     style={
-                      this.state.invoice == '1'
+                      this.state.invoice === '1'
                         ? styles.invoiceBorder
                         : styles.invoice
                     }
@@ -600,7 +600,7 @@ class ProMyProfileScreen extends Component {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
-                      this.state.invoice == '0'
+                      this.state.invoice === '0'
                         ? styles.invoiceBorder
                         : styles.invoice,
                       {marginLeft: 20},

@@ -23,7 +23,7 @@ class ProDialogLogout extends Component {
 
   closeDialogLogout = async action => {
     const {resetUserDetails, changeDialogVisibility} = this.props;
-    if (action == 'Ok') {
+    if (action === 'Ok') {
       if (firebaseAuth().currentUser) firebaseAuth().signOut();
       await rNES.removeItem('userId');
       await rNES.removeItem('auth');
@@ -34,7 +34,7 @@ class ProDialogLogout extends Component {
       Config.socket.close();
       changeDialogVisibility(false);
       RNExitApp.exitApp();
-    } else if (action == 'Cancel') {
+    } else if (action === 'Cancel') {
       console.log('Logout Cancel');
       changeDialogVisibility(false);
     }

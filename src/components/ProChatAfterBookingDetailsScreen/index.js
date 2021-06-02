@@ -35,6 +35,7 @@ import {
   MessagesHeader,
   MessagesFooter,
 } from '../ProMessagesComponents';
+import {imageExists} from '../../misc/helpers';
 
 const screenWidth = Dimensions.get('window').width;
 const socket = Config.socket;
@@ -69,6 +70,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
       generalInfo: {OnlineUsers},
       userInfo: {providerDetails},
     } = props;
+    let imageAvailable;
+    imageExists(navigation.state.params.receiverImage).then(res => {
+      imageAvailable = res;
+    });
     this.state = {
       showButton: false,
       senderId: providerDetails.providerId,
@@ -82,6 +87,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
       receiverId: navigation.state.params.receiverId,
       receiverName: navigation.state.params.receiverName,
       receiverImage: navigation.state.params.receiverImage,
+      imageAvailable,
       orderId: navigation.state.params.orderId,
       serviceName: navigation.state.params.serviceName,
       pageTitle: navigation.state.params.pageTitle,
@@ -139,7 +145,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
     });
   }
 
-  reInit = () => {
+  reInit = async () => {
     const {
       messagesInfo: {dataChatSource, fetched},
       jobsInfo: {
@@ -155,6 +161,10 @@ class ProChatAfterBookingDetailsScreen extends Component {
       socket.connect();
       fetchEmployeeMessages(providerDetails.providerId);
     }
+    let imageAvailable;
+    await imageExists(navigation.state.params.receiverImage).then(res => {
+      imageAvailable = res;
+    });
     this.setState({
       showButton: false,
       senderId: providerDetails.providerId,
@@ -165,6 +175,7 @@ class ProChatAfterBookingDetailsScreen extends Component {
       dataChatSource: dataChatSource[user_id] || [],
       isLoading: !fetched,
       isUploading: false,
+      imageAvailable,
       receiverId: navigation.state.params.receiverId,
       receiverName: navigation.state.params.receiverName,
       receiverImage: navigation.state.params.receiverImage,
@@ -308,6 +319,8 @@ class ProChatAfterBookingDetailsScreen extends Component {
       receiverId,
       online,
       imageAvailable,
+      receiverImage,
+      receiverName,
       uploadingImage,
     } = this.state;
     return (
@@ -320,9 +333,9 @@ class ProChatAfterBookingDetailsScreen extends Component {
           source={require('../../icons/bg_chat.png')}>
           <MessagesHeader
             online={online}
-            receiverImage={this.state.receiverImage}
+            receiverImage={receiverImage}
             imageAvailable={imageAvailable}
-            receiverName={this.state.receiverName}
+            receiverName={receiverName}
             handleBackButtonClick={() => this.props.navigation.goBack()}
           />
           <ScrollView

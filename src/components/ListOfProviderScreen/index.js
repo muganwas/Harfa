@@ -105,7 +105,6 @@ class ListOfProviderScreen extends Component {
       usersCoordinates: this.props?.generalInfo?.usersCoordinates,
       setDistInfo: distInfo => this.setState({distInfo}),
       setDistDataSource: dataSource => {
-        console.log('data source after dist calc ', dataSource);
         this.setState({
           distCalculated: true,
           dataSource,

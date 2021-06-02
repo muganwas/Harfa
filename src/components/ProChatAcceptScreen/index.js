@@ -13,12 +13,9 @@ import {
   ScrollView,
 } from 'react-native';
 import {connect} from 'react-redux';
-import database from '@react-native-firebase/database';
 import Toast from 'react-native-simple-toast';
-import {cloneDeep} from 'lodash';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
-import {getDistance} from '../../misc/helpers';
 import {
   startFetchingNotification,
   notificationsFetched,
@@ -40,13 +37,13 @@ import {
   themeRed,
   colorGreen,
 } from '../../Constants/colors';
+import {acceptChatRequest, rejectChatRequest} from '../../controllers/chats';
 import SimpleToast from 'react-native-simple-toast';
-import {imageExists} from '../../misc/helpers';
+import {fetchProfile} from '../../controllers/users';
 
 const screenWidth = Dimensions.get('window').width;
 
 const USER_GET_PROFILE = Config.baseURL + 'users/';
-const REJECT_ACCEPT_REQUEST = Config.baseURL + 'jobrequest/updatejobrequest';
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
 const StatusBarPlaceHolder = () => {
@@ -82,7 +79,6 @@ class ProChatAcceptScreen extends Component {
       distance: 'unavailable',
       isLoading: true,
       isErrorToast: false,
-      timer: null,
       serviceName: navigation.state.params.serviceName,
       orderId: navigation.state.params.orderId,
       mainId: navigation.state.params.mainId,
@@ -113,77 +109,24 @@ class ProChatAcceptScreen extends Component {
       getPendingJobRequestProvider(this.props, providerDetails.providerId);
     });
     const userId = navigation.state.params.userId;
-    try {
-      fetch(USER_GET_PROFILE + userId, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => response.json())
-        .then(async responseJson => {
-          let imageAvailable =
-            responseJson.data.image &&
-            !responseJson.data.image !== 'no-image.jpg'
-              ? true
-              : false;
-          if (imageAvailable)
-            await imageExists(responseJson.data.image).then(res => {
-              imageAvailable = res;
-            });
-          if (responseJson.result) {
-            const id = responseJson.data.id;
-            this.setState({
-              userId: responseJson.data.id,
-              userName: responseJson.data.username,
-              userImage: responseJson.data.image,
-              imageAvailable,
-              userMobile: responseJson.data.mobile,
-              userDob: responseJson.data.dob,
-              userAddress: responseJson.data.address,
-              userLat: responseJson.data.lat,
-              userLang: responseJson.data.lang,
-              userFcmId: responseJson.data.fcm_id,
-              isLoading: false,
-              secondTimeLoader: '1',
-            });
-            database()
-              .ref(`liveLocation/${responseJson.data.id}`)
-              .once('value', result => {
-                const {latitude, longitude} = result.val();
-                const fullDist = getDistance(
-                  latitude,
-                  longitude,
-                  responseJson.data.lat,
-                  responseJson.data.lang,
-                  'K',
-                );
-                const distance = parseFloat(fullDist).toFixed(1);
-                this.setState({distance});
-              })
-              .catch(e => {
-                console.log(e.message);
-              });
-          } else {
-            this.setState({
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong, try again');
-          }
-        })
-        .catch(error => {
-          this.setState({
-            isLoading: false,
-          });
-          SimpleToast.show('Error ' + error, SimpleToast.SHORT);
+    fetchProfile({
+      userId,
+      setDistance: distance => this.setState({distance}),
+      onSuccess: data => {
+        this.setState({
+          ...data,
+          isLoading: false,
+          secondTimeLoader: '1',
         });
-    } catch (e) {
-      this.setState({
-        isLoading: false,
-      });
-      SimpleToast.show('Error ' + error, SimpleToast.SHORT);
-    }
+      },
+      onError: msg => {
+        this.setState({
+          isErrorToast: true,
+        });
+        SimpleToast.show(msg);
+      },
+      userGetProfileURL: USER_GET_PROFILE,
+    });
   }
 
   handleBackButtonClick = () => {
@@ -191,278 +134,70 @@ class ProChatAcceptScreen extends Component {
     return true;
   };
 
-  acceptJob = () => {
-    const {
-      userInfo: {providerDetails},
-    } = this.props;
-    const {userId, orderId} = this.state;
-    this.setState({
-      isLoading: true,
-    });
+  acceptJob = async () =>
+    await acceptChatRequest(
+      {
+        pos: this.props?.jobsInfo?.jobRequestsProviders.length,
+        fetchedPendingJobInfo: this.props.fetchedPendingJobInfo,
+        providerDetails: this.props.jobsInfo.providerDetails,
+        jobRequests: this.props?.jobsInfo?.jobRequestsProviders,
+        setSelectedJobRequest: this.props.dispatchSelectedJobRequest,
+        toggleLoading: this.changeWaitingDialogVisibility,
+        onError: msg => {
+          SimpleToast.show(msg);
+          this.setState({
+            isErrorToast: true,
+            isLoading: false,
+          });
+        },
+        navigate: this.props.navigation.navigate,
+      },
+      true,
+    );
 
-    const data = {
-      main_id: this.props.navigation.state.params.mainId,
-      chat_status: '1',
-      status: 'Pending',
-      notification: {
-        fcm_id: this.state.userFcmId,
-        title: 'Chat Request Accepted',
-        type: 'ChatAcceptance',
-        notification_by: 'Employee',
-        save_notification: true,
-        user_id: userId,
-        employee_id: providerDetails.providerId,
-        order_id: orderId,
-        body:
-          'Chat request has been accepted by ' +
-          providerDetails.name +
-          ' Request Id : ' +
-          orderId,
-        data: {
+  rejectJob = async () =>
+    await rejectChatRequest({
+      pos: this.props?.jobsInfo?.jobRequestsProviders.length,
+      fetchedPendingJobInfo: this.props.fetchedPendingJobInfo,
+      providerDetails: this.props?.userInfo?.providerDetails,
+      jobRequestsProviders: this.props?.jobsInfo?.jobRequestsProviders,
+      toggleLoading: this.changeWaitingDialogVisibility,
+      onSuccess: () => this.changeWaitingDialogVisibility(false),
+      onError: msg => {
+        SimpleToast.show(msg);
+        this.setState({
+          isErrorToast: true,
+          isLoading: false,
+        });
+      },
+      rejectionData: {
+        main_id: this.props.navigation.state.params.mainId,
+        chat_status: '0',
+        status: 'Rejected',
+        notification: {
+          fcm_id: this.state.userFcmId,
+          title: 'Chat Request Rejected',
+          type: 'JobRejection',
+          notification_by: 'Employee',
+          save_notification: true,
           user_id: userId,
-          providerId: providerDetails.providerId,
-          ProviderData: providerDetails,
-          serviceName: this.state.serviceName,
-          orderId: this.props.navigation.state.params.orderId,
-          mainId: this.props.navigation.state.params.mainId,
-          chat_status: '1',
-          status: 'Pending',
-          delivery_address: this.props.navigation.state.params.delivery_address,
-          delivery_lat: this.props.navigation.state.params.delivery_lat,
-          delivery_lang: this.props.navigation.state.params.delivery_lang,
+          employee_id: this.props?.userInfo?.providerDetails?.providerId,
+          order_id: orderId,
+          body:
+            'Your request has been rejected by ' +
+            this.props?.userInfo?.providerDetails?.name +
+            ' Request Id : ' +
+            this.props.navigation.state.params.orderId,
+          data: {
+            ProviderId: this.props?.userInfo?.providerDetails?.providerId,
+            serviceName: this.state.serviceName,
+            orderId: this.props.navigation.state.params.orderId,
+            mainId: this.props.navigation.state.params.mainId,
+          },
         },
       },
-    };
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          const {
-            jobsInfo: {jobRequestsProviders},
-            fetchedPendingJobInfo,
-            dispatchSelectedJobRequest,
-            navigation,
-          } = this.props;
-          let newProJobsInfo = cloneDeep(jobRequestsProviders);
-          let newJobsInfoLength = newProJobsInfo.length;
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-            });
-            var jobData = {
-              id: responseJson.data.id,
-              order_id: this.state.orderId,
-              user_id: this.state.userId,
-              image: this.state.userImage,
-              fcm_id: this.state.userFcmId,
-              name: this.state.userName,
-              mobile: this.state.userMobile,
-              dob: this.state.userDob,
-              address: this.state.userAddress,
-              lat: this.state.userLat,
-              lang: this.state.userLang,
-              service_name: this.state.serviceName,
-              chat_status: '1',
-              status: 'Pending',
-              delivery_address: this.state.delivery_address,
-              delivery_lat: this.state.delivery_lat,
-              delivery_lang: this.state.delivery_lang,
-            };
-
-            newProJobsInfo.push(jobData);
-            dispatchSelectedJobRequest(jobData);
-            fetchedPendingJobInfo(newProJobsInfo);
-            //used + 1 before and it didnt work
-            navigation.navigate('ProAcceptRejectJob', {
-              currentPos: newJobsInfoLength,
-            });
-          } else {
-            this.setState({
-              timer: null,
-              requestStatus: 'No Response',
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Quelque chose a mal tourné');
-          }
-        })
-        .catch(error => {
-          console.log('accept job error ' + error);
-          this.setState({
-            timer: null,
-            requestStatus: 'No Response',
-            isLoading: false,
-          });
-        });
-    } catch (e) {
-      console.log('accept job error ' + e);
-      this.setState({
-        timer: null,
-        requestStatus: 'No Response',
-        isLoading: false,
-      });
-    }
-  };
-
-  rejectJob = () => {
-    const {
-      userInfo: {providerDetails},
-    } = this.props;
-    const {orderId, userId} = this.state;
-    const data = {
-      main_id: this.props.navigation.state.params.mainId,
-      chat_status: '0',
-      status: 'Rejected',
-      notification: {
-        fcm_id: this.state.userFcmId,
-        title: 'Chat Request Rejected',
-        type: 'JobRejection',
-        notification_by: 'Employee',
-        save_notification: true,
-        user_id: userId,
-        employee_id: providerDetails.providerId,
-        order_id: orderId,
-        body:
-          'Your request has been rejected by ' +
-          providerDetails.name +
-          ' Request Id : ' +
-          this.props.navigation.state.params.orderId,
-        data: {
-          ProviderId: providerDetails.providerId,
-          serviceName: this.state.serviceName,
-          orderId: this.props.navigation.state.params.orderId,
-          mainId: this.props.navigation.state.params.mainId,
-        },
-      },
-    };
-
-    this.setState({
-      isLoading: true,
+      navigate: this.props.navigation.navigate,
     });
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-            });
-          } else {
-            this.setState({
-              timer: null,
-              requestStatus: 'No Response',
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Something went wrong');
-          }
-          this.getBackFromProAcceptRejectJob();
-        })
-        .catch(error => {
-          console.log('reject error', error);
-          this.setState({
-            timer: null,
-            requestStatus: 'No Response',
-            isLoading: false,
-          });
-        });
-    } catch (e) {
-      console.log('reject error', e);
-      this.setState({
-        timer: null,
-        requestStatus: 'No Response',
-        isLoading: false,
-      });
-    }
-  };
-
-  rejectedAfterNoResponse = () => {
-    const {
-      userInfo: {providerDetails},
-    } = this.props;
-    const {userId, orderId} = this.state;
-    const data = {
-      main_id: this.props.navigation.state.params.mainId,
-      chat_status: '0',
-      status: 'No Response',
-      notification: {
-        fcm_id: this.state.userFcmId,
-        title: 'No Response',
-        save_notification: true,
-        user_id: userId,
-        employee_id: providerDetails.providerId,
-        order_id: orderId,
-        notification_by: 'Employee',
-        body:
-          providerDetails.name +
-          ' is not responding to your request' +
-          ' Request Id : ' +
-          orderId,
-        data: {
-          ProviderId: providerDetails.providerId,
-          serviceName: this.state.serviceName,
-          orderId: this.props.navigation.state.params.orderId,
-          mainId: this.props.navigation.state.params.mainId,
-        },
-      },
-    };
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-            });
-          } else {
-            this.setState({
-              timer: null,
-              requestStatus: 'No Response',
-              isLoading: false,
-              isErrorToast: true,
-            });
-            this.showToast('Quelque chose a mal tourné');
-          }
-          this.getBackFromProAcceptRejectJob();
-        })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            timer: null,
-            requestStatus: 'No Response',
-            isLoading: false,
-          });
-        });
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        timer: null,
-        requestStatus: 'No Response',
-        isLoading: false,
-      });
-    }
-  };
 
   getBackFromProAcceptRejectJob = () => {
     this.props.navigation.goBack();

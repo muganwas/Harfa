@@ -520,7 +520,7 @@ class ProRegisterFBScreen extends Component {
                   }}>
                   <TouchableOpacity
                     style={
-                      this.state.invoice == '1'
+                      this.state.invoice === '1'
                         ? styles.invoiceBorder
                         : styles.invoice
                     }
@@ -536,7 +536,7 @@ class ProRegisterFBScreen extends Component {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
-                      this.state.invoice == '0'
+                      this.state.invoice === '0'
                         ? styles.invoiceBorder
                         : styles.invoice,
                       {marginLeft: 20},

@@ -1181,6 +1181,77 @@ export const calculateDistance = async ({
   }
 };
 
+export const fetchProfile = async ({
+  userId,
+  onSuccess,
+  setDistance,
+  onError,
+  userGetProfileURL,
+}) => {
+  try {
+    fetch(userGetProfileURL + userId, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => response.json())
+      .then(async responseJson => {
+        let imageAvailable =
+          responseJson.data.image && !responseJson.data.image !== 'no-image.jpg'
+            ? true
+            : false;
+        if (imageAvailable)
+          await imageExists(responseJson.data.image).then(res => {
+            imageAvailable = res;
+          });
+        if (responseJson.result) {
+          const id = responseJson.data.id;
+          onSuccess({
+            userId: responseJson.data.id,
+            userName: responseJson.data.username,
+            userImage: responseJson.data.image,
+            imageAvailable,
+            userMobile: responseJson.data.mobile,
+            userDob: responseJson.data.dob,
+            userAddress: responseJson.data.address,
+            userLat: responseJson.data.lat,
+            userLang: responseJson.data.lang,
+            userFcmId: responseJson.data.fcm_id,
+          });
+          database()
+            .ref(`liveLocation/${id}`)
+            .once('value', result => {
+              const {latitude, longitude} = result.val();
+              const fullDist = getDistance(
+                latitude,
+                longitude,
+                responseJson.data.lat,
+                responseJson.data.lang,
+                'K',
+              );
+              const distance = parseFloat(fullDist).toFixed(1);
+              setDistance(distance);
+            })
+            .catch(e => {
+              console.log('user profile fetch error 3', e.message);
+              onError("Someting went wrong, couldn't fetch user information");
+            });
+        } else {
+          onError('Something went wrong, try again');
+        }
+      })
+      .catch(error => {
+        console.log('user profile fetch error 2' + error);
+        onError("Someting went wrong, couldn't fetch user information");
+      });
+  } catch (e) {
+    console.log('user profile fetch error 1' + error);
+    onError("Someting went wrong, couldn't fetch user information");
+  }
+};
+
 export const getRating = async ({id, ratingsURL}) => {
   let avg = 0;
   try {

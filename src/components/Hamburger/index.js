@@ -126,8 +126,9 @@ class Hamburger extends React.Component {
     });
     messaging().onMessage(async message => {
       const data = JSON.parse(message.data.data);
-      const {title, main_id} = data;
+      const {title, main_id, orderId} = data;
       const check = main_id + title;
+      console.log('message data --', data);
       notifications.push(check);
       const {
         fetchedNotifications,
@@ -137,9 +138,10 @@ class Hamburger extends React.Component {
         getAllWorkRequestClient,
         jobsInfo: {jobRequests},
       } = this.props;
+      const {currentMessage} = this.state;
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
-      if (!_.isEqual(this.state.currentMessage, message)) {
+      if (!_.isEqual(currentMessage, message)) {
         title !== 'Message Recieved' &&
           fetchedNotifications({
             type: 'generic',
@@ -147,12 +149,11 @@ class Hamburger extends React.Component {
           });
       }
       let newJobRequests = cloneDeep(jobRequests);
-      const orderId = data.orderId;
       let pos;
       await jobRequests.map((obj, i) => {
         if (orderId === obj.order_id) pos = i;
       });
-      this.getAllNotificationsCustomer();
+      title !== 'Message Recieved' && this.getAllNotificationsCustomer();
       if (title.toLowerCase() === 'chat request rejected') {
         if (pos !== undefined) {
           newJobRequests.splice(pos, 1);

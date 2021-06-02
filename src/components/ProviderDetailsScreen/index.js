@@ -179,6 +179,10 @@ class ProviderDetailsScreen extends Component {
       );
     });
     navigation.addListener('willBlur', () => {
+      this.setState({
+        isLoading: false,
+        requestStatus: '',
+      });
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -471,8 +475,8 @@ class ProviderDetailsScreen extends Component {
           </View>
         </View>
 
-        {(this.state.requestStatus == '' ||
-          this.state.requestStatus == 'No Response') && (
+        {(this.state.requestStatus === '' ||
+          this.state.requestStatus === 'No Response') && (
           <View style={[styles.bottomView, {flexDirection: 'row'}]}>
             <TouchableOpacity
               style={styles.buttonContainer}
@@ -482,7 +486,7 @@ class ProviderDetailsScreen extends Component {
           </View>
         )}
 
-        {this.state.requestStatus == 'Chat Request Accepted' && (
+        {this.state.requestStatus === 'Chat Request Accepted' && (
           <View style={styles.bottomView}>
             <TouchableOpacity
               style={styles.buttonContainer}
@@ -548,8 +552,8 @@ class ProviderDetailsScreen extends Component {
           </View>
         )}
 
-        {this.state.requestStatus == 'Request Sending...' ||
-          (this.state.requestStatus == 'Waiting for acceptance...' && (
+        {this.state.requestStatus === 'Request Sending...' ||
+          (this.state.requestStatus === 'Waiting for acceptance...' && (
             <View style={styles.loaderStyle}>
               <ActivityIndicator
                 style={{

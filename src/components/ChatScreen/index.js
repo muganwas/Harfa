@@ -83,6 +83,7 @@ class ChatScreen extends Component {
       dialogDesc: '',
       isLoading: true,
       dialogLeftText: 'Cancel',
+      imageAvailable: false,
       dialogRightText: 'Retry',
       uploadingImage: false,
     };
@@ -242,11 +243,11 @@ class ChatScreen extends Component {
   handleBackButtonClick = () => {
     const {titlePage} = this.state;
     const {navigation} = this.props;
-    if (titlePage == 'MapDirection')
+    if (titlePage === 'MapDirection')
       navigation.navigate('MapDirection', {
         titlePage: 'Chat',
       });
-    else if (titlePage == 'ProviderDetails')
+    else if ((titlePage = 'ProviderDetails'))
       navigation.navigate('ProviderDetails');
     else if (titlePage === 'AllMessage') navigation.navigate('AllMessage');
     else navigation.goBack();
@@ -329,9 +330,10 @@ class ChatScreen extends Component {
 
   jobCancelTaskChat = async () =>
     await jobCancelTask({
+      userType: 'Customer',
       currRequestPos: this.props.navigation.getParam('currentPosition'),
       toggleIsLoading: this.changeWaitingDialogVisibility,
-      fetchedPendingJobInfo: this.props?.fetchedPendingJobInfo,
+      updatePendingJobInfo: this.props?.fetchedPendingJobInfo,
       jobRequests: this.props?.jobsInfo?.jobRequests,
       userDetails: this.props?.userInfo?.userDetails,
       onError: msg => {
@@ -365,11 +367,11 @@ class ChatScreen extends Component {
   handleBackButtonClick = () => {
     const {titlePage} = this.state;
     const {navigation} = this.props;
-    if (titlePage == 'MapDirection')
+    if (titlePage === 'MapDirection')
       navigation.navigate('MapDirection', {
         titlePage: 'Chat',
       });
-    else if (titlePage == 'ProviderDetails')
+    else if (titlePage === 'ProviderDetails')
       navigation.navigate('ProviderDetails');
     else if (titlePage === 'AllMessage') navigation.navigate('AllMessage');
     else navigation.goBack();

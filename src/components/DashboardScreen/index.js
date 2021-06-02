@@ -122,8 +122,9 @@ class DashboardScreen extends Component {
 
   jobCancelTaskDash = async currRequestPos =>
     await jobCancelTask({
+      userType: 'Customer',
       currRequestPos,
-      fetchedPendingJobInfo: this.props?.fetchedPendingJobInfo,
+      updatePendingJobInfo: this.props?.fetchedPendingJobInfo,
       jobRequests: this.props?.jobsInfo?.jobRequests,
       userDetails: this.props?.userInfo?.userDetails,
       toggleIsLoading: this.changeWaitingDialogVisibility,
@@ -156,10 +157,10 @@ class DashboardScreen extends Component {
     });
 
   handleBackButton = () => {
-    if (Platform.OS == 'ios')
-      this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
+    if (Platform.OS === 'ios')
+      this.state.backClickCount === 1 ? RNExitApp.exitApp() : this._spring();
     else
-      this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+      this.state.backClickCount === 1 ? BackHandler.exitApp() : this._spring();
     return true;
   };
 
@@ -495,20 +496,21 @@ class DashboardScreen extends Component {
   render() {
     const {
       jobsInfo: {jobRequests, requestsFetched},
+      navigation,
     } = this.props;
     const {isLoading} = this.state;
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
         <View style={styles.header}>
-          <Hamburger navigation={this.props.navigation} text="kuchapa" />
+          <Hamburger navigation={navigation} text="kuchapa" />
           <TouchableOpacity
             style={{
               width: '100%',
               justifyContent: 'center',
               alignContent: 'center',
             }}
-            onPress={() => this.props.navigation.navigate('AddAddress')}>
+            onPress={() => navigation.navigate('AddAddress')}>
             <Image
               style={{
                 width: 22,

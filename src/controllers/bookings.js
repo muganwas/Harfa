@@ -24,19 +24,19 @@ export const getAllBookings = async ({
           let newData = cloneDeep(responseJson.data);
           for (let i = 0; i < newData.length; i++) {
             if (userType === 'Provider')
-              imageExists(newData[i].user_details.image).then(res => {
-                if (newData[i].user_details)
+              imageExists(newData[i]?.user_details?.image).then(res => {
+                if (newData[i]?.user_details)
                   newData[i].user_details.imageAvailable = res;
               });
             else
-              imageExists(newData[i].employee_details.image).then(res => {
-                if (newData[i].employee_details)
+              imageExists(newData[i]?.employee_details?.image).then(res => {
+                if (newData[i]?.employee_details)
                   newData[i].employee_details.imageAvailable = res;
               });
-            if (newData[i].chat_status == '1') {
+            if (newData[i].chat_status === '1') {
               if (newData[i].status === 'Completed') {
                 bookingCompleteData.push(newData[i]);
-              } else if (newData[i].status == 'Rejected') {
+              } else if (newData[i].status === 'Rejected') {
                 bookingRejectData.push(newData[i]);
               }
             } else {
@@ -51,7 +51,7 @@ export const getAllBookings = async ({
         }
       })
       .catch(error => {
-        console.log(error);
+        console.log('Booking fetch error', error);
         toggleIsLoading(false);
         SimpleToast.show(
           'Something went wrong, check your internet connection',

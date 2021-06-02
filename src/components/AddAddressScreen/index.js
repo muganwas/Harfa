@@ -115,7 +115,7 @@ class AddAddressScreen extends Component {
       userInfo: {userDetails},
     } = this.props;
 
-    if (Platform.OS == 'ios') {
+    if (Platform.OS === 'ios') {
       Geolocation.requestAuthorization();
       Geolocation.getCurrentPosition(
         position => {

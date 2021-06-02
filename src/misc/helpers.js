@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {PermissionsAndroid, Platform} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
+import Polyline from '@mapbox/polyline';
 import messaging from '@react-native-firebase/messaging';
 import {exitApp} from 'react-native-exit-app';
 import {MAPS_API_KEY} from 'react-native-dotenv';
@@ -191,7 +192,7 @@ export const passwordCheck = async (password = '', setPassword, setError) => {
 };
 
 export const getDistance = (lat1, lon1, lat2, lon2, unit) => {
-  if (lat1 == lat2 && lon1 == lon2) {
+  if (lat1 === lat2 && lon1 === lon2) {
     return 0;
   } else {
     var radlat1 = (Math.PI * lat1) / 180;
@@ -276,4 +277,37 @@ export const selectPhoto = async callback => {
       });
     }
   });
+};
+
+export const getDirections = async ({startLoc, destinationLoc, onSuccess}) => {
+  if (startLoc && destinationLoc) {
+    try {
+      fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`,
+      )
+        .then(resp => resp.json())
+        .then(async respJson => {
+          if (respJson && respJson.routes[0]) {
+            const points = Polyline.decode(
+              respJson.routes[0].overview_polyline.points,
+            );
+            let coords = await points.map((point, index) => {
+              return {
+                latitude: point[0],
+                longitude: point[1],
+              };
+            });
+            onSuccess(coords);
+          }
+        });
+    } catch (error) {
+      console.log('get loc error', error);
+      SimpleToast.show('Something went wrong, try again later.');
+    }
+  } else {
+    SimpleToast.show(
+      'Destination co-ordinates missing, try later',
+      SimpleToast.LONG,
+    );
+  }
 };

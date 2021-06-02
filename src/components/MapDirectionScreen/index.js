@@ -13,10 +13,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {connect} from 'react-redux';
-import {cloneDeep, isEqual} from 'lodash';
-import simpleToast from 'react-native-simple-toast';
+import {isEqual} from 'lodash';
+import SimpleToast from 'react-native-simple-toast';
 import MapView from 'react-native-maps';
-import Polyline from '@mapbox/polyline';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import {
   startFetchingNotification,
@@ -30,7 +29,6 @@ import {
   setSelectedJobRequest,
 } from '../../Redux/Actions/jobsActions';
 import DialogComponent from '../DialogComponent';
-import {MAPS_API_KEY} from 'react-native-dotenv';
 import Config from '../Config';
 import {
   white,
@@ -40,6 +38,8 @@ import {
   themeRed,
   colorGreen,
 } from '../../Constants/colors';
+import {jobCompleteTask, jobCancelTask} from '../../controllers/jobs';
+import {getDirections} from '../../misc/helpers';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -213,7 +213,10 @@ class MapDirectionScreen extends Component {
 
     const destination =
       usersCoordinates.latitude + ',' + usersCoordinates.longitude;
-    this.getDirections(employeeLatitude + ',' + employeeLongitude, destination);
+    this.getDirectionsLocal(
+      employeeLatitude + ',' + employeeLongitude,
+      destination,
+    );
 
     navigation.addListener('willFocus', async () => {
       this.reInit(this.props);
@@ -256,7 +259,7 @@ class MapDirectionScreen extends Component {
         : usersCoordinates.longitude;
       const destination =
         usersCoordinates.latitude + ',' + usersCoordinates.longitude;
-      this.getDirections(
+      this.getDirectionsLocal(
         employeeLatitude + ',' + employeeLongitude,
         destination,
       );
@@ -289,11 +292,11 @@ class MapDirectionScreen extends Component {
         });
         const destination =
           usersCoordinates.latitude + ',' + usersCoordinates.longitude;
-        this.getDirections(latitude + ',' + longitude, destination);
+        this.getDirectionsLocal(latitude + ',' + longitude, destination);
       }
     }
     if (this.state.coords.length === 0) {
-      this.getDirections(
+      this.getDirectionsLocal(
         latitude + ',' + longitude,
         this.state.destinationLocation,
       );
@@ -306,55 +309,22 @@ class MapDirectionScreen extends Component {
   };
 
   handleBackButtonClick = () => {
-    if (this.state.titlePage == 'Dashboard')
+    if (this.state.titlePage === 'Dashboard')
       this.props.navigation.navigate('Dashboard');
-    else if (this.state.titlePage == 'ProviderDetails')
+    else if (this.state.titlePage === 'ProviderDetails')
       this.props.navigation.navigate('ProviderDetails');
-    else if (this.state.titlePage == 'Chat')
+    else if (this.state.titlePage === 'Chat')
       this.props.navigation.navigate('Chat');
     else this.props.navigation.goBack();
     return true;
   };
 
-  async getDirections(startLoc, destinationLoc) {
-    if (startLoc && destinationLoc) {
-      try {
-        fetch(
-          `https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`,
-        )
-          .then(resp => resp.json())
-          .then(respJson => {
-            if (respJson && respJson.routes[0]) {
-              let points = Polyline.decode(
-                respJson.routes[0].overview_polyline.points,
-              );
-              let coords = points.map((point, index) => {
-                return {
-                  latitude: point[0],
-                  longitude: point[1],
-                };
-              });
-              //If Delay some second, works fine..Reason don't know
-              setTimeout(() => {
-                this.setState({
-                  coords: coords,
-                  isLoading: false,
-                });
-                return coords;
-              }, 1500);
-            }
-          });
-      } catch (error) {
-        alert(error);
-        return error;
-      }
-    } else {
-      simpleToast.show(
-        'Destination co-ordinates missing, try later',
-        simpleToast.LONG,
-      );
-    }
-  }
+  getDirectionsLocal = async (startLoc, destinationLoc) =>
+    await getDirections({
+      startLoc,
+      destinationLoc,
+      onSuccess: coords => this.setState({coords, isLoading: false}),
+    });
 
   callPhoneTask = () => {
     Linking.openURL('tel:' + this.state.providerMobile);
@@ -369,7 +339,7 @@ class MapDirectionScreen extends Component {
       });
     };
     this.rightButtonAction = async () => {
-      await this.jobCompleteTask();
+      await this.jobCompleteTaskCustomer();
       this.setState({
         showDialog: false,
         dialogType: null,
@@ -395,7 +365,7 @@ class MapDirectionScreen extends Component {
       });
     };
     this.rightButtonAction = async () => {
-      await this.jobCancelTask();
+      await this.jobCancelTaskLocal();
       this.setState({
         showDialog: false,
         dialogType: null,
@@ -412,225 +382,64 @@ class MapDirectionScreen extends Component {
     });
   };
 
-  jobCancelTask = async () => {
-    this.setState({isLoading: true});
-    const {
-      fetchedPendingJobInfo,
-      jobsInfo: {jobRequests},
-      userInfo: {userDetails},
-    } = this.props;
-
-    try {
-      const {currRequestPos} = this.state;
-      let newJobRequests = cloneDeep(jobRequests);
-      if (jobRequests[currRequestPos]) {
-        const data = {
-          main_id: jobRequests[currRequestPos].id,
-          chat_status: '1',
-          status: 'Cancelled',
-          notification: {
-            fcm_id: jobRequests[currRequestPos].fcm_id,
-            title: 'Job Cancelled',
-            type: 'JobCancellation',
-            user_id: userDetails.userId,
-            employee_id: jobRequests[currRequestPos].employee_id,
-            order_id: jobRequests[currRequestPos].order_id,
-            notification_by: 'Customer',
-            save_notification: true,
-            body:
-              'Job request has been cancelled by client' +
-              ' Request Id : ' +
-              jobRequests[currRequestPos].order_id,
-            data: {
-              ProviderId: jobRequests[currRequestPos].employee_id,
-              image: jobRequests[currRequestPos].image
-                ? jobRequests[currRequestPos].image
-                : 'null',
-              fcmId: jobRequests[currRequestPos].fcm_id,
-              name: jobRequests[currRequestPos].name,
-              surname: jobRequests[currRequestPos].surname,
-              mobile: jobRequests[currRequestPos].mobile,
-              description: jobRequests[currRequestPos].description,
-              address: jobRequests[currRequestPos].address,
-              lat: jobRequests[currRequestPos].lat,
-              lang: jobRequests[currRequestPos].lang,
-              serviceName: jobRequests[currRequestPos].service_name,
-              orderId: jobRequests[currRequestPos].order_id,
-              mainId: jobRequests[currRequestPos].id,
-              chat_status: jobRequests[currRequestPos].chat_status,
-              status: 'Cancelled',
-              delivery_address: jobRequests[currRequestPos].delivery_address,
-              delivery_lat: jobRequests[currRequestPos].delivery_lat,
-              delivery_lang: jobRequests[currRequestPos].delivery_lang,
-            },
-          },
-        };
-        await fetch(REJECT_ACCEPT_REQUEST, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        })
-          .then(response => response.json())
-          .then(responseJson => {
-            if (responseJson.result) {
-              this.setState({
-                isLoading: false,
-                isAcceptJob: true,
-              });
-              newJobRequests.splice(currRequestPos, 1);
-              fetchedPendingJobInfo(newJobRequests);
-              this.props.navigation.navigate('Dashboard');
-            } else {
-              this.leftButtonActon = null;
-              this.rightButtonAction = () => {
-                this.setState({
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'OOPS!',
-                dialogDesc: 'An error has occurred, please try again later',
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok',
-              });
-            }
-          })
-          .catch(error => {
-            console.log('Error >>> ' + error);
-            this.setState({
-              isLoading: false,
-            });
-          });
-      } else {
-        simpleToast.show('Something went wrong, please try again later');
-      }
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
-
-  jobCompleteTask = async () => {
-    this.setState({
-      isLoading: true,
+  jobCancelTaskLocal = async () =>
+    await jobCancelTask({
+      userType: 'Customer',
+      currRequestPos: this.props.navigation.getParam('currentPos', 0),
+      toggleIsLoading: val => {
+        this.toggleIsLoading(val);
+        this.props.fetchingPendingJobInfo();
+      },
+      updatePendingJobInfo: this.props.fetchedPendingJobInfo,
+      jobRequests: this.props?.jobsInfo?.jobRequests,
+      userDetails: this.props?.userInfo?.userDetails,
+      onSuccess: () =>
+        this.setState({
+          isLoading: false,
+          isAcceptJob: false,
+          showDialog: false,
+        }),
+      onError: msg => {
+        this.setState({isLoading: false});
+        SimpleToast.show(msg);
+      },
+      navigate: this.props.navigation.navigate,
     });
-    const {
-      fetchedPendingJobInfo,
-      jobsInfo: {jobRequests},
-      userInfo: {userDetails},
-    } = this.props;
-    try {
-      const {currRequestPos} = this.state;
-      let newJobRequests = cloneDeep(jobRequests);
-      if (jobRequests[currRequestPos]) {
-        const data = {
-          main_id: jobRequests[currRequestPos].id,
-          chat_status: '1',
-          status: 'Completed',
-          notification: {
-            fcm_id: jobRequests[currRequestPos].fcm_id,
-            title: 'Job Completed',
-            body:
-              'Job Id : ' +
-              jobRequests[currRequestPos].order_id +
-              ' has been reported complete by the client: ' +
-              userDetails.username,
-            type: 'Job Completed',
-            user_id: userDetails.userId,
-            employee_id: jobRequests[currRequestPos].employee_id,
-            order_id: jobRequests[currRequestPos].order_id,
-            notification_by: 'Customer',
-            save_notification: true,
-            data: {
-              ProviderId: jobRequests[currRequestPos].employee_id,
-              user_id: userDetails.userId,
-              image: jobRequests[currRequestPos].image
-                ? jobRequests[currRequestPos].image
-                : 'null',
-              fcmId: jobRequests[currRequestPos].fcm_id,
-              name: jobRequests[currRequestPos].name,
-              surname: jobRequests[currRequestPos].surname,
-              mobile: jobRequests[currRequestPos].mobile,
-              description: jobRequests[currRequestPos].description,
-              address: jobRequests[currRequestPos].address,
-              lat: jobRequests[currRequestPos].lat,
-              lang: jobRequests[currRequestPos].lang,
-              serviceName: jobRequests[currRequestPos].service_name,
-              orderId: jobRequests[currRequestPos].order_id,
-              mainId: jobRequests[currRequestPos].id,
-              chat_status: jobRequests[currRequestPos].chat_status,
-              status: jobRequests[currRequestPos].status,
-              delivery_address: jobRequests[currRequestPos].delivery_address,
-              delivery_lat: jobRequests[currRequestPos].delivery_lat,
-              delivery_lang: jobRequests[currRequestPos].delivery_lang,
-            },
-          },
-        };
-        await fetch(REJECT_ACCEPT_REQUEST, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        })
-          .then(response => response.json())
-          .then(responseJson => {
-            if (responseJson.result) {
-              this.setState({
-                isLoading: false,
-                isAcceptJob: true,
-              });
-              newJobRequests.splice(currRequestPos, 1);
-              fetchedPendingJobInfo(newJobRequests);
-              this.props.navigation.navigate('Dashboard');
-            } else {
-              this.leftButtonActon = null;
-              this.rightButtonAction = () => {
-                this.setState({
-                  showDialog: false,
-                  dialogType: null,
-                });
-              };
-              this.setState({
-                isLoading: false,
-                showDialog: true,
-                dialogType: 'fb',
-                dialogTitle: 'OOPS!',
-                dialogDesc: 'An error has occurred, please try again later',
-                dialogLeftText: 'Cancel',
-                dialogRightText: 'Ok',
-              });
-            }
-          })
-          .catch(error => {
-            console.log('Error >>> ' + error);
-            this.setState({
-              isLoading: false,
-            });
-          });
-      } else {
-        simpleToast.show('Something went wrong, try again later');
-      }
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-      });
-    }
-  };
+
+  jobCompleteTaskCustomer = async () =>
+    await jobCompleteTask({
+      userType: 'Customer',
+      currRequestPos: this.props.navigation.getParam('currentPos', 0),
+      jobRequests: this.props?.jobsInfo?.jobRequests,
+      userDetails: this.props?.userInfo?.userDetails,
+      updatePendingJobInfo: this.props.fetchedPendingJobInfo,
+      toggleIsLoading: val => {
+        this.toggleIsLoading(val);
+        this.props.fetchingPendingJobInfo();
+      },
+      onSuccess: () =>
+        this.setState({
+          isLoading: false,
+          isAcceptJob: true,
+        }),
+      onError: msg => {
+        this.setState({
+          isLoading: false,
+          isAcceptJob: false,
+        });
+        SimpleToast.show(msg);
+      },
+      navigate: this.props.navigation.navigate,
+      rejectAcceptURL: REJECT_ACCEPT_REQUEST,
+    });
 
   changeDialogVisibility = () =>
     this.setState(prevState => ({showDialog: !prevState.showDialog}));
+
+  toggleIsLoading = bool =>
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
 
   render() {
     const {

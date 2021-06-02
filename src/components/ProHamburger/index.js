@@ -126,12 +126,13 @@ class ProHamburger extends React.Component {
         notificationsInfo,
         jobsInfo: {jobRequestsProviders},
       } = this.props;
+      const {currentMessage} = this.state;
       const {title, main_id} = data;
       const check = main_id + title;
       notifications.push(check);
       const currentGenericCount = notificationsInfo.generic;
       this.setState({currentMessage: message});
-      if (!_.isEqual(this.state.currentMessage, message)) {
+      if (!_.isEqual(currentMessage, message)) {
         title !== 'Message Recieved' &&
           fetchedNotifications({
             type: 'generic',
@@ -144,7 +145,7 @@ class ProHamburger extends React.Component {
         if (orderId === obj.order_id) pos = key;
       });
       let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
-      this.getAllNotificationsProvider();
+      title !== 'Message Recieved' && this.getAllNotificationsProvider();
       if (title.toLowerCase() === 'booking request') {
         navigation.navigate('ProChatAccept', {
           userId: data.userId,
