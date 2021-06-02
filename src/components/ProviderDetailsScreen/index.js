@@ -26,7 +26,6 @@ import {
 } from '../../Redux/Actions/jobsActions';
 import WaitingDialog from '../WaitingDialog';
 import {cloneDeep} from 'lodash';
-import {imageExists} from '../../misc/helpers';
 import {
   updateUserDetails,
   updateProviderDetails,
@@ -156,7 +155,7 @@ class ProviderDetailsScreen extends Component {
       generalInfo: {OnlineUsers},
     } = this.props;
     const {requestStatus, liveChatStatus} = this.state;
-    if (!activeRequest && requestStatus == 'Waiting for acceptance...')
+    if (!activeRequest && requestStatus === 'Waiting for acceptance...')
       this.setState({requestStatus: ''});
     const currentliveChatStatus = OnlineUsers[this.state.providerId]
       ? OnlineUsers[this.state.providerId].status
@@ -174,12 +173,16 @@ class ProviderDetailsScreen extends Component {
     this.initialRender();
     const {navigation} = this.props;
     navigation.addListener('willFocus', async () => {
-      this.initialRender();
+      //this.initialRender();
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
       );
     });
     navigation.addListener('willBlur', () => {
+      this.setState({
+        isLoading: false,
+        requestStatus: '',
+      });
       BackHandler.removeEventListener(
         'hardwareBackPress',
         this.handleBackButtonClick,
@@ -205,6 +208,7 @@ class ProviderDetailsScreen extends Component {
       name: navigation.state.params.name,
       surname: navigation.state.params.surname,
       image: navigation.state.params.image,
+      imageAvailable: navigation.state.params.imageAvailable,
       mobile: navigation.state.params.mobile,
       avgRating: navigation.state.params.avgRating,
       distance: navigation.state.params.distance,
@@ -227,10 +231,6 @@ class ProviderDetailsScreen extends Component {
       title: '',
       body: '',
       data: '',
-    });
-    const {image} = this.props.navigation.state.params;
-    await imageExists(image).then(imageAvailable => {
-      this.setState({imageAvailable});
     });
     const providerId = navigation.getParam('providerId');
     providerId &&
@@ -356,7 +356,7 @@ class ProviderDetailsScreen extends Component {
                 justifyContent: 'center',
                 marginLeft: 5,
               }}
-              onPress={() => this.props.navigation.goBack()}>
+              onPress={this.props.navigation.getParam('onGoBack')}>
               <Image
                 style={{width: 20, height: 20, alignSelf: 'center'}}
                 source={require('../../icons/arrow_back.png')}
@@ -475,8 +475,8 @@ class ProviderDetailsScreen extends Component {
           </View>
         </View>
 
-        {(this.state.requestStatus == '' ||
-          this.state.requestStatus == 'No Response') && (
+        {(this.state.requestStatus === '' ||
+          this.state.requestStatus === 'No Response') && (
           <View style={[styles.bottomView, {flexDirection: 'row'}]}>
             <TouchableOpacity
               style={styles.buttonContainer}
@@ -486,7 +486,7 @@ class ProviderDetailsScreen extends Component {
           </View>
         )}
 
-        {this.state.requestStatus == 'Chat Request Accepted' && (
+        {this.state.requestStatus === 'Chat Request Accepted' && (
           <View style={styles.bottomView}>
             <TouchableOpacity
               style={styles.buttonContainer}
@@ -552,8 +552,8 @@ class ProviderDetailsScreen extends Component {
           </View>
         )}
 
-        {this.state.requestStatus == 'Request Sending...' ||
-          (this.state.requestStatus == 'Waiting for acceptance...' && (
+        {this.state.requestStatus === 'Request Sending...' ||
+          (this.state.requestStatus === 'Waiting for acceptance...' && (
             <View style={styles.loaderStyle}>
               <ActivityIndicator
                 style={{

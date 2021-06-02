@@ -73,58 +73,69 @@ export const requestClientForReview = async ({
 };
 
 export const jobCancelTask = async ({
+  userType,
   currRequestPos,
   toggleIsLoading,
-  fetchedPendingJobInfo,
+  updatePendingJobInfo,
   jobRequests,
   userDetails,
+  onSuccess,
   onError,
   navigate,
 }) => {
   toggleIsLoading(true);
+  const dash = userType === 'Provider' ? 'ProDashboard' : 'Dashboard';
   try {
     let newJobRequests = cloneDeep(jobRequests);
-    const data = {
-      main_id: jobRequests[currRequestPos].id,
-      chat_status: '1',
-      status: 'Cancelled',
-      notification: {
-        fcm_id: jobRequests[currRequestPos].fcm_id,
-        title: 'Job Cancelled',
-        type: 'JobCancellation',
-        user_id: userDetails.userId,
-        employee_id: jobRequests[currRequestPos].employee_id,
-        order_id: jobRequests[currRequestPos].order_id,
-        notification_by: 'Customer',
-        save_notification: true,
-        body:
-          'Job request has been cancelled by client' +
-          ' Request Id : ' +
-          jobRequests[currRequestPos].order_id,
-        data: {
-          ProviderId: jobRequests[currRequestPos].employee_id,
-          image: jobRequests[currRequestPos].image
-            ? jobRequests[currRequestPos].image
-            : 'null',
-          fcmId: jobRequests[currRequestPos].fcm_id,
-          name: jobRequests[currRequestPos].name,
-          surname: jobRequests[currRequestPos].surname,
-          mobile: jobRequests[currRequestPos].mobile,
-          description: jobRequests[currRequestPos].description,
-          address: jobRequests[currRequestPos].address,
-          lat: jobRequests[currRequestPos].lat,
-          lang: jobRequests[currRequestPos].lang,
-          serviceName: jobRequests[currRequestPos].service_name,
-          orderId: jobRequests[currRequestPos].order_id,
-          mainId: jobRequests[currRequestPos].id,
-          chat_status: jobRequests[currRequestPos].chat_status,
-          status: 'Cancelled',
-          delivery_address: jobRequests[currRequestPos].delivery_address,
-          delivery_lat: jobRequests[currRequestPos].delivery_lat,
-          delivery_lang: jobRequests[currRequestPos].delivery_lang,
-        },
-      },
-    };
+    const data =
+      userType === 'Provider'
+        ? {
+            main_id: jobRequests[currRequestPos]?.id,
+            chat_status: '1',
+            status: 'Cancelled',
+            notification: {
+              fcm_id: jobRequests[currRequestPos]?.customer_details?.fcm_id,
+              title: 'Job Cancelled',
+              type: 'JobCancellation',
+              body:
+                'Your job request has been cancelled by the service provder : ' +
+                userDetails.name,
+              save_notification: true,
+              user_id: jobRequests[currRequestPos]?.customer_details?._id,
+              employee_id: userDetails.providerId,
+              order_id: jobRequests[currRequestPos]?.order_id,
+              notification_by: 'Employee',
+              data: {
+                ProviderId: userDetails.providerId,
+                orderId: jobRequests[currRequestPos]?.order_id,
+                mainId: jobRequests[currRequestPos]?.id,
+              },
+            },
+          }
+        : {
+            main_id: jobRequests[currRequestPos].id,
+            chat_status: '1',
+            status: 'Cancelled',
+            notification: {
+              fcm_id: jobRequests[currRequestPos].fcm_id,
+              title: 'Job Cancelled',
+              type: 'JobCancellation',
+              user_id: userDetails.userId,
+              employee_id: jobRequests[currRequestPos].employee_id,
+              order_id: jobRequests[currRequestPos].order_id,
+              notification_by: 'Customer',
+              save_notification: true,
+              body:
+                'Job request has been cancelled by client' +
+                ' Request Id : ' +
+                jobRequests[currRequestPos].order_id,
+              data: {
+                ProviderId: jobRequests[currRequestPos].employee_id,
+                orderId: jobRequests[currRequestPos].order_id,
+                mainId: jobRequests[currRequestPos].id,
+              },
+            },
+          };
     await fetch(REJECT_ACCEPT_REQUEST, {
       method: 'POST',
       headers: {
@@ -136,10 +147,11 @@ export const jobCancelTask = async ({
       .then(response => response.json())
       .then(responseJson => {
         if (responseJson.result) {
+          onSuccess && onSuccess();
           toggleIsLoading(false);
           newJobRequests.splice(currRequestPos, 1);
-          fetchedPendingJobInfo(newJobRequests);
-          navigate && navigate('Dashboard');
+          updatePendingJobInfo(newJobRequests);
+          navigate && navigate(dash);
         } else {
           onError('An error has occurred, please try again later');
         }
@@ -158,10 +170,6 @@ export const acceptJobTask = async ({
   receiverId,
   orderId,
   fcm_id,
-  deliveryAddress,
-  deliveryLat,
-  deliveryLang,
-  serviceName,
   mainId,
   providerDetails,
   dataWorkSource,
@@ -203,15 +211,8 @@ export const acceptJobTask = async ({
       data: {
         userId: receiverId,
         providerId: providerDetails.providerId,
-        ProviderData: providerDetails,
-        serviceName: serviceName,
         orderId: orderId,
         mainId: mainId,
-        chat_status: '1',
-        status: 'Accepted',
-        delivery_address: deliveryAddress,
-        delivery_lat: deliveryLat,
-        delivery_lang: deliveryLang,
       },
     },
   };
@@ -275,10 +276,6 @@ export const rejectJobTask = async ({
   currRequestPos,
   mainId,
   fcm_id,
-  serviceName,
-  deliveryAddress,
-  deliveryLat,
-  deliveryLang,
   dataWorkSource,
   providerDetails,
   toggleIsLoading,
@@ -315,25 +312,8 @@ export const rejectJobTask = async ({
         orderId,
       data: {
         ProviderId: providerDetails.providerId,
-        image: providerDetails.imageSource
-          ? providerDetails.imageSource
-          : 'null',
-        fcmId: providerDetails.fcmId,
-        name: providerDetails.name,
-        surname: providerDetails.surname,
-        mobile: providerDetails.mobile,
-        description: providerDetails.description,
-        address: providerDetails.address,
-        lat: providerDetails.lat,
-        lang: providerDetails.lang,
-        serviceName: serviceName,
         orderId: orderId,
         mainId: mainId,
-        chat_status: '0',
-        status: 'Rejected',
-        delivery_address: deliveryAddress,
-        delivery_lat: deliveryLat,
-        delivery_lang: deliveryLang,
       },
     },
   };
@@ -372,6 +352,105 @@ export const rejectJobTask = async ({
     console.log('Error >>> ' + e);
     toggleIsLoading(false);
     SimpleToast.show('Something went wrong, please try again later');
+  }
+};
+
+export const jobCompleteTask = async ({
+  userType,
+  currRequestPos,
+  jobRequests,
+  userDetails,
+  updatePendingJobInfo,
+  toggleIsLoading,
+  onSuccess,
+  onError,
+  navigate,
+  rejectAcceptURL,
+}) => {
+  toggleIsLoading(true);
+  const dash = userType === 'Provider' ? 'ProDashboard' : 'Dashboard';
+  try {
+    let newJobRequests = cloneDeep(jobRequests);
+    if (jobRequests[currRequestPos]) {
+      const data =
+        userType === 'Provider'
+          ? {
+              main_id: jobRequests[currRequestPos]?.id,
+              chat_status: '1',
+              status: 'Completed',
+              notification: {
+                fcm_id: jobRequests[currRequestPos]?.customer_details?.fcm_id,
+                title: 'Job Completed',
+                type: 'jobCompletion',
+                body:
+                  'Your job request has been completed by the service provder : ' +
+                  userDetails.name,
+                save_notification: true,
+                user_id: jobRequests[currRequestPos]?.customer_details?._id,
+                employee_id: userDetails.providerId,
+                order_id: jobRequests[currRequestPos]?.order_id,
+                notification_by: 'Employee',
+                data: {
+                  ProviderId: userDetails.providerId,
+                  orderId: jobRequests[currRequestPos]?.order_id,
+                  mainId: jobRequests[currRequestPos]?.id,
+                },
+              },
+            }
+          : {
+              main_id: jobRequests[currRequestPos]?.id,
+              chat_status: '1',
+              status: 'Completed',
+              notification: {
+                fcm_id: jobRequests[currRequestPos]?.fcm_id,
+                title: 'Job Completed',
+                body:
+                  'Job Id : ' +
+                  jobRequests[currRequestPos]?.order_id +
+                  ' has been reported complete by the client: ' +
+                  userDetails.username,
+                type: 'Job Completed',
+                user_id: userDetails.userId,
+                employee_id: jobRequests[currRequestPos]?.employee_id,
+                order_id: jobRequests[currRequestPos]?.order_id,
+                notification_by: 'Customer',
+                save_notification: true,
+                data: {
+                  ProviderId: jobRequests[currRequestPos]?.employee_id,
+                  orderId: jobRequests[currRequestPos]?.order_id,
+                  mainId: jobRequests[currRequestPos]?.id,
+                },
+              },
+            };
+      await fetch(rejectAcceptURL, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then(response => response.json())
+        .then(responseJson => {
+          if (responseJson.result) {
+            onSuccess();
+            newJobRequests.splice(currRequestPos, 1);
+            updatePendingJobInfo(newJobRequests);
+            navigate(dash);
+          } else {
+            onError('An error has occurred, please try again later');
+          }
+        })
+        .catch(error => {
+          console.log('Error >>> ' + error);
+          onError('Something went wrong, try again later');
+        });
+    } else {
+      simpleToast.show('Something went wrong, try logging in and out of app');
+    }
+  } catch (e) {
+    console.log('Error >>> ' + e);
+    onError('Something went wrong, try again later');
   }
 };
 

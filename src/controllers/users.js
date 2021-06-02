@@ -14,9 +14,16 @@ import {cloneDeep} from 'lodash';
 import database from '@react-native-firebase/database';
 import storage from '@react-native-firebase/storage';
 import Config from '../components/Config';
-import {emailCheck, passwordCheck, sanitizeMobileNumber} from '../misc/helpers';
+import {
+  emailCheck,
+  passwordCheck,
+  sanitizeMobileNumber,
+  imageExists,
+  getDistance,
+} from '../misc/helpers';
 
 const PRO_GET_PROFILE = Config.baseURL + 'employee/';
+const GET_ALL_PROVIDER_URL = Config.baseURL + 'job/serviceprovider/';
 const USER_GET_PROFILE = Config.baseURL + 'users/';
 const storageRef = storage().ref('/users_info');
 
@@ -1076,4 +1083,183 @@ export const registerTask = async ({
       else errMsg = 'Something went wrong, please try again later';
       onError(errMsg, true);
     });
+};
+
+export const getAllProviders = async ({
+  userDetails,
+  serviceId,
+  toggleIsLoading,
+  usersCoordinates,
+  setDistInfo,
+  setDistDataSource,
+  onSuccess,
+  onError,
+}) => {
+  const data = {
+    lat: userDetails.lat,
+    lang: userDetails.lang,
+  };
+  try {
+    await fetch(GET_ALL_PROVIDER_URL + serviceId, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(async responseJson => {
+        if (responseJson.result) {
+          let dataSource = responseJson.data;
+          await calculateDistance({
+            usersCoordinates,
+            dataSource,
+            setDistInfo,
+            onSuccess: setDistDataSource,
+          });
+          onSuccess();
+        } else {
+          onError();
+        }
+      })
+      .catch(error => {
+        console.log('getting provider error 1', error);
+        toggleIsLoading(false);
+        SimpleToast.show(
+          'Something went wrong, Check your internet connection',
+        );
+      });
+  } catch (e) {
+    console.log('getting provider error 2', e);
+    toggleIsLoading(false);
+    SimpleToast.show('Something went wrong, try again');
+  }
+};
+
+export const calculateDistance = async ({
+  usersCoordinates,
+  dataSource,
+  toggleIsRefreshing,
+  setDistInfo,
+  onSuccess,
+}) => {
+  toggleIsRefreshing && toggleIsRefreshing(true);
+  var distInfo = {};
+  var tempDatasource = cloneDeep(dataSource);
+  if (dataSource.length > 0) {
+    await dataSource.map(async (obj, key) => {
+      const {_id, image} = obj;
+      let imageAvaliable = image && image !== 'no-image.jpg' ? true : false;
+      if (image && imageAvaliable) {
+        await imageExists(image).then(res => {
+          imageAvaliable = res;
+        });
+      }
+      tempDatasource[key].imageAvailable = imageAvaliable;
+      await database()
+        .ref(`liveLocation/${_id}`)
+        .once('value', result => {
+          const {latitude, longitude, address} = result.val();
+          const dist = getDistance(
+            latitude,
+            longitude,
+            usersCoordinates.latitude,
+            usersCoordinates.longitude,
+            'K',
+          );
+          distInfo[_id] = parseFloat(dist).toFixed(1);
+          tempDatasource[key].hash = parseFloat(dist).toFixed(1);
+          tempDatasource[key].currentAddress = address;
+          setDistInfo(distInfo);
+        })
+        .catch(e => {
+          console.log('dist cal error ', e.message);
+        });
+    });
+    onSuccess(tempDatasource);
+  }
+};
+
+export const fetchProfile = async ({
+  userId,
+  onSuccess,
+  setDistance,
+  onError,
+  userGetProfileURL,
+}) => {
+  try {
+    await fetch(userGetProfileURL + userId, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => response.json())
+      .then(async responseJson => {
+        let imageAvailable =
+          responseJson.data.image && !responseJson.data.image !== 'no-image.jpg'
+            ? true
+            : false;
+        if (imageAvailable)
+          await imageExists(responseJson.data.image).then(res => {
+            imageAvailable = res;
+          });
+        if (responseJson.result) {
+          const id = responseJson.data.id;
+          onSuccess({
+            userId: responseJson.data.id,
+            userName: responseJson.data.username,
+            userImage: responseJson.data.image,
+            imageAvailable,
+            userMobile: responseJson.data.mobile,
+            userDob: responseJson.data.dob,
+            userAddress: responseJson.data.address,
+            userLat: responseJson.data.lat,
+            userLang: responseJson.data.lang,
+            userFcmId: responseJson.data.fcm_id,
+          });
+          await database()
+            .ref(`liveLocation/${id}`)
+            .once('value', result => {
+              const {latitude, longitude} = result.val();
+              const fullDist = getDistance(
+                latitude,
+                longitude,
+                responseJson.data.lat,
+                responseJson.data.lang,
+                'K',
+              );
+              const distance = parseFloat(fullDist).toFixed(1);
+              setDistance(distance);
+            })
+            .catch(e => {
+              console.log('user profile fetch error 3', e.message);
+              onError("Someting went wrong, couldn't fetch user information");
+            });
+        } else {
+          onError('Something went wrong, try again');
+        }
+      })
+      .catch(error => {
+        console.log('user profile fetch error 2' + error);
+        onError("Someting went wrong, couldn't fetch user information");
+      });
+  } catch (e) {
+    console.log('user profile fetch error 1' + error);
+    onError("Someting went wrong, couldn't fetch user information");
+  }
+};
+
+export const getRating = async ({id, ratingsURL}) => {
+  let avg = 0;
+  try {
+    await Axios.get(ratingsURL + id).then(res => {
+      if (res.data.rating > 0) avg = res.data.rating;
+    });
+  } catch (e) {
+    console.log(e);
+  }
+  return avg;
 };

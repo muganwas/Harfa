@@ -16,18 +16,12 @@ import {
 } from 'react-native';
 import {AirbnbRating} from 'react-native-ratings';
 import Toast from 'react-native-simple-toast';
-import Config from '../Config';
-import database from '@react-native-firebase/database';
-import axios from 'axios';
 import WaitingDialog from '../WaitingDialog';
-import {getDistance, imageExists} from '../../misc/helpers';
 import images from '../../Constants/images';
 import {colorBg, white, themeRed} from '../../Constants/colors';
+import {calculateDistance, getAllProviders} from '../../controllers/users';
 
 const screenWidth = Dimensions.get('window').width;
-
-const GET_ALL_PROVIDER_URL = Config.baseURL + 'job/serviceprovider/';
-const GET_EMPLOYEE_RATINGS = Config.baseURL + 'jobrequest/employeeReviews/';
 
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBar.currentHeight;
 
@@ -47,7 +41,7 @@ const StatusBarPlaceHolder = () => {
 };
 
 class ListOfProviderScreen extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
       serviceName: null,
@@ -69,6 +63,9 @@ class ListOfProviderScreen extends Component {
     const {navigation} = this.props;
     this.initialize();
     navigation.addListener('willFocus', async () => {
+      /**
+       * app has tocheck for new providers everytime this view is opened
+       */
       this.initialize();
       BackHandler.addEventListener('hardwareBackPress', () =>
         this.handleBackButtonClick(),
@@ -97,142 +94,65 @@ class ListOfProviderScreen extends Component {
       distanceOrder: true,
       reviewOrder: true,
     });
-    await this.getAllProviders();
+    await this.getAllProvidersLocal();
   };
 
-  getAllProviders = async () => {
-    const {
-      userInfo: {userDetails},
-      navigation,
-    } = this.props;
-    const data = {
-      lat: userDetails.lat,
-      lang: userDetails.lang,
-    };
-    const serviceId = navigation.getParam('serviceId', null);
-    try {
-      await fetch(GET_ALL_PROVIDER_URL + serviceId, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(async responseJson => {
-          if (responseJson.result) {
-            let dataSource = responseJson.data;
-            await dataSource.map(async (obj, key) => {
-              const {image} = obj;
-              let imageAvaliable = true;
-              if (image) {
-                await imageExists(image).then(res => {
-                  imageAvaliable = res;
-                });
-              } else {
-                imageAvaliable = false;
-              }
-              dataSource[key].imageAvailable = imageAvaliable;
-            });
-            await this.calculateDistance(dataSource);
-            this.setState({
-              isLoading: false,
-              isNoData: false,
-              isData: true,
-            });
-          } else {
-            this.setState({
-              isLoading: false,
-              isNoData: true,
-              isData: false,
-            });
-          }
-        })
-        .catch(error => {
-          this.setState({
-            isLoading: false,
-          });
-          this.showToast(
-            'Something went wrong, Check your internet connection',
-          );
+  getAllProvidersLocal = async () =>
+    getAllProviders({
+      userDetails: this.props?.userInfo?.userDetails,
+      serviceId: this.props.navigation.getParam('serviceId'),
+      toggleIsLoading: this.changeWaitingDialogVisibility,
+      usersCoordinates: this.props?.generalInfo?.usersCoordinates,
+      setDistInfo: distInfo => this.setState({distInfo}),
+      setDistDataSource: dataSource => {
+        this.setState({
+          distCalculated: true,
+          dataSource,
+          refreshing: false,
         });
-    } catch (e) {
-      this.setState({
-        isLoading: false,
-      });
-      this.showToast('Something went wrong, try again');
-    }
-  };
+      },
+      onSuccess: () =>
+        this.setState({
+          isLoading: false,
+          isNoData: false,
+          isData: true,
+        }),
+      onError: () =>
+        this.setState({
+          isLoading: false,
+          isNoData: true,
+          isData: false,
+        }),
+    });
 
-  calculateRating = async id => {
-    let avg = 0;
-    try {
-      await axios.get(GET_EMPLOYEE_RATINGS + id).then(res => {
-        if (res.data.rating > 0) avg = res.data.rating;
-      });
-    } catch (e) {
-      console.log(e);
-    }
-    return avg;
-  };
-
-  calculateDistance = async dataSource => {
-    var distInfo = {};
-    var tempDatasource = [...dataSource];
-    const {
-      generalInfo: {usersCoordinates},
-    } = this.props;
-    if (dataSource.length > 0) {
-      await dataSource.map(async (obj, key) => {
-        const {_id, image} = obj;
-        let imageAvaliable = image && image !== 'no-image.jpg' ? true : false;
-        if (image && imageAvaliable) {
-          await imageExists(image).then(res => {
-            imageAvaliable = res;
-          });
-        }
-        tempDatasource[key].imageAvailable = imageAvaliable;
-        database()
-          .ref(`liveLocation/${_id}`)
-          .once('value', result => {
-            const {latitude, longitude, address} = result.val();
-            const dist = getDistance(
-              latitude,
-              longitude,
-              usersCoordinates.latitude,
-              usersCoordinates.longitude,
-              'K',
-            );
-            distInfo[_id] = parseFloat(dist).toFixed(1);
-            tempDatasource[key].hash = parseFloat(dist).toFixed(1);
-            tempDatasource[key].currentAddress = address;
-            this.setState({distInfo});
-          })
-          .catch(e => {
-            console.log(e.message);
-          });
-      });
-      this.setState({
-        distCalculated: true,
-        dataSource: tempDatasource,
-        refreshing: false,
-      });
-    }
-  };
+  calculateDistanceLocal = async dataSource =>
+    calculateDistance({
+      usersCoordinates: this.props?.generalInfo?.usersCoordinates,
+      dataSource,
+      setDistInfo: distInfo => this.setState({distInfo}),
+      toggleIsRefreshing: this.toggleRefreshing,
+      onSuccess: dataSource =>
+        this.setState({
+          distCalculated: true,
+          dataSource,
+          refreshing: false,
+        }),
+    });
 
   handleBackButtonClick = () => {
     this.props.navigation.navigate('Dashboard');
     return true;
   };
 
-  showToast = message => {
-    Toast.show(message);
+  showToast = (message, length) => {
+    if (length) Toast.show(message, length);
+    else Toast.show(message);
   };
 
   renderItem = ({item}) => {
     const {
       userInfo: {userDetails},
+      navigation,
     } = this.props;
     const {accountType} = userDetails;
     const {showClasses} = this.state;
@@ -243,11 +163,12 @@ class ListOfProviderScreen extends Component {
           style={styles.itemMainContainer}
           onPress={() => {
             !showClasses
-              ? this.props.navigation.navigate('ProviderDetails', {
+              ? navigation.navigate('ProviderDetails', {
                   providerId: item.id,
                   name: item.username,
                   surname: item.surname,
                   image: item.image,
+                  imageAvailable: item.imageAvailable,
                   mobile: item.mobile,
                   avgRating: item.avgRating,
                   distance: item.hash,
@@ -258,6 +179,13 @@ class ListOfProviderScreen extends Component {
                   accountType: item.account_type,
                   serviceName: this.state.serviceName,
                   serviceId: this.state.serviceId,
+                  serviceImage: navigation.getParam('serviceImage'),
+                  onGoBack: () =>
+                    navigation.navigate('ListOfProviders', {
+                      serviceName: this.state.serviceName,
+                      serviceId: this.state.serviceId,
+                      serviceImage: navigation.getParam('serviceImage'),
+                    }),
                 })
               : null;
           }}>
@@ -355,9 +283,15 @@ class ListOfProviderScreen extends Component {
   };
 
   changeWaitingDialogVisibility = bool => {
-    this.setState({
-      isLoading: bool,
-    });
+    this.setState(prevState => ({
+      isLoading: typeof bool === 'boolean' ? bool : !prevState.isLoading,
+    }));
+  };
+
+  toggleRefreshing = bool => {
+    this.setState(prevState => ({
+      refreshing: typeof bool === 'boolean' ? bool : !prevState.refreshing,
+    }));
   };
 
   rerenderList = order => {
@@ -374,7 +308,9 @@ class ListOfProviderScreen extends Component {
         : hashsArr.sort(function(a, b) {
             return b[1] - a[1];
           });
-      /**rearrange datasource according to distance */
+      /**
+       * rearrange datasource according to distance
+       */
       hashsArr.map(innerArr => {
         dataSource.map(obj => {
           const id = obj._id;
@@ -393,7 +329,9 @@ class ListOfProviderScreen extends Component {
         : ratingArr.sort(function(a, b) {
             return b[1] - a[1];
           });
-      /**rearrange datasource according to ratings */
+      /**
+       * rearrange datasource according to ratings
+       */
       ratingArr.map(innerArr => {
         dataSource.map(obj => {
           const id = obj._id;
@@ -413,8 +351,8 @@ class ListOfProviderScreen extends Component {
   };
 
   render() {
-    const {showClasses} = this.state;
-    const categoryImage = this.props.navigation.getParam('image', null);
+    const {showClasses, dataSource} = this.state;
+    const categoryImage = this.props.navigation.getParam('serviceImage', null);
     return (
       <View style={styles.container}>
         <StatusBarPlaceHolder />
@@ -464,7 +402,7 @@ class ListOfProviderScreen extends Component {
           </View>
         </View>
 
-        {this.state.isData && (
+        {dataSource && dataSource.length > 0 && (
           <View style={styles.listView}>
             <FlatList
               numColumns={1}
@@ -474,7 +412,7 @@ class ListOfProviderScreen extends Component {
               showsVerticalScrollIndicator={false}
               extraData={this.state}
               refreshing={this.state.refreshing}
-              onRefresh={this.calculateDistance}
+              onRefresh={this.calculateDistanceLocal}
             />
           </View>
         )}

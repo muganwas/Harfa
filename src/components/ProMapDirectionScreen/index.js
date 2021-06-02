@@ -14,12 +14,10 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import {cloneDeep, isEqual} from 'lodash';
+import {isEqual} from 'lodash';
 import MapView from 'react-native-maps';
-import Polyline from '@mapbox/polyline';
-import {MAPS_API_KEY} from 'react-native-dotenv';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
-import simpleToast from 'react-native-simple-toast';
+import SimpleToast from 'react-native-simple-toast';
 import Config from '../Config';
 import WaitingDialog from '../WaitingDialog';
 import DialogComponent from '../DialogComponent';
@@ -43,6 +41,8 @@ import {
   themeRed,
   colorGreen,
 } from '../../Constants/colors';
+import {getDirections} from '../../misc/helpers';
+import {jobCompleteTask, jobCancelTask} from '../../controllers/jobs';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -129,7 +129,7 @@ class ProMapDirectionScreen extends Component {
       othersCoordinates[user_id]?.latitude +
       ',' +
       othersCoordinates[user_id]?.longitude;
-    this.getDirections(
+    this.getDirectionsLocal(
       usersCoordinates.latitude + ',' + usersCoordinates.longitude,
       destination,
     );
@@ -226,7 +226,7 @@ class ProMapDirectionScreen extends Component {
         othersCoordinates[user_id]?.latitude +
         ',' +
         othersCoordinates[user_id]?.longitude;
-      this.getDirections(
+      this.getDirectionsLocal(
         usersCoordinates.latitude + ',' + usersCoordinates.longitude,
         destination,
       );
@@ -246,47 +246,13 @@ class ProMapDirectionScreen extends Component {
     Linking.openURL('tel:' + this.state.userMobile);
   };
 
-  getDirections = async (startLoc, destinationLoc) => {
-    if (startLoc && destinationLoc) {
-      try {
-        fetch(
-          `https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=${MAPS_API_KEY}`,
-        )
-          .then(resp => resp.json())
-          .then(respJson => {
-            if (respJson && respJson.routes[0]) {
-              let points = Polyline.decode(
-                respJson.routes[0].overview_polyline.points,
-              );
-              let routeCoordinates = points.map((point, index) => {
-                return {
-                  latitude: point[0],
-                  longitude: point[1],
-                };
-              });
-              //If Delay some second, works fine..Reason don't know
-              setTimeout(() => {
-                this.setState({
-                  routeCoordinates: routeCoordinates,
-                  isLoading: false,
-                });
-                return this.state.routeCoordinates;
-              }, 1500);
-            }
-          });
-      } catch (error) {
-        this.setState({
-          isLoading: false,
-        });
-        return error;
-      }
-    } else {
-      simpleToast.show(
-        'Destination co-ordinates missing, try later',
-        simpleToast.LONG,
-      );
-    }
-  };
+  getDirectionsLocal = async (startLoc, destinationLoc) =>
+    await getDirections({
+      startLoc,
+      destinationLoc,
+      onSuccess: routeCoordinates =>
+        this.setState({routeCoordinates, isLoading: false}),
+    });
 
   openCompleteConfirmation = () => {
     this.setState({currentModal: 'complete', showDialog: true});
@@ -296,206 +262,60 @@ class ProMapDirectionScreen extends Component {
     this.setState({currentModal: 'cancel', showDialog: true});
   };
 
-  jobCompleteTask = () => {
-    this.setState({isLoading: true});
-    const {
-      fetchingPendingJobInfo,
-      fetchedPendingJobInfo,
-      jobsInfo: {jobRequestsProviders},
-      userInfo: {providerDetails},
-    } = this.props;
-    const {orderId, userId, currentPos} = this.state;
-    const newJobRequestsProviders = cloneDeep(jobRequestsProviders);
-    const data = {
-      main_id: this.state.mainId,
-      chat_status: '1',
-      status: 'Completed',
-      notification: {
-        fcm_id: this.state.userFcmId,
-        title: 'Job Completed',
-        body:
-          'Your job request has been completed by the service provder : ' +
-          providerDetails.name,
-        save_notification: true,
-        user_id: userId,
-        employee_id: providerDetails.providerId,
-        order_id: orderId,
-        notification_by: 'Employee',
-        data: {
-          ProviderId: providerDetails.providerId,
-          user_Id: newJobRequestsProviders[currentPos].user_Id,
-          image: providerDetails.imageSource
-            ? providerDetails.imageSource
-            : 'null',
-          fcmId: providerDetails.fcmId,
-          name: providerDetails.name,
-          surname: providerDetails.surname,
-          mobile: providerDetails.mobile,
-          description: providerDetails.description,
-          address: providerDetails.address,
-          lat: providerDetails.lat,
-          lang: providerDetails.lang,
-          serviceName: this.state.serviceName,
-          orderId: this.state.orderId,
-          mainId: this.state.mainId,
-          chat_status: this.state.chatStatus,
-          status: this.state.status,
-          delivery_address: this.state.delivertAddress,
-          delivery_lat: this.state.deliveryLat,
-          delivery_lang: this.state.deliveryLang,
-        },
+  jobCompleteTaskProvider = async () =>
+    jobCompleteTask({
+      userType: 'Provider',
+      currRequestPos: this.props.navigation.getParam('currentPos', 0),
+      jobRequests: this.props?.jobsInfo?.jobRequestsProviders,
+      userDetails: this.props?.userInfo?.providerDetails,
+      updatePendingJobInfo: this.props.fetchedPendingJobInfo,
+      toggleIsLoading: val => {
+        this.changeWaitingDialogVisibility(val);
+        this.props.fetchingPendingJobInfo();
       },
-    };
-    fetchingPendingJobInfo();
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-              isAcceptJob: true,
-              showDialog: false,
-            });
-            newJobRequestsProviders.splice(currentPos, 1);
-            fetchedPendingJobInfo(newJobRequestsProviders);
-            this.props.navigation.navigate('ProDashboard');
-          } else {
-            ToastAndroid.show('Something went wrong', ToastAndroid.show);
-            this.setState({
-              isLoading: false,
-              showDialog: false,
-            });
-          }
-        })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            isLoading: false,
-            showDialog: false,
-          });
+      onSuccess: () =>
+        this.setState({
+          isLoading: false,
+          isAcceptJob: true,
+          showDialog: false,
+        }),
+      onError: msg => {
+        SimpleToast.show(msg);
+        this.setState({
+          isLoading: false,
+          showDialog: false,
         });
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-        showDialog: false,
-      });
-    }
-  };
-
-  jobCancelTask = async () => {
-    this.setState({isLoading: true});
-    const {
-      fetchingPendingJobInfo,
-      fetchedPendingJobInfo,
-      fetchedDataWorkSource,
-      jobsInfo: {jobRequestsProviders, dataWorkSource},
-      userInfo: {providerDetails},
-    } = this.props;
-    let newJobRequestsProviders = cloneDeep(jobRequestsProviders);
-    let newDWS = cloneDeep(dataWorkSource);
-    let dataWSPos;
-    const {orderId, userId} = this.state;
-    await newDWS.map((wks, i) => {
-      if (wks.order_id === orderId) dataWSPos = i;
+      },
+      navigate: this.props.navigation.navigate,
+      rejectAcceptURL: REJECT_ACCEPT_REQUEST,
     });
-    const data = {
-      main_id: this.state.mainId,
-      chat_status: '1',
-      status: 'Cancelled',
-      notification: {
-        fcm_id: this.state.userFcmId,
-        title: 'Job Cancelled',
-        type: 'JobCancellation',
-        notification_by: 'Employee',
-        save_notification: true,
-        user_id: userId,
-        employee_id: providerDetails.providerId,
-        order_id: orderId,
-        body:
-          'Your job request has been cancelled by the service provder : ' +
-          providerDetails.providerId,
-        data: {
-          ProviderId: providerDetails.providerId,
-          image: providerDetails.imageSource
-            ? providerDetails.imageSource
-            : 'null',
-          fcmId: providerDetails.fcmId,
-          name: providerDetails.name,
-          surname: providerDetails.surname,
-          mobile: providerDetails.mobile,
-          description: providerDetails.description,
-          address: providerDetails.address,
-          lat: providerDetails.lat,
-          lang: providerDetails.lang,
-          serviceName: this.state.serviceName,
-          orderId: this.state.orderId,
-          mainId: this.state.mainId,
-          chat_status: this.state.chatStatus,
-          status: 'Cancelled',
-          delivery_address: this.state.delivertAddress,
-          delivery_lat: this.state.deliveryLat,
-          delivery_lang: this.state.deliveryLang,
-        },
-      },
-    };
 
-    fetchingPendingJobInfo();
-    try {
-      fetch(REJECT_ACCEPT_REQUEST, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-        .then(response => response.json())
-        .then(responseJson => {
-          if (responseJson.result) {
-            this.setState({
-              isLoading: false,
-              isAcceptJob: true,
-              showDialog: false,
-            });
-            if (dataWSPos || dataWSPos === 0) {
-              newDWS.splice(dataWSPos, 1);
-              fetchedDataWorkSource(newDWS);
-            }
-            newJobRequestsProviders.splice(this.state.currentPos, 1);
-            fetchedPendingJobInfo(newJobRequestsProviders);
-            this.props.navigation.navigate('ProDashboard');
-          } else {
-            ToastAndroid.show('Something went wrong', ToastAndroid.show);
-            this.setState({
-              isLoading: false,
-              showDialog: false,
-            });
-          }
-        })
-        .catch(error => {
-          console.log('Error >>> ' + error);
-          this.setState({
-            isLoading: false,
-            showDialog: false,
-          });
+  jobCancelTaskLocal = async () =>
+    await jobCancelTask({
+      userType: 'Provider',
+      currRequestPos: this.props.navigation.getParam('currentPos', 0),
+      toggleIsLoading: val => {
+        this.changeWaitingDialogVisibility(val);
+        this.props.fetchingPendingJobInfo();
+      },
+      updatePendingJobInfo: this.props.fetchedPendingJobInfo,
+      jobRequests: this.props?.jobsInfo?.jobRequestsProviders,
+      userDetails: this.props?.userInfo?.providerDetails,
+      onSuccess: () =>
+        this.setState({
+          isLoading: false,
+          isAcceptJob: false,
+          showDialog: false,
+        }),
+      onError: msg => {
+        SimpleToast.show(msg);
+        this.setState({
+          isLoading: false,
+          showDialog: false,
         });
-    } catch (e) {
-      console.log('Error >>> ' + e);
-      this.setState({
-        isLoading: false,
-        showDialog: false,
-      });
-    }
-  };
+      },
+      navigate: this.props.navigation.navigate,
+    });
 
   changeWaitingDialogVisibility = bool => {
     this.setState({
@@ -534,8 +354,8 @@ class ProMapDirectionScreen extends Component {
           leftButtonAction={this.changeDialogVisibility}
           rightButtonAction={
             currentModal && currentModal === 'cancel'
-              ? this.jobCancelTask
-              : this.jobCompleteTask
+              ? this.jobCancelTaskLocal
+              : this.jobCompleteTaskProvider
           }
           isLoading={false}
           titleText={

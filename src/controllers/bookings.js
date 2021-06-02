@@ -24,19 +24,19 @@ export const getAllBookings = async ({
           let newData = cloneDeep(responseJson.data);
           for (let i = 0; i < newData.length; i++) {
             if (userType === 'Provider')
-              imageExists(newData[i].user_details.image).then(res => {
-                if (newData[i].user_details)
+              imageExists(newData[i]?.user_details?.image).then(res => {
+                if (newData[i]?.user_details)
                   newData[i].user_details.imageAvailable = res;
               });
             else
-              imageExists(newData[i].employee_details.image).then(res => {
-                if (newData[i].employee_details)
+              imageExists(newData[i]?.employee_details?.image).then(res => {
+                if (newData[i]?.employee_details)
                   newData[i].employee_details.imageAvailable = res;
               });
-            if (newData[i].chat_status == '1') {
+            if (newData[i].chat_status === '1') {
               if (newData[i].status === 'Completed') {
                 bookingCompleteData.push(newData[i]);
-              } else if (newData[i].status == 'Rejected') {
+              } else if (newData[i].status === 'Rejected') {
                 bookingRejectData.push(newData[i]);
               }
             } else {
@@ -51,7 +51,7 @@ export const getAllBookings = async ({
         }
       })
       .catch(error => {
-        console.log(error);
+        console.log('Booking fetch error', error);
         toggleIsLoading(false);
         SimpleToast.show(
           'Something went wrong, check your internet connection',
@@ -141,7 +141,7 @@ export const requestForBooking = async ({
   goBack,
 }) => {
   if (!userDetails.lang) {
-    onError('Please provide your address first');
+    onError(true, 'Please provide your address first');
     setTimeout(
       () =>
         navigation.navigate('SelectAddress', {
@@ -150,7 +150,7 @@ export const requestForBooking = async ({
       400,
     );
   } else if (!userDetails.mobile) {
-    onError('Please update mobile first');
+    onError(true, 'Please update mobile first');
   } else {
     onRequestSending();
     const data = {
@@ -178,7 +178,10 @@ export const requestForBooking = async ({
       },
     };
     if (!online) {
-      onError('Service provider is Offline and might take a while to respond');
+      onError(
+        true,
+        'Service provider is Offline and might take a while to respond',
+      );
     }
     try {
       fetch(BOOKING_REQUEST, {
@@ -194,33 +197,33 @@ export const requestForBooking = async ({
           if (responseJson.result) {
             onSuccess('Waiting for acceptance...');
           } else {
-            if (responseJson.message == 'Already Exist') {
+            if (responseJson.message === 'Already Exist') {
               onError(
                 false,
                 'You already have a running job with this provider',
               );
-            } else if (responseJson.message == 'Service provider busy') {
+            } else if (responseJson.message === 'Service provider busy') {
               onError(
                 false,
                 'Service provider is currently busy. please try another service provider',
               );
-            } else if (responseJson.message == 'Service provider is offline') {
+            } else if (responseJson.message === 'Service provider is offline') {
               onError(
                 false,
                 'Service provider is offline. Book another service provider',
               );
             } else {
-              SimpleToast.show('Something went wrong');
+              onError(true, 'Something went wrong');
             }
           }
         })
         .catch(error => {
           console.log('pro req error ', error);
-          onError('Something went wrong, try again later');
+          onError(true, 'Something went wrong, try again later');
         });
     } catch (e) {
       console.log('Pro request err !', e);
-      onError('Something went wrong, try again later');
+      onError(true, 'Something went wrong, try again later');
     }
   }
 };

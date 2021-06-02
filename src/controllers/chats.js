@@ -108,11 +108,9 @@ export const acceptChatRequest = async (
             delivery_lat,
             delivery_lang,
           };
-
-          imageExists(image).then(res => {
+          await imageExists(image).then(res => {
             jobData.imageAvailable = res;
           });
-
           newjobRequests[pos] = jobData;
           fetchedPendingJobInfo(newjobRequests);
           if (redirect) navigate();
@@ -134,24 +132,26 @@ export const acceptChatRequest = async (
   }
 };
 
-export const rejectJobRequest = async (
+export const rejectChatRequest = async (
   {
     pos,
     fetchedPendingJobInfo,
     providerDetails,
+    rejectionData,
     jobRequestsProviders,
     toggleLoading,
     onError,
+    onSuccess,
     navigate,
   },
   redirect = true,
 ) => {
-  toggleLoading();
+  toggleLoading(true);
   let newjobRequestsProviders = cloneDeep(jobRequestsProviders);
   const {id, user_id, fcm_id, service_name, order_id} = jobRequestsProviders[
     pos
   ];
-  const data = {
+  const data = rejectionData || {
     main_id: id,
     chat_status: '0',
     status: 'Rejected',
@@ -189,9 +189,12 @@ export const rejectJobRequest = async (
       .then(response => response.json())
       .then(responseJson => {
         if (responseJson.result) {
-          toggleLoading();
-          newjobRequestsProviders.splice(pos, 1);
-          fetchedPendingJobInfo(newjobRequestsProviders);
+          if (!rejectionData) {
+            toggleLoading(false);
+            newjobRequestsProviders.splice(pos, 1);
+            fetchedPendingJobInfo(newjobRequestsProviders);
+          }
+          onSuccess && onSuccess();
         } else {
           onError('Something went wrong');
         }

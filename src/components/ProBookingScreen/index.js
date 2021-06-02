@@ -86,10 +86,10 @@ class ProBookingScreen extends Component {
   }
 
   handleBackButtonClick = () => {
-    if (Platform.OS == 'ios')
-      this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
+    if (Platform.OS === 'ios')
+      this.state.backClickCount === 1 ? RNExitApp.exitApp() : this._spring();
     else
-      this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+      this.state.backClickCount === 1 ? BackHandler.exitApp() : this._spring();
   };
 
   _spring = () => {

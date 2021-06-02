@@ -30,7 +30,7 @@ class AfterSplashScreen extends Component {
   }
 
   handleBackButtonClick = () => {
-    if (Platform.OS == 'android') BackHandler.exitApp();
+    if (Platform.OS === 'android') BackHandler.exitApp();
     else RNExitApp.exitApp();
   };
 

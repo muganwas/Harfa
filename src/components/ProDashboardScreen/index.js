@@ -46,7 +46,7 @@ import {
 } from '../../Redux/Actions/messageActions';
 import {
   acceptChatRequest,
-  rejectJobRequest,
+  rejectChatRequest,
   updateAvailabilityInMongoDB,
   getAllRecentChats,
 } from '../../controllers/chats';
@@ -173,7 +173,6 @@ class ProDashboardScreen extends Component {
       id: this.props?.userInfo?.providerDetails?.providerId,
       dataSource: this.props?.messagesInfo?.latestChats,
       onSuccess: data => {
-        console.log('latest chats got ...', data);
         this.props.updateLatestChats(data);
         this.setState({isLoading: false});
       },
@@ -504,10 +503,10 @@ class ProDashboardScreen extends Component {
     });
 
   handleBackButtonClick = () => {
-    if (Platform.OS == 'ios')
-      this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
+    if (Platform.OS === 'ios')
+      this.state.backClickCount === 1 ? RNExitApp.exitApp() : this._spring();
     else
-      this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+      this.state.backClickCount === 1 ? BackHandler.exitApp() : this._spring();
     return true;
   };
 
@@ -573,7 +572,7 @@ class ProDashboardScreen extends Component {
   };
 
   rejectJob = async (pos, redirect) =>
-    await rejectJobRequest(
+    await rejectChatRequest(
       {
         pos,
         fetchedPendingJobInfo: this.props?.fetchedPendingJobInfo,
@@ -693,9 +692,9 @@ class ProDashboardScreen extends Component {
                   textAlignVertical: 'center',
                   fontWeight: 'bold',
                 }}>
-                {chat_status == '0'
+                {chat_status === '0'
                   ? 'New Job Request'
-                  : status == 'Pending'
+                  : status === 'Pending'
                   ? 'Chat Request Accepted'
                   : 'Job Accepted'}
               </Text>

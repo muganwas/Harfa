@@ -234,7 +234,7 @@ class ProRegisterScreen extends Component {
     } else {
       this.leftButtonActon = null;
       this.rightButtonAction = () => {
-        if (Platform.OS == 'android') BackHandler.exitApp();
+        if (Platform.OS === 'android') BackHandler.exitApp();
         else RNExitApp.exitApp();
       };
       this.setState({
@@ -447,7 +447,7 @@ class ProRegisterScreen extends Component {
                     color: black,
                   }}
                   placeholder={
-                    this.state.currentPage == 0 ? 'Username' : 'Company name'
+                    this.state.currentPage === 0 ? 'Username' : 'Company name'
                   }
                   onChangeText={nameInput =>
                     this.setState({error: '', name: nameInput})
@@ -615,7 +615,7 @@ class ProRegisterScreen extends Component {
                   }}>
                   <TouchableOpacity
                     style={
-                      this.state.invoice == 1
+                      this.state.invoice === 1
                         ? styles.invoiceBorder
                         : styles.invoice
                     }
@@ -631,7 +631,7 @@ class ProRegisterScreen extends Component {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
-                      this.state.invoice == 0
+                      this.state.invoice === 0
                         ? styles.invoiceBorder
                         : styles.invoice,
                       {marginLeft: 20},

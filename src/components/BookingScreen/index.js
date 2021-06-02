@@ -87,10 +87,10 @@ class BookingScreen extends Component {
   }
 
   handleBackButtonClick = () => {
-    if (Platform.OS == 'ios')
-      this.state.backClickCount == 1 ? RNExitApp.exitApp() : this._spring();
+    if (Platform.OS === 'ios')
+      this.state.backClickCount === 1 ? RNExitApp.exitApp() : this._spring();
     else
-      this.state.backClickCount == 1 ? BackHandler.exitApp() : this._spring();
+      this.state.backClickCount === 1 ? BackHandler.exitApp() : this._spring();
   };
 
   _spring = () => {
@@ -323,7 +323,7 @@ class BookingScreen extends Component {
             }}>
             <TouchableOpacity
               style={
-                this.state.currentPage == 0
+                this.state.currentPage === 0
                   ? styles.buttonGreen
                   : styles.buttonPrimaryDark
               }
@@ -332,7 +332,7 @@ class BookingScreen extends Component {
                 style={[
                   styles.text,
                   {
-                    color: this.state.currentPage == 0 ? black : white,
+                    color: (this.state.currentPage = 0 ? black : white),
                     fontWeight: 'bold',
                   },
                 ]}>
@@ -341,16 +341,16 @@ class BookingScreen extends Component {
             </TouchableOpacity>
             <TouchableOpacity
               style={
-                this.state.currentPage == 1
+                (this.state.currentPage = 1
                   ? styles.buttonRed
-                  : styles.buttonPrimaryDark
+                  : styles.buttonPrimaryDark)
               }
               onPress={() => this.selectPage('Rejected')}>
               <Text
                 style={[
                   styles.text,
                   {
-                    color: this.state.currentPage == 1 ? black : white,
+                    color: this.state.currentPage === 1 ? black : white,
                     fontWeight: 'bold',
                   },
                 ]}>
