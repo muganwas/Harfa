@@ -94,67 +94,68 @@ class ProAllMessageScreen extends Component {
         currentPos = key;
       }
     });
-    return (
-      <TouchableOpacity
-        key={index}
-        style={styles.itemMainContainer}
-        onPress={() => {
-          dispatchSelectedJobRequest({user_id: item.id});
-          this.props.navigation.navigate('ProChat', {
-            currentPos,
-            receiverId: item.id,
-            receiverName: item.name,
-            receiverImage: item.image,
-            orderId: item.orderId,
-            serviceName: item.serviceName,
-            pageTitle: 'ProAllMessage',
-          });
-        }}>
-        <View style={styles.itemImageView}>
-          <Image
-            style={{width: 40, height: 40, borderRadius: 100}}
-            source={
-              item.image && item.exists
-                ? {uri: item.image}
-                : require('../../images/generic_avatar.png')
-            }
-          />
-        </View>
-        <View style={{flexDirection: 'column', justifyContent: 'center'}}>
-          <Text
-            style={{
-              fontSize: 14,
-              color: 'black',
-              textAlignVertical: 'center',
-            }}>
-            {item.name}
-          </Text>
-          <Text
-            style={{
-              width: screenWidth - 150,
-              fontSize: 10,
-              color: 'black',
-              textAlignVertical: 'center',
-              color: 'gray',
-              marginTop: 3,
-            }}
-            numberOfLines={2}>
-            {item.textMessage}
-          </Text>
-        </View>
-
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignContent: 'center',
+    if (allJobRequestsProviders[currentPos].user_details)
+      return (
+        <TouchableOpacity
+          key={index}
+          style={styles.itemMainContainer}
+          onPress={() => {
+            dispatchSelectedJobRequest({user_id: item.id});
+            this.props.navigation.navigate('ProChat', {
+              currentPos,
+              receiverId: item.id,
+              receiverName: item.name,
+              receiverImage: item.image,
+              orderId: item.orderId,
+              serviceName: item.serviceName,
+              pageTitle: 'ProAllMessage',
+            });
           }}>
-          <Text style={{alignSelf: 'flex-end', marginRight: 20, fontSize: 8}}>
-            {item.date}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
+          <View style={styles.itemImageView}>
+            <Image
+              style={{width: 40, height: 40, borderRadius: 100}}
+              source={
+                item.image && item.exists
+                  ? {uri: item.image}
+                  : require('../../images/generic_avatar.png')
+              }
+            />
+          </View>
+          <View style={{flexDirection: 'column', justifyContent: 'center'}}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: 'black',
+                textAlignVertical: 'center',
+              }}>
+              {item.name}
+            </Text>
+            <Text
+              style={{
+                width: screenWidth - 150,
+                fontSize: 10,
+                color: 'black',
+                textAlignVertical: 'center',
+                color: 'gray',
+                marginTop: 3,
+              }}
+              numberOfLines={2}>
+              {item.textMessage}
+            </Text>
+          </View>
+
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignContent: 'center',
+            }}>
+            <Text style={{alignSelf: 'flex-end', marginRight: 20, fontSize: 8}}>
+              {item.date}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
   };
 
   searchTask = textInput => {

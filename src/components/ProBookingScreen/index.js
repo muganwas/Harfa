@@ -147,129 +147,135 @@ class ProBookingScreen extends Component {
   };
 
   renderBookingHistoryItem = (item, index) => {
-    return (
-      <TouchableOpacity
-        key={index}
-        style={{
-          flexDirection: 'column',
-          backgroundColor: white,
-          shadowColor: black,
-          shadowOffset: {width: 0, height: 3},
-          shadowOpacity: 0.75,
-          shadowRadius: 5,
-          elevation: 5,
-          marginBottom: 7,
-        }}
-        onPress={() =>
-          this.props.navigation.navigate('ProBookingDetails', {
-            bookingDetails: item,
-            position: index,
-          })
-        }>
-        <View style={styles.itemContainer}>
-          <Image
+    if (item.user_details)
+      return (
+        <TouchableOpacity
+          key={index}
+          style={{
+            flexDirection: 'column',
+            backgroundColor: white,
+            shadowColor: black,
+            shadowOffset: {width: 0, height: 3},
+            shadowOpacity: 0.75,
+            shadowRadius: 5,
+            elevation: 5,
+            marginBottom: 7,
+          }}
+          onPress={() =>
+            this.props.navigation.navigate('ProBookingDetails', {
+              bookingDetails: item,
+              position: index,
+            })
+          }>
+          <View style={styles.itemContainer}>
+            <Image
+              style={{
+                height: 45,
+                width: 45,
+                alignSelf: 'flex-start',
+                alignContent: 'flex-start',
+                borderRadius: 100,
+              }}
+              source={
+                item?.user_details?.imageAvailable
+                  ? {uri: item.user_details.image}
+                  : require('../../images/generic_avatar.png')
+              }
+            />
+            <View style={{flexDirection: 'column'}}>
+              <Text
+                style={{
+                  color: 'black',
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  textAlignVertical: 'center',
+                  marginLeft: 10,
+                }}>
+                {item.user_details.username}
+              </Text>
+              <View
+                style={{flexDirection: 'row', marginLeft: 10, marginTop: 5}}>
+                <Image
+                  style={{
+                    height: 15,
+                    width: 15,
+                    alignSelf: 'center',
+                    alignContent: 'flex-start',
+                    borderRadius: 100,
+                  }}
+                  source={require('../../icons/mobile.png')}
+                />
+                <Text
+                  style={{
+                    color: 'black',
+                    fontSize: 14,
+                    textAlignVertical: 'center',
+                    marginLeft: 5,
+                  }}>
+                  {item.user_details.mobile}
+                </Text>
+              </View>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                color: 'white',
+                alignContent: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  alignSelf: 'flex-end',
+                  padding: 10,
+                  fontSize: 12,
+                  color: 'black',
+                  marginRight: 10,
+                }}>
+                {item.order_id.replace('"', '')}
+              </Text>
+            </View>
+          </View>
+
+          <View
             style={{
-              height: 45,
-              width: 45,
-              alignSelf: 'flex-start',
-              alignContent: 'flex-start',
-              borderRadius: 100,
-            }}
-            source={
-              item?.user_details?.imageAvailable
-                ? {uri: item.user_details.image}
-                : require('../../images/generic_avatar.png')
-            }
-          />
-          <View style={{flexDirection: 'column'}}>
+              flexDirection: 'row',
+              backgroundColor: colorBg,
+              borderTopWidth: 1,
+              borderTopColor: lightGray,
+            }}>
             <Text
               style={{
                 color: 'black',
                 fontSize: 14,
                 fontWeight: 'bold',
                 textAlignVertical: 'center',
+                alignSelf: 'center',
                 marginLeft: 10,
               }}>
-              {item.user_details.username}
+              {item.service_details.service_name}
             </Text>
-            <View style={{flexDirection: 'row', marginLeft: 10, marginTop: 5}}>
-              <Image
-                style={{
-                  height: 15,
-                  width: 15,
-                  alignSelf: 'center',
-                  alignContent: 'flex-start',
-                  borderRadius: 100,
-                }}
-                source={require('../../icons/mobile.png')}
-              />
+            <View
+              style={{
+                flex: 1,
+                alignContent: 'center',
+                justifyContent: 'center',
+              }}>
               <Text
                 style={{
+                  textAlign: 'center',
+                  alignSelf: 'flex-end',
+                  padding: 10,
+                  fontSize: 12,
                   color: 'black',
-                  fontSize: 14,
-                  textAlignVertical: 'center',
-                  marginLeft: 5,
+                  marginRight: 10,
                 }}>
-                {item.user_details.mobile}
+                {item.createdDate}
               </Text>
             </View>
           </View>
-          <View
-            style={{
-              flex: 1,
-              color: 'white',
-              alignContent: 'center',
-              justifyContent: 'center',
-            }}>
-            <Text
-              style={{
-                textAlign: 'center',
-                alignSelf: 'flex-end',
-                padding: 10,
-                fontSize: 12,
-                color: 'black',
-                marginRight: 10,
-              }}>
-              {item.order_id.replace('"', '')}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            backgroundColor: colorBg,
-            borderTopWidth: 1,
-            borderTopColor: lightGray,
-          }}>
-          <Text
-            style={{
-              color: 'black',
-              fontSize: 14,
-              fontWeight: 'bold',
-              textAlignVertical: 'center',
-              alignSelf: 'center',
-              marginLeft: 10,
-            }}>
-            {item.service_details.service_name}
-          </Text>
-          <View
-            style={{flex: 1, alignContent: 'center', justifyContent: 'center'}}>
-            <Text
-              style={{
-                textAlign: 'center',
-                alignSelf: 'flex-end',
-                padding: 10,
-                fontSize: 12,
-                color: 'black',
-                marginRight: 10,
-              }}>
-              {item.createdDate}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
+        </TouchableOpacity>
+      );
   };
 
   showToast = (message, length) => {
@@ -322,7 +328,7 @@ class ProBookingScreen extends Component {
             }}>
             <TouchableOpacity
               style={
-                this.state.currentPage == 0
+                this.state.currentPage === 0
                   ? styles.buttonGreen
                   : styles.buttonPrimaryDark
               }
@@ -330,14 +336,14 @@ class ProBookingScreen extends Component {
               <Text
                 style={[
                   styles.text,
-                  {color: this.state.currentPage == 0 ? black : white},
+                  {color: this.state.currentPage === 0 ? black : white},
                 ]}>
                 Completed
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={
-                this.state.currentPage == 1
+                this.state.currentPage === 1
                   ? styles.buttonRed
                   : styles.buttonPrimaryDark
               }
@@ -346,7 +352,7 @@ class ProBookingScreen extends Component {
                 style={[
                   styles.text,
                   {
-                    color: this.state.currentPage == 1 ? black : white,
+                    color: this.state.currentPage === 1 ? black : white,
                     fontWeight: 'bold',
                   },
                 ]}>

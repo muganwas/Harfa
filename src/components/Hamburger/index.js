@@ -128,7 +128,6 @@ class Hamburger extends React.Component {
       const data = JSON.parse(message.data.data);
       const {title, main_id, orderId} = data;
       const check = main_id + title;
-      console.log('message data --', data);
       notifications.push(check);
       const {
         fetchedNotifications,

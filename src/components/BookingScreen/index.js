@@ -146,131 +146,137 @@ class BookingScreen extends Component {
   };
 
   renderBookingHistoryItem = (item, index) => {
-    return (
-      <TouchableOpacity
-        key={index}
-        style={{
-          flexDirection: 'column',
-          backgroundColor: white,
-          shadowColor: white,
-          shadowOffset: {width: 0, height: 0},
-          shadowOpacity: 0.75,
-          shadowRadius: 5,
-          elevation: 5,
-          marginBottom: 7,
-        }}
-        onPress={() =>
-          this.props.navigation.navigate('BookingDetails', {
-            bookingDetails: item,
-            position: index,
-          })
-        }>
-        <View style={styles.itemContainer}>
-          <Image
+    if (item.employee_details)
+      return (
+        <TouchableOpacity
+          key={index}
+          style={{
+            flexDirection: 'column',
+            backgroundColor: white,
+            shadowColor: white,
+            shadowOffset: {width: 0, height: 0},
+            shadowOpacity: 0.75,
+            shadowRadius: 5,
+            elevation: 5,
+            marginBottom: 7,
+          }}
+          onPress={() =>
+            this.props.navigation.navigate('BookingDetails', {
+              bookingDetails: item,
+              position: index,
+            })
+          }>
+          <View style={styles.itemContainer}>
+            <Image
+              style={{
+                height: 45,
+                width: 45,
+                alignSelf: 'flex-start',
+                alignContent: 'flex-start',
+                borderRadius: 100,
+              }}
+              source={
+                item?.employee_details?.imageAvailable
+                  ? {uri: item?.employee_details?.image}
+                  : require('../../images/generic_avatar.png')
+              }
+            />
+            <View style={{flexDirection: 'column'}}>
+              <Text
+                style={{
+                  color: black,
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  textAlignVertical: 'center',
+                  marginLeft: 10,
+                }}>
+                {item?.employee_details?.username +
+                  ' ' +
+                  item?.employee_details?.surname}
+              </Text>
+              <View
+                style={{flexDirection: 'row', marginLeft: 10, marginTop: 5}}>
+                <Image
+                  style={{
+                    height: 15,
+                    width: 15,
+                    alignSelf: 'center',
+                    alignContent: 'flex-start',
+                    borderRadius: 100,
+                  }}
+                  source={require('../../icons/mobile.png')}
+                />
+                <Text
+                  style={{
+                    color: black,
+                    fontSize: 14,
+                    textAlignVertical: 'center',
+                    marginLeft: 5,
+                  }}>
+                  {item?.employee_details?.mobile}
+                </Text>
+              </View>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                color: white,
+                alignContent: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  alignSelf: 'flex-end',
+                  padding: 10,
+                  fontSize: 12,
+                  color: black,
+                  marginRight: 10,
+                }}>
+                {item.order_id.replace('"', '')}
+              </Text>
+            </View>
+          </View>
+
+          <View
             style={{
-              height: 45,
-              width: 45,
-              alignSelf: 'flex-start',
-              alignContent: 'flex-start',
-              borderRadius: 100,
-            }}
-            source={
-              item.employee_details.imageAvailable
-                ? {uri: item.employee_details.image}
-                : require('../../images/generic_avatar.png')
-            }
-          />
-          <View style={{flexDirection: 'column'}}>
+              flexDirection: 'row',
+              backgroundColor: colorBg,
+              borderTopWidth: 1,
+              borderTopColor: lightGray,
+            }}>
             <Text
               style={{
                 color: black,
                 fontSize: 14,
                 fontWeight: 'bold',
+                alignSelf: 'center',
                 textAlignVertical: 'center',
                 marginLeft: 10,
               }}>
-              {item.employee_details.username +
-                ' ' +
-                item.employee_details.surname}
+              {item.service_details.service_name}
             </Text>
-            <View style={{flexDirection: 'row', marginLeft: 10, marginTop: 5}}>
-              <Image
-                style={{
-                  height: 15,
-                  width: 15,
-                  alignSelf: 'center',
-                  alignContent: 'flex-start',
-                  borderRadius: 100,
-                }}
-                source={require('../../icons/mobile.png')}
-              />
+            <View
+              style={{
+                flex: 1,
+                alignContent: 'center',
+                justifyContent: 'center',
+              }}>
               <Text
                 style={{
+                  textAlign: 'center',
+                  alignSelf: 'flex-end',
+                  padding: 10,
+                  fontSize: 12,
                   color: black,
-                  fontSize: 14,
-                  textAlignVertical: 'center',
-                  marginLeft: 5,
+                  marginRight: 10,
                 }}>
-                {item.employee_details.mobile}
+                {item.createdDate}
               </Text>
             </View>
           </View>
-          <View
-            style={{
-              flex: 1,
-              color: white,
-              alignContent: 'center',
-              justifyContent: 'center',
-            }}>
-            <Text
-              style={{
-                textAlign: 'center',
-                alignSelf: 'flex-end',
-                padding: 10,
-                fontSize: 12,
-                color: black,
-                marginRight: 10,
-              }}>
-              {item.order_id.replace('"', '')}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            backgroundColor: colorBg,
-            borderTopWidth: 1,
-            borderTopColor: lightGray,
-          }}>
-          <Text
-            style={{
-              color: black,
-              fontSize: 14,
-              fontWeight: 'bold',
-              alignSelf: 'center',
-              textAlignVertical: 'center',
-              marginLeft: 10,
-            }}>
-            {item.service_details.service_name}
-          </Text>
-          <View
-            style={{flex: 1, alignContent: 'center', justifyContent: 'center'}}>
-            <Text
-              style={{
-                textAlign: 'center',
-                alignSelf: 'flex-end',
-                padding: 10,
-                fontSize: 12,
-                color: black,
-                marginRight: 10,
-              }}>
-              {item.createdDate}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
+        </TouchableOpacity>
+      );
   };
 
   showToast = (message, length) => {
@@ -332,7 +338,7 @@ class BookingScreen extends Component {
                 style={[
                   styles.text,
                   {
-                    color: (this.state.currentPage = 0 ? black : white),
+                    color: this.state.currentPage === 0 ? black : white,
                     fontWeight: 'bold',
                   },
                 ]}>
@@ -341,9 +347,9 @@ class BookingScreen extends Component {
             </TouchableOpacity>
             <TouchableOpacity
               style={
-                (this.state.currentPage = 1
+                this.state.currentPage === 1
                   ? styles.buttonRed
-                  : styles.buttonPrimaryDark)
+                  : styles.buttonPrimaryDark
               }
               onPress={() => this.selectPage('Rejected')}>
               <Text

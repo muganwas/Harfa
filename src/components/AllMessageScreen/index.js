@@ -107,61 +107,66 @@ class AllMessageScreen extends Component {
     const selectedJobReq = allJobRequestsClient.find(
       jobInfo => jobInfo.employee_id === item.id,
     );
-    return (
-      <TouchableOpacity
-        key={index}
-        style={styles.itemMainContainer}
-        onPress={() => {
-          dispatchSelectedJobRequest(selectedJobReq);
-          this.props.navigation.navigate('ChatAfterBookingDetails', {
-            providerId: item.id,
-            providerName: item.name,
-            providerSurname: '',
-            providerImage: item.image,
-            orderId: item.orderId,
-            serviceName: item.serviceName,
-            imageAvailable: item.exists,
-            pageTitle: 'AllMessage',
-            fcmId: selectedJobReq.employee_details.fcm_id,
-          });
-        }}>
-        <View style={styles.itemImageView}>
-          <Image
-            style={{width: 40, height: 40, borderRadius: 100}}
-            source={
-              item.image && item.exists
-                ? {uri: item.image}
-                : require('../../images/generic_avatar.png')
-            }
-          />
-        </View>
-        <View style={{flexDirection: 'column', justifyContent: 'center'}}>
-          <Text
-            style={{fontSize: 14, color: 'black', textAlignVertical: 'center'}}>
-            {item.name}
-          </Text>
-          <Text
-            style={{
-              width: screenWidth - 150,
-              fontSize: 10,
-              color: 'black',
-              textAlignVertical: 'center',
-              color: 'gray',
-              marginTop: 3,
-            }}
-            numberOfLines={2}>
-            {item.textMessage}
-          </Text>
-        </View>
+    if (selectedJobReq.employee_details)
+      return (
+        <TouchableOpacity
+          key={index}
+          style={styles.itemMainContainer}
+          onPress={() => {
+            dispatchSelectedJobRequest(selectedJobReq);
+            this.props.navigation.navigate('ChatAfterBookingDetails', {
+              providerId: item.id,
+              providerName: item.name,
+              providerSurname: '',
+              providerImage: item.image,
+              orderId: item.orderId,
+              serviceName: item.serviceName,
+              imageAvailable: item.exists,
+              pageTitle: 'AllMessage',
+              fcmId: selectedJobReq?.employee_details?.fcm_id,
+            });
+          }}>
+          <View style={styles.itemImageView}>
+            <Image
+              style={{width: 40, height: 40, borderRadius: 100}}
+              source={
+                item.image && item.exists
+                  ? {uri: item.image}
+                  : require('../../images/generic_avatar.png')
+              }
+            />
+          </View>
+          <View style={{flexDirection: 'column', justifyContent: 'center'}}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: 'black',
+                textAlignVertical: 'center',
+              }}>
+              {item.name}
+            </Text>
+            <Text
+              style={{
+                width: screenWidth - 150,
+                fontSize: 10,
+                color: 'black',
+                textAlignVertical: 'center',
+                color: 'gray',
+                marginTop: 3,
+              }}
+              numberOfLines={2}>
+              {item.textMessage}
+            </Text>
+          </View>
 
-        <View
-          style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
-          <Text style={{alignSelf: 'flex-end', marginRight: 20, fontSize: 8}}>
-            {item.date}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
+          <View
+            style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
+            <Text style={{alignSelf: 'flex-end', marginRight: 20, fontSize: 8}}>
+              {item.date}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
   };
 
   searchTask = textInput => {

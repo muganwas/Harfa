@@ -98,8 +98,9 @@ export const jobCancelTask = async ({
               title: 'Job Cancelled',
               type: 'JobCancellation',
               body:
-                'Your job request has been cancelled by the service provder : ' +
-                userDetails.name,
+                'Your job request has been cancelled by the service provder,' +
+                ' Request Id : ' +
+                jobRequests[currRequestPos]?.order_id,
               save_notification: true,
               user_id: jobRequests[currRequestPos]?.customer_details?._id,
               employee_id: userDetails.providerId,
@@ -383,8 +384,9 @@ export const jobCompleteTask = async ({
                 title: 'Job Completed',
                 type: 'jobCompletion',
                 body:
-                  'Your job request has been completed by the service provder : ' +
-                  userDetails.name,
+                  'Your job request has been completed by the service provder,' +
+                  ' Request id: ' +
+                  jobRequests[currRequestPos]?.order_id,
                 save_notification: true,
                 user_id: jobRequests[currRequestPos]?.customer_details?._id,
                 employee_id: userDetails.providerId,
@@ -407,8 +409,7 @@ export const jobCompleteTask = async ({
                 body:
                   'Job Id : ' +
                   jobRequests[currRequestPos]?.order_id +
-                  ' has been reported complete by the client: ' +
-                  userDetails.username,
+                  ' has been reported complete by the client.',
                 type: 'Job Completed',
                 user_id: userDetails.userId,
                 employee_id: jobRequests[currRequestPos]?.employee_id,
