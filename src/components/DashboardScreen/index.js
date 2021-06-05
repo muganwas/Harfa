@@ -556,7 +556,7 @@ class DashboardScreen extends Component {
           </View>
         </View>
 
-        <ScrollView
+        <View
           style={[
             styles.gridView,
             {flex: 1, marginBottom: jobRequests.length === 0 ? 0 : 45},
@@ -574,7 +574,7 @@ class DashboardScreen extends Component {
               style={{paddingBottom: 20}}
             />
           </View>
-        </ScrollView>
+        </View>
         {/** show pending requests */}
         {requestsFetched && jobRequests.length > 0 && (
           <View style={styles.pendingJobsContainer}>

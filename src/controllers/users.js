@@ -29,7 +29,9 @@ const storageRef = storage().ref('/users_info');
 
 export const checkForUserType = async navigate =>
   await rNES.getItem('userType').then(result => {
-    if (!result) navigate('AfterSplash');
+    console.log('user type', result)
+    if (!result && navigate) navigate('AfterSplash');
+    else {console.log('navigation error...')}
   });
 
 export const getFCMToken = async (

@@ -15,10 +15,12 @@ import com.android.build.OutputFile
  *   // the name of the generated asset file containing your JS bundle
  *   bundleAssetName: "index.android.bundle",
  *
- *   // the entry file for bundle generation
+ *   // the entry file for bundle generation. If none specified and
+ *   // "index.android.js" exists, it will be used. Otherwise "index.js" is
+ *   // default. Can be overridden with ENTRY_FILE environment variable.
  *   entryFile: "index.android.js",
  *
- *   // https://facebook.github.io/react-native/docs/performance#enable-the-ram-format
+ *   // https://reactnative.dev/docs/performance#enable-the-ram-format
  *   bundleCommand: "ram-bundle",
  *
  *   // whether to bundle JS and assets in debug mode
@@ -110,6 +112,7 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
+
 /**
  * Whether to enable the Hermes VM.
  *
@@ -119,7 +122,9 @@ def jscFlavor = 'org.webkit:android-jsc:+'
  */
 def enableHermes = project.ext.react.get("enableHermes", false)
 
+
 android {
+    ndkVersion rootProject.ext.ndkVersion
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     compileOptions {
@@ -159,6 +164,7 @@ android {
     }
     buildTypes {
         debug {
+            // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
         }
         release {
@@ -178,7 +184,7 @@ android {
             def abi = output.getFilter(OutputFile.ABI)
             if (abi != null) {  // null for the universal-debug, universal-release variants
                 output.versionCodeOverride =
-                        versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
+                        defaultConfig.versionCode * 1000 + versionCodes.get(abi)
             }
 
         }
@@ -187,7 +193,28 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation "com.facebook.react:react-native:+"  // From node_modules
+    //noinspection GradleDynamicVersion
+    implementation('com.facebook.react:react-native:+'){
+        exclude group:'com.facebook.fbjni'
+    }
+    implementation 'com.facebook.fresco:fresco:2.4.0'
+    implementation 'com.facebook.fresco:animated-gif:2.0.0'
+// IN CASE YOU NEED WEBP SUPPORT / MAKE SURE TO CHANGE THIS TOO TO 1.9.0
+    implementation 'com.facebook.fresco:animated-webp:1.9.0'
+    implementation 'com.facebook.fresco:webpsupport:1.9.0'
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    debugImplementation('com.facebook.flipper:flipper:0.92.0') {
+        exclude group:'com.facebook.fbjni'
+    }
+    debugImplementation('com.facebook.flipper:flipper-network-plugin:0.92.0') {
+        exclude group:'com.facebook.flipper'
+        exclude group:'com.squareup.okhttp3', module:'okhttp'
+    }
+    debugImplementation('com.facebook.flipper:flipper-fresco-plugin:0.92.0') {
+        exclude group:'com.facebook.flipper'
+    }
+    debugImplementation 'com.facebook.soloader:soloader:0.10.1'
+    releaseImplementation 'com.facebook.flipper:flipper-noop:0.92.0'
     implementation 'com.facebook.android:facebook-login:5.15.3'
     implementation 'com.facebook.android:facebook-android-sdk:5.11.1'
     implementation 'com.android.support:multidex:1.0.3'

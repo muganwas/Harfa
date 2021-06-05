@@ -13,7 +13,6 @@ import {createAppContainer} from 'react-navigation';
 import {createStackNavigator} from 'react-navigation-stack';
 import rNES from 'react-native-encrypted-storage';
 import RNExitApp from 'react-native-exit-app';
-import SimpleToast from 'react-native-simple-toast';
 import HomeScreen from '../HomeScreen';
 import DashboardScreen from '../DashboardScreen';
 import ProDashboardScreen from '../ProDashboardScreen';
