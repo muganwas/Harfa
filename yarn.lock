@@ -4629,6 +4629,11 @@ jsc-android@^245459.0.0:
   resolved "https://registry.yarnpkg.com/jsc-android/-/jsc-android-245459.0.0.tgz#e584258dd0b04c9159a27fb104cd5d491fd202c9"
   integrity sha512-wkjURqwaB1daNkDi2OYYbsLnIdC/lUM2nPXQKRs5pqEU9chDg435bjvo+LSaHotDENygHQDHe+ntUkkw2gwMtg==
 
+jsc-android@^250230.2.1:
+  version "250230.2.1"
+  resolved "https://registry.yarnpkg.com/jsc-android/-/jsc-android-250230.2.1.tgz#3790313a970586a03ab0ad47defbc84df54f1b83"
+  integrity sha512-KmxeBlRjwoqCnBBKGsihFtvsBHyUFlBxJPK4FzeYcIuBfdjv6jFys44JITAgSTbQD+vIdwMEfyZklsuQX0yI1Q==
+
 jsdom@^11.5.1:
   version "11.12.0"
   resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-11.12.0.tgz#1a80d40ddd378a1de59656e9e6dc5a3ba8657bc8"
@@ -6414,6 +6419,13 @@ react-native-text-input-mask@^2.0.1:
   resolved "https://registry.yarnpkg.com/react-native-text-input-mask/-/react-native-text-input-mask-2.0.1.tgz#d28602d2e6f2e5f0d860cc8a0bdc09d3180d861c"
   integrity sha512-9n7JehpaJ1xf185RKdeHYRFAT6zv3vdf1gW3OYZ1kNSXthUVoOQw/MORC/ycYPhWCCdzdWQAp4Jx6JCZxLnwyw==
 
+"react-native-v8@>=0.61.2-patch.0 <0.61.3":
+  version "0.61.2-patch.1"
+  resolved "https://registry.yarnpkg.com/react-native-v8/-/react-native-v8-0.61.2-patch.1.tgz#1f370009fa7a5fcac0f7ad9e1173835fb8e1f983"
+  integrity sha512-6J/xjAhrkbE1iPVoX4QsiO6fX7e/xMp0aX0KdyWf/s+9zDyrm6k8lEYRA5SnoA1tBiup0VAVuBXRgmrdy68d/Q==
+  dependencies:
+    v8-android "7.8.x >= 7.8.1"
+
 react-native@0.61.2:
   version "0.61.2"
   resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.61.2.tgz#987b91b063557f8ebec803fdfea2044a24bdbe4d"
@@ -7727,6 +7739,11 @@ uuid@^3.3.2:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
+
+"v8-android@7.8.x >= 7.8.1":
+  version "7.8.2"
+  resolved "https://registry.yarnpkg.com/v8-android/-/v8-android-7.8.2.tgz#cab9196d2afad6b931630dcfa8ab3609ca18864e"
+  integrity sha512-LZLtehBxj4rLgf3+gWs3ITTmnVvlD3KQubLzFmtdI+l3G9tbi8ckWm6tJv7KQXZu3L/ok5M2bZz1AGnofPiMfQ==
 
 validate-npm-package-license@^3.0.1:
   version "3.0.4"
