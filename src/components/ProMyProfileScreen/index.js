@@ -17,7 +17,6 @@ import {connect} from 'react-redux';
 import RNExitApp from 'react-native-exit-app';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import rNES from 'react-native-encrypted-storage';
-import ShakingText from 'react-native-shaking-text';
 import TextInputMask from 'react-native-text-input-mask';
 import ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-simple-toast';
@@ -388,14 +387,14 @@ class ProMyProfileScreen extends Component {
             </View>
 
             <View style={styles.logincontainer}>
-              <ShakingText
+              { this.state.error && <Text
                 style={{
                   color: 'red',
                   fontWeight: 'bold',
                   marginBottom: 10,
                 }}>
                 {this.state.error}
-              </ShakingText>
+              </Text> }
 
               <View
                 style={{

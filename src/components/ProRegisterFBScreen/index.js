@@ -16,7 +16,6 @@ import {
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import {connect} from 'react-redux';
 import rNES from 'react-native-encrypted-storage';
-import ShakingText from 'react-native-shaking-text';
 import messaging from '@react-native-firebase/messaging';
 import Axios from 'axios';
 import Config from '../Config';
@@ -376,10 +375,10 @@ class ProRegisterFBScreen extends Component {
                 </View>
               </View>
 
-              <ShakingText
+              { this.state.error && <Text
                 style={{color: 'red', fontWeight: 'bold', marginBottom: 5}}>
                 {this.state.error}
-              </ShakingText>
+              </Text> }
 
               <View style={styles.textInputView}>
                 <Image

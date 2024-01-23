@@ -11,7 +11,6 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import ShakingText from 'react-native-shaking-text';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import DialogComponent from '../DialogComponent';
 import WaitingDialog from '../WaitingDialog';
@@ -207,14 +206,14 @@ export default class ProForgotPasswordScreen extends Component {
             </View>
 
             <View style={styles.logincontainer}>
-              <ShakingText
+              { this.state.error && <Text
                 style={{
                   color: 'red',
                   fontWeight: 'bold',
                   marginBottom: 10,
                 }}>
                 {this.state.error}
-              </ShakingText>
+              </Text> }
 
               <View style={{padding: 5}}>
                 <Text

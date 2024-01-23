@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import {connect} from 'react-redux';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import ShakingText from 'react-native-shaking-text';
 import 'react-native-gesture-handler';
 import {GoogleSignin} from '@react-native-community/google-signin';
 import {
@@ -285,14 +284,14 @@ class FacebookGoogleScreen extends Component {
             </View>
 
             <View style={styles.logincontainer}>
-              <ShakingText
+              { this.state.error && <Text
                 style={{
                   color: 'red',
                   fontWeight: 'bold',
                   marginBottom: 10,
                 }}>
                 {this.state.error}
-              </ShakingText>
+              </Text> }
 
               <View style={styles.textInputView}>
                 <Image

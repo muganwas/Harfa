@@ -15,7 +15,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
-import ShakingText from 'react-native-shaking-text';
 import 'react-native-gesture-handler';
 import {
   getPendingJobRequest,
@@ -357,14 +356,14 @@ class LoginPhoneScreen extends Component {
                   we'll send you a OTP
                 </Text>
               </View>
-              <ShakingText
+              { this.state.error && <Text
                 style={{
                   color: 'red',
                   fontWeight: 'bold',
                   marginBottom: 10,
                 }}>
                 {this.state.error}
-              </ShakingText>
+              </Text> }
               <View style={[styles.textInputView, {marginTop: 5}]}>
                 {!confirmation && !numberSent && (
                   <Image

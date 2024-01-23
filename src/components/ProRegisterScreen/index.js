@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import {connect} from 'react-redux';
-import ShakingText from 'react-native-shaking-text';
 import TextInputMask from 'react-native-text-input-mask';
 import messaging from '@react-native-firebase/messaging';
 import {
@@ -399,9 +398,9 @@ class ProRegisterScreen extends Component {
             </View>
 
             <View style={styles.logincontainer}>
-              <ShakingText style={styles.shakingText}>
+              { this.state.error && <Text style={styles.shakingText}>
                 {this.state.error}
-              </ShakingText>
+              </Text> }
 
               <View
                 style={{

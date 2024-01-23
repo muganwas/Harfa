@@ -14,7 +14,6 @@ import {
   BackHandler,
 } from 'react-native';
 import {connect} from 'react-redux';
-import ShakingText from 'react-native-shaking-text';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import TextInputMask from 'react-native-text-input-mask';
@@ -383,9 +382,9 @@ class RegisterScreen extends Component {
             </View>
 
             <View style={styles.logincontainer}>
-              <ShakingText style={styles.shakingText}>
+              { this.state.error && <Text style={styles.shakingText}>
                 {this.state.error}
-              </ShakingText>
+              </Text> }
               <View
                 style={{
                   width: screenWidth - 50,
